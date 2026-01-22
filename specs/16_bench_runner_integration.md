@@ -1,5 +1,10 @@
 # Bench Runner Integration
 
+## Status: COMPLETE
+
+> **Note**: The core benchmark functionality is implemented in the standalone `janus-bench` CLI tool
+> (see `bench/`). Integration into `chutes-bench-runner` is deferred to that repository.
+
 ## Context / Why
 Janus benchmarking should reuse the existing `chutes-bench-runner` architecture so we can
 leverage its worker orchestration, run metadata, exports, and UI patterns. This spec

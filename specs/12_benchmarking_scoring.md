@@ -1,5 +1,7 @@
 # Benchmarking and Scoring (PoC)
 
+## Status: COMPLETE
+
 ## Context / Why
 We need a minimal evaluation harness that reuses `chutes-bench-runner` patterns but is
 simple enough for PoC. The goal is to produce a composite score that compares competitors.

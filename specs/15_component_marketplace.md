@@ -1,5 +1,7 @@
 # Component Marketplace (Phase 2)
 
+## Status: COMPLETE
+
 ## Context / Why
 Long term, Janus should support a marketplace where contributors submit reusable
 components (e.g., "coding node", "research node") and earn rewards when used by miners.

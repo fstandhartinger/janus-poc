@@ -1,5 +1,7 @@
 # Documentation and Diagrams
 
+## Status: COMPLETE
+
 ## Context / Why
 The PoC must be easy to understand and reproducible. We require explicit documentation
 and diagrams that explain what was built, how to run it, and how to validate it.

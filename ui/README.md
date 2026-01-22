@@ -1,36 +1,83 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Janus Chat UI
 
-## Getting Started
+ChatGPT-like interface for the Janus gateway with streaming support and reasoning visualization.
 
-First, run the development server:
+## Features
+
+- Session list with new chat and history
+- Real-time streaming with incremental rendering
+- Markdown rendering with syntax highlighting
+- Image upload (base64 data URLs)
+- Collapsible "Thinking" panel for reasoning_content
+- Competitor selector (baseline only in MVP)
+- Artifact links with download support
+
+## Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Running
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Development mode
+npm run dev
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Production build
+npm run build
+npm start
+```
 
-## Learn More
+## Testing
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+# Run tests
+npm test
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+# Type checking
+npm run typecheck
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+# Linting
+npm run lint
+```
 
-## Deploy on Vercel
+## Project Structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+ui/
+├── src/
+│   ├── app/           # Next.js app router
+│   │   ├── layout.tsx # Root layout
+│   │   └── page.tsx   # Main chat page
+│   ├── components/    # React components
+│   │   ├── ChatArea.tsx
+│   │   ├── ChatInput.tsx
+│   │   ├── MessageBubble.tsx
+│   │   └── Sidebar.tsx
+│   ├── lib/           # Utilities
+│   │   └── api.ts     # Gateway API client
+│   ├── store/         # State management
+│   │   └── chat.ts    # Chat state (zustand)
+│   └── types/         # TypeScript types
+│       └── chat.ts
+└── ...
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `NEXT_PUBLIC_GATEWAY_URL` | `http://localhost:8000` | Janus gateway URL |
+
+## API Integration
+
+The UI communicates with the Janus Gateway via:
+
+- `POST /v1/chat/completions` - Send chat messages (SSE streaming)
+- `GET /v1/models` - List available competitors
+- `GET /v1/artifacts/{id}` - Retrieve artifacts
+
+## Health Check
+
+The UI is ready when it's accessible at `http://localhost:3000` and can reach the gateway.
