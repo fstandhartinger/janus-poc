@@ -1,5 +1,7 @@
 # Janus PoC Components
 
+## Status: COMPLETE
+
 ## Context / Why
 This PoC is composed of several services that must interoperate cleanly. This document
 defines each component's responsibilities and interfaces.
@@ -59,6 +61,7 @@ flowchart TD
 - **Baseline Competitor (CLI agent)**
   - Uses Sandy to run a CLI agent inside a sandbox.
   - Implements a fast-path for simple prompts without sandbox usage.
+  - Runs a sandbox file server for artifact URLs or emits base64 `data:` URLs.
 
 - **Benchmark Runner**
   - Mirrors `chutes-bench-runner` worker pattern: deterministic subsets and structured results.
@@ -66,6 +69,7 @@ flowchart TD
 ## Acceptance criteria
 - Each component has a clear interface and ownership scope.
 - Reuse of Sandy, knowledge-agent, and bench-runner patterns is explicit.
+- An agent can map each component to a test category (unit, integration, UI, smoke).
 
 ## Open questions / risks
 - What minimum set of platform services must be available for the baseline to be competitive?

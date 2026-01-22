@@ -24,7 +24,7 @@ flows.
 - The Gateway forwards requests to the selected competitor container.
 - Competitors may call platform services via whitelisted endpoints.
 - The baseline competitor uses Sandy to run a CLI agent when needed.
-- Artifact links are retrievable via the Gateway.
+- Artifact links are retrievable via a sandbox file server or base64 links (gateway may proxy).
 
 ## Non-functional requirements
 - Gateway must be stateless and horizontally scalable.
@@ -62,6 +62,7 @@ flowchart LR
 - Architecture clearly separates UI, gateway, competitor containers, and Sandy.
 - Each boundary has a defined API contract.
 - The diagram matches the required data flow.
+- An agent can trace a request across components using logs and headers.
 
 ## Open questions / risks
 - How will competitor images be distributed to Sandy in a production-like setup?

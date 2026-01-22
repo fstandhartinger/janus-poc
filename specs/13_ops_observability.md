@@ -64,6 +64,7 @@ specs, define expected inputs/outputs and error behavior.
 - Logs and metrics fields are defined and consistent across components.
 - A minimal set of operator commands is documented.
 - A test plan exists that can be executed by an AI agent (unit/integration/smoke/UI).
+ - Env var names are documented and match existing conventions in other Chutes repos.
 
 ## Open questions / risks
 - Should we standardize on OpenTelemetry in PoC or defer to later?

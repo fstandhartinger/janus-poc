@@ -46,6 +46,7 @@ flowchart LR
 ## Acceptance criteria
 - Specs define explicit allowlist endpoints and enforcement points.
 - Risk areas (benchmark leakage, exfiltration) have mitigation strategies.
+- A smoke test confirms direct outbound HTTP is blocked while proxy endpoints succeed.
 
 ## Open questions / risks
 - Can we safely allow limited outbound HTTPS to a curated allowlist in PoC?

@@ -1,5 +1,7 @@
 # Chat UI (MVP)
 
+## Status: COMPLETE
+
 ## Context / Why
 The PoC needs a minimal but polished ChatGPT-like UI to demo the Janus experience and
 streaming behavior. The UI should reuse patterns from `chutes-knowledge-agent`.
@@ -19,6 +21,7 @@ streaming behavior. The UI should reuse patterns from `chutes-knowledge-agent`.
 - Real-time streaming with incremental rendering.
 - Upload attachments (image files). Convert to data URL or use gateway upload endpoint.
 - Render artifact links with filename and size.
+ - Support artifact links that are either HTTP URLs or base64 `data:` URLs.
 - Toggle "Thinking" panel to show streamed `reasoning_content`.
 - Dropdown or pill selector for competitor choice (baseline only in MVP).
 

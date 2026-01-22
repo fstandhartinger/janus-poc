@@ -11,7 +11,7 @@
   "sha256": "9d1c...",
   "created_at": "2026-01-22T12:00:00Z",
   "ttl_seconds": 3600,
-  "url": "https://gateway.local/v1/artifacts/artf_img_001"
+  "url": "https://sandbox-abc.sandy.local/artifacts/chart.png"
 }
 ```
 
@@ -26,7 +26,7 @@
   "sha256": "fa12...",
   "created_at": "2026-01-22T12:00:00Z",
   "ttl_seconds": 3600,
-  "url": "https://gateway.local/v1/artifacts/artf_file_010"
+  "url": "data:application/pdf;base64,JVBERi0xLjcKJcfs..."
 }
 ```
 

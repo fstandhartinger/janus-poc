@@ -73,6 +73,7 @@ sequenceDiagram
 - Requests with text-only and text+image content are accepted.
 - Streaming responses contain valid OpenAI-style chunk envelopes.
 - Responses can include artifacts via the Janus extension.
+ - A contract test validates the OpenAPI schema against example payloads.
 
 ## Open questions / risks
 - Should we support `response_format: { type: "json_schema" }` in PoC?

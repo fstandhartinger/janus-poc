@@ -62,6 +62,7 @@ Composite score (0-100):
 - Streaming continuity checks report max gap and TTFT.
 - Results are stored in a structured JSON file.
 - A smoke test runs against the gateway locally and via a Render deployment.
+ - The Janus suite appears in the bench-runner UI/API list of benchmarks.
 
 ## Open questions / risks
 - Should quality be judged via static references or LLM judges in PoC?

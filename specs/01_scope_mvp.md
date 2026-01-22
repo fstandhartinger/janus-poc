@@ -23,11 +23,13 @@ in scope and out of scope for the PoC.
 - **Sandboxing**: Sandy-based sandbox for CLI agent execution.
 - **Benchmarking**: Minimal suite with public train/dev and private test stubs.
 - **Guardrails**: Egress only via platform services; enforced or stubbed but documented.
+ - **Artifacts**: Stored in sandbox and accessible via sandbox file server or base64 links.
 
 ## Non-functional requirements
 - Local dev must run on a single machine without distributed dependencies.
 - The UI should remain responsive during long-running streamed requests.
 - Baseline competitor should be deterministic enough for repeated tests.
+ - Default request timeout is 5 minutes.
 
 ## API/contracts
 - Gateway provides `/v1/chat/completions` and `/v1/models` (minimal) for UI.

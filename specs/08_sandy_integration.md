@@ -19,7 +19,8 @@ Sandy for CLI agent execution and treat it as the PoC stand-in for TEE-like isol
   `/api/sandboxes/{id}/agent/run`.
 - Sandbox resources and TTL are enforced via Sandy settings.
 - Sandbox events (create, exec, terminate) are surfaced in `reasoning_content`.
- - Sandboxes run a lightweight HTTP server that exposes `/artifacts/*` from the sandbox filesystem.
+- Sandboxes run a lightweight HTTP server that exposes `/artifacts/*` from the sandbox filesystem.
+ - Artifact server port is configurable via `JANUS_ARTIFACT_PORT` (default 8787).
 
 ## Non-functional requirements
 - Sandbox startup time should be < 10s in local dev.
@@ -57,12 +58,13 @@ sequenceDiagram
 - Sandy uses a FastAPI service with Docker-based sandboxes.
 - For CLI agent workflows, use Sandy's `agent/run` if available; otherwise shell out via `exec`.
 - For future TEE-like isolation, map Sandy sandboxes to TEE nodes (conceptual alignment).
- - The artifact file server should bind to a known port and path, and be reachable via the
-   Sandy proxy URL.
+- The artifact file server should bind to a known port and path, and be reachable via the
+  Sandy proxy URL.
 
 ## Acceptance criteria
 - Baseline competitor can run a CLI agent in a Sandy sandbox and return results.
 - Sandbox lifecycle events are streamed in `reasoning_content`.
+- A smoke test fetches `http(s)://<sandbox>/artifacts/<file>` and validates the payload.
 
 ## Open questions / risks
 - Should the gateway manage sandbox lifecycles, or should competitors manage their own?

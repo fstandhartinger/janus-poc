@@ -19,6 +19,7 @@
 - Public train/dev suites and runner CLI.
 - Composite scoring and streaming metrics.
 - Results export (JSON + markdown summary).
+ - Integration into chutes-bench-runner backend/worker.
 
 ## Epic 5: Guardrails + Platform Services
 - Egress allowlist and proxy stubs.
@@ -29,6 +30,10 @@
 - Structured logs and health endpoints.
 - Basic metrics for latency and streaming gaps.
 - Developer automation scripts.
+
+## Epic 8: Documentation + Diagrams
+- Component READMEs and runbooks.
+- Mermaid diagrams for architecture and flows.
 
 ## Epic 7: Phase 2 Marketplace (Spec-only)
 - Component registry contracts.

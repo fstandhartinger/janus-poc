@@ -10,6 +10,7 @@ This PoC must reuse existing Chutes conventions:
 - **Sandy** for sandboxed execution (treat as TEE-like isolation for architecture).
 - **chutes-knowledge-agent** for UI and agent app patterns.
 - **chutes-bench-runner** for evaluation runner patterns and scoring flow.
+- **affine/memory.md** for additional conventions and context (if applicable).
 
 ## Goals
 - Define an implementation-grade spec suite for the Janus PoC.
@@ -66,5 +67,4 @@ flowchart LR
 
 ## Open questions / risks
 - How strict should the streaming continuity requirement be for slow tools?
-- What is the default CLI agent for the baseline (OpenHands vs OpenCode vs Aider)?
 - How much of the guardrail enforcement should be in the gateway vs competitor container?

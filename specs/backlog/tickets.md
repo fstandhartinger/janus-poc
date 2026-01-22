@@ -26,6 +26,7 @@
 - Implement runner CLI with deterministic subsets.
 - Add scoring for quality, speed, cost, streaming, multimodal.
 - Generate JSON summary reports.
+ - Add Janus benchmark module to chutes-bench-runner backend/worker.
 
 ## Guardrails
 - Stub platform proxy endpoints (web/search/vector).
@@ -36,3 +37,7 @@
 - Add `/health` and `/metrics` endpoints.
 - Add structured logging (request id, competitor id, latency).
 - Add automation scripts for /autonomous, /test-all, /visual-test, /verify-complete.
+
+## Documentation
+- Add component READMEs (gateway/ui/baseline) with run + test steps.
+- Create `docs/architecture.md` with Mermaid diagrams.

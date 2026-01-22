@@ -40,7 +40,8 @@ This document defines the required endpoints, behavior, and guardrails for submi
 - Container exposes HTTP on port `8080` by default.
 - Container must accept configuration via environment variables.
 - No outbound internet access except platform proxies.
- - Artifact URLs must be resolvable to sandbox-hosted files or `data:` URLs.
+- Artifact URLs must be resolvable to sandbox-hosted files or `data:` URLs.
+ - If using sandbox-hosted artifacts, competitors should expose them on a fixed port/path.
 
 ## Cost accounting (minimal)
 Each response should include a `usage` object with:
@@ -50,7 +51,7 @@ Each response should include a `usage` object with:
 ## Acceptance criteria
 - A competitor container can be health-checked and passes a basic chat request.
 - Streaming output includes continuous `reasoning_content` updates.
-- Artifacts can be retrieved via the gateway.
+- Artifacts can be retrieved via sandbox URL or base64 `data:` URL and are verifiable by hash.
 
 ## Open questions / risks
 - Should we require a `/v1/models` endpoint for competitor discovery?

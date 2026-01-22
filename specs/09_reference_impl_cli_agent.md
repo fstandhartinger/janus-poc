@@ -43,7 +43,8 @@ handle simple chat tasks quickly and complex tasks via a CLI agent inside Sandy.
   - sandbox bootstrap scripts
   - model config (Chutes model IDs)
 - The agent pack is mounted or copied into the Sandy sandbox before execution.
- - The sandbox starts a lightweight file server for artifacts (see `specs/06_artifacts_and_files.md`).
+- The sandbox starts a lightweight file server for artifacts (see `specs/06_artifacts_and_files.md`).
+ - Artifact server port is configurable via `JANUS_ARTIFACT_PORT`.
 
 ## Data flow
 ```mermaid

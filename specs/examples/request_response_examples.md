@@ -59,7 +59,7 @@
       "index": 0,
       "message": {
         "role": "assistant",
-        "content": "I generated a CSV file with the cleaned data: [download](https://gateway.local/v1/artifacts/artf_456)",
+        "content": "I generated a CSV file with the cleaned data: [download](https://sandbox-xyz.sandy.local/artifacts/cleaned-data.csv)",
         "artifacts": [
           {
             "id": "artf_456",
@@ -70,7 +70,7 @@
             "sha256": "abc123...",
             "created_at": "2026-01-22T12:00:00Z",
             "ttl_seconds": 3600,
-            "url": "https://gateway.local/v1/artifacts/artf_456"
+            "url": "https://sandbox-xyz.sandy.local/artifacts/cleaned-data.csv"
           }
         ]
       },
