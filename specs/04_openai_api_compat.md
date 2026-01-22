@@ -1,5 +1,7 @@
 # OpenAI API Compatibility
 
+## Status: COMPLETE
+
 ## Context / Why
 Janus competitors must be OpenAI Chat Completions compatible to reduce friction for
 clients and to reuse existing tooling. This document defines the supported subset and

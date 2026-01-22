@@ -1,5 +1,7 @@
 # Streaming Contract
 
+## Status: COMPLETE
+
 ## Context / Why
 Janus differentiates itself by requiring continuous streaming during internal processing.
 Intermediate reasoning, tool activity, and sandbox lifecycle events must be observable in

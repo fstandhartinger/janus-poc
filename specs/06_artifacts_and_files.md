@@ -1,5 +1,7 @@
 # Artifacts and File Handling
 
+## Status: COMPLETE
+
 ## Context / Why
 Janus supports "anything out" outputs, but the MVP will surface non-text outputs as
 artifact descriptors and retrieval URLs. This document defines the artifact schema and
