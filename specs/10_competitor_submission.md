@@ -28,7 +28,8 @@ This document defines the required endpoints, behavior, and guardrails for submi
 ## Non-functional requirements
 - Must start and be ready within 30 seconds.
 - Must handle at least 2 concurrent requests.
-- Must respect request timeouts (configurable via gateway).
+- Must respect request timeouts (default **5 minutes**, configurable via gateway).
+- Must keep the SSE connection alive with frequent updates or keep-alive comments.
 
 ## API/contracts
 - OpenAI-compatible schema as defined in `specs/04_openai_api_compat.md`.
@@ -39,6 +40,7 @@ This document defines the required endpoints, behavior, and guardrails for submi
 - Container exposes HTTP on port `8080` by default.
 - Container must accept configuration via environment variables.
 - No outbound internet access except platform proxies.
+ - Artifact URLs must be resolvable to sandbox-hosted files or `data:` URLs.
 
 ## Cost accounting (minimal)
 Each response should include a `usage` object with:

@@ -49,10 +49,10 @@ sequenceDiagram
 - Provide lightweight styling via Tailwind or CSS modules.
 
 ## Acceptance criteria
-- A user can upload an image and send a prompt.
-- Streaming responses appear incrementally in the chat area.
-- Reasoning panel shows streamed intermediate steps.
-- Artifact links are visible and downloadable.
+- A Playwright test uploads an image and submits a prompt.
+- Streaming responses appear incrementally in the chat area (validated by DOM updates).
+- Reasoning panel shows streamed intermediate steps and can be toggled.
+- Artifact links are visible and downloadable; clicking a link triggers a successful fetch.
 
 ## Open questions / risks
 - Should attachments be uploaded to the gateway first or inlined as data URLs?

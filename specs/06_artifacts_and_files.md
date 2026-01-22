@@ -9,6 +9,7 @@ how uploads/downloads work.
 - Define an artifact descriptor schema.
 - Specify how artifact URLs are exposed and retrieved.
 - Support image uploads as input.
+- Ensure artifact links are directly accessible (sandbox webserver or base64 links).
 
 ## Non-goals
 - Full object storage integration or multi-region CDN.
@@ -16,13 +17,16 @@ how uploads/downloads work.
 
 ## Functional requirements
 - Competitors can return an `artifacts` array with metadata + retrieval URL.
-- Gateway must proxy or serve artifacts locally.
+- **Artifacts are stored inside the sandbox** and served via a lightweight HTTP server,
+  or returned as base64 `data:` URLs for small files.
+- Gateway must proxy or serve artifacts locally when needed.
 - UI must render artifact links and download buttons.
 - Input supports `image_url` or base64 data URLs in message content parts.
 
 ## Non-functional requirements
 - Artifacts must be size-limited and time-limited (TTL).
 - Retrieval must be authenticated or single-use tokenized.
+- Artifact links must resolve deterministically to the sandbox file or base64 payload.
 
 ## API/contracts
 ### Artifact descriptor (JSON)
@@ -36,28 +40,33 @@ how uploads/downloads work.
   "sha256": "...",
   "created_at": "2026-01-22T12:00:00Z",
   "ttl_seconds": 3600,
-  "url": "https://gateway.local/v1/artifacts/artf_123"
+  "url": "https://sandbox-host/files/artf_123"
 }
 ```
 
 ### Response embedding
 - `choices[0].message.artifacts` contains an array of descriptors.
 - If `content` references artifacts, it should do so via markdown links to the URL.
+ - For small artifacts, `url` MAY be a `data:` URL (base64).
 
 ## Data flow
 ```mermaid
 flowchart LR
   COMP[Competitor] -->|artifact metadata| GW[Gateway]
-  GW -->|proxy URL| UI[Chat UI]
+  COMP -->|sandbox file server| SBOX[Sandbox HTTP]
+  GW -->|proxy URL or direct sandbox URL| UI[Chat UI]
   UI -->|GET /v1/artifacts/{id}| GW
   GW -->|stream/serve| UI
 ```
 
 ## Acceptance criteria
 - Artifact descriptors include `id`, `type`, `mime_type`, `size_bytes`, and `url`.
-- UI renders artifact links with filenames.
-- Gateway can serve a locally stored artifact by ID.
+- If `url` is HTTP:
+  - A smoke test fetches the URL and validates content length and SHA256.
+- If `url` is `data:`:
+  - A unit test decodes base64 and matches the stored SHA256.
+- UI renders artifact links with filenames and can download the file.
+- Gateway can proxy a sandbox-hosted artifact by ID.
 
 ## Open questions / risks
-- Where should artifacts be stored in PoC (disk vs object storage)?
 - How should artifact URLs be signed or scoped to a session?

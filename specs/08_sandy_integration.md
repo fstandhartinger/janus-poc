@@ -19,10 +19,12 @@ Sandy for CLI agent execution and treat it as the PoC stand-in for TEE-like isol
   `/api/sandboxes/{id}/agent/run`.
 - Sandbox resources and TTL are enforced via Sandy settings.
 - Sandbox events (create, exec, terminate) are surfaced in `reasoning_content`.
+ - Sandboxes run a lightweight HTTP server that exposes `/artifacts/*` from the sandbox filesystem.
 
 ## Non-functional requirements
 - Sandbox startup time should be < 10s in local dev.
 - Sandboxes must be preemptable for low priority benchmark runs.
+ - Sandbox job timeout defaults to **5 minutes** and is configurable via env.
 
 ## API/contracts
 ### Required Sandy endpoints
@@ -47,6 +49,7 @@ sequenceDiagram
   Sandy-->>Comp: sandbox_id + host/port
   Comp->>Sandy: POST /api/sandboxes/{id}/exec (run CLI agent)
   Sandy-->>Comp: stdout/stderr + exit code
+  Comp->>Sandy: POST /api/sandboxes/{id}/exec (start artifact file server)
   Comp->>Sandy: POST /api/sandboxes/{id}/terminate
 ```
 
@@ -54,6 +57,8 @@ sequenceDiagram
 - Sandy uses a FastAPI service with Docker-based sandboxes.
 - For CLI agent workflows, use Sandy's `agent/run` if available; otherwise shell out via `exec`.
 - For future TEE-like isolation, map Sandy sandboxes to TEE nodes (conceptual alignment).
+ - The artifact file server should bind to a known port and path, and be reachable via the
+   Sandy proxy URL.
 
 ## Acceptance criteria
 - Baseline competitor can run a CLI agent in a Sandy sandbox and return results.

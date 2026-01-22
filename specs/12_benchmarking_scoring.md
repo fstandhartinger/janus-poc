@@ -8,6 +8,7 @@ simple enough for PoC. The goal is to produce a composite score that compares co
 - Define a minimal suite (public train/dev + private test stubs).
 - Measure speed, cost, quality, streaming continuity, and modality handling.
 - Provide a CLI workflow for local evaluation.
+ - Integrate benchmarks into `chutes-bench-runner` patterns.
 
 ## Non-goals
 - Full-scale benchmark coverage or large datasets.
@@ -27,6 +28,9 @@ simple enough for PoC. The goal is to produce a composite score that compares co
 - **CLI**:
   - `janus-bench run --target <gateway-url> --suite public/dev`
   - Output JSON results + summary table
+ - **Bench-runner integration**:
+   - Add a Janus benchmark module in `chutes-bench-runner` backend/worker.
+   - Use the same run/result schema and export patterns (JSON + signed bundle optional).
 
 ## Non-functional requirements
 - Bench runs must be reproducible (seeded sampling).
@@ -57,6 +61,7 @@ Composite score (0-100):
 - Bench runner can execute a small suite and output a composite score.
 - Streaming continuity checks report max gap and TTFT.
 - Results are stored in a structured JSON file.
+- A smoke test runs against the gateway locally and via a Render deployment.
 
 ## Open questions / risks
 - Should quality be judged via static references or LLM judges in PoC?

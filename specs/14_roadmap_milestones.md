@@ -43,8 +43,9 @@ This document defines milestones and a clear Definition of Done (DoD) for the Po
    - Streaming continuity metrics collected.
 
 5) **M4: Demo + Hardening**
-   - End-to-end demo with UI, gateway, baseline.
-   - Guardrail enforcement documented and partially implemented.
+  - End-to-end demo with UI, gateway, baseline.
+  - Guardrail enforcement documented and partially implemented.
+  - Generate implementation README + architecture diagrams.
 
 ## Definition of Done (PoC)
 - UI, Gateway, and Baseline competitor are running locally.
@@ -52,6 +53,7 @@ This document defines milestones and a clear Definition of Done (DoD) for the Po
 - At least one artifact-producing task is demonstrated.
 - Bench runner outputs a composite score from a public/dev suite.
 - Guardrails are documented and minimal enforcement exists.
+ - Documentation deliverables (README + diagrams) are produced.
 
 ## Acceptance criteria
 - Milestones are concrete and testable.

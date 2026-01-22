@@ -1,17 +1,11 @@
 # Janus PoC (spec-first)
 
-This repo contains implementation-grade specs for the Janus Proof-of-Concept. It does **not**
-include a working implementation yet.
+This repo contains the Janus Proof-of-Concept. (in the Beginning it does **not**
+include a working implementation yet, only implementation-grade specs).
 
-## Create the private GitHub repo
+## GitHub repo
 
-1) Create a new private repo under the `fstandhartinger` org/user named `janus-poc`.
-2) From this folder, add the remote and push:
-
-```bash
-git remote add origin git@github.com:fstandhartinger/janus-poc.git
-git push -u origin main
-```
+Private repo under the `fstandhartinger` org/user named `janus-poc`.
 
 ## Local run (once implemented)
 

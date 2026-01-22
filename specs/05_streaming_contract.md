@@ -25,6 +25,7 @@ real time while the final user response streams as normal `content` tokens.
 - **Time-to-first-token (TTFT):** <= 2s (local dev target).
 - **Max gap:** <= 2s between SSE events; keep-alives count.
 - **Reliability:** Gateway must not buffer; it must stream pass-through.
+ - **Timeout:** Streams may run up to 5 minutes by default without gateway termination.
 
 ## API/contracts
 ### Chunk envelope (OpenAI-compatible)
@@ -71,6 +72,7 @@ sequenceDiagram
 - A long-running tool call still yields SSE updates at least every 2 seconds.
 - `reasoning_content` appears during tool calls and sandbox lifecycle events.
 - Stream termination uses `[DONE]` and includes usage if requested.
+ - An integration test verifies a 3-5 minute stream stays open and emits keep-alives.
 
 ## Open questions / risks
 - Should we allow competitors to emit `event:` frames, or only OpenAI-compatible `data:`?

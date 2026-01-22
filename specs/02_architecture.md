@@ -1,5 +1,7 @@
 # Janus PoC Architecture
 
+## Status: COMPLETE
+
 ## Context / Why
 The PoC must reflect the eventual production architecture: competitor containers run in
 isolated environments with controlled egress, while a gateway enforces contracts and
