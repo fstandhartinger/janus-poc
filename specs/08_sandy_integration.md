@@ -1,5 +1,7 @@
 # Sandy Integration
 
+## Status: COMPLETE
+
 ## Context / Why
 Sandy is the sandbox-as-a-service used across Chutes projects. Janus PoC should reuse
 Sandy for CLI agent execution and treat it as the PoC stand-in for TEE-like isolation.

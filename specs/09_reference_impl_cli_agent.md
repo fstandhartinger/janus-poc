@@ -1,5 +1,7 @@
 # Reference Implementation: CLI Agent Baseline
 
+## Status: COMPLETE
+
 ## Context / Why
 The baseline competitor sets the minimum bar for miners. It must be strong enough to
 handle simple chat tasks quickly and complex tasks via a CLI agent inside Sandy.

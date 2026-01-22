@@ -1,5 +1,7 @@
 # Competitor Submission Interface
 
+## Status: COMPLETE
+
 ## Context / Why
 Miners/competitors must submit containers that expose a stable, OpenAI-compatible API.
 This document defines the required endpoints, behavior, and guardrails for submissions.
