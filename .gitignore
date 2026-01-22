@@ -1,0 +1,33 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+coverage/
+.nyc_output/
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+.env.*
+.pytest_cache/
+.mypy_cache/
+
+# Playwright / E2E
+playwright-report/
+playwright/.cache/
+
+# Build / artifacts
+*.tmp
+*.bak

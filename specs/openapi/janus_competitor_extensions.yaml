@@ -1,0 +1,65 @@
+openapi: 3.1.0
+info:
+  title: Janus Competitor Extensions
+  version: 0.1.0
+  description: Optional endpoints for competitor containers beyond OpenAI chat completions.
+servers:
+  - url: http://localhost:8080
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+  /metrics:
+    get:
+      summary: Metrics (optional)
+      operationId: metrics
+      responses:
+        "200":
+          description: Metrics response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+            text/plain:
+              schema:
+                type: string
+  /v1/artifacts/{artifact_id}:
+    get:
+      summary: Retrieve an artifact (optional; gateway preferred)
+      operationId: getArtifact
+      parameters:
+        - name: artifact_id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Artifact bytes
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+components:
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        version:
+          type: string
+        uptime_seconds:
+          type: number

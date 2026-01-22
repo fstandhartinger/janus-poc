@@ -1,0 +1,224 @@
+openapi: 3.1.0
+info:
+  title: Janus OpenAI Chat Completions
+  version: 0.1.0
+  description: OpenAI-compatible chat completions endpoint with Janus extensions.
+servers:
+  - url: http://localhost:8080
+paths:
+  /v1/chat/completions:
+    post:
+      summary: Create a chat completion
+      operationId: createChatCompletion
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChatCompletionRequest"
+      responses:
+        "200":
+          description: Chat completion response or SSE stream
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ChatCompletionResponse"
+            text/event-stream:
+              schema:
+                $ref: "#/components/schemas/ChatCompletionChunk"
+components:
+  schemas:
+    ChatCompletionRequest:
+      type: object
+      required: [model, messages]
+      properties:
+        model:
+          type: string
+          description: Model ID or competitor name.
+        messages:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatMessage"
+        temperature:
+          type: number
+        top_p:
+          type: number
+        max_tokens:
+          type: integer
+        stream:
+          type: boolean
+        stream_options:
+          type: object
+          properties:
+            include_usage:
+              type: boolean
+        tools:
+          type: array
+          items:
+            type: object
+        tool_choice:
+          oneOf:
+            - type: string
+            - type: object
+        response_format:
+          type: object
+        user:
+          type: string
+        metadata:
+          type: object
+          additionalProperties: true
+    ChatMessage:
+      type: object
+      required: [role, content]
+      properties:
+        role:
+          type: string
+          enum: [system, user, assistant, tool]
+        content:
+          oneOf:
+            - type: string
+            - type: array
+              items:
+                $ref: "#/components/schemas/ContentPart"
+        name:
+          type: string
+        tool_call_id:
+          type: string
+        tool_calls:
+          type: array
+          items:
+            type: object
+    ContentPart:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [text, image_url]
+        text:
+          type: string
+        image_url:
+          type: object
+          properties:
+            url:
+              type: string
+            detail:
+              type: string
+    ChatCompletionResponse:
+      type: object
+      required: [id, object, created, model, choices]
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum: [chat.completion]
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatCompletionChoice"
+        usage:
+          $ref: "#/components/schemas/Usage"
+    ChatCompletionChoice:
+      type: object
+      required: [index, message, finish_reason]
+      properties:
+        index:
+          type: integer
+        message:
+          $ref: "#/components/schemas/ChatMessageResponse"
+        finish_reason:
+          type: string
+    ChatMessageResponse:
+      type: object
+      required: [role]
+      properties:
+        role:
+          type: string
+          enum: [assistant]
+        content:
+          type: string
+        reasoning_content:
+          type: string
+        artifacts:
+          type: array
+          items:
+            $ref: "#/components/schemas/ArtifactDescriptor"
+    ChatCompletionChunk:
+      type: object
+      description: JSON payload inside SSE `data:` lines.
+      properties:
+        id:
+          type: string
+        object:
+          type: string
+          enum: [chat.completion.chunk]
+        created:
+          type: integer
+        model:
+          type: string
+        choices:
+          type: array
+          items:
+            $ref: "#/components/schemas/ChatCompletionDelta"
+    ChatCompletionDelta:
+      type: object
+      required: [index]
+      properties:
+        index:
+          type: integer
+        delta:
+          type: object
+          properties:
+            role:
+              type: string
+            content:
+              type: string
+            reasoning_content:
+              type: string
+            janus:
+              type: object
+              additionalProperties: true
+        finish_reason:
+          type: string
+    Usage:
+      type: object
+      properties:
+        prompt_tokens:
+          type: integer
+        completion_tokens:
+          type: integer
+        total_tokens:
+          type: integer
+        cost_usd:
+          type: number
+        sandbox_seconds:
+          type: number
+    ArtifactDescriptor:
+      type: object
+      required: [id, type, mime_type, size_bytes, url]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [image, file, dataset, binary]
+        mime_type:
+          type: string
+        display_name:
+          type: string
+        size_bytes:
+          type: integer
+        sha256:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        ttl_seconds:
+          type: integer
+        url:
+          type: string
