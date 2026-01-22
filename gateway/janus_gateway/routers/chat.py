@@ -263,7 +263,6 @@ async def chat_completions(
 
     else:
         # Non-streaming response
-        use_mock = True
         if competitor:
             async with httpx.AsyncClient() as client:
                 try:
@@ -280,7 +279,6 @@ async def chat_completions(
                     data = response.json()
                     # Override the ID
                     data["id"] = request_id
-                    use_mock = False
                     return ChatCompletionResponse(**data)
                 except httpx.RequestError as e:
                     logger.warning(
@@ -290,19 +288,19 @@ async def chat_completions(
                     )
                     # Fall through to mock response
 
-        if use_mock:
-            # Mock non-streaming response (no competitor or competitor unavailable)
-            return ChatCompletionResponse(
-                id=request_id,
-                model=request.model,
-                choices=[
-                    Choice(
-                        message=Message(
-                            role=MessageRole.ASSISTANT,
-                            content="Hello! I'm the Janus Gateway. This is a mock response.",
-                        ),
-                        finish_reason=FinishReason.STOP,
-                    )
-                ],
-                usage=Usage(prompt_tokens=50, completion_tokens=20, total_tokens=70),
-            )
+        # Mock non-streaming response (no competitor or competitor unavailable)
+        # Note: use_mock is always True here since competitor success returns early
+        return ChatCompletionResponse(
+            id=request_id,
+            model=request.model,
+            choices=[
+                Choice(
+                    message=Message(
+                        role=MessageRole.ASSISTANT,
+                        content="Hello! I'm the Janus Gateway. This is a mock response.",
+                    ),
+                    finish_reason=FinishReason.STOP,
+                )
+            ],
+            usage=Usage(prompt_tokens=50, completion_tokens=20, total_tokens=70),
+        )
