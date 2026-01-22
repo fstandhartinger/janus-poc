@@ -1,5 +1,7 @@
 # Ops and Observability
 
+## Status: COMPLETE
+
 ## Context / Why
 The PoC should be debuggable and measurable. Logs, metrics, and a small set of operator
 commands will keep development efficient and enable future production hardening.

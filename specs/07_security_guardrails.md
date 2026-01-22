@@ -1,5 +1,7 @@
 # Security and Guardrails
 
+## Status: COMPLETE
+
 ## Context / Why
 Competitor containers are untrusted. The PoC must outline guardrails for network egress,
 resource usage, and artifact handling, while acknowledging that production-grade controls

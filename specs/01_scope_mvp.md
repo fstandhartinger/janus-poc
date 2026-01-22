@@ -1,5 +1,7 @@
 # Janus PoC Scope (MVP)
 
+## Status: COMPLETE
+
 ## Context / Why
 We need a narrow MVP that proves the Janus concept end-to-end without implementing the
 full competitive network or production security posture. This document enumerates what is

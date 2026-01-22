@@ -1,5 +1,7 @@
 # Janus PoC Overview
 
+## Status: COMPLETE
+
 ## Context / Why
 Janus is a competitive, OpenAI-compatible intelligence API where miners submit arbitrary
 containers that expose `/v1/chat/completions` and stream continuously. We need a PoC that

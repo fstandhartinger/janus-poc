@@ -1,5 +1,7 @@
 # Roadmap and Milestones
 
+## Status: COMPLETE
+
 ## Context / Why
 This PoC is the first stage of a longer roadmap toward a competitive inference network.
 This document defines milestones and a clear Definition of Done (DoD) for the PoC.
