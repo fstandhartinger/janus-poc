@@ -15,7 +15,7 @@ export function HeroSection() {
           <div className="space-y-6">
             <div className="space-y-4 animate-fade-up">
               <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">
-                Janus Competition — The Rodeo
+                Janus Competition - The Rodeo
               </p>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight text-[#F3F4F6]">
                 Compete to Build the Best{' '}
