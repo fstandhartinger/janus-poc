@@ -9,7 +9,7 @@ export function HeroSection() {
       <div className="hero-image-stage">
         <div className="hero-image-frame">
           <Image
-            src="/hero-img.png"
+            src="/hero-img2.png"
             alt="Janus riding an iridescent bull"
             fill
             priority
