@@ -42,8 +42,10 @@ services:
       - key: BASELINE_OPENAI_API_KEY
         sync: false
       - key: SANDY_BASE_URL
-        value: "https://sandy.chutes.ai"
+        value: "https://sandy.65.109.64.180.nip.io"
       - key: SANDY_API_KEY
+        sync: false
+      - key: CHUTES_API_KEY
         sync: false
     healthCheckPath: /health
 
