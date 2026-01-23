@@ -19,17 +19,32 @@ pip install -e ".[dev]"
 # Run against local gateway
 janus-bench run --target http://localhost:8000 --suite public/dev
 
+# Run Janus intelligence suite
+janus-bench run --target http://localhost:8000 --suite janus/intelligence
+
 # Run against deployed gateway
 janus-bench run --target https://janus.example.com --suite public/dev
 
 # Specify model and output file
-janus-bench run --target http://localhost:8000 --suite public/dev --model janus-baseline --output results.json
+janus-bench run --target http://localhost:8000 --suite public/dev --model janus-baseline-agent-cli --output results.json
+
+# Run a deterministic subset (10% sample)
+janus-bench run --target http://localhost:8000 --suite public/dev --subset 10 --seed 42
+
+# Run a single Janus benchmark
+janus-bench run --target http://localhost:8000 --suite janus/intelligence --benchmark janus_streaming
 ```
 
 ### List Available Suites
 
 ```bash
 janus-bench list-suites
+```
+
+### List Available Benchmarks
+
+```bash
+janus-bench list-benchmarks
 ```
 
 ### View Saved Report
@@ -44,10 +59,10 @@ The composite score (0-100) is calculated from weighted components:
 
 | Component | Weight | Description |
 |-----------|--------|-------------|
-| Quality | 45% | Response correctness based on expected answers/keywords |
-| Speed | 20% | P50 latency and time to first token (TTFT) |
+| Quality | 40% | Response correctness for research + tool-use tasks |
+| Speed | 20% | TTFT and token throughput (TPS) for streaming tasks |
 | Cost | 15% | Token usage, USD cost, sandbox seconds |
-| Streaming | 10% | TTFT, max gap between events, chunk count |
+| Streaming | 15% | Continuity score based on streaming metrics |
 | Multimodal | 10% | Image input acknowledgment and processing |
 
 ## Benchmark Suites
@@ -55,23 +70,37 @@ The composite score (0-100) is calculated from weighted components:
 - **public/train** - Visible training data for iteration
 - **public/dev** - Visible development data, scored
 - **private/test** - Hidden test data for final evaluation (stubs in PoC)
+- **janus/intelligence** - Full Janus Intelligence benchmark suite
 
 ## Task Types
 
 - **chat_quality** - Simple Q&A for quality measurement
 - **research** - Fact-finding tasks
+- **tool_use** - Function calling and tool integration
 - **coding** - Code generation tasks
 - **streaming** - Tasks that test streaming continuity
 - **multimodal** - Tasks with image input
+- **cost** - Token efficiency tasks
+
+## Janus Intelligence Benchmarks
+
+The Janus suite is organized into five benchmarks (all under the **Janus Intelligence** category):
+
+- **janus_research** - Web search and synthesis tasks (100 items)
+- **janus_tool_use** - Function calling and tool integration tasks (80 items)
+- **janus_multimodal** - Image/vision tasks (60 items)
+- **janus_streaming** - Streaming quality metrics (50 items)
+- **janus_cost** - Token efficiency evaluation (40 items)
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `JANUS_BENCH_TARGET_URL` | `http://localhost:8000` | Target gateway URL |
-| `JANUS_BENCH_MODEL` | `janus-baseline` | Model name for requests |
+| `JANUS_BENCH_MODEL` | `janus-baseline-agent-cli` | Model name for requests |
 | `JANUS_BENCH_REQUEST_TIMEOUT` | `300` | Request timeout in seconds |
 | `JANUS_BENCH_SEED` | `42` | Random seed for reproducibility |
+| `JANUS_BENCH_SUBSET_PERCENT` | `100` | Task subset percentage (1-100) |
 
 ## Output Format
 
@@ -82,7 +111,7 @@ Results are saved as JSON with the following structure:
   "run_id": "abc12345",
   "suite": "public/dev",
   "target_url": "http://localhost:8000",
-  "model": "janus-baseline",
+  "model": "janus-baseline-agent-cli",
   "started_at": "2026-01-22T12:00:00Z",
   "completed_at": "2026-01-22T12:05:00Z",
   "composite_score": 85.5,

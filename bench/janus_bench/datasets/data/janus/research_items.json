@@ -1,0 +1,2588 @@
+{
+  "metadata": {
+    "benchmark": "janus_research",
+    "version": "1.1.0",
+    "created": "2026-01-23T21:18:53.648472Z",
+    "total_items": 100,
+    "categories": {
+      "fact_verification": 20,
+      "current_events": 20,
+      "comparative": 20,
+      "synthesis": 20,
+      "deep_dive": 20
+    }
+  },
+  "items": [
+    {
+      "id": "fact_001",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The current CEO of OpenAI is Sam Altman.",
+      "prompt": "Verify the following claim using current sources and cite them: The current CEO of OpenAI is Sam Altman.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "Sam Altman",
+        "OpenAI",
+        "CEO"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_002",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The current CEO of Microsoft is Satya Nadella.",
+      "prompt": "Verify the following claim using current sources and cite them: The current CEO of Microsoft is Satya Nadella.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "Satya Nadella",
+        "Microsoft",
+        "CEO"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_003",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The current CEO of Apple is Tim Cook.",
+      "prompt": "Verify the following claim using current sources and cite them: The current CEO of Apple is Tim Cook.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "Tim Cook",
+        "Apple",
+        "CEO"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_004",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The current CEO of Alphabet (Google) is Sundar Pichai.",
+      "prompt": "Verify the following claim using current sources and cite them: The current CEO of Alphabet (Google) is Sundar Pichai.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "Sundar Pichai",
+        "Alphabet",
+        "Google",
+        "CEO"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_005",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The European Union's GDPR went into effect in May 2018.",
+      "prompt": "Verify the following claim using current sources and cite them: The European Union's GDPR went into effect in May 2018.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "GDPR",
+        "May 2018"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_006",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The World Health Organization declared COVID-19 a pandemic in March 2020.",
+      "prompt": "Verify the following claim using current sources and cite them: The World Health Organization declared COVID-19 a pandemic in March 2020.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "WHO",
+        "pandemic",
+        "March 2020"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_007",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The 2024 Summer Olympics are scheduled to be held in Paris.",
+      "prompt": "Verify the following claim using current sources and cite them: The 2024 Summer Olympics are scheduled to be held in Paris.",
+      "requires_search": true,
+      "max_age_days": 365,
+      "expected_facts": [
+        "2024",
+        "Paris",
+        "Olympics"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_008",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "NASA's Artemis I mission launched in November 2022.",
+      "prompt": "Verify the following claim using current sources and cite them: NASA's Artemis I mission launched in November 2022.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "Artemis I",
+        "November 2022"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_009",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The James Webb Space Telescope was launched in December 2021.",
+      "prompt": "Verify the following claim using current sources and cite them: The James Webb Space Telescope was launched in December 2021.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "James Webb",
+        "December 2021"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_010",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The Inflation Reduction Act was signed into law in August 2022.",
+      "prompt": "Verify the following claim using current sources and cite them: The Inflation Reduction Act was signed into law in August 2022.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "Inflation Reduction Act",
+        "August 2022"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_011",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The EU AI Act was approved by the European Parliament in 2024.",
+      "prompt": "Verify the following claim using current sources and cite them: The EU AI Act was approved by the European Parliament in 2024.",
+      "requires_search": true,
+      "max_age_days": 365,
+      "expected_facts": [
+        "EU AI Act",
+        "European Parliament",
+        "2024"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_012",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The United Kingdom left the European Union in January 2020.",
+      "prompt": "Verify the following claim using current sources and cite them: The United Kingdom left the European Union in January 2020.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "United Kingdom",
+        "European Union",
+        "January 2020"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_013",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "Bitcoin's creator is known by the pseudonym Satoshi Nakamoto.",
+      "prompt": "Verify the following claim using current sources and cite them: Bitcoin's creator is known by the pseudonym Satoshi Nakamoto.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "Satoshi Nakamoto",
+        "Bitcoin"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_014",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "Meta Platforms, Inc. was formerly named Facebook, Inc.",
+      "prompt": "Verify the following claim using current sources and cite them: Meta Platforms, Inc. was formerly named Facebook, Inc.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "Meta Platforms",
+        "Facebook"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_015",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The IPCC released its Sixth Assessment Report synthesis in 2023.",
+      "prompt": "Verify the following claim using current sources and cite them: The IPCC released its Sixth Assessment Report synthesis in 2023.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "IPCC",
+        "Sixth Assessment Report",
+        "2023"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_016",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The World Bank's headquarters are in Washington, D.C.",
+      "prompt": "Verify the following claim using current sources and cite them: The World Bank's headquarters are in Washington, D.C.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "World Bank",
+        "Washington"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_017",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The United Nations was founded in 1945.",
+      "prompt": "Verify the following claim using current sources and cite them: The United Nations was founded in 1945.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "United Nations",
+        "1945"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_018",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The Hubble Space Telescope was launched in 1990.",
+      "prompt": "Verify the following claim using current sources and cite them: The Hubble Space Telescope was launched in 1990.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "Hubble",
+        "1990"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_019",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "The Paris Agreement on climate change was adopted in 2015.",
+      "prompt": "Verify the following claim using current sources and cite them: The Paris Agreement on climate change was adopted in 2015.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "Paris Agreement",
+        "2015"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "fact_020",
+      "suite": "janus/intelligence",
+      "task_type": "fact_verification",
+      "claim": "OpenAI announced GPT-4 in March 2023.",
+      "prompt": "Verify the following claim using current sources and cite them: OpenAI announced GPT-4 in March 2023.",
+      "requires_search": true,
+      "max_age_days": 3650,
+      "expected_facts": [
+        "GPT-4",
+        "March 2023",
+        "OpenAI"
+      ],
+      "evaluation": {
+        "type": "boolean_with_evidence",
+        "requires": [
+          "search_performed",
+          "source_cited",
+          "correct_conclusion"
+        ]
+      }
+    },
+    {
+      "id": "current_001",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the main announcements at the most recent Apple WWDC?",
+      "prompt": "Use web research to answer: What were the main announcements at the most recent Apple WWDC? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "iOS",
+        "macOS",
+        "visionOS",
+        "AI"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "iOS",
+          "macOS",
+          "visionOS",
+          "AI"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_002",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What was the most recent US Federal Reserve interest rate decision and rationale?",
+      "prompt": "Use web research to answer: What was the most recent US Federal Reserve interest rate decision and rationale? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "interest rate",
+        "inflation",
+        "policy statement",
+        "economic outlook"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "interest rate",
+          "inflation",
+          "policy statement",
+          "economic outlook"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_003",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What are the headline updates in the latest EU AI Act legislative timeline?",
+      "prompt": "Use web research to answer: What are the headline updates in the latest EU AI Act legislative timeline? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "AI Act",
+        "compliance timeline",
+        "risk categories",
+        "implementation"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "AI Act",
+          "compliance timeline",
+          "risk categories",
+          "implementation"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_004",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the key outcomes of the most recent UN climate conference (COP)?",
+      "prompt": "Use web research to answer: What were the key outcomes of the most recent UN climate conference (COP)? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "emissions",
+        "finance",
+        "adaptation",
+        "loss and damage"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "emissions",
+          "finance",
+          "adaptation",
+          "loss and damage"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_005",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the major product or policy announcements from the latest Google I/O?",
+      "prompt": "Use web research to answer: What were the major product or policy announcements from the latest Google I/O? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "Android",
+        "AI",
+        "Search",
+        "developer tools"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "Android",
+          "AI",
+          "Search",
+          "developer tools"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_006",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the notable changes in the most recent Linux kernel release?",
+      "prompt": "Use web research to answer: What were the notable changes in the most recent Linux kernel release? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "scheduler",
+        "drivers",
+        "filesystem",
+        "security"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "scheduler",
+          "drivers",
+          "filesystem",
+          "security"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_007",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What happened in the latest NVIDIA GTC keynote related to AI hardware?",
+      "prompt": "Use web research to answer: What happened in the latest NVIDIA GTC keynote related to AI hardware? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "GPU",
+        "CUDA",
+        "data center",
+        "AI accelerators"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "GPU",
+          "CUDA",
+          "data center",
+          "AI accelerators"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_008",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the key results of the most recent OpenAI or Anthropic model release?",
+      "prompt": "Use web research to answer: What were the key results of the most recent OpenAI or Anthropic model release? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "model capabilities",
+        "safety",
+        "benchmarks",
+        "availability"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "model capabilities",
+          "safety",
+          "benchmarks",
+          "availability"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_009",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the main points from the latest US Executive Order on AI?",
+      "prompt": "Use web research to answer: What were the main points from the latest US Executive Order on AI? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "safety",
+        "transparency",
+        "procurement",
+        "standards"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "safety",
+          "transparency",
+          "procurement",
+          "standards"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_010",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the major developments in the most recent UK AI Safety Summit?",
+      "prompt": "Use web research to answer: What were the major developments in the most recent UK AI Safety Summit? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "safety commitments",
+        "frontier models",
+        "testing",
+        "international cooperation"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "safety commitments",
+          "frontier models",
+          "testing",
+          "international cooperation"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_011",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the latest developments in U.S. SEC crypto regulation guidance?",
+      "prompt": "Use web research to answer: What were the latest developments in U.S. SEC crypto regulation guidance? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "enforcement",
+        "exchange rules",
+        "disclosure",
+        "compliance"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "enforcement",
+          "exchange rules",
+          "disclosure",
+          "compliance"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_012",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the headline changes in the most recent ISO/IEC AI standards update?",
+      "prompt": "Use web research to answer: What were the headline changes in the most recent ISO/IEC AI standards update? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 180,
+      "expected_facts": [
+        "risk management",
+        "governance",
+        "testing",
+        "documentation"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "risk management",
+          "governance",
+          "testing",
+          "documentation"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_013",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the major announcements from the latest Microsoft Build conference?",
+      "prompt": "Use web research to answer: What were the major announcements from the latest Microsoft Build conference? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 30,
+      "expected_facts": [
+        "Azure",
+        "Copilot",
+        "Windows",
+        "developer tools"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "Azure",
+          "Copilot",
+          "Windows",
+          "developer tools"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_014",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the key findings from the most recent IPCC report release?",
+      "prompt": "Use web research to answer: What were the key findings from the most recent IPCC report release? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 180,
+      "expected_facts": [
+        "climate impacts",
+        "mitigation",
+        "adaptation",
+        "scenarios"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "climate impacts",
+          "mitigation",
+          "adaptation",
+          "scenarios"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_015",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the major updates in the most recent Tesla earnings report?",
+      "prompt": "Use web research to answer: What were the major updates in the most recent Tesla earnings report? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "deliveries",
+        "margins",
+        "guidance",
+        "AI/robotics"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "deliveries",
+          "margins",
+          "guidance",
+          "AI/robotics"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_016",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the main outcomes of the latest WTO ministerial meeting?",
+      "prompt": "Use web research to answer: What were the main outcomes of the latest WTO ministerial meeting? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 180,
+      "expected_facts": [
+        "trade facilitation",
+        "dispute settlement",
+        "development",
+        "agriculture"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "trade facilitation",
+          "dispute settlement",
+          "development",
+          "agriculture"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_017",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What are the latest changes announced for the Android platform (most recent release)?",
+      "prompt": "Use web research to answer: What are the latest changes announced for the Android platform (most recent release)? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "API changes",
+        "UI",
+        "security",
+        "performance"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "API changes",
+          "UI",
+          "security",
+          "performance"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_018",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the most recent updates to the Python language (latest release highlights)?",
+      "prompt": "Use web research to answer: What were the most recent updates to the Python language (latest release highlights)? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 180,
+      "expected_facts": [
+        "language features",
+        "performance",
+        "typing",
+        "stdlib"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "language features",
+          "performance",
+          "typing",
+          "stdlib"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_019",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What were the latest developments in the EU's Digital Markets Act enforcement?",
+      "prompt": "Use web research to answer: What were the latest developments in the EU's Digital Markets Act enforcement? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 90,
+      "expected_facts": [
+        "DMA",
+        "gatekeepers",
+        "enforcement actions",
+        "remedies"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "DMA",
+          "gatekeepers",
+          "enforcement actions",
+          "remedies"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "current_020",
+      "suite": "janus/intelligence",
+      "task_type": "current_events",
+      "query": "What are the most recent changes in the US Department of Energy clean energy funding programs?",
+      "prompt": "Use web research to answer: What are the most recent changes in the US Department of Energy clean energy funding programs? Provide citations.",
+      "requires_search": true,
+      "max_age_days": 180,
+      "expected_facts": [
+        "grants",
+        "tax credits",
+        "grid",
+        "renewables"
+      ],
+      "evaluation": {
+        "type": "key_facts",
+        "expected_topics": [
+          "grants",
+          "tax credits",
+          "grid",
+          "renewables"
+        ],
+        "min_topics": 3
+      }
+    },
+    {
+      "id": "compare_001",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare the AI regulation approaches of the EU and China.",
+      "prompt": "Use web research to answer: Compare the AI regulation approaches of the EU and China. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "EU AI Act",
+        "China AI regulation",
+        "key differences",
+        "similarities"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "EU AI Act",
+          "China AI regulation",
+          "key differences",
+          "similarities"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_002",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare GDPR and CCPA privacy laws.",
+      "prompt": "Use web research to answer: Compare GDPR and CCPA privacy laws. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "GDPR",
+        "CCPA",
+        "scope",
+        "user rights"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "GDPR",
+          "CCPA",
+          "scope",
+          "user rights"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_003",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare electric vehicle incentives in the US and EU.",
+      "prompt": "Use web research to answer: Compare electric vehicle incentives in the US and EU. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "US incentives",
+        "EU incentives",
+        "eligibility",
+        "policy goals"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "US incentives",
+          "EU incentives",
+          "eligibility",
+          "policy goals"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_004",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare open-source and proprietary LLM licensing models.",
+      "prompt": "Use web research to answer: Compare open-source and proprietary LLM licensing models. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "open-source licenses",
+        "proprietary terms",
+        "usage restrictions",
+        "tradeoffs"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "open-source licenses",
+          "proprietary terms",
+          "usage restrictions",
+          "tradeoffs"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_005",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare lithium-ion and sodium-ion batteries for grid storage.",
+      "prompt": "Use web research to answer: Compare lithium-ion and sodium-ion batteries for grid storage. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "energy density",
+        "cost",
+        "supply chain",
+        "safety"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "energy density",
+          "cost",
+          "supply chain",
+          "safety"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_006",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare Kubernetes and Nomad for container orchestration.",
+      "prompt": "Use web research to answer: Compare Kubernetes and Nomad for container orchestration. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "orchestration model",
+        "scheduling",
+        "ecosystem",
+        "operational complexity"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "orchestration model",
+          "scheduling",
+          "ecosystem",
+          "operational complexity"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_007",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare PostgreSQL and MySQL for OLTP workloads.",
+      "prompt": "Use web research to answer: Compare PostgreSQL and MySQL for OLTP workloads. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "transaction model",
+        "performance",
+        "replication",
+        "extensions"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "transaction model",
+          "performance",
+          "replication",
+          "extensions"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_008",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare AWS and Azure for managed AI services.",
+      "prompt": "Use web research to answer: Compare AWS and Azure for managed AI services. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "model offerings",
+        "managed services",
+        "pricing",
+        "integration"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "model offerings",
+          "managed services",
+          "pricing",
+          "integration"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_009",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare OAuth2 and OpenID Connect.",
+      "prompt": "Use web research to answer: Compare OAuth2 and OpenID Connect. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "authentication vs authorization",
+        "tokens",
+        "ID token",
+        "use cases"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "authentication vs authorization",
+          "tokens",
+          "ID token",
+          "use cases"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_010",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare retrieval-augmented generation and fine-tuning for domain adaptation.",
+      "prompt": "Use web research to answer: Compare retrieval-augmented generation and fine-tuning for domain adaptation. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "data requirements",
+        "latency",
+        "update cadence",
+        "accuracy tradeoffs"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "data requirements",
+          "latency",
+          "update cadence",
+          "accuracy tradeoffs"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_011",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare transformers and RNNs for NLP tasks.",
+      "prompt": "Use web research to answer: Compare transformers and RNNs for NLP tasks. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "architecture",
+        "parallelism",
+        "long-range dependencies",
+        "training efficiency"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "architecture",
+          "parallelism",
+          "long-range dependencies",
+          "training efficiency"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_012",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare REST and GraphQL for API design.",
+      "prompt": "Use web research to answer: Compare REST and GraphQL for API design. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "schema/typing",
+        "over/under-fetching",
+        "caching",
+        "client flexibility"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "schema/typing",
+          "over/under-fetching",
+          "caching",
+          "client flexibility"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_013",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare OpenAI and Anthropic safety approaches.",
+      "prompt": "Use web research to answer: Compare OpenAI and Anthropic safety approaches. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "safety policies",
+        "red teaming",
+        "governance",
+        "release process"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "safety policies",
+          "red teaming",
+          "governance",
+          "release process"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_014",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare the NIST AI Risk Management Framework and ISO/IEC AI standards.",
+      "prompt": "Use web research to answer: Compare the NIST AI Risk Management Framework and ISO/IEC AI standards. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "framework scope",
+        "risk management",
+        "compliance",
+        "documentation"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "framework scope",
+          "risk management",
+          "compliance",
+          "documentation"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_015",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare public cloud and on-prem deployments for regulated workloads.",
+      "prompt": "Use web research to answer: Compare public cloud and on-prem deployments for regulated workloads. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "security controls",
+        "compliance",
+        "cost",
+        "operational overhead"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "security controls",
+          "compliance",
+          "cost",
+          "operational overhead"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_016",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare FPGAs and GPUs for inference workloads.",
+      "prompt": "Use web research to answer: Compare FPGAs and GPUs for inference workloads. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "latency",
+        "throughput",
+        "power efficiency",
+        "flexibility"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "latency",
+          "throughput",
+          "power efficiency",
+          "flexibility"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_017",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare LoRA and full fine-tuning for adapting LLMs.",
+      "prompt": "Use web research to answer: Compare LoRA and full fine-tuning for adapting LLMs. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "parameter efficiency",
+        "training cost",
+        "quality",
+        "deployment"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "parameter efficiency",
+          "training cost",
+          "quality",
+          "deployment"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_018",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare the EU Digital Markets Act and US antitrust enforcement approaches.",
+      "prompt": "Use web research to answer: Compare the EU Digital Markets Act and US antitrust enforcement approaches. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "legal basis",
+        "enforcement tools",
+        "scope",
+        "remedies"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "legal basis",
+          "enforcement tools",
+          "scope",
+          "remedies"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_019",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare zero trust security and perimeter-based security models.",
+      "prompt": "Use web research to answer: Compare zero trust security and perimeter-based security models. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "trust assumptions",
+        "segmentation",
+        "identity",
+        "implementation challenges"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "trust assumptions",
+          "segmentation",
+          "identity",
+          "implementation challenges"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "compare_020",
+      "suite": "janus/intelligence",
+      "task_type": "comparative",
+      "query": "Compare centralized and decentralized identity systems.",
+      "prompt": "Use web research to answer: Compare centralized and decentralized identity systems. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "control model",
+        "privacy",
+        "interoperability",
+        "adoption barriers"
+      ],
+      "evaluation": {
+        "type": "balanced_comparison",
+        "required_aspects": [
+          "control model",
+          "privacy",
+          "interoperability",
+          "adoption barriers"
+        ],
+        "min_sources": 2
+      }
+    },
+    {
+      "id": "synthesis_001",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are the current best practices for fine-tuning large language models?",
+      "prompt": "Use web research to answer: What are the current best practices for fine-tuning large language models? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "LoRA",
+        "QLoRA",
+        "dataset preparation",
+        "evaluation"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "LoRA",
+          "QLoRA",
+          "dataset preparation",
+          "evaluation"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_002",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for defending against prompt injection?",
+      "prompt": "Use web research to answer: What are best practices for defending against prompt injection? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "input sanitization",
+        "tool gating",
+        "policy enforcement",
+        "testing"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "input sanitization",
+          "tool gating",
+          "policy enforcement",
+          "testing"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_003",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for data privacy in AI systems?",
+      "prompt": "Use web research to answer: What are best practices for data privacy in AI systems? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "PII handling",
+        "data minimization",
+        "encryption",
+        "access controls"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "PII handling",
+          "data minimization",
+          "encryption",
+          "access controls"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_004",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for evaluating LLM outputs?",
+      "prompt": "Use web research to answer: What are best practices for evaluating LLM outputs? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "golden tests",
+        "human review",
+        "automatic metrics",
+        "failure analysis"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "golden tests",
+          "human review",
+          "automatic metrics",
+          "failure analysis"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_005",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for building retrieval-augmented generation pipelines?",
+      "prompt": "Use web research to answer: What are best practices for building retrieval-augmented generation pipelines? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "embedding model selection",
+        "retrieval strategy",
+        "reranking",
+        "citation handling"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "embedding model selection",
+          "retrieval strategy",
+          "reranking",
+          "citation handling"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_006",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for safe agent tool use?",
+      "prompt": "Use web research to answer: What are best practices for safe agent tool use? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "permissioning",
+        "sandboxing",
+        "rate limits",
+        "logging"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "permissioning",
+          "sandboxing",
+          "rate limits",
+          "logging"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_007",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for MLOps monitoring of LLM applications?",
+      "prompt": "Use web research to answer: What are best practices for MLOps monitoring of LLM applications? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "drift detection",
+        "latency monitoring",
+        "cost tracking",
+        "feedback loops"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "drift detection",
+          "latency monitoring",
+          "cost tracking",
+          "feedback loops"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_008",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for secure API key management?",
+      "prompt": "Use web research to answer: What are best practices for secure API key management? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "secret storage",
+        "rotation",
+        "least privilege",
+        "audit logging"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "secret storage",
+          "rotation",
+          "least privilege",
+          "audit logging"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_009",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for incident response in cloud environments?",
+      "prompt": "Use web research to answer: What are best practices for incident response in cloud environments? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "detection",
+        "containment",
+        "communication",
+        "postmortem"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "detection",
+          "containment",
+          "communication",
+          "postmortem"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_010",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for model quantization and deployment?",
+      "prompt": "Use web research to answer: What are best practices for model quantization and deployment? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "quantization method",
+        "accuracy tradeoff",
+        "hardware targets",
+        "benchmarking"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "quantization method",
+          "accuracy tradeoff",
+          "hardware targets",
+          "benchmarking"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_011",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for dataset documentation in ML?",
+      "prompt": "Use web research to answer: What are best practices for dataset documentation in ML? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "datasheets",
+        "provenance",
+        "labeling process",
+        "bias analysis"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "datasheets",
+          "provenance",
+          "labeling process",
+          "bias analysis"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_012",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for accessibility in web applications?",
+      "prompt": "Use web research to answer: What are best practices for accessibility in web applications? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "keyboard navigation",
+        "contrast",
+        "ARIA",
+        "screen reader testing"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "keyboard navigation",
+          "contrast",
+          "ARIA",
+          "screen reader testing"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_013",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for Kubernetes cluster security?",
+      "prompt": "Use web research to answer: What are best practices for Kubernetes cluster security? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "RBAC",
+        "network policies",
+        "image scanning",
+        "secrets management"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "RBAC",
+          "network policies",
+          "image scanning",
+          "secrets management"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_014",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for supply chain risk management?",
+      "prompt": "Use web research to answer: What are best practices for supply chain risk management? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "vendor assessment",
+        "monitoring",
+        "diversification",
+        "contingency planning"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "vendor assessment",
+          "monitoring",
+          "diversification",
+          "contingency planning"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_015",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for energy-efficient ML training?",
+      "prompt": "Use web research to answer: What are best practices for energy-efficient ML training? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "mixed precision",
+        "hardware selection",
+        "schedule optimization",
+        "carbon tracking"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "mixed precision",
+          "hardware selection",
+          "schedule optimization",
+          "carbon tracking"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_016",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for multimodal model evaluation?",
+      "prompt": "Use web research to answer: What are best practices for multimodal model evaluation? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "modality coverage",
+        "bias checks",
+        "benchmark suites",
+        "human eval"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "modality coverage",
+          "bias checks",
+          "benchmark suites",
+          "human eval"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_017",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for human-in-the-loop review of AI outputs?",
+      "prompt": "Use web research to answer: What are best practices for human-in-the-loop review of AI outputs? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "review criteria",
+        "workflow tooling",
+        "escalation",
+        "sampling strategy"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "review criteria",
+          "workflow tooling",
+          "escalation",
+          "sampling strategy"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_018",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for A/B testing ML models?",
+      "prompt": "Use web research to answer: What are best practices for A/B testing ML models? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "experiment design",
+        "metrics",
+        "traffic allocation",
+        "statistical significance"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "experiment design",
+          "metrics",
+          "traffic allocation",
+          "statistical significance"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_019",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for privacy-preserving machine learning?",
+      "prompt": "Use web research to answer: What are best practices for privacy-preserving machine learning? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "federated learning",
+        "differential privacy",
+        "secure aggregation",
+        "threat modeling"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "federated learning",
+          "differential privacy",
+          "secure aggregation",
+          "threat modeling"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "synthesis_020",
+      "suite": "janus/intelligence",
+      "task_type": "synthesis",
+      "query": "What are best practices for AI governance and compliance programs?",
+      "prompt": "Use web research to answer: What are best practices for AI governance and compliance programs? Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "policy framework",
+        "risk assessments",
+        "auditability",
+        "stakeholder oversight"
+      ],
+      "evaluation": {
+        "type": "comprehensive_answer",
+        "required_elements": [
+          "policy framework",
+          "risk assessments",
+          "auditability",
+          "stakeholder oversight"
+        ],
+        "quality_criteria": [
+          "technical_accuracy",
+          "practical_advice",
+          "source_diversity"
+        ]
+      }
+    },
+    {
+      "id": "deep_001",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how Bittensor's incentive mechanism works, including the role of validators and miners.",
+      "prompt": "Use web research to answer: Explain how Bittensor's incentive mechanism works, including the role of validators and miners. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "subnet",
+        "validator",
+        "miner",
+        "emission",
+        "consensus"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "subnet",
+          "validator",
+          "miner",
+          "emission",
+          "consensus"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_002",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how Ethereum proof-of-stake works, including staking and slashing.",
+      "prompt": "Use web research to answer: Explain how Ethereum proof-of-stake works, including staking and slashing. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "validator",
+        "staking",
+        "slashing",
+        "epochs",
+        "finality"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "validator",
+          "staking",
+          "slashing",
+          "epochs",
+          "finality"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_003",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how Bitcoin mining and difficulty adjustment work.",
+      "prompt": "Use web research to answer: Explain how Bitcoin mining and difficulty adjustment work. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "mining",
+        "hash rate",
+        "difficulty adjustment",
+        "blocks",
+        "proof of work"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "mining",
+          "hash rate",
+          "difficulty adjustment",
+          "blocks",
+          "proof of work"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_004",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how DNS resolution works from a client to an authoritative server.",
+      "prompt": "Use web research to answer: Explain how DNS resolution works from a client to an authoritative server. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "recursive resolver",
+        "root servers",
+        "TLD",
+        "authoritative",
+        "caching"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "recursive resolver",
+          "root servers",
+          "TLD",
+          "authoritative",
+          "caching"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_005",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how the TLS handshake establishes a secure connection.",
+      "prompt": "Use web research to answer: Explain how the TLS handshake establishes a secure connection. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "certificates",
+        "key exchange",
+        "session keys",
+        "cipher suites",
+        "verification"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "certificates",
+          "key exchange",
+          "session keys",
+          "cipher suites",
+          "verification"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_006",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how Kubernetes scheduling works, including placement decisions.",
+      "prompt": "Use web research to answer: Explain how Kubernetes scheduling works, including placement decisions. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "scheduler",
+        "nodes",
+        "pods",
+        "affinity",
+        "taints"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "scheduler",
+          "nodes",
+          "pods",
+          "affinity",
+          "taints"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_007",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how PostgreSQL MVCC handles concurrent transactions.",
+      "prompt": "Use web research to answer: Explain how PostgreSQL MVCC handles concurrent transactions. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "transactions",
+        "snapshots",
+        "visibility",
+        "vacuum",
+        "locking"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "transactions",
+          "snapshots",
+          "visibility",
+          "vacuum",
+          "locking"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_008",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how OpenTelemetry tracing works end-to-end.",
+      "prompt": "Use web research to answer: Explain how OpenTelemetry tracing works end-to-end. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "spans",
+        "traces",
+        "context propagation",
+        "exporters",
+        "sampling"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "spans",
+          "traces",
+          "context propagation",
+          "exporters",
+          "sampling"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_009",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how Kafka handles partitions and replication.",
+      "prompt": "Use web research to answer: Explain how Kafka handles partitions and replication. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "partition",
+        "leader",
+        "replica",
+        "ISR",
+        "offsets"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "partition",
+          "leader",
+          "replica",
+          "ISR",
+          "offsets"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_010",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how WebRTC establishes peer connections across NATs.",
+      "prompt": "Use web research to answer: Explain how WebRTC establishes peer connections across NATs. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "ICE",
+        "STUN",
+        "TURN",
+        "SDP",
+        "NAT traversal"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "ICE",
+          "STUN",
+          "TURN",
+          "SDP",
+          "NAT traversal"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_011",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain the OAuth2 authorization code flow with PKCE.",
+      "prompt": "Use web research to answer: Explain the OAuth2 authorization code flow with PKCE. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "client",
+        "authorization server",
+        "authorization code",
+        "access token",
+        "redirect URI"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "client",
+          "authorization server",
+          "authorization code",
+          "access token",
+          "redirect URI"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_012",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how retrieval-augmented generation pipelines retrieve and rank context.",
+      "prompt": "Use web research to answer: Explain how retrieval-augmented generation pipelines retrieve and rank context. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "embeddings",
+        "vector store",
+        "retriever",
+        "reranker",
+        "context window"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "embeddings",
+          "vector store",
+          "retriever",
+          "reranker",
+          "context window"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_013",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how diffusion models generate images from noise.",
+      "prompt": "Use web research to answer: Explain how diffusion models generate images from noise. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "noise schedule",
+        "denoising",
+        "U-Net",
+        "latent space",
+        "sampling"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "noise schedule",
+          "denoising",
+          "U-Net",
+          "latent space",
+          "sampling"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_014",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how RLHF is used to align large language models.",
+      "prompt": "Use web research to answer: Explain how RLHF is used to align large language models. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "reward model",
+        "preference data",
+        "PPO",
+        "policy model",
+        "safety alignment"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "reward model",
+          "preference data",
+          "PPO",
+          "policy model",
+          "safety alignment"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_015",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how secure enclaves (TEE/SGX) provide isolation and attestation.",
+      "prompt": "Use web research to answer: Explain how secure enclaves (TEE/SGX) provide isolation and attestation. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "attestation",
+        "isolation",
+        "trusted code",
+        "memory encryption",
+        "threat model"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "attestation",
+          "isolation",
+          "trusted code",
+          "memory encryption",
+          "threat model"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_016",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how the Raft consensus algorithm achieves consistency.",
+      "prompt": "Use web research to answer: Explain how the Raft consensus algorithm achieves consistency. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "leader election",
+        "log replication",
+        "commit index",
+        "term",
+        "heartbeat"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "leader election",
+          "log replication",
+          "commit index",
+          "term",
+          "heartbeat"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_017",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how container images are built and layered.",
+      "prompt": "Use web research to answer: Explain how container images are built and layered. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "layers",
+        "registry",
+        "union filesystem",
+        "image manifest",
+        "build cache"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "layers",
+          "registry",
+          "union filesystem",
+          "image manifest",
+          "build cache"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_018",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how HTTP/3 and QUIC improve web transport.",
+      "prompt": "Use web research to answer: Explain how HTTP/3 and QUIC improve web transport. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "UDP",
+        "streams",
+        "handshake",
+        "multiplexing",
+        "connection migration"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "UDP",
+          "streams",
+          "handshake",
+          "multiplexing",
+          "connection migration"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_019",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how vector databases index embeddings for similarity search.",
+      "prompt": "Use web research to answer: Explain how vector databases index embeddings for similarity search. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "HNSW",
+        "ANN search",
+        "index build",
+        "distance metrics",
+        "recall"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "HNSW",
+          "ANN search",
+          "index build",
+          "distance metrics",
+          "recall"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    },
+    {
+      "id": "deep_020",
+      "suite": "janus/intelligence",
+      "task_type": "deep_dive",
+      "query": "Explain how feature stores support ML training and serving.",
+      "prompt": "Use web research to answer: Explain how feature stores support ML training and serving. Provide citations.",
+      "requires_search": true,
+      "expected_facts": [
+        "offline store",
+        "online store",
+        "feature pipelines",
+        "consistency",
+        "serving latency"
+      ],
+      "evaluation": {
+        "type": "expert_level",
+        "required_concepts": [
+          "offline store",
+          "online store",
+          "feature pipelines",
+          "consistency",
+          "serving latency"
+        ],
+        "depth_indicators": [
+          "technical_details",
+          "examples",
+          "tradeoffs"
+        ]
+      }
+    }
+  ]
+}

@@ -12,9 +12,21 @@ class TaskType(str, Enum):
 
     CHAT_QUALITY = "chat_quality"
     RESEARCH = "research"
+    TOOL_USE = "tool_use"
     CODING = "coding"
     STREAMING = "streaming"
     MULTIMODAL = "multimodal"
+    COST = "cost"
+
+
+class BenchmarkName(str, Enum):
+    """Janus benchmark identifiers."""
+
+    JANUS_RESEARCH = "janus_research"
+    JANUS_TOOL_USE = "janus_tool_use"
+    JANUS_MULTIMODAL = "janus_multimodal"
+    JANUS_STREAMING = "janus_streaming"
+    JANUS_COST = "janus_cost"
 
 
 class Suite(str, Enum):
@@ -23,12 +35,14 @@ class Suite(str, Enum):
     PUBLIC_TRAIN = "public/train"
     PUBLIC_DEV = "public/dev"
     PRIVATE_TEST = "private/test"
+    JANUS_INTELLIGENCE = "janus/intelligence"
 
 
 class BenchmarkTask(BaseModel):
     """A single benchmark task."""
 
     id: str
+    benchmark: str = Field(default="core", description="Benchmark name/group")
     suite: Suite
     type: TaskType
     prompt: str
@@ -52,6 +66,7 @@ class TaskResult(BaseModel):
     """Result from running a single benchmark task."""
 
     task_id: str
+    benchmark: str = Field(default="core", description="Benchmark name/group")
     task_type: TaskType
     success: bool
     response_text: Optional[str] = None
@@ -60,6 +75,7 @@ class TaskResult(BaseModel):
     # Timing metrics
     latency_seconds: float = Field(description="Total request latency")
     streaming_metrics: Optional[StreamingMetrics] = None
+    tokens_per_second: Optional[float] = Field(default=None, description="Tokens per second")
 
     # Usage metrics (from response)
     prompt_tokens: Optional[int] = None
@@ -74,6 +90,10 @@ class TaskResult(BaseModel):
     cost_score: float = Field(default=0.0, ge=0, le=1)
     streaming_score: float = Field(default=0.0, ge=0, le=1)
     multimodal_score: float = Field(default=0.0, ge=0, le=1)
+
+    judge_score: Optional[float] = Field(default=None, ge=0, le=1)
+    judge_output: Optional[dict[str, Any]] = None
+    metadata: Optional[dict[str, Any]] = None
 
     timestamp: datetime = Field(default_factory=datetime.now)
 
@@ -112,3 +132,7 @@ class BenchmarkReport(BaseModel):
 
     # Weights used
     weights: dict[str, int]
+
+    # Benchmark breakdowns (optional)
+    benchmark_scores: dict[str, float] = Field(default_factory=dict)
+    benchmark_metrics: dict[str, dict[str, object]] = Field(default_factory=dict)

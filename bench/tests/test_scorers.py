@@ -76,6 +76,13 @@ class TestSpeedScorer:
         score = score_speed(latency_seconds=4.0)
         assert score == 1.0  # Uses latency only
 
+    def test_tps_influences_score(self):
+        """Test TPS contributes to speed score."""
+        slow_tps = score_speed(latency_seconds=8.0, ttft_seconds=2.0, tps=5.0)
+        fast_tps = score_speed(latency_seconds=8.0, ttft_seconds=2.0, tps=15.0)
+
+        assert fast_tps > slow_tps
+
 
 class TestCostScorer:
     """Tests for cost scoring."""
@@ -177,7 +184,68 @@ class TestCompositeScorer:
         results = [
             TaskResult(
                 task_id="test_001",
-                task_type=TaskType.CHAT_QUALITY,
+                benchmark="janus_research",
+                task_type=TaskType.RESEARCH,
+                success=True,
+                response_text="Test response",
+                latency_seconds=2.0,
+                quality_score=1.0,
+                speed_score=1.0,
+                cost_score=1.0,
+                streaming_score=1.0,
+                multimodal_score=1.0,
+            ),
+            TaskResult(
+                task_id="test_002",
+                benchmark="janus_tool_use",
+                task_type=TaskType.TOOL_USE,
+                success=True,
+                response_text="Test response",
+                latency_seconds=2.0,
+                quality_score=1.0,
+                speed_score=1.0,
+                cost_score=1.0,
+                streaming_score=1.0,
+                multimodal_score=1.0,
+            ),
+            TaskResult(
+                task_id="test_003",
+                benchmark="janus_streaming",
+                task_type=TaskType.STREAMING,
+                success=True,
+                response_text="Test response",
+                latency_seconds=2.0,
+                streaming_metrics=StreamingMetrics(
+                    ttft_seconds=0.2,
+                    max_gap_seconds=0.1,
+                    total_chunks=10,
+                    keep_alive_count=0,
+                    total_duration_seconds=2.0,
+                ),
+                tokens_per_second=20.0,
+                quality_score=1.0,
+                speed_score=1.0,
+                cost_score=1.0,
+                streaming_score=1.0,
+                multimodal_score=1.0,
+            ),
+            TaskResult(
+                task_id="test_004",
+                benchmark="janus_cost",
+                task_type=TaskType.COST,
+                success=True,
+                response_text="Test response",
+                latency_seconds=2.0,
+                quality_score=1.0,
+                speed_score=1.0,
+                cost_score=1.0,
+                streaming_score=1.0,
+                multimodal_score=1.0,
+            ),
+            TaskResult(
+                task_id="test_005",
+                benchmark="janus_multimodal",
+                task_type=TaskType.MULTIMODAL,
                 success=True,
                 response_text="Test response",
                 latency_seconds=2.0,
@@ -189,14 +257,56 @@ class TestCompositeScorer:
             ),
         ]
         scores = compute_composite_score(results)
-        assert scores["composite_score"] == 100.0
+        assert scores["composite_score"] == pytest.approx(100.0, rel=1e-6)
+
+    def test_research_metrics_in_results(self):
+        """Ensure research metrics are aggregated in benchmark metrics."""
+        results = [
+            TaskResult(
+                task_id="research_001",
+                benchmark="janus_research",
+                task_type=TaskType.RESEARCH,
+                success=True,
+                response_text="According to source: https://example.com, ...",
+                latency_seconds=1.0,
+                quality_score=0.8,
+                metadata={
+                    "research_task_type": "fact_verification",
+                    "search_used": True,
+                    "citation_used": True,
+                },
+            ),
+            TaskResult(
+                task_id="research_002",
+                benchmark="janus_research",
+                task_type=TaskType.RESEARCH,
+                success=True,
+                response_text="Summary without explicit citation.",
+                latency_seconds=2.0,
+                quality_score=0.6,
+                metadata={
+                    "research_task_type": "current_events",
+                    "search_used": False,
+                    "citation_used": False,
+                },
+            ),
+        ]
+
+        scores = compute_composite_score(results)
+        metrics = scores["benchmark_metrics"]["janus_research"]
+
+        assert metrics["search_usage_rate"] == 0.5
+        assert metrics["citation_rate"] == 0.5
+        assert metrics["by_task_type"]["fact_verification"]["count"] == 1
+        assert metrics["by_task_type"]["current_events"]["count"] == 1
 
     def test_zero_scores(self):
         """Test composite calculation with zero scores."""
         results = [
             TaskResult(
                 task_id="test_001",
-                task_type=TaskType.CHAT_QUALITY,
+                benchmark="janus_research",
+                task_type=TaskType.RESEARCH,
                 success=False,
                 latency_seconds=60.0,
                 quality_score=0.0,
@@ -207,8 +317,7 @@ class TestCompositeScorer:
             ),
         ]
         scores = compute_composite_score(results)
-        # Multimodal defaults to 1.0 for non-multimodal tasks
-        assert scores["composite_score"] == 10.0  # Only multimodal weight
+        assert scores["composite_score"] == 0.0
 
     def test_empty_results(self):
         """Test composite calculation with no results."""
@@ -220,7 +329,8 @@ class TestCompositeScorer:
         results = [
             TaskResult(
                 task_id="test_001",
-                task_type=TaskType.CHAT_QUALITY,
+                benchmark="core",
+                task_type=TaskType.RESEARCH,
                 success=True,
                 latency_seconds=2.0,
                 quality_score=1.0,
@@ -239,4 +349,82 @@ class TestCompositeScorer:
             weight_multimodal=5,
         )
         # Quality dominates with 80% weight
-        assert scores["composite_score"] > 80.0
+        assert scores["composite_score"] >= 80.0
+
+    def test_janus_composite_scoring(self):
+        """Test Janus composite scoring across benchmark groups."""
+        results = [
+            TaskResult(
+                task_id="research_001",
+                benchmark="janus_research",
+                task_type=TaskType.RESEARCH,
+                success=True,
+                latency_seconds=1.0,
+                quality_score=0.8,
+                speed_score=0.0,
+                cost_score=0.0,
+                streaming_score=0.0,
+                multimodal_score=0.0,
+            ),
+            TaskResult(
+                task_id="tool_001",
+                benchmark="janus_tool_use",
+                task_type=TaskType.TOOL_USE,
+                success=True,
+                latency_seconds=1.0,
+                quality_score=0.6,
+                speed_score=0.0,
+                cost_score=0.0,
+                streaming_score=0.0,
+                multimodal_score=0.0,
+            ),
+            TaskResult(
+                task_id="multimodal_001",
+                benchmark="janus_multimodal",
+                task_type=TaskType.MULTIMODAL,
+                success=True,
+                latency_seconds=1.0,
+                quality_score=0.0,
+                speed_score=0.0,
+                cost_score=0.0,
+                streaming_score=0.0,
+                multimodal_score=0.8,
+            ),
+            TaskResult(
+                task_id="streaming_001",
+                benchmark="janus_streaming",
+                task_type=TaskType.STREAMING,
+                success=True,
+                latency_seconds=1.0,
+                streaming_metrics=StreamingMetrics(
+                    ttft_seconds=0.5,
+                    max_gap_seconds=0.2,
+                    total_chunks=10,
+                    keep_alive_count=0,
+                    total_duration_seconds=1.0,
+                ),
+                tokens_per_second=20.0,
+                quality_score=0.0,
+                speed_score=0.0,
+                cost_score=0.0,
+                streaming_score=0.9,
+                multimodal_score=0.0,
+            ),
+            TaskResult(
+                task_id="cost_001",
+                benchmark="janus_cost",
+                task_type=TaskType.COST,
+                success=True,
+                latency_seconds=1.0,
+                total_tokens=500,
+                cost_usd=0.01,
+                quality_score=0.0,
+                speed_score=0.0,
+                cost_score=0.5,
+                streaming_score=0.0,
+                multimodal_score=0.0,
+            ),
+        ]
+
+        scores = compute_composite_score(results)
+        assert scores["composite_score"] == pytest.approx(77.0, rel=0.01)

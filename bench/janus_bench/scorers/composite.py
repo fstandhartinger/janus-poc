@@ -1,8 +1,11 @@
 """Composite score calculation."""
 
-from typing import Optional
+from __future__ import annotations
 
-from ..models import TaskResult, StreamingMetrics, TaskType
+from typing import Any, Mapping, Optional
+
+from ..janus_scoring import calculate_janus_composite_score
+from ..models import TaskResult
 from .quality import score_quality
 from .speed import score_speed
 from .cost import score_cost
@@ -28,15 +31,24 @@ def compute_task_scores(
         Updated TaskResult with scores filled in
     """
     # Quality score
-    result.quality_score = score_quality(
-        result.response_text,
-        expected_answer,
-        expected_keywords,
-    )
+    if result.judge_score is None and not (
+        result.metadata and result.metadata.get("quality_override")
+    ):
+        result.quality_score = score_quality(
+            result.response_text,
+            expected_answer,
+            expected_keywords,
+        )
 
     # Speed score
     ttft = result.streaming_metrics.ttft_seconds if result.streaming_metrics else None
-    result.speed_score = score_speed(result.latency_seconds, ttft)
+    tps = None
+    if result.streaming_metrics and result.streaming_metrics.total_duration_seconds > 0:
+        token_count = result.completion_tokens or result.total_tokens
+        if token_count:
+            tps = token_count / result.streaming_metrics.total_duration_seconds
+    result.tokens_per_second = tps
+    result.speed_score = score_speed(result.latency_seconds, ttft, tps)
 
     # Cost score
     result.cost_score = score_cost(
@@ -58,22 +70,134 @@ def compute_task_scores(
     return result
 
 
+def _average(values: list[float]) -> float:
+    return sum(values) / len(values) if values else 0.0
+
+
+def _build_benchmark_results(results: list[TaskResult]) -> dict[str, dict[str, Any]]:
+    grouped: dict[str, list[TaskResult]] = {}
+    for result in results:
+        if not result.benchmark:
+            continue
+        grouped.setdefault(result.benchmark, []).append(result)
+
+    benchmark_results: dict[str, dict[str, Any]] = {}
+
+    def add_benchmark(
+        name: str,
+        score_values: list[float],
+        metrics: Mapping[str, object] | None = None,
+    ) -> None:
+        payload: dict[str, Any] = {"score": _average(score_values)}
+        if metrics:
+            payload["metrics"] = dict(metrics)
+        benchmark_results[name] = payload
+
+    research_results = grouped.get("janus_research", [])
+    tool_results = grouped.get("janus_tool_use", [])
+    multimodal_results = grouped.get("janus_multimodal", [])
+    streaming_results = grouped.get("janus_streaming", [])
+    cost_results = grouped.get("janus_cost", [])
+
+    if research_results:
+        metrics: dict[str, object] = {}
+        latencies_ms = [
+            r.latency_seconds * 1000
+            for r in research_results
+            if r.latency_seconds is not None
+        ]
+        if latencies_ms:
+            metrics["avg_latency_ms"] = _average(latencies_ms)
+
+        task_type_scores: dict[str, list[float]] = {}
+        search_count = 0
+        citation_count = 0
+
+        valid_results = [r for r in research_results if r.response_text and not r.error]
+        for result in valid_results:
+            task_type = "unknown"
+            if result.metadata:
+                task_type = result.metadata.get("research_task_type", task_type)
+                if result.metadata.get("search_used"):
+                    search_count += 1
+                if result.metadata.get("citation_used"):
+                    citation_count += 1
+            task_type_scores.setdefault(task_type, []).append(result.quality_score)
+
+        if valid_results:
+            metrics["search_usage_rate"] = search_count / len(valid_results)
+            metrics["citation_rate"] = citation_count / len(valid_results)
+
+        if task_type_scores:
+            metrics["by_task_type"] = {
+                task_type: {
+                    "count": len(scores),
+                    "avg_score": _average(scores),
+                }
+                for task_type, scores in task_type_scores.items()
+            }
+
+        add_benchmark("janus_research", [r.quality_score for r in research_results], metrics)
+    if tool_results:
+        add_benchmark("janus_tool_use", [r.quality_score for r in tool_results])
+    if multimodal_results:
+        add_benchmark("janus_multimodal", [r.multimodal_score for r in multimodal_results])
+    if streaming_results:
+        ttft_values = [
+            r.streaming_metrics.ttft_seconds * 1000
+            for r in streaming_results
+            if r.streaming_metrics
+        ]
+        tps_values = [
+            r.tokens_per_second
+            for r in streaming_results
+            if r.tokens_per_second is not None
+        ]
+        continuity_scores = [r.streaming_score for r in streaming_results]
+        chunk_regularities = [
+            max(0.0, 1.0 - (r.streaming_metrics.max_gap_seconds / r.streaming_metrics.total_duration_seconds))
+            for r in streaming_results
+            if r.streaming_metrics and r.streaming_metrics.total_duration_seconds > 0
+        ]
+        streaming_metrics: dict[str, float] = {}
+        if ttft_values:
+            streaming_metrics["avg_ttft_ms"] = _average(ttft_values)
+        if tps_values:
+            streaming_metrics["avg_tps"] = _average(tps_values)
+        if continuity_scores:
+            streaming_metrics["continuity_score"] = _average(continuity_scores)
+        if chunk_regularities:
+            streaming_metrics["chunk_regularity"] = _average(chunk_regularities)
+        add_benchmark("janus_streaming", continuity_scores, streaming_metrics)
+    if cost_results:
+        token_values = [float(r.total_tokens) for r in cost_results if r.total_tokens is not None]
+        cost_values = [r.cost_usd for r in cost_results if r.cost_usd is not None]
+        cost_metrics: dict[str, float] = {}
+        if token_values:
+            cost_metrics["tokens_per_task"] = _average(token_values)
+        if cost_values:
+            cost_metrics["cost_per_task"] = _average(cost_values)
+        add_benchmark("janus_cost", [r.cost_score for r in cost_results], cost_metrics)
+
+    return benchmark_results
+
+
 def compute_composite_score(
     results: list[TaskResult],
-    weight_quality: int = 45,
+    weight_quality: int = 40,
     weight_speed: int = 20,
     weight_cost: int = 15,
-    weight_streaming: int = 10,
+    weight_streaming: int = 15,
     weight_multimodal: int = 10,
-) -> dict[str, float]:
-    """Compute composite and component scores from task results.
+) -> dict[str, object]:
+    """Compute Janus composite and component scores from task results.
 
     Args:
         results: List of task results with individual scores
-        weight_quality: Quality weight (default 45%)
+        weight_quality: Quality weight (default 40%)
         weight_speed: Speed weight (default 20%)
         weight_cost: Cost weight (default 15%)
-        weight_streaming: Streaming weight (default 10%)
+        weight_streaming: Streaming weight (default 15%)
         weight_multimodal: Multimodal weight (default 10%)
 
     Returns:
@@ -87,38 +211,79 @@ def compute_composite_score(
             "cost_score": 0.0,
             "streaming_score": 0.0,
             "multimodal_score": 0.0,
+            "benchmark_scores": {},
+            "benchmark_metrics": {},
         }
 
-    # Average each component score
-    n = len(results)
-    avg_quality = sum(r.quality_score for r in results) / n
-    avg_speed = sum(r.speed_score for r in results) / n
-    avg_cost = sum(r.cost_score for r in results) / n
-    avg_streaming = sum(r.streaming_score for r in results) / n
+    janus_results = [
+        result for result in results if result.benchmark and result.benchmark.startswith("janus_")
+    ]
+    non_janus_results = [
+        result
+        for result in results
+        if not result.benchmark or not result.benchmark.startswith("janus_")
+    ]
+    has_janus_only = bool(janus_results) and not non_janus_results
 
-    # For multimodal, only average multimodal tasks
-    multimodal_results = [r for r in results if r.task_type == TaskType.MULTIMODAL]
-    if multimodal_results:
-        avg_multimodal = sum(r.multimodal_score for r in multimodal_results) / len(multimodal_results)
+    if has_janus_only:
+        benchmark_results = _build_benchmark_results(results)
+        janus_scores = calculate_janus_composite_score(benchmark_results)
+
+        composite = janus_scores["composite"] * 100
+        quality = janus_scores["quality"] * 100
+        speed = janus_scores["speed"] * 100
+        cost = janus_scores["cost"] * 100
+        streaming = janus_scores["streaming"] * 100
+        multimodal = janus_scores["modality"] * 100
+
+        benchmark_scores = {
+            name: float(payload.get("score") or 0.0) * 100
+            for name, payload in benchmark_results.items()
+        }
+        benchmark_metrics = {
+            name: payload.get("metrics", {})
+            for name, payload in benchmark_results.items()
+            if payload.get("metrics")
+        }
     else:
-        avg_multimodal = 1.0  # No multimodal tasks - full score
+        avg_quality = _average([r.quality_score for r in results])
+        avg_speed = _average([r.speed_score for r in results])
+        avg_cost = _average([r.cost_score for r in results])
+        avg_streaming = _average([r.streaming_score for r in results])
 
-    # Compute weighted composite
-    total_weight = weight_quality + weight_speed + weight_cost + weight_streaming + weight_multimodal
-    composite = (
-        weight_quality * avg_quality +
-        weight_speed * avg_speed +
-        weight_cost * avg_cost +
-        weight_streaming * avg_streaming +
-        weight_multimodal * avg_multimodal
-    ) / total_weight
+        multimodal_results = [r for r in results if r.task_type.value == "multimodal"]
+        if multimodal_results:
+            avg_multimodal = _average([r.multimodal_score for r in multimodal_results])
+        else:
+            avg_multimodal = 1.0
 
-    # Return scores on 0-100 scale
+        total_weight = (
+            weight_quality + weight_speed + weight_cost + weight_streaming + weight_multimodal
+        )
+        composite = (
+            weight_quality * avg_quality
+            + weight_speed * avg_speed
+            + weight_cost * avg_cost
+            + weight_streaming * avg_streaming
+            + weight_multimodal * avg_multimodal
+        ) / total_weight
+
+        composite *= 100
+        quality = avg_quality * 100
+        speed = avg_speed * 100
+        cost = avg_cost * 100
+        streaming = avg_streaming * 100
+        multimodal = avg_multimodal * 100
+        benchmark_scores = {}
+        benchmark_metrics = {}
+
     return {
-        "composite_score": composite * 100,
-        "quality_score": avg_quality * 100,
-        "speed_score": avg_speed * 100,
-        "cost_score": avg_cost * 100,
-        "streaming_score": avg_streaming * 100,
-        "multimodal_score": avg_multimodal * 100,
+        "composite_score": composite,
+        "quality_score": quality,
+        "speed_score": speed,
+        "cost_score": cost,
+        "streaming_score": streaming,
+        "multimodal_score": multimodal,
+        "benchmark_scores": benchmark_scores,
+        "benchmark_metrics": benchmark_metrics,
     }

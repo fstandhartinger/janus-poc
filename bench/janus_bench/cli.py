@@ -3,7 +3,6 @@
 import asyncio
 import json
 import sys
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
@@ -13,8 +12,9 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.table import Table
 
 from . import __version__
+from .benchmarks import get_janus_benchmarks, get_janus_benchmark_names
 from .config import Settings
-from .models import BenchmarkReport, Suite
+from .models import BenchmarkReport, Suite, TaskResult
 from .runner import BenchmarkRunner
 
 console = Console()
@@ -132,13 +132,19 @@ def main() -> None:
     "--suite",
     "-s",
     default="public/dev",
-    type=click.Choice(["public/train", "public/dev", "private/test"]),
+    type=click.Choice(["public/train", "public/dev", "private/test", "janus/intelligence"]),
     help="Benchmark suite to run",
+)
+@click.option(
+    "--benchmark",
+    "-b",
+    type=click.Choice(get_janus_benchmark_names()),
+    help="Optional Janus benchmark to run",
 )
 @click.option(
     "--model",
     "-m",
-    default="janus-baseline",
+    default="janus-baseline-agent-cli",
     help="Model name to use in requests",
 )
 @click.option(
@@ -148,6 +154,18 @@ def main() -> None:
     help="Output file for JSON results",
 )
 @click.option(
+    "--subset",
+    default=100,
+    type=click.IntRange(1, 100),
+    help="Subset percentage of tasks to run (1-100)",
+)
+@click.option(
+    "--seed",
+    default=42,
+    type=int,
+    help="Random seed for deterministic sampling",
+)
+@click.option(
     "--timeout",
     default=300,
     help="Request timeout in seconds",
@@ -155,15 +173,21 @@ def main() -> None:
 def run(
     target: str,
     suite: str,
+    benchmark: Optional[str],
     model: str,
     output: Optional[str],
+    subset: int,
+    seed: int,
     timeout: int,
 ) -> None:
     """Run benchmark suite against a target gateway."""
     console.print(f"[bold]Janus Benchmark Runner v{__version__}[/bold]")
     console.print(f"Target: {target}")
     console.print(f"Suite: {suite}")
+    if benchmark:
+        console.print(f"Benchmark: {benchmark}")
     console.print(f"Model: {model}")
+    console.print(f"Subset: {subset}% (seed={seed})")
     console.print()
 
     # Create settings override
@@ -171,6 +195,8 @@ def run(
         target_url=target,
         model=model,
         request_timeout=timeout,
+        subset_percent=subset,
+        seed=seed,
     )
 
     # Run the benchmark
@@ -184,14 +210,18 @@ def run(
             ) as progress:
                 task = progress.add_task("Running benchmark...", total=None)
 
-                def update_progress(current: int, total: int, result) -> None:
+                def update_progress(current: int, total: int, result: TaskResult) -> None:
                     status = "PASS" if result.success else "FAIL"
                     progress.update(
                         task,
                         description=f"[{current}/{total}] {result.task_id}: {status}",
                     )
 
-                report = await runner.run_suite(suite, progress_callback=update_progress)
+                report = await runner.run_suite(
+                    suite,
+                    benchmark=benchmark,
+                    progress_callback=update_progress,
+                )
                 return report
         finally:
             await runner.close()
@@ -225,6 +255,20 @@ def list_suites() -> None:
 
     for suite in Suite:
         console.print(f"  - {suite.value}")
+
+
+@main.command()
+def list_benchmarks() -> None:
+    """List available Janus benchmarks."""
+    console.print("[bold]Janus Benchmarks[/bold]")
+    console.print()
+
+    for benchmark in get_janus_benchmarks():
+        console.print(f"  - {benchmark.display_name} ({benchmark.name})")
+        console.print(f"    Category: {benchmark.category}")
+        console.print(f"    Items: {benchmark.total_items}")
+        console.print(f"    Description: {benchmark.description}")
+        console.print()
 
 
 @main.command()

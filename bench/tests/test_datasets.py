@@ -1,7 +1,10 @@
 """Tests for dataset loading."""
 
+from collections import Counter
+
 import pytest
 
+from janus_bench.benchmarks import get_janus_benchmark_names
 from janus_bench.datasets import get_tasks, load_suite
 from janus_bench.models import Suite, TaskType
 
@@ -34,10 +37,14 @@ class TestDatasetLoader:
         chat_tasks = get_tasks(task_type=TaskType.CHAT_QUALITY)
         coding_tasks = get_tasks(task_type=TaskType.CODING)
         streaming_tasks = get_tasks(task_type=TaskType.STREAMING)
+        tool_use_tasks = get_tasks(task_type=TaskType.TOOL_USE)
+        cost_tasks = get_tasks(task_type=TaskType.COST)
 
         assert all(t.type == TaskType.CHAT_QUALITY for t in chat_tasks)
         assert all(t.type == TaskType.CODING for t in coding_tasks)
         assert all(t.type == TaskType.STREAMING for t in streaming_tasks)
+        assert all(t.type == TaskType.TOOL_USE for t in tool_use_tasks)
+        assert all(t.type == TaskType.COST for t in cost_tasks)
 
     def test_get_tasks_combined_filter(self):
         """Test filtering by suite and type together."""
@@ -59,10 +66,22 @@ class TestDatasetLoader:
         assert len(tasks) > 0
         assert all(t.suite == Suite.PUBLIC_DEV for t in tasks)
 
+    def test_load_suite_janus_intelligence(self):
+        """Test loading Janus intelligence suite."""
+        tasks = load_suite("janus/intelligence")
+        assert len(tasks) > 0
+        assert all(t.suite == Suite.JANUS_INTELLIGENCE for t in tasks)
+
     def test_load_suite_invalid(self):
         """Test loading invalid suite raises error."""
         with pytest.raises(ValueError, match="Unknown suite"):
             load_suite("invalid/suite")
+
+    def test_load_suite_janus_intelligence(self):
+        """Test loading Janus intelligence suite."""
+        tasks = load_suite("janus/intelligence")
+        assert len(tasks) > 0
+        assert all(t.suite == Suite.JANUS_INTELLIGENCE for t in tasks)
 
     def test_task_structure(self):
         """Test that tasks have required fields."""
@@ -70,6 +89,7 @@ class TestDatasetLoader:
 
         for task in tasks:
             assert task.id is not None
+            assert task.benchmark is not None
             assert task.suite is not None
             assert task.type is not None
             assert task.prompt is not None
@@ -89,3 +109,45 @@ class TestDatasetLoader:
         for task in private_tasks:
             assert task.metadata is not None
             assert task.metadata.get("stub") is True
+
+    def test_subset_sampling_is_deterministic(self):
+        """Test deterministic subset sampling with a seed."""
+        tasks_full = load_suite("janus/intelligence", subset_percent=100, seed=123)
+        tasks_sample_a = load_suite("janus/intelligence", subset_percent=10, seed=123)
+        tasks_sample_b = load_suite("janus/intelligence", subset_percent=10, seed=123)
+
+        assert len(tasks_full) > len(tasks_sample_a) > 0
+        assert [t.id for t in tasks_sample_a] == [t.id for t in tasks_sample_b]
+
+    def test_subset_sampling_deterministic(self):
+        """Test subset sampling is deterministic by seed."""
+        tasks_a = get_tasks(suite=Suite.PUBLIC_DEV, subset_percent=10, seed=123)
+        tasks_b = get_tasks(suite=Suite.PUBLIC_DEV, subset_percent=10, seed=123)
+
+        assert [t.id for t in tasks_a] == [t.id for t in tasks_b]
+
+    def test_subset_sampling_preserves_janus_benchmarks(self):
+        """Ensure each Janus benchmark appears in sampled subset."""
+        tasks = get_tasks(suite=Suite.JANUS_INTELLIGENCE, subset_percent=5, seed=42)
+        janus_names = set(get_janus_benchmark_names())
+        found = {task.benchmark for task in tasks if task.benchmark in janus_names}
+
+        assert janus_names.issubset(found)
+
+    def test_research_task_type_breakdown(self):
+        """Ensure research tasks include 5 subtypes with 20 items each."""
+        tasks = get_tasks(suite=Suite.JANUS_INTELLIGENCE, benchmark="janus_research")
+
+        assert len(tasks) == 100
+        counts = Counter(task.metadata.get("research_task_type") for task in tasks)
+        assert counts == {
+            "fact_verification": 20,
+            "current_events": 20,
+            "comparative": 20,
+            "synthesis": 20,
+            "deep_dive": 20,
+        }
+
+        for task in tasks:
+            assert task.metadata is not None
+            assert "evaluation" in task.metadata

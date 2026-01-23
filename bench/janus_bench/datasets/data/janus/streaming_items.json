@@ -1,0 +1,360 @@
+{
+  "metadata": {
+    "benchmark": "janus_streaming",
+    "version": "1.0.0",
+    "created": "2026-01-23T20:51:43.223361Z",
+    "total_items": 50
+  },
+  "items": [
+    {
+      "id": "stream_001",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_002",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_003",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_004",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_005",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_006",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_007",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_008",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_009",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_010",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_011",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_012",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_013",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_014",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_015",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_016",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_017",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_018",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_019",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_020",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_021",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_022",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_023",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_024",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_025",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_026",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_027",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_028",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_029",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_030",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_031",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_032",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_033",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_034",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_035",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_036",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_037",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_038",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_039",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_040",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_041",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_042",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_043",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_044",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_045",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_046",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 10 prime numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_047",
+      "suite": "janus/intelligence",
+      "prompt": "Count from 1 to 15, one number per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_048",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 8 Fibonacci numbers, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_049",
+      "suite": "janus/intelligence",
+      "prompt": "Write the alphabet from A to Z, one letter per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    },
+    {
+      "id": "stream_050",
+      "suite": "janus/intelligence",
+      "prompt": "List the first 12 months, one per line.",
+      "expected_keywords": null,
+      "task_type": "streaming"
+    }
+  ]
+}

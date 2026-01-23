@@ -1,0 +1,290 @@
+{
+  "metadata": {
+    "benchmark": "janus_cost",
+    "version": "1.0.0",
+    "created": "2026-01-23T20:51:43.223526Z",
+    "total_items": 40
+  },
+  "items": [
+    {
+      "id": "cost_001",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_002",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_003",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_004",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_005",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_006",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_007",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_008",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_009",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_010",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_011",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_012",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_013",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_014",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_015",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_016",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_017",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_018",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_019",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_020",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_021",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_022",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_023",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_024",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_025",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_026",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_027",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_028",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_029",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_030",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_031",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_032",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_033",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_034",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_035",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_036",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the benefits of open-source software in two sentences.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_037",
+      "suite": "janus/intelligence",
+      "prompt": "Explain why latency matters for user experience in one paragraph.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_038",
+      "suite": "janus/intelligence",
+      "prompt": "Provide a concise overview of serverless architectures.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_039",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the role of caching in web applications.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    },
+    {
+      "id": "cost_040",
+      "suite": "janus/intelligence",
+      "prompt": "Summarize the pros and cons of microservices.",
+      "expected_keywords": null,
+      "task_type": "cost"
+    }
+  ]
+}

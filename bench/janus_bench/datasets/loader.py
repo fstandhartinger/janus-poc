@@ -1,9 +1,12 @@
 """Dataset loader for benchmark tasks."""
 
 import json
+import math
+import random
 from pathlib import Path
 from typing import Optional
 
+from ..adapters import list_adapters
 from ..models import BenchmarkTask, Suite, TaskType
 
 # Built-in benchmark tasks
@@ -128,17 +131,24 @@ BUILTIN_TASKS: list[BenchmarkTask] = [
 def get_tasks(
     suite: Optional[Suite] = None,
     task_type: Optional[TaskType] = None,
+    benchmark: Optional[str] = None,
+    subset_percent: int = 100,
+    seed: Optional[int] = None,
 ) -> list[BenchmarkTask]:
     """Get benchmark tasks filtered by suite and/or type.
 
     Args:
         suite: Filter by benchmark suite (public/train, public/dev, private/test)
         task_type: Filter by task type (chat_quality, research, coding, etc.)
+        benchmark: Filter by benchmark name/group
+        subset_percent: Optional subset percentage (1-100)
+        seed: Optional seed for deterministic sampling
 
     Returns:
         List of matching benchmark tasks
     """
     tasks = BUILTIN_TASKS.copy()
+    tasks.extend(_load_janus_tasks())
 
     if suite is not None:
         tasks = [t for t in tasks if t.suite == suite]
@@ -146,15 +156,30 @@ def get_tasks(
     if task_type is not None:
         tasks = [t for t in tasks if t.type == task_type]
 
+    if benchmark is not None:
+        tasks = [t for t in tasks if t.benchmark == benchmark]
+
+    if subset_percent < 100:
+        tasks = _sample_tasks(tasks, subset_percent=subset_percent, seed=seed)
+
     return tasks
 
 
-def load_suite(suite_name: str, custom_path: Optional[Path] = None) -> list[BenchmarkTask]:
+def load_suite(
+    suite_name: str,
+    custom_path: Optional[Path] = None,
+    benchmark: Optional[str] = None,
+    subset_percent: int = 100,
+    seed: Optional[int] = None,
+) -> list[BenchmarkTask]:
     """Load a benchmark suite by name.
 
     Args:
         suite_name: Suite name like "public/train" or "public/dev"
         custom_path: Optional path to custom dataset JSON file
+        benchmark: Optional benchmark name/group
+        subset_percent: Optional subset percentage (1-100)
+        seed: Optional seed for deterministic sampling
 
     Returns:
         List of benchmark tasks for the suite
@@ -171,7 +196,52 @@ def load_suite(suite_name: str, custom_path: Optional[Path] = None) -> list[Benc
             data = json.load(f)
             custom_tasks = [BenchmarkTask(**task) for task in data.get("tasks", [])]
             # Filter to requested suite
-            return [t for t in custom_tasks if t.suite == suite]
+            tasks = [t for t in custom_tasks if t.suite == suite]
+            if subset_percent < 100:
+                tasks = _sample_tasks(tasks, subset_percent=subset_percent, seed=seed)
+            return tasks
 
     # Return built-in tasks for the suite
-    return get_tasks(suite=suite)
+    return get_tasks(
+        suite=suite,
+        benchmark=benchmark,
+        subset_percent=subset_percent,
+        seed=seed,
+    )
+
+
+def _load_janus_tasks() -> list[BenchmarkTask]:
+    """Load Janus benchmark tasks from JSON files."""
+    tasks: list[BenchmarkTask] = []
+    for adapter in list_adapters():
+        tasks.extend(adapter.to_tasks(suite=Suite.JANUS_INTELLIGENCE))
+
+    return tasks
+
+
+def _sample_tasks(
+    tasks: list[BenchmarkTask],
+    subset_percent: int,
+    seed: Optional[int],
+) -> list[BenchmarkTask]:
+    """Select a deterministic subset of tasks per benchmark."""
+    if not tasks:
+        return tasks
+    if subset_percent <= 0:
+        return []
+    if subset_percent >= 100:
+        return tasks
+
+    by_benchmark: dict[str, list[BenchmarkTask]] = {}
+    for task in tasks:
+        by_benchmark.setdefault(task.benchmark, []).append(task)
+
+    sampled: list[BenchmarkTask] = []
+    for benchmark, group in by_benchmark.items():
+        rng = random.Random(f"{seed}:{benchmark}")
+        shuffled = list(group)
+        rng.shuffle(shuffled)
+        take_count = max(1, math.ceil(len(shuffled) * subset_percent / 100))
+        sampled.extend(shuffled[:take_count])
+
+    return sorted(sampled, key=lambda t: t.id)

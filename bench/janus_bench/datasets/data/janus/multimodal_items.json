@@ -1,0 +1,610 @@
+{
+  "metadata": {
+    "benchmark": "janus_multimodal",
+    "version": "1.0.0",
+    "created": "2026-01-23T20:51:43.223098Z",
+    "total_items": 60
+  },
+  "items": [
+    {
+      "id": "multimodal_001",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_002",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_003",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_004",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_005",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_006",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_007",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_008",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_009",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_010",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_011",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_012",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_013",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_014",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_015",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_016",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_017",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_018",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_019",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_020",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_021",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_022",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_023",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_024",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_025",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_026",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_027",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_028",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_029",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_030",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_031",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_032",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_033",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_034",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_035",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_036",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_037",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_038",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_039",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_040",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_041",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_042",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_043",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_044",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_045",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_046",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_047",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_048",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_049",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_050",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_051",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_052",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_053",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_054",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_055",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_056",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_057",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_058",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_059",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    },
+    {
+      "id": "multimodal_060",
+      "suite": "janus/intelligence",
+      "prompt": "Describe the image and mention any dominant colors.",
+      "expected_keywords": [
+        "red"
+      ],
+      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+      "task_type": "multimodal"
+    }
+  ]
+}

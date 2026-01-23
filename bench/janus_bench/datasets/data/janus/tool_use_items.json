@@ -1,0 +1,570 @@
+{
+  "metadata": {
+    "benchmark": "janus_tool_use",
+    "version": "1.0.0",
+    "created": "2026-01-23T20:51:43.222863Z",
+    "total_items": 80
+  },
+  "items": [
+    {
+      "id": "tool_001",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_002",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_003",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_004",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_005",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_006",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_007",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_008",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_009",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_010",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_011",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_012",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_013",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_014",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_015",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_016",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_017",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_018",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_019",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_020",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_021",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_022",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_023",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_024",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_025",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_026",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_027",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_028",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_029",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_030",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_031",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_032",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_033",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_034",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_035",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_036",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_037",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_038",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_039",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_040",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_041",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_042",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_043",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_044",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_045",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_046",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_047",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_048",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_049",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_050",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_051",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_052",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_053",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_054",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_055",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_056",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_057",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_058",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_059",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_060",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_061",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_062",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_063",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_064",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_065",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_066",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_067",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_068",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_069",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_070",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_071",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_072",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_073",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_074",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_075",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_076",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_077",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_078",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_079",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    },
+    {
+      "id": "tool_080",
+      "suite": "janus/intelligence",
+      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
+      "expected_keywords": null,
+      "task_type": "tool_use"
+    }
+  ]
+}

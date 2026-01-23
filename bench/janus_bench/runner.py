@@ -6,7 +6,7 @@ import time
 import uuid
 from datetime import datetime
 from statistics import median
-from typing import AsyncGenerator, Optional
+from typing import Any, AsyncGenerator, Callable, Optional, cast
 
 import httpx
 import structlog
@@ -20,7 +20,15 @@ from .models import (
     TaskResult,
     TaskType,
 )
-from .scorers import compute_composite_score, compute_task_scores
+from .scorers import compute_composite_score, compute_task_scores, score_quality
+from .scorers.research import (
+    build_judge_prompt,
+    detect_citations,
+    detect_search_usage,
+    extract_judge_score,
+    parse_json_block,
+    score_key_facts,
+)
 
 logger = structlog.get_logger()
 
@@ -62,7 +70,7 @@ class BenchmarkRunner:
         total_chunks = 0
         keep_alive_count = 0
         response_text = ""
-        usage_data: dict = {}
+        usage_data: dict[str, object] = {}
         error: Optional[str] = None
 
         try:
@@ -73,7 +81,9 @@ class BenchmarkRunner:
                 headers={"Accept": "text/event-stream"},
             ) as response:
                 if response.status_code != 200:
-                    error = f"HTTP {response.status_code}: {await response.aread()}"
+                    error_body = await response.aread()
+                    error_text = error_body.decode("utf-8", errors="replace")
+                    error = f"HTTP {response.status_code}: {error_text}"
                 else:
                     async for line in response.aiter_lines():
                         current_time = time.perf_counter()
@@ -136,21 +146,40 @@ class BenchmarkRunner:
             total_duration_seconds=latency,
         )
 
+        prompt_tokens = cast(Optional[int], usage_data.get("prompt_tokens"))
+        completion_tokens = cast(Optional[int], usage_data.get("completion_tokens"))
+        total_tokens = cast(Optional[int], usage_data.get("total_tokens"))
+        cost_usd = cast(Optional[float], usage_data.get("cost_usd"))
+        sandbox_seconds = cast(Optional[float], usage_data.get("sandbox_seconds"))
+
         # Create result
         result = TaskResult(
             task_id=task.id,
+            benchmark=task.benchmark,
             task_type=task.type,
             success=error is None and len(response_text) > 0,
             response_text=response_text if response_text else None,
             error=error,
             latency_seconds=latency,
             streaming_metrics=streaming_metrics,
-            prompt_tokens=usage_data.get("prompt_tokens"),
-            completion_tokens=usage_data.get("completion_tokens"),
-            total_tokens=usage_data.get("total_tokens"),
-            cost_usd=usage_data.get("cost_usd"),
-            sandbox_seconds=usage_data.get("sandbox_seconds"),
+            prompt_tokens=prompt_tokens,
+            completion_tokens=completion_tokens,
+            total_tokens=total_tokens,
+            cost_usd=cost_usd,
+            sandbox_seconds=sandbox_seconds,
         )
+
+        if task.benchmark == "janus_research" and error is None and response_text:
+            (
+                quality_score,
+                research_metadata,
+                judge_score,
+                judge_output,
+            ) = await self._score_research_task(task, response_text)
+            result.quality_score = quality_score
+            result.metadata = research_metadata
+            result.judge_score = judge_score
+            result.judge_output = judge_output
 
         # Compute scores
         result = compute_task_scores(
@@ -171,7 +200,7 @@ class BenchmarkRunner:
 
         return result
 
-    def _build_content(self, task: BenchmarkTask) -> list | str:
+    def _build_content(self, task: BenchmarkTask) -> list[dict[str, object]] | str:
         """Build message content from task.
 
         Args:
@@ -188,15 +217,131 @@ class BenchmarkRunner:
             ]
         return task.prompt
 
+    def _judge_headers(self) -> dict[str, str]:
+        headers: dict[str, str] = {}
+        if self.settings.judge_api_key:
+            headers["Authorization"] = f"Bearer {self.settings.judge_api_key}"
+        return headers
+
+    def _judge_url(self) -> Optional[str]:
+        if not self.settings.judge_url:
+            return None
+        base = self.settings.judge_url.rstrip("/")
+        if base.endswith("/v1"):
+            return f"{base}/chat/completions"
+        return f"{base}/v1/chat/completions"
+
+    async def _run_judge_prompt(
+        self,
+        prompt: str,
+    ) -> tuple[Optional[float], Optional[dict[str, Any]]]:
+        judge_url = self._judge_url()
+        if not judge_url:
+            return None, None
+
+        payload = {
+            "model": self.settings.judge_model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.0,
+            "response_format": {"type": "json_object"},
+        }
+
+        try:
+            response = await self.client.post(
+                judge_url,
+                json=payload,
+                headers=self._judge_headers(),
+                timeout=self.settings.judge_timeout,
+            )
+        except Exception as exc:
+            return None, {"error": str(exc)}
+
+        if response.status_code != 200:
+            return None, {"error": f"HTTP {response.status_code}: {response.text}"}
+
+        try:
+            data = response.json()
+        except ValueError as exc:
+            return None, {"error": f"Invalid JSON response: {exc}"}
+
+        content = (
+            data.get("choices", [{}])[0]
+            .get("message", {})
+            .get("content", "")
+        )
+        parsed = parse_json_block(content)
+        if parsed is None:
+            return None, {"error": "Invalid judge output", "raw": content}
+
+        return extract_judge_score(parsed), parsed
+
+    async def _score_research_task(
+        self,
+        task: BenchmarkTask,
+        response_text: str,
+    ) -> tuple[float, dict[str, Any], Optional[float], Optional[dict[str, Any]]]:
+        task_metadata = task.metadata or {}
+        evaluation = task_metadata.get("evaluation") or {}
+        research_type = task_metadata.get("research_task_type") or task_metadata.get("task_type") or "research"
+        query = task_metadata.get("query") or task_metadata.get("claim") or task.prompt
+
+        expected_facts: list[str] = []
+        for key in (
+            "expected_facts",
+            "expected_topics",
+            "required_aspects",
+            "required_elements",
+            "required_concepts",
+        ):
+            value = task_metadata.get(key) or evaluation.get(key)
+            if isinstance(value, list):
+                expected_facts.extend(str(item) for item in value if item)
+
+        key_fact_score = (
+            score_key_facts(response_text, expected_facts) if expected_facts else None
+        )
+        search_used = detect_search_usage(response_text)
+        citation_used = detect_citations(response_text)
+
+        judge_score = None
+        judge_output = None
+        if self.settings.judge_url:
+            judge_prompt = build_judge_prompt(research_type, query, evaluation, response_text)
+            judge_score, judge_output = await self._run_judge_prompt(judge_prompt)
+
+        if judge_score is not None and key_fact_score is not None:
+            quality_score = (judge_score * 0.7) + (key_fact_score * 0.3)
+        elif judge_score is not None:
+            quality_score = judge_score
+        elif key_fact_score is not None:
+            quality_score = key_fact_score
+        else:
+            quality_score = score_quality(response_text)
+
+        quality_score = max(0.0, min(1.0, quality_score))
+
+        result_metadata = {
+            "research_task_type": research_type,
+            "search_used": search_used,
+            "citation_used": citation_used,
+            "key_fact_score": key_fact_score,
+            "quality_source": "judge" if judge_score is not None else "heuristic",
+            "quality_override": True,
+        }
+
+        return quality_score, result_metadata, judge_score, judge_output
+
     async def run_suite(
         self,
         suite_name: str,
-        progress_callback: Optional[callable] = None,
+        benchmark: Optional[str] = None,
+        progress_callback: Optional[Callable[[int, int, TaskResult], None]] = None,
     ) -> BenchmarkReport:
         """Run all tasks in a benchmark suite.
 
         Args:
             suite_name: Name of the suite (e.g., "public/dev")
+            benchmark: Optional benchmark name to filter tasks
             progress_callback: Optional callback for progress updates
 
         Returns:
@@ -206,7 +351,12 @@ class BenchmarkRunner:
         started_at = datetime.now()
 
         # Load tasks
-        tasks = load_suite(suite_name)
+        tasks = load_suite(
+            suite_name,
+            benchmark=benchmark,
+            subset_percent=self.settings.subset_percent,
+            seed=self.settings.seed,
+        )
         logger.info("suite_loaded", suite=suite_name, task_count=len(tasks))
 
         # Run all tasks
@@ -234,6 +384,18 @@ class BenchmarkRunner:
             weight_streaming=self.settings.weight_streaming,
             weight_multimodal=self.settings.weight_multimodal,
         )
+        benchmark_scores = cast(dict[str, float], scores.get("benchmark_scores", {}))
+        benchmark_metrics = cast(
+            dict[str, dict[str, object]],
+            scores.get("benchmark_metrics", {}),
+        )
+
+        composite_score = cast(float, scores["composite_score"])
+        quality_score = cast(float, scores["quality_score"])
+        speed_score = cast(float, scores["speed_score"])
+        cost_score = cast(float, scores["cost_score"])
+        streaming_score = cast(float, scores["streaming_score"])
+        multimodal_score = cast(float, scores["multimodal_score"])
 
         # Compute aggregate metrics
         latencies = [r.latency_seconds for r in results]
@@ -249,12 +411,12 @@ class BenchmarkRunner:
             model=self.settings.model,
             started_at=started_at,
             completed_at=completed_at,
-            composite_score=scores["composite_score"],
-            quality_score=scores["quality_score"],
-            speed_score=scores["speed_score"],
-            cost_score=scores["cost_score"],
-            streaming_score=scores["streaming_score"],
-            multimodal_score=scores["multimodal_score"],
+            composite_score=composite_score,
+            quality_score=quality_score,
+            speed_score=speed_score,
+            cost_score=cost_score,
+            streaming_score=streaming_score,
+            multimodal_score=multimodal_score,
             total_tasks=len(results),
             passed_tasks=sum(1 for r in results if r.success),
             failed_tasks=sum(1 for r in results if not r.success),
@@ -272,12 +434,14 @@ class BenchmarkRunner:
                 "streaming": self.settings.weight_streaming,
                 "multimodal": self.settings.weight_multimodal,
             },
+            benchmark_scores=benchmark_scores,
+            benchmark_metrics=benchmark_metrics,
         )
 
         logger.info(
             "suite_completed",
             run_id=run_id,
-            composite_score=round(scores["composite_score"], 2),
+            composite_score=round(composite_score, 2),
             passed=report.passed_tasks,
             failed=report.failed_tasks,
         )
