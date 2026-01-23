@@ -1,9 +1,10 @@
 """Chat completions endpoint with OpenAI compatibility and streaming."""
 
 import asyncio
+import contextlib
 import time
 import uuid
-from typing import AsyncGenerator, Union
+from typing import AsyncGenerator, Union, cast
 
 import httpx
 import structlog
@@ -42,8 +43,8 @@ async def stream_from_competitor(
     settings: Settings,
 ) -> AsyncGenerator[str, None]:
     """Stream responses from a competitor, adding keep-alives."""
-    last_event_time = time.time()
     keep_alive_interval = settings.keep_alive_interval
+    done_sent = False
 
     # Prepare request for competitor (exclude janus-specific fields)
     competitor_request = request.model_dump(
@@ -80,21 +81,47 @@ async def stream_from_competitor(
                 yield "data: [DONE]\n\n"
                 return
 
-            async for line in response.aiter_lines():
-                current_time = time.time()
+            line_queue: asyncio.Queue[object] = asyncio.Queue()
+            done_sentinel = object()
 
-                # Emit keep-alive if needed
-                while current_time - last_event_time > keep_alive_interval:
-                    yield ": ping\n\n"
-                    last_event_time += keep_alive_interval
+            async def read_lines() -> None:
+                try:
+                    async for line in response.aiter_lines():
+                        await line_queue.put(line)
+                except asyncio.CancelledError:
+                    raise
+                except Exception as exc:
+                    await line_queue.put(exc)
+                finally:
+                    await line_queue.put(done_sentinel)
 
-                if line.startswith("data:"):
-                    yield f"{line}\n\n"
-                    last_event_time = current_time
-                elif line.startswith(":"):
-                    # Pass through comments/keep-alives
-                    yield f"{line}\n\n"
-                    last_event_time = current_time
+            reader_task = asyncio.create_task(read_lines())
+            try:
+                while True:
+                    try:
+                        item = await asyncio.wait_for(
+                            line_queue.get(), timeout=keep_alive_interval
+                        )
+                    except asyncio.TimeoutError:
+                        yield ": ping\n\n"
+                        continue
+
+                    if item is done_sentinel:
+                        break
+                    if isinstance(item, Exception):
+                        raise item
+
+                    line = cast(str, item)
+                    if line.startswith("data:") or line.startswith(":"):
+                        yield f"{line}\n\n"
+                        if line.startswith("data:") and line[5:].strip() == "[DONE]":
+                            done_sent = True
+                            break
+            finally:
+                if not reader_task.done():
+                    reader_task.cancel()
+                    with contextlib.suppress(asyncio.CancelledError):
+                        await reader_task
 
     except httpx.TimeoutException:
         logger.error("competitor_timeout", url=competitor_url)
@@ -110,6 +137,7 @@ async def stream_from_competitor(
         )
         yield f"data: {error_chunk.model_dump_json()}\n\n"
         yield "data: [DONE]\n\n"
+        return
     except httpx.RequestError as e:
         logger.error("competitor_request_error", error=str(e))
         error_chunk = ChatCompletionChunk(
@@ -123,6 +151,10 @@ async def stream_from_competitor(
             ],
         )
         yield f"data: {error_chunk.model_dump_json()}\n\n"
+        yield "data: [DONE]\n\n"
+        return
+
+    if not done_sent:
         yield "data: [DONE]\n\n"
 
 
