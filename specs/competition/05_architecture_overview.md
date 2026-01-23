@@ -1,6 +1,6 @@
 # Spec: Architecture Overview
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
