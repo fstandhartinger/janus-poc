@@ -1,6 +1,6 @@
 # Spec 28: Janus Chat UI Improvements
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
