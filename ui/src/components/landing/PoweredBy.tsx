@@ -1,9 +1,7 @@
 export function PoweredBy() {
   const partners = [
     { name: 'Chutes', highlight: true },
-    { name: 'Bittensor Subnet 64', highlight: false },
-    { name: 'OpenAI Compatible', highlight: false },
-    { name: 'Sandy Sandboxes', highlight: false },
+    { name: 'Bittensor', highlight: false },
   ];
 
   return (

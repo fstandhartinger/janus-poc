@@ -30,7 +30,7 @@ export function HeroSection() {
           <p className="hero-tagline">the intelligence engine</p>
           <p className="hero-subtitle">
             Anything In. Anything Out. Build the intelligence engine for the decentralized
-            intelligence network powered by Bittensor Subnet 64.
+            intelligence network powered by Bittensor.
           </p>
 
           <div className="mt-10 flex flex-col sm:flex-row gap-4 justify-center">

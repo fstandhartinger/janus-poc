@@ -3,8 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Janus - The Open Intelligence Rodeo",
-  description: "Build the intelligence engine on the decentralized intelligence network powered by Bittensor Subnet 64. Anything In, Anything Out.",
-  keywords: ["AI", "Bittensor", "Subnet 64", "OpenAI", "Competition", "Decentralized AI"],
+  description: "Build the intelligence engine on the decentralized intelligence network powered by Bittensor. Anything In, Anything Out.",
+  keywords: ["Intelligence", "Bittensor", "OpenAI", "Competition", "Decentralized Intelligence"],
   icons: {
     icon: [
       { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },

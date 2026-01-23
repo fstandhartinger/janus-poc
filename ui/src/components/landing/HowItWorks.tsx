@@ -11,7 +11,7 @@ function Step({ number, title, description, delay = 0 }: StepProps) {
   return (
     <div
       data-reveal
-      className="reveal flex flex-col items-center text-center"
+      className="reveal relative z-10 flex flex-col items-center text-center"
       style={{ '--reveal-delay': `${delay}ms` } as CSSProperties}
     >
       <div className="w-12 h-12 rounded-full bg-[#63D297] text-[#111827] flex items-center justify-center font-bold text-lg mb-4">
@@ -35,7 +35,7 @@ export function HowItWorks() {
       number: 2,
       title: 'Compete',
       description:
-        'Benchmarks score implementations on composite metrics: quality, speed, cost',
+        'Benchmarks score implementations on many use cases and composite metrics: quality, speed, cost',
     },
     {
       number: 3,
@@ -59,7 +59,7 @@ export function HowItWorks() {
 
         <div className="grid md:grid-cols-3 gap-8 lg:gap-12 relative">
           {/* Connecting line (desktop only) */}
-          <div className="hidden md:block absolute top-6 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-transparent via-[#374151] to-transparent" />
+          <div className="hidden md:block absolute top-6 left-1/6 right-1/6 h-0.5 bg-gradient-to-r from-transparent via-[#374151] to-transparent z-0" />
 
           {steps.map((step, index) => (
             <Step key={step.number} delay={index * 120} {...step} />

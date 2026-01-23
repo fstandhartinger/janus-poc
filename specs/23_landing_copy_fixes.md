@@ -1,6 +1,6 @@
 # Spec 23: Landing Page Copy & Branding Fixes
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context
 

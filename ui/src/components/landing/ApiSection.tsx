@@ -21,7 +21,7 @@ export function ApiSection() {
               OpenAI Compatible
             </div>
             <h2 className="mt-6 text-3xl sm:text-4xl font-semibold text-[#F3F4F6]">
-              Drop-in API for agent builders
+              Drop-in API for intelligence builders
             </h2>
             <p className="mt-4 text-lg text-[#9CA3AF] leading-relaxed">
               Point your existing OpenAI SDK to Janus and keep the same request shape. The

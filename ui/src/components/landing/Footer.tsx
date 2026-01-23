@@ -10,7 +10,7 @@ export function Footer() {
     Resources: [
       { label: 'Documentation', href: '/docs' },
       { label: 'API Reference', href: '/docs' },
-      { label: 'GitHub', href: 'https://github.com' },
+      { label: 'GitHub', href: 'https://github.com/chutesai' },
     ],
     Company: [
       { label: 'About', href: '#' },
@@ -29,7 +29,7 @@ export function Footer() {
               JANUS
             </Link>
             <p className="text-[#9CA3AF] text-sm leading-relaxed mb-4">
-              The Open Intelligence Rodeo. Build the intelligence engine on Bittensor Subnet 64.
+              The Open Intelligence Rodeo. Build the intelligence engine on Bittensor.
             </p>
             <div className="flex items-center gap-2 text-sm text-[#6B7280]">
               <span>Powered by</span>
@@ -62,16 +62,16 @@ export function Footer() {
         {/* Bottom */}
         <div className="pt-8 border-t border-[#1F2937]/50 flex flex-col sm:flex-row justify-between items-center gap-4">
           <p className="text-[#6B7280] text-sm">
-            &copy; {new Date().getFullYear()} Janus. All rights reserved.
+            &copy; 2026 Chutes.ai. All rights reserved.
           </p>
           <div className="flex items-center gap-6">
             {/* Twitter/X */}
             <a
-              href="https://twitter.com"
+              href="https://x.com/chutes_ai"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#6B7280] hover:text-[#F3F4F6] transition-colors"
-              aria-label="Twitter"
+              aria-label="X"
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
@@ -79,7 +79,7 @@ export function Footer() {
             </a>
             {/* GitHub */}
             <a
-              href="https://github.com"
+              href="https://github.com/chutesai"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[#6B7280] hover:text-[#F3F4F6] transition-colors"

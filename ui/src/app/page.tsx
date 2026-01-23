@@ -3,6 +3,8 @@ import {
   HeroSection,
   FeatureCards,
   HowItWorks,
+  FlexibilitySection,
+  IdealsSection,
   PoweredBy,
   Footer,
   ApiSection,
@@ -19,6 +21,8 @@ export default function LandingPage() {
         <FeatureCards />
         <ApiSection />
         <HowItWorks />
+        <FlexibilitySection />
+        <IdealsSection />
         <PoweredBy />
       </main>
       <Footer />

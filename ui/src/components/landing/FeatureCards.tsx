@@ -33,7 +33,7 @@ export function FeatureCards() {
       ),
       title: 'Anything In, Anything Out',
       description:
-        'Multimodal input (text, images, files) and multimodal output (text, code, images, artifacts). Your agent handles it all.',
+        'Multimodal input (text, images, files) and multimodal output (text, code, images, artifacts). Your Janus engine handles it all.',
     },
     {
       icon: (
@@ -41,9 +41,9 @@ export function FeatureCards() {
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
         </svg>
       ),
-      title: 'Miner Rodeo',
+      title: 'Intelligence Rodeo',
       description:
-        'Compete to build the best agent. Benchmarks score on quality, speed, cost, and streaming continuity. Top performers earn rewards.',
+        'Compete to build the best intelligence engine. Benchmarks score implementations on many use cases and composite metrics: quality, speed, cost. Top performers earn rewards.',
     },
     {
       icon: (
@@ -53,7 +53,7 @@ export function FeatureCards() {
       ),
       title: 'Build & Earn',
       description:
-        'Submit reusable components to the marketplace. Earn rewards when other miners integrate your research nodes, tools, or memory systems.',
+        'Publish reusable components (research nodes, tools, memory systems). Earn rewards whenever another Janus submission uses your component.',
     },
   ];
 
@@ -65,7 +65,7 @@ export function FeatureCards() {
             Why Janus?
           </h2>
           <p className="text-lg text-[#9CA3AF] max-w-2xl mx-auto">
-            The next generation of competitive AI infrastructure
+            The next generation of competitive intelligence infrastructure
           </p>
         </div>
 
