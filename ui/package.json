@@ -12,6 +12,7 @@
     "test:ui": "playwright test --ui"
   },
   "dependencies": {
+    "mermaid": "^11.12.2",
     "next": "16.1.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
