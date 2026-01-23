@@ -88,7 +88,7 @@ class LLMService:
             ]
 
             response = await client.chat.completions.create(
-                model=request.model or self._settings.model,
+                model=self._settings.model,  # Always use configured model for upstream
                 messages=openai_messages,  # type: ignore
                 temperature=request.temperature or self._settings.temperature,
                 max_tokens=request.max_tokens or self._settings.max_tokens,
@@ -139,7 +139,9 @@ class LLMService:
     ) -> AsyncGenerator[ChatCompletionChunk, None]:
         """Make a streaming completion request."""
         request_id = self._generate_id()
+        # Use requested model name in responses, but settings model for upstream
         model = request.model or self._settings.model
+        upstream_model = self._settings.model
 
         if self._should_mock():
             logger.info("llm_mock_response", mode="streaming")
@@ -191,7 +193,7 @@ class LLMService:
             )
 
             stream = await client.chat.completions.create(
-                model=model,
+                model=upstream_model,  # Always use configured model for upstream
                 messages=openai_messages,  # type: ignore
                 temperature=request.temperature or self._settings.temperature,
                 max_tokens=request.max_tokens or self._settings.max_tokens,
