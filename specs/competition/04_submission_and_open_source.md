@@ -1,6 +1,6 @@
 # Spec: Submission Process & Open Source Requirements
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

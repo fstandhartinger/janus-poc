@@ -9,6 +9,7 @@ import {
   Leaderboard,
   PrizePool,
   ScoringBreakdown,
+  SubmissionGuide,
   SubmissionForm,
   TechRequirements,
 } from './components';
@@ -27,6 +28,7 @@ export default function CompetitionPage() {
         <ArchitectureOverview />
         <TechRequirements />
         <BenchRunner />
+        <SubmissionGuide />
         <SubmissionForm />
         <FAQ />
       </main>

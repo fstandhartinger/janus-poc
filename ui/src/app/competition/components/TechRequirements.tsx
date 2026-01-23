@@ -1,88 +1,123 @@
-'use client';
+const apiEndpoints = [
+  { endpoint: '/v1/chat/completions', method: 'POST', required: 'Yes' },
+  { endpoint: '/health', method: 'GET', required: 'Yes' },
+  { endpoint: '/v1/models', method: 'GET', required: 'No (recommended)' },
+];
 
-import { useState } from 'react';
+const streamingRequirements = [
+  'Must support stream: true for SSE responses.',
+  'Continuous output: tokens should flow continuously, not in batches.',
+  'Reasoning tokens: use reasoning_content for thinking/planning.',
+  'Finish reason: always include finish_reason in the final chunk.',
+];
 
-const requirements = [
-  {
-    title: 'API Contract',
-    items: [
-      'Expose POST /v1/chat/completions (OpenAI-compatible).',
-      'Expose GET /health with a fast response.',
-      'Optional: GET /metrics and GET /debug endpoints.',
-    ],
-  },
-  {
-    title: 'Streaming Requirements',
-    items: [
-      'Support "stream": true for SSE responses.',
-      'Stream reasoning_content for intermediate steps.',
-      'Stream content for final output.',
-      'Maximum 10-second gap between chunks.',
-    ],
-  },
-  {
-    title: 'Resource Limits',
-    items: [
-      'Container budget: 4 vCPU, 8GB RAM, 20GB disk.',
-      'Request timeout: 5 minutes end-to-end.',
-      'Network: whitelist egress only (platform services).',
-    ],
-  },
-  {
-    title: 'Security',
-    items: [
-      'No hardcoded API keys or secrets in the image.',
-      'No external paid API calls.',
-      'Container runs in TEE isolation.',
-    ],
-  },
+const resourceLimits = [
+  { resource: 'Memory', limit: '16 GB' },
+  { resource: 'CPU', limit: '4 cores' },
+  { resource: 'Disk', limit: '50 GB' },
+  { resource: 'Network', limit: 'Whitelisted egress only' },
+  { resource: 'Timeout', limit: '5 minutes per request' },
+];
+
+const egressEndpoints = [
+  'api.chutes.ai',
+  'proxy.janus.rodeo',
+  'search.janus.rodeo',
+  'sandbox.janus.rodeo',
+  'vector.janus.rodeo',
 ];
 
 export function TechRequirements() {
-  const [openIndex, setOpenIndex] = useState(0);
-
   return (
     <section className="py-16 lg:py-24">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-10">
-          <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">Requirements</p>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-10">
+        <div className="text-center">
+          <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">
+            Requirements
+          </p>
           <h2 className="text-3xl sm:text-4xl font-semibold text-[#F3F4F6] mt-3">
             Technical Requirements
           </h2>
           <p className="text-[#9CA3AF] mt-4">
-            Ensure your container meets the contract before submitting to the
-            competition.
+            Validate your container against the required API contract, streaming
+            behavior, and resource limits before you submit.
           </p>
         </div>
 
-        <div className="space-y-4">
-          {requirements.map((requirement, index) => {
-            const isOpen = openIndex === index;
-            return (
-              <div key={requirement.title} className="glass-card p-5">
-                <button
-                  type="button"
-                  className="w-full flex items-center justify-between text-left"
-                  onClick={() => setOpenIndex(isOpen ? -1 : index)}
-                  aria-expanded={isOpen}
-                >
-                  <span className="text-lg font-semibold text-[#F3F4F6]">
-                    {requirement.title}
-                  </span>
-                  <span className="text-[#63D297] text-xl">
-                    {isOpen ? '−' : '+'}
-                  </span>
-                </button>
-                {isOpen && (
-                  <ul className="mt-4 space-y-2 text-sm text-[#9CA3AF] list-disc list-inside">
-                    {requirement.items.map((item) => (
-                      <li key={item}>{item}</li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            );
-          })}
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="glass-card p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+              API endpoints
+            </p>
+            <table className="w-full text-left text-sm mt-4">
+              <thead>
+                <tr className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                  <th className="pb-2">Endpoint</th>
+                  <th className="pb-2">Method</th>
+                  <th className="pb-2">Required</th>
+                </tr>
+              </thead>
+              <tbody>
+                {apiEndpoints.map((endpoint) => (
+                  <tr key={endpoint.endpoint} className="border-t border-[#1F2937]">
+                    <td className="py-2 text-[#F3F4F6]">{endpoint.endpoint}</td>
+                    <td className="py-2 text-[#D1D5DB]">{endpoint.method}</td>
+                    <td className="py-2 text-[#9CA3AF]">{endpoint.required}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="glass-card p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+              Streaming requirements
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-[#D1D5DB] list-disc list-inside">
+              {streamingRequirements.map((requirement) => (
+                <li key={requirement}>{requirement}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-6">
+          <div className="glass-card p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+              Resource limits
+            </p>
+            <table className="w-full text-left text-sm mt-4">
+              <thead>
+                <tr className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                  <th className="pb-2">Resource</th>
+                  <th className="pb-2">Limit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {resourceLimits.map((limit) => (
+                  <tr key={limit.resource} className="border-t border-[#1F2937]">
+                    <td className="py-2 text-[#F3F4F6]">{limit.resource}</td>
+                    <td className="py-2 text-[#9CA3AF]">{limit.limit}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="glass-card p-6">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+              Whitelisted egress
+            </p>
+            <p className="text-sm text-[#9CA3AF] mt-3">
+              Only these services are reachable from the container. All other outbound
+              traffic is blocked.
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-[#D1D5DB] list-disc list-inside">
+              {egressEndpoints.map((endpoint) => (
+                <li key={endpoint}>{endpoint}</li>
+              ))}
+            </ul>
+          </div>
         </div>
       </div>
     </section>
