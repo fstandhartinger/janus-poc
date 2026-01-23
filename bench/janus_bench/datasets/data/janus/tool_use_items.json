@@ -2,569 +2,4527 @@
   "metadata": {
     "benchmark": "janus_tool_use",
     "version": "1.0.0",
-    "created": "2026-01-23T20:51:43.222863Z",
-    "total_items": 80
+    "created": "2026-01-23T21:57:53.213833+00:00",
+    "total_items": 80,
+    "categories": {
+      "function_calling": 25,
+      "tool_selection": 20,
+      "tool_chaining": 20,
+      "code_execution": 15
+    }
   },
   "items": [
     {
-      "id": "tool_001",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_002",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_003",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_004",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_005",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_006",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_007",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_008",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_009",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_010",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_011",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_012",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_013",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_014",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_015",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_016",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_017",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_018",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_019",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_020",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_021",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_022",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_023",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_024",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_025",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_026",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_027",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_028",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_029",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_030",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_031",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_032",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_033",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_034",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_035",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_036",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_037",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_038",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_039",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_040",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_041",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_042",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_043",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_044",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_045",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_046",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_047",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_048",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_049",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_050",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_051",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_052",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_053",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_054",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_055",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_056",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_057",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_058",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_059",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_060",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_061",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_062",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_063",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_064",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_065",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_066",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_067",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_068",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_069",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_070",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_071",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: convert 5 miles to kilometers.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_072",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: calculate the compound interest on $1000 at 5% for 2 years.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_073",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: normalize this list of numbers: 4, 8, 15, 16, 23, 42.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_074",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: summarize and extract key dates from a document.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_075",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: generate a CSV with columns name, email, role.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_076",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: parse a JSON object and list its keys.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_077",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: translate a short paragraph into Spanish.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_078",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: extract entities (people, orgs, locations) from text.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_079",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: compare two versions of text and list changes.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
-    },
-    {
-      "id": "tool_080",
-      "suite": "janus/intelligence",
-      "prompt": "Use available tools to complete: format a markdown table from bullet points.",
-      "expected_keywords": null,
-      "task_type": "tool_use"
+      "id": "func_001",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current weather in Tokyo.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City name"
+                },
+                "units": {
+                  "type": "string",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_weather",
+        "arguments": {
+          "location": "Tokyo"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_002",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current weather in London.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City name"
+                },
+                "units": {
+                  "type": "string",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_weather",
+        "arguments": {
+          "location": "London"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_003",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current weather in San Francisco.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City name"
+                },
+                "units": {
+                  "type": "string",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_weather",
+        "arguments": {
+          "location": "San Francisco"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_004",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current weather in Sydney.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City name"
+                },
+                "units": {
+                  "type": "string",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_weather",
+        "arguments": {
+          "location": "Sydney"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_005",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current weather in Berlin.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_weather",
+            "description": "Get current weather for a location",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "location": {
+                  "type": "string",
+                  "description": "City name"
+                },
+                "units": {
+                  "type": "string",
+                  "enum": [
+                    "celsius",
+                    "fahrenheit"
+                  ]
+                }
+              },
+              "required": [
+                "location"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_weather",
+        "arguments": {
+          "location": "Berlin"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_006",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Fetch the exchange rate from USD to EUR.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_exchange_rate",
+            "description": "Get exchange rate between currencies",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "base_currency": {
+                  "type": "string"
+                },
+                "target_currency": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "base_currency",
+                "target_currency"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_exchange_rate",
+        "arguments": {
+          "base_currency": "USD",
+          "target_currency": "EUR"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_007",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Fetch the exchange rate from USD to JPY.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_exchange_rate",
+            "description": "Get exchange rate between currencies",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "base_currency": {
+                  "type": "string"
+                },
+                "target_currency": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "base_currency",
+                "target_currency"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_exchange_rate",
+        "arguments": {
+          "base_currency": "USD",
+          "target_currency": "JPY"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_008",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Fetch the exchange rate from EUR to GBP.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_exchange_rate",
+            "description": "Get exchange rate between currencies",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "base_currency": {
+                  "type": "string"
+                },
+                "target_currency": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "base_currency",
+                "target_currency"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_exchange_rate",
+        "arguments": {
+          "base_currency": "EUR",
+          "target_currency": "GBP"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_009",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Fetch the exchange rate from BTC to USD.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_exchange_rate",
+            "description": "Get exchange rate between currencies",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "base_currency": {
+                  "type": "string"
+                },
+                "target_currency": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "base_currency",
+                "target_currency"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_exchange_rate",
+        "arguments": {
+          "base_currency": "BTC",
+          "target_currency": "USD"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_010",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Fetch the exchange rate from CAD to USD.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_exchange_rate",
+            "description": "Get exchange rate between currencies",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "base_currency": {
+                  "type": "string"
+                },
+                "target_currency": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "base_currency",
+                "target_currency"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_exchange_rate",
+        "arguments": {
+          "base_currency": "CAD",
+          "target_currency": "USD"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_011",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Look up the current stock price for AAPL.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_stock_price",
+            "description": "Get current stock price for a ticker",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ticker"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_stock_price",
+        "arguments": {
+          "ticker": "AAPL"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_012",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Look up the current stock price for MSFT.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_stock_price",
+            "description": "Get current stock price for a ticker",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ticker"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_stock_price",
+        "arguments": {
+          "ticker": "MSFT"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_013",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Look up the current stock price for TSLA.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_stock_price",
+            "description": "Get current stock price for a ticker",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ticker"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_stock_price",
+        "arguments": {
+          "ticker": "TSLA"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_014",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Look up the current stock price for AMZN.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_stock_price",
+            "description": "Get current stock price for a ticker",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ticker"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_stock_price",
+        "arguments": {
+          "ticker": "AMZN"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_015",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Look up the current stock price for NVDA.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_stock_price",
+            "description": "Get current stock price for a ticker",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "ticker": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "ticker"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_stock_price",
+        "arguments": {
+          "ticker": "NVDA"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_016",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Convert 5 miles to kilometers.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_units",
+            "description": "Convert units between measurement systems",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "from_unit": {
+                  "type": "string"
+                },
+                "to_unit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "from_unit",
+                "to_unit"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "convert_units",
+        "arguments": {
+          "value": 5,
+          "from_unit": "miles",
+          "to_unit": "kilometers"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_017",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Convert 100 fahrenheit to celsius.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_units",
+            "description": "Convert units between measurement systems",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "from_unit": {
+                  "type": "string"
+                },
+                "to_unit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "from_unit",
+                "to_unit"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "convert_units",
+        "arguments": {
+          "value": 100,
+          "from_unit": "fahrenheit",
+          "to_unit": "celsius"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_018",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Convert 2.5 kilograms to pounds.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_units",
+            "description": "Convert units between measurement systems",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "from_unit": {
+                  "type": "string"
+                },
+                "to_unit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "from_unit",
+                "to_unit"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "convert_units",
+        "arguments": {
+          "value": 2.5,
+          "from_unit": "kilograms",
+          "to_unit": "pounds"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_019",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Convert 3 liters to gallons.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_units",
+            "description": "Convert units between measurement systems",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "from_unit": {
+                  "type": "string"
+                },
+                "to_unit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "from_unit",
+                "to_unit"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "convert_units",
+        "arguments": {
+          "value": 3,
+          "from_unit": "liters",
+          "to_unit": "gallons"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_020",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Convert 10 inches to centimeters.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "convert_units",
+            "description": "Convert units between measurement systems",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "value": {
+                  "type": "number"
+                },
+                "from_unit": {
+                  "type": "string"
+                },
+                "to_unit": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "value",
+                "from_unit",
+                "to_unit"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "convert_units",
+        "arguments": {
+          "value": 10,
+          "from_unit": "inches",
+          "to_unit": "centimeters"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_021",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current time in UTC.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_time",
+            "description": "Get current time for a timezone",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timezone"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_time",
+        "arguments": {
+          "timezone": "UTC"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_022",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current time in America/New_York.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_time",
+            "description": "Get current time for a timezone",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timezone"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_time",
+        "arguments": {
+          "timezone": "America/New_York"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_023",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current time in Europe/Paris.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_time",
+            "description": "Get current time for a timezone",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timezone"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_time",
+        "arguments": {
+          "timezone": "Europe/Paris"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_024",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current time in Asia/Tokyo.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_time",
+            "description": "Get current time for a timezone",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timezone"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_time",
+        "arguments": {
+          "timezone": "Asia/Tokyo"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "func_025",
+      "suite": "janus/intelligence",
+      "task_type": "function_calling",
+      "prompt": "Get the current time in Australia/Sydney.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "get_time",
+            "description": "Get current time for a timezone",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "timezone": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "timezone"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_call": {
+        "function": "get_time",
+        "arguments": {
+          "timezone": "Australia/Sydney"
+        }
+      },
+      "evaluation": {
+        "type": "function_call_match",
+        "allow_extra_args": true
+      }
+    },
+    {
+      "id": "select_001",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Calculate the compound interest on $10,000 at 5% for 10 years.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "calculator"
+      ],
+      "acceptable_alternatives": [
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_002",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Compute 17 * 23.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "calculator"
+      ],
+      "acceptable_alternatives": [
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_003",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Determine the square root of 529.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "calculator"
+      ],
+      "acceptable_alternatives": [
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_004",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Find the average of 4, 8, 15, 16, 23, 42.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "calculator"
+      ],
+      "acceptable_alternatives": [
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_005",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Convert 3.5 hours to seconds.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "calculator"
+      ],
+      "acceptable_alternatives": [
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_006",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Find the latest news about AI regulation in Europe.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "search"
+      ],
+      "acceptable_alternatives": [],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_007",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Look up the opening hours of the Louvre museum.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "search"
+      ],
+      "acceptable_alternatives": [],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_008",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "What is the current population of Canada?",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "search"
+      ],
+      "acceptable_alternatives": [],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_009",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Find the official documentation for Python async/await.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "search"
+      ],
+      "acceptable_alternatives": [],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_010",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Get the current price of gold per ounce.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "search"
+      ],
+      "acceptable_alternatives": [],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_011",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Fetch and summarize the content from https://example.com/policy.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "fetch_url"
+      ],
+      "acceptable_alternatives": [
+        "search"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_012",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Retrieve the text of https://example.com/terms and extract the refund section.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "fetch_url"
+      ],
+      "acceptable_alternatives": [
+        "search"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_013",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Download https://example.com/data.csv for further analysis.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "fetch_url"
+      ],
+      "acceptable_alternatives": [
+        "search"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_014",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Pull https://example.com/guide and list the headings.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "fetch_url"
+      ],
+      "acceptable_alternatives": [
+        "search"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_015",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Fetch https://example.com/report and summarize the conclusion.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "fetch_url"
+      ],
+      "acceptable_alternatives": [
+        "search"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_016",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Simulate 100 random dice rolls and report the distribution.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "code_execute"
+      ],
+      "acceptable_alternatives": [
+        "calculator"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_017",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Sort a list of 500 numbers and report the top 5 values.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "code_execute"
+      ],
+      "acceptable_alternatives": [
+        "calculator"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_018",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Parse a large list of numbers and compute the median.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "code_execute"
+      ],
+      "acceptable_alternatives": [
+        "calculator"
+      ],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_019",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Generate a CSV with columns name, email, role from a list of users.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "code_execute"
+      ],
+      "acceptable_alternatives": [],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "select_020",
+      "suite": "janus/intelligence",
+      "task_type": "tool_selection",
+      "prompt": "Analyze a JSON file and count the number of entries.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_tools": [
+        "code_execute"
+      ],
+      "acceptable_alternatives": [],
+      "evaluation": {
+        "type": "tool_choice",
+        "score_alternatives": 0.8
+      }
+    },
+    {
+      "id": "chain_001",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for the number of US states, then use a calculator to multiply it by 2.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "100"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_002",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for days in a week, then add 14 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "21"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_003",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for months in a year, then multiply by 3 with a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "36"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_004",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for hours in a day, then divide by 2 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "12"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_005",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for minutes in an hour, then add 15 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "75"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_006",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for seconds in a minute, then multiply by 2 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "120"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_007",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for the number of continents, then multiply it by 10 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "70"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_008",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for letters in the English alphabet, then subtract 6 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "20"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_009",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for days in February (non-leap year), then add 1 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "29"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_010",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for wheels on a standard car, then multiply by 3 using a calculator.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Basic math operations",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "expression"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "calculator"
+      ],
+      "expected_output_contains": [
+        "12"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true,
+        "verify_final_answer": true
+      }
+    },
+    {
+      "id": "chain_011",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for the official Python documentation page for datetime, then fetch the page content.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "fetch_url"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_012",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for the latest Node.js release notes, then fetch the release page.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "fetch_url"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_013",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for the RFC describing HTTP/2, then fetch the RFC page.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "fetch_url"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_014",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for the OpenAI API reference, then fetch the documentation page.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "fetch_url"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_015",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Search for the AWS S3 pricing page, then fetch the page content.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "search",
+            "description": "Web search",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "query": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "query"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "search",
+        "fetch_url"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_016",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Fetch https://example.com/data.csv, then use code execution to compute the average of the first column.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "fetch_url",
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_017",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Fetch https://example.com/sales.json, then use code execution to total the sales values.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "fetch_url",
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_018",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Fetch https://example.com/metrics.csv, then use code execution to find the max value.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "fetch_url",
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_019",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Fetch https://example.com/users.json, then use code execution to count entries.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "fetch_url",
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "chain_020",
+      "suite": "janus/intelligence",
+      "task_type": "tool_chaining",
+      "prompt": "Fetch https://example.com/logs.txt, then use code execution to count error lines.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "fetch_url",
+            "description": "Fetch web page content",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "url": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "url"
+              ]
+            }
+          }
+        },
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_sequence": [
+        "fetch_url",
+        "code_execute"
+      ],
+      "evaluation": {
+        "type": "sequence_match",
+        "partial_credit": true
+      }
+    },
+    {
+      "id": "code_001",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write and run Python code to list all prime numbers under 30.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "29"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_002",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to generate the first 10 Fibonacci numbers.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "55"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_003",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to compute factorial of 6.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "720"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_004",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to sum numbers from 1 to 100.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "5050"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_005",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to compute the GCD of 54 and 24.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "6"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_006",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to calculate the mean of [2, 4, 6, 8, 10].",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "6"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_007",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to count vowels in the string 'hello world'.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "3"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_008",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to check if 'racecar' is a palindrome.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "True",
+        "true"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_009",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to generate squares of numbers 1 through 5.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "25"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_010",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to find the median of [1, 3, 5, 7, 9].",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "5"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_011",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to count even numbers in [1, 2, 3, 4, 5, 6].",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "3"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_012",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to find the maximum value in [3, 1, 7, 2].",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "7"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_013",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to reverse the string 'abcde'.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "edcba"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_014",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to compute 12 * 12.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "144"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
+    },
+    {
+      "id": "code_015",
+      "suite": "janus/intelligence",
+      "task_type": "code_execution",
+      "prompt": "Write Python code to compute the sum of [10, 20, 30, 40].",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "code_execute",
+            "description": "Run Python code",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "language": {
+                  "type": "string"
+                },
+                "code": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "code"
+              ]
+            }
+          }
+        }
+      ],
+      "expected_output_contains": [
+        "100"
+      ],
+      "evaluation": {
+        "type": "code_output_match",
+        "verify_correctness": true,
+        "check_efficiency": false
+      }
     }
   ]
 }

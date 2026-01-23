@@ -1,6 +1,6 @@
 # Spec 32: Janus Tool Use Benchmark
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

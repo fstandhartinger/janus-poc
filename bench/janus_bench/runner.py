@@ -20,7 +20,12 @@ from .models import (
     TaskResult,
     TaskType,
 )
-from .scorers import compute_composite_score, compute_task_scores, score_quality
+from .scorers import (
+    compute_composite_score,
+    compute_task_scores,
+    score_quality,
+    score_tool_use,
+)
 from .scorers.research import (
     build_judge_prompt,
     detect_citations,
@@ -62,6 +67,15 @@ class BenchmarkRunner:
             "messages": messages,
             "stream": True,
         }
+        task_metadata = dict(task.metadata or {})
+        available_tools = task_metadata.get("available_tools") or task_metadata.get("tools")
+        if available_tools:
+            payload["tools"] = available_tools
+            tool_choice = task_metadata.get("tool_choice", "auto")
+            if tool_choice is not None:
+                payload["tool_choice"] = tool_choice
+        if "temperature" in task_metadata:
+            payload["temperature"] = task_metadata["temperature"]
 
         start_time = time.perf_counter()
         first_token_time: Optional[float] = None
@@ -72,6 +86,7 @@ class BenchmarkRunner:
         response_text = ""
         usage_data: dict[str, object] = {}
         error: Optional[str] = None
+        tool_call_chunks: dict[int, dict[str, object]] = {}
 
         try:
             async with self.client.stream(
@@ -113,6 +128,30 @@ class BenchmarkRunner:
                                 choices = chunk.get("choices", [])
                                 if choices:
                                     delta = choices[0].get("delta", {})
+                                    if "tool_calls" in delta:
+                                        for tool_call in delta["tool_calls"]:
+                                            index = tool_call.get("index", 0)
+                                            entry = tool_call_chunks.setdefault(
+                                                index,
+                                                {
+                                                    "id": None,
+                                                    "type": None,
+                                                    "function": {
+                                                        "name": "",
+                                                        "arguments": "",
+                                                    },
+                                                },
+                                            )
+                                            if "id" in tool_call:
+                                                entry["id"] = tool_call["id"]
+                                            if "type" in tool_call:
+                                                entry["type"] = tool_call["type"]
+                                            if "function" in tool_call:
+                                                function = tool_call["function"]
+                                                if function.get("name"):
+                                                    entry["function"]["name"] = function["name"]
+                                                if "arguments" in function and function["arguments"] is not None:
+                                                    entry["function"]["arguments"] += function["arguments"]
                                     content = delta.get("content", "")
                                     if content:
                                         response_text += content
@@ -152,6 +191,32 @@ class BenchmarkRunner:
         cost_usd = cast(Optional[float], usage_data.get("cost_usd"))
         sandbox_seconds = cast(Optional[float], usage_data.get("sandbox_seconds"))
 
+        tool_calls: list[dict[str, object]] = []
+        for index in sorted(tool_call_chunks):
+            entry = tool_call_chunks[index]
+            function = entry.get("function") or {}
+            name = function.get("name") if isinstance(function, dict) else None
+            args_raw = ""
+            if isinstance(function, dict):
+                args_raw = cast(str, function.get("arguments") or "")
+            arguments: dict[str, object] = {}
+            if args_raw:
+                try:
+                    arguments = json.loads(args_raw)
+                except json.JSONDecodeError:
+                    arguments = {}
+            tool_call_payload: dict[str, object] = {
+                "function": name,
+                "arguments": arguments,
+            }
+            if args_raw:
+                tool_call_payload["arguments_raw"] = args_raw
+            if entry.get("id"):
+                tool_call_payload["id"] = entry["id"]
+            if entry.get("type"):
+                tool_call_payload["type"] = entry["type"]
+            tool_calls.append(tool_call_payload)
+
         # Create result
         result = TaskResult(
             task_id=task.id,
@@ -169,6 +234,12 @@ class BenchmarkRunner:
             sandbox_seconds=sandbox_seconds,
         )
 
+        if tool_calls or task_metadata:
+            task_metadata = dict(task_metadata)
+            if tool_calls:
+                task_metadata["tool_calls"] = tool_calls
+            result.metadata = task_metadata or None
+
         if task.benchmark == "janus_research" and error is None and response_text:
             (
                 quality_score,
@@ -180,6 +251,20 @@ class BenchmarkRunner:
             result.metadata = research_metadata
             result.judge_score = judge_score
             result.judge_output = judge_output
+        elif task.type == TaskType.TOOL_USE:
+            tool_score, reasoning = score_tool_use(
+                response_text,
+                tool_calls,
+                task_metadata,
+            )
+            task_metadata = dict(task_metadata or {})
+            task_metadata["quality_override"] = True
+            result.metadata = task_metadata
+            result.judge_output = {
+                "reasoning": reasoning,
+                "tool_calls": tool_calls,
+            }
+            result.quality_score = tool_score
 
         # Compute scores
         result = compute_task_scores(
