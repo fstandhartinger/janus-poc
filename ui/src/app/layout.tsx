@@ -5,6 +5,14 @@ export const metadata: Metadata = {
   title: "Janus - The Open Intelligence Rodeo",
   description: "Compete to build the best AI agent on the decentralized intelligence network powered by Bittensor Subnet 64. Anything In, Anything Out.",
   keywords: ["AI", "Bittensor", "Subnet 64", "OpenAI", "Competition", "Decentralized AI"],
+  icons: {
+    icon: [
+      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
