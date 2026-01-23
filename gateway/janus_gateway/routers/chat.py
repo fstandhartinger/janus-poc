@@ -242,8 +242,10 @@ async def chat_completions(
         message_count=len(request.messages),
     )
 
-    # Resolve competitor
-    competitor = registry.resolve(request.competitor_id)
+    # Resolve competitor: explicit competitor_id overrides model-based selection.
+    competitor = registry.get(request.competitor_id) if request.competitor_id else None
+    if competitor is None and request.competitor_id is None:
+        competitor = registry.get(request.model) or registry.get_default()
 
     if request.stream:
         # Streaming response

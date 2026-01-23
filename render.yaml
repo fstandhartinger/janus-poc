@@ -19,33 +19,62 @@ services:
       - key: BASELINE_URL
         fromService:
           type: web
-          name: janus-baseline
+          name: janus-baseline-agent-cli
           property: hostport
           envVarKey: BASELINE_URL
+      - key: BASELINE_LANGCHAIN_URL
+        fromService:
+          type: web
+          name: janus-baseline-langchain
+          property: hostport
+          envVarKey: BASELINE_LANGCHAIN_URL
     healthCheckPath: /health
 
-  # Janus Baseline - Reference competitor implementation
+  # Janus Baseline Agent CLI - Reference competitor implementation
   - type: web
-    name: janus-baseline
+    name: janus-baseline-agent-cli
     runtime: python
     plan: free
     region: oregon
     branch: main
-    rootDir: baseline
+    rootDir: baseline-agent-cli
     buildCommand: pip install -e .
-    startCommand: uvicorn janus_baseline.main:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn janus_baseline_agent_cli.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
         value: "3.11"
-      - key: BASELINE_DEBUG
+      - key: BASELINE_AGENT_CLI_DEBUG
         value: "false"
-      - key: BASELINE_OPENAI_API_KEY
+      - key: BASELINE_AGENT_CLI_OPENAI_API_KEY
         sync: false
       - key: SANDY_BASE_URL
         value: "https://sandy.65.109.64.180.nip.io"
       - key: SANDY_API_KEY
         sync: false
       - key: CHUTES_API_KEY
+        sync: false
+    healthCheckPath: /health
+
+  # Janus Baseline LangChain - Alternative competitor implementation
+  - type: web
+    name: janus-baseline-langchain
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: baseline-langchain
+    buildCommand: pip install -e .
+    startCommand: uvicorn janus_baseline_langchain.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: BASELINE_LANGCHAIN_DEBUG
+        value: "false"
+      - key: BASELINE_LANGCHAIN_OPENAI_API_KEY
+        sync: false
+      - key: BASELINE_LANGCHAIN_CHUTES_API_KEY
+        sync: false
+      - key: BASELINE_LANGCHAIN_TAVILY_API_KEY
         sync: false
     healthCheckPath: /health
 

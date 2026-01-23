@@ -29,9 +29,21 @@ class Settings(BaseSettings):
 
     # Competitor routing
     baseline_url: str = Field(
-        default="http://localhost:8001",
-        description="Baseline competitor base URL",
-        validation_alias=AliasChoices("BASELINE_URL", "JANUS_BASELINE_URL"),
+        default="https://janus-baseline-agent-cli.onrender.com",
+        description="Baseline agent CLI competitor base URL",
+        validation_alias=AliasChoices(
+            "BASELINE_AGENT_CLI_URL",
+            "BASELINE_URL",
+            "JANUS_BASELINE_URL",
+        ),
+    )
+    baseline_langchain_url: str = Field(
+        default="http://localhost:8002",
+        description="Baseline LangChain competitor base URL",
+        validation_alias=AliasChoices(
+            "BASELINE_LANGCHAIN_URL",
+            "JANUS_BASELINE_LANGCHAIN_URL",
+        ),
     )
 
     # Sandy settings

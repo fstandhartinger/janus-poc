@@ -1,6 +1,6 @@
 # Spec 27: Baseline-LangChain Alternative Implementation
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

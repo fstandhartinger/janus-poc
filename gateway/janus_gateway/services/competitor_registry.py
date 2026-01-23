@@ -10,10 +10,15 @@ from janus_gateway.models import CompetitorInfo
 class CompetitorRegistry:
     """Registry of available competitors."""
 
-    def __init__(self, baseline_url: Optional[str] = None) -> None:
+    def __init__(
+        self,
+        baseline_url: Optional[str] = None,
+        baseline_langchain_url: Optional[str] = None,
+    ) -> None:
         self._competitors: dict[str, CompetitorInfo] = {}
         self._default_id: Optional[str] = None
         self._baseline_url = baseline_url
+        self._baseline_langchain_url = baseline_langchain_url
         self._initialize_default_competitors()
 
     def _initialize_default_competitors(self) -> None:
@@ -28,6 +33,22 @@ class CompetitorRegistry:
             is_baseline=True,
         )
         self.register(baseline, is_default=True)
+
+        langchain_url = (
+            self._normalize_url(self._baseline_langchain_url)
+            if self._baseline_langchain_url
+            else None
+        )
+        if langchain_url:
+            langchain = CompetitorInfo(
+                id="baseline-langchain",
+                name="Janus Baseline LangChain",
+                description="LangChain-based baseline competitor",
+                url=langchain_url,
+                enabled=True,
+                is_baseline=True,
+            )
+            self.register(langchain)
 
     @staticmethod
     def _normalize_url(url: str) -> str:
@@ -83,4 +104,7 @@ class CompetitorRegistry:
 def get_competitor_registry() -> CompetitorRegistry:
     """Get cached competitor registry instance."""
     settings = get_settings()
-    return CompetitorRegistry(baseline_url=settings.baseline_url)
+    return CompetitorRegistry(
+        baseline_url=settings.baseline_url,
+        baseline_langchain_url=settings.baseline_langchain_url,
+    )
