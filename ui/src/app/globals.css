@@ -301,6 +301,21 @@ html {
   height: 100%;
   overflow: hidden;
   border-bottom: 1px solid rgba(31, 41, 55, 0.7);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hero-image-frame:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 40px rgba(99, 210, 151, 0.2);
+}
+
+.hero-image-frame:active {
+  transform: scale(0.98);
+}
+
+.hero-image-frame:focus-visible {
+  outline: 2px solid rgba(99, 210, 151, 0.45);
+  outline-offset: 4px;
 }
 
 .hero-image {

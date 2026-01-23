@@ -1,6 +1,6 @@
 # Spec 29: Hero Video Easter Egg
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

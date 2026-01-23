@@ -1,13 +1,30 @@
+'use client';
+
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { HeroVideoModal } from './HeroVideoModal';
 
 export function HeroSection() {
+  const [showVideo, setShowVideo] = useState(false);
+
   return (
     <section className="relative overflow-hidden">
       <div className="absolute inset-0 aurora-glow pointer-events-none" />
 
       <div className="hero-image-stage">
-        <div className="hero-image-frame">
+        <div
+          className="hero-image-frame cursor-pointer"
+          onClick={() => setShowVideo(true)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              setShowVideo(true);
+            }
+          }}
+          role="button"
+          aria-label="Play hero video"
+          tabIndex={0}
+        >
           <Image
             src="/hero-img2.png"
             alt="Janus riding an iridescent bull"
@@ -20,6 +37,8 @@ export function HeroSection() {
           <div className="hero-image-rim" />
         </div>
       </div>
+
+      {showVideo && <HeroVideoModal onClose={() => setShowVideo(false)} />}
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-16 pt-12 lg:pt-20 text-center">
         <div data-reveal className="reveal">
