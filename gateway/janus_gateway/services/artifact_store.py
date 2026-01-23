@@ -1,8 +1,6 @@
 """Artifact storage service."""
 
 import hashlib
-import os
-import time
 import uuid
 from datetime import datetime
 from functools import lru_cache

@@ -1,15 +1,13 @@
 """Chat completions endpoint with OpenAI compatibility and streaming."""
 
 import asyncio
-import json
 import time
 import uuid
-from datetime import datetime
 from typing import AsyncGenerator, Union
 
 import httpx
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 
 from janus_gateway.config import Settings, get_settings
