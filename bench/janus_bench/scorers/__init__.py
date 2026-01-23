@@ -1,6 +1,14 @@
 """Scoring functions for benchmark evaluation."""
 
 from .quality import score_quality
+from .research import (
+    build_judge_prompt,
+    detect_citations,
+    detect_search_usage,
+    extract_judge_score,
+    parse_json_block,
+    score_key_facts,
+)
 from .speed import score_speed
 from .cost import score_cost
 from .streaming import score_streaming
@@ -13,6 +21,12 @@ __all__ = [
     "score_cost",
     "score_streaming",
     "score_multimodal",
+    "build_judge_prompt",
+    "detect_citations",
+    "detect_search_usage",
+    "extract_judge_score",
+    "parse_json_block",
+    "score_key_facts",
     "compute_composite_score",
     "compute_task_scores",
 ]

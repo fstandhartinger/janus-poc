@@ -1,6 +1,6 @@
 # Spec 31: Janus Research Benchmark
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

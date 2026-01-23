@@ -43,6 +43,30 @@ class Settings(BaseSettings):
 
     # Dataset settings
     seed: Optional[int] = Field(default=42, description="Random seed for reproducibility")
+    subset_percent: int = Field(
+        default=100,
+        ge=1,
+        le=100,
+        description="Subset percentage of tasks to run (1-100)",
+    )
+
+    # Judge settings (optional)
+    judge_url: Optional[str] = Field(
+        default=None,
+        description="Optional judge API base URL (e.g., https://api.openai.com/v1)",
+    )
+    judge_model: str = Field(
+        default="gpt-4o",
+        description="Judge model name",
+    )
+    judge_api_key: Optional[str] = Field(
+        default=None,
+        description="Optional API key for judge requests",
+    )
+    judge_timeout: int = Field(
+        default=120,
+        description="Judge request timeout in seconds",
+    )
 
 
 @lru_cache

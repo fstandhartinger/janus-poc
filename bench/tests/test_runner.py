@@ -102,6 +102,46 @@ class TestBenchmarkRunner:
         await runner.close()
 
     @pytest.mark.asyncio
+    async def test_run_task_research_scoring_override(self, runner, mock_sse_response):
+        """Test research scoring override uses judge output."""
+        research_task = BenchmarkTask(
+            id="research_001",
+            suite=Suite.JANUS_INTELLIGENCE,
+            type=TaskType.RESEARCH,
+            prompt="Verify a claim with citations.",
+            benchmark="janus_research",
+            metadata={"research_task_type": "fact_verification"},
+        )
+
+        mock_response = AsyncMock()
+        mock_response.status_code = 200
+
+        async def mock_aiter_lines():
+            for line in mock_sse_response:
+                yield line.strip()
+
+        mock_response.aiter_lines = mock_aiter_lines
+
+        mock_context = AsyncMock()
+        mock_context.__aenter__.return_value = mock_response
+        mock_context.__aexit__.return_value = None
+
+        with patch.object(runner.client, "stream", return_value=mock_context):
+            with patch.object(
+                runner,
+                "_score_research_task",
+                return_value=(0.9, {"quality_override": True}, 0.9, {"score": 0.9}),
+            ):
+                result = await runner.run_task(research_task)
+
+        assert result.quality_score == 0.9
+        assert result.metadata["quality_override"] is True
+        assert result.judge_score == 0.9
+        assert result.judge_output == {"score": 0.9}
+
+        await runner.close()
+
+    @pytest.mark.asyncio
     async def test_run_task_http_error(self, runner, sample_task):
         """Test handling HTTP error."""
         mock_response = AsyncMock()
