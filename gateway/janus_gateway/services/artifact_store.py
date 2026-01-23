@@ -1,5 +1,6 @@
 """Artifact storage service."""
 
+import base64
 import hashlib
 import uuid
 from datetime import datetime
@@ -9,6 +10,16 @@ from typing import Optional
 
 from janus_gateway.config import get_settings
 from janus_gateway.models import Artifact, ArtifactType
+
+DATA_URL_MAX_BYTES = 1_000_000
+
+
+def build_data_url(data: bytes, mime_type: str, max_bytes: int = DATA_URL_MAX_BYTES) -> Optional[str]:
+    """Return a base64 data URL for small artifacts."""
+    if len(data) > max_bytes:
+        return None
+    encoded = base64.b64encode(data).decode("ascii")
+    return f"data:{mime_type};base64,{encoded}"
 
 
 class ArtifactStore:
