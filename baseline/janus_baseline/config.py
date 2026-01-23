@@ -14,6 +14,7 @@ class Settings(BaseSettings):
         env_prefix="BASELINE_",
         env_file=".env",
         env_file_encoding="utf-8",
+        populate_by_name=True,
         extra="ignore",
     )
 
@@ -43,6 +44,20 @@ class Settings(BaseSettings):
         description="Sandy API key",
     )
     sandy_timeout: int = Field(default=300, description="Sandy sandbox timeout in seconds")
+
+    # Agent pack configuration
+    agent_pack_path: str = Field(
+        default="./agent-pack", description="Path to the baseline agent pack directory"
+    )
+    system_prompt_path: str = Field(
+        default="./agent-pack/prompts/system.md",
+        description="Path to the system prompt used by the CLI agent",
+    )
+    enable_web_search: bool = Field(default=True, description="Enable web search tools")
+    enable_code_execution: bool = Field(
+        default=True, description="Enable code execution tools"
+    )
+    enable_file_tools: bool = Field(default=True, description="Enable file tooling")
 
     # Complexity detection
     complexity_threshold: int = Field(
