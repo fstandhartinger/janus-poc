@@ -52,5 +52,8 @@ pytest
 | `JANUS_PORT` | `8000` | Server port |
 | `JANUS_DEBUG` | `false` | Enable debug mode |
 | `JANUS_LOG_LEVEL` | `INFO` | Log level |
+| `JANUS_BASELINE_URL` | `http://localhost:8001` | Baseline competitor base URL |
 | `JANUS_SANDY_BASE_URL` | - | Sandy API base URL |
 | `JANUS_SANDY_API_KEY` | - | Sandy API key |
+
+`BASELINE_URL` is accepted as an alias for `JANUS_BASELINE_URL` to match Render service variables.

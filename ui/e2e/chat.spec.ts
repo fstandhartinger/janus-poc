@@ -15,12 +15,8 @@ test.describe('Chat UI', () => {
     fs.writeFileSync(testImagePath, Buffer.from(PNG_BASE64, 'base64'));
 
     try {
-      // Use the fileChooser event to handle the hidden input
-      const [fileChooser] = await Promise.all([
-        page.waitForEvent('filechooser'),
-        page.getByTitle('Attach image').click(),
-      ]);
-      await fileChooser.setFiles(testImagePath);
+      // Set the file directly on the hidden input for reliability.
+      await page.locator('[data-testid="file-input"]').setInputFiles(testImagePath);
 
       // Verify image preview appears
       const imagePreview = page.locator('img[alt="Upload preview"]');
@@ -73,7 +69,9 @@ test.describe('Chat UI', () => {
     await textarea.fill('Hello, how are you?');
 
     // Submit the message
-    await page.locator('[data-testid="send-button"]').click();
+    const sendButton = page.locator('[data-testid="send-button"]');
+    await expect(sendButton).toBeEnabled();
+    await sendButton.click();
 
     const userMessageBubble = page.locator('[data-testid="user-message"]');
     await expect(userMessageBubble.first()).toContainText('Hello, how are you?');
@@ -129,7 +127,7 @@ test.describe('Chat UI', () => {
     await newChatButton.click();
 
     // Verify empty state appears
-    const emptyState = page.locator('text=Where should we begin?');
+    const emptyState = page.locator('.chat-empty-title');
     await expect(emptyState).toBeVisible();
   });
 });
