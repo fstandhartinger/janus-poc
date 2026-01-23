@@ -1,10 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sidebar, ChatArea } from '@/components';
 
 export default function ChatPage() {
+  const [isMounted, setIsMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) {
+    return <div className="min-h-screen chat-aurora-bg" aria-busy="true" />;
+  }
 
   return (
     <div className="min-h-screen chat-aurora-bg">

@@ -160,7 +160,7 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
             </svg>
           </button>
           <span className="chat-context">Session</span>
-          <span className="chat-session-title">{session?.title || 'Where should we begin?'}</span>
+          <span className="chat-session-title">{session?.title || 'New chat'}</span>
         </div>
 
         <div className="chat-topbar-right">
