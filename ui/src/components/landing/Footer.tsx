@@ -8,8 +8,8 @@ export function Footer() {
       { label: 'Marketplace', href: '/marketplace' },
     ],
     Resources: [
-      { label: 'Documentation', href: '#' },
-      { label: 'API Reference', href: '#' },
+      { label: 'Documentation', href: '/docs' },
+      { label: 'API Reference', href: '/docs' },
       { label: 'GitHub', href: 'https://github.com' },
     ],
     Company: [
@@ -29,7 +29,7 @@ export function Footer() {
               JANUS
             </Link>
             <p className="text-[#9CA3AF] text-sm leading-relaxed mb-4">
-              The Open Intelligence Rodeo. Compete to build the best AI agent on Bittensor Subnet 64.
+              The Open Intelligence Rodeo. Build the intelligence engine on Bittensor Subnet 64.
             </p>
             <div className="flex items-center gap-2 text-sm text-[#6B7280]">
               <span>Powered by</span>

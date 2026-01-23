@@ -24,12 +24,13 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
     message.content.some((c) => c.type === 'image_url');
 
   return (
-    <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
+    <div
+      className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
+      data-testid={isUser ? 'user-message' : 'assistant-message'}
+    >
       <div
-        className={`max-w-[80%] rounded-lg px-4 py-3 ${
-          isUser
-            ? 'bg-blue-600 text-white'
-            : 'bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100'
+        className={`chat-message max-w-[80%] ${
+          isUser ? 'chat-message-user' : 'chat-message-assistant'
         }`}
       >
         {/* Show attached images */}
@@ -42,7 +43,7 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
                   key={i}
                   src={c.image_url.url}
                   alt="Attached"
-                  className="max-w-[200px] max-h-[200px] rounded"
+                  className="max-w-[200px] max-h-[200px] rounded-lg border border-[#1F2937]"
                 />
               ))}
           </div>
@@ -50,18 +51,18 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
 
         {/* Show reasoning panel if available */}
         {showReasoning && message.reasoning_content && (
-          <div className="mb-2 p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm border-l-2 border-yellow-400">
-            <div className="text-xs text-yellow-600 dark:text-yellow-400 font-medium mb-1">
-              Thinking...
+          <div className="mb-3 p-3 rounded-lg text-sm border border-[#1F2937] bg-[#111726]/70">
+            <div className="text-[11px] uppercase tracking-[0.2em] text-[#F59E0B] font-semibold mb-2">
+              Thinking
             </div>
-            <div className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+            <div className="text-[#D1D5DB] whitespace-pre-wrap">
               {message.reasoning_content}
             </div>
           </div>
         )}
 
         {/* Message content */}
-        <div className="prose dark:prose-invert prose-sm max-w-none">
+        <div className="prose prose-invert prose-sm max-w-none">
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
         </div>
 
@@ -74,11 +75,11 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
                 href={artifact.url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 bg-white/10 rounded text-sm hover:bg-white/20 transition-colors"
+                className="flex items-center gap-2 p-2 bg-white/5 rounded-lg text-sm hover:bg-white/10 transition-colors"
               >
-                <span className="text-blue-400">📎</span>
+                <span className="text-[#63D297]">Attachment</span>
                 <span className="truncate">{artifact.display_name}</span>
-                <span className="text-xs text-gray-400">
+                <span className="text-xs text-[#6B7280]">
                   ({Math.round(artifact.size_bytes / 1024)}KB)
                 </span>
               </a>

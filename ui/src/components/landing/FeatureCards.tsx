@@ -1,12 +1,19 @@
+import type { CSSProperties } from 'react';
+
 interface FeatureCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
+  delay?: number;
 }
 
-function FeatureCard({ icon, title, description }: FeatureCardProps) {
+function FeatureCard({ icon, title, description, delay = 0 }: FeatureCardProps) {
   return (
-    <div className="glass-card p-6 sm:p-8">
+    <div
+      data-reveal
+      className="reveal glass-card p-6 sm:p-8"
+      style={{ '--reveal-delay': `${delay}ms` } as CSSProperties}
+    >
       <div className="w-12 h-12 rounded-xl bg-[#63D297]/10 flex items-center justify-center text-[#63D297] mb-4">
         {icon}
       </div>
@@ -53,7 +60,7 @@ export function FeatureCards() {
   return (
     <section className="py-16 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
+        <div data-reveal className="reveal text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-semibold text-[#F3F4F6] mb-4">
             Why Janus?
           </h2>
@@ -64,7 +71,7 @@ export function FeatureCards() {
 
         <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
           {features.map((feature, index) => (
-            <FeatureCard key={index} {...feature} />
+            <FeatureCard key={index} {...feature} delay={index * 120} />
           ))}
         </div>
       </div>

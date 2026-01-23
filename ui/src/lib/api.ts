@@ -4,7 +4,23 @@
 
 import type { ChatCompletionRequest, ChatCompletionChunk, Model } from '@/types/chat';
 
-const GATEWAY_URL = process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8000';
+function normalizeGatewayUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim().replace(/\/+$/, '');
+  if (!trimmed) {
+    return 'http://localhost:8000';
+  }
+  if (trimmed.includes('://')) {
+    return trimmed;
+  }
+  if (trimmed.startsWith('localhost') || trimmed.startsWith('127.0.0.1')) {
+    return `http://${trimmed}`;
+  }
+  return `https://${trimmed}`;
+}
+
+const GATEWAY_URL = normalizeGatewayUrl(
+  process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8000'
+);
 
 export async function fetchModels(): Promise<Model[]> {
   const response = await fetch(`${GATEWAY_URL}/v1/models`);

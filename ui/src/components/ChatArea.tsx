@@ -1,13 +1,17 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
-import { streamChatCompletion } from '@/lib/api';
+import { fetchModels, streamChatCompletion } from '@/lib/api';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
-import type { MessageContent } from '@/types/chat';
+import type { MessageContent, Model } from '@/types/chat';
 
-export function ChatArea() {
+interface ChatAreaProps {
+  onMenuClick?: () => void;
+}
+
+export function ChatArea({ onMenuClick }: ChatAreaProps) {
   const {
     currentSessionId,
     isStreaming,
@@ -22,6 +26,8 @@ export function ChatArea() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const [models, setModels] = useState<Model[]>([]);
+  const [selectedModel, setSelectedModel] = useState('baseline');
 
   const session = getCurrentSession();
   const messages = session?.messages || [];
@@ -30,6 +36,31 @@ export function ChatArea() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const fallbackModels: Model[] = [
+      { id: 'baseline', object: 'model', created: 0, owned_by: 'janus' },
+    ];
+
+    fetchModels()
+      .then((data) => {
+        if (!isMounted) return;
+        const available = data.length ? data : fallbackModels;
+        setModels(available);
+        setSelectedModel((current) =>
+          available.some((model) => model.id === current) ? current : available[0].id
+        );
+      })
+      .catch(() => {
+        if (!isMounted) return;
+        setModels(fallbackModels);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleSend = async (content: string, images: string[]) => {
     // Ensure we have a session
@@ -82,7 +113,7 @@ export function ChatArea() {
 
       for await (const chunk of streamChatCompletion(
         {
-          model: 'baseline',
+          model: selectedModel,
           messages: requestMessages,
           stream: true,
         },
@@ -116,62 +147,86 @@ export function ChatArea() {
 
   return (
     <div className="flex-1 flex flex-col h-full">
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 py-2 border-b dark:border-gray-700">
-        <h2 className="font-medium text-gray-700 dark:text-gray-200">
-          {session?.title || 'Select or create a chat'}
-        </h2>
-        <button
-          onClick={toggleReasoning}
-          className={`px-3 py-1 text-sm rounded ${
-            showReasoning
-              ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400'
-              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-          }`}
-        >
-          {showReasoning ? '💭 Thinking: ON' : '💭 Thinking: OFF'}
-        </button>
-      </div>
+      <div className="chat-topbar">
+        <div className="chat-topbar-left">
+          <button
+            type="button"
+            onClick={onMenuClick}
+            className="chat-menu-btn lg:hidden"
+            aria-label="Open sidebar"
+          >
+            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+          <span className="chat-context">Session</span>
+          <span className="chat-session-title">{session?.title || 'Where should we begin?'}</span>
+        </div>
 
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {messages.length === 0 ? (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            <div className="text-center">
-              <div className="text-4xl mb-2">👋</div>
-              <p>Start a conversation</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            {messages.map((message) => (
-              <MessageBubble
-                key={message.id}
-                message={message}
-                showReasoning={showReasoning}
-              />
-            ))}
-            <div ref={messagesEndRef} />
-          </>
-        )}
-
-        {/* Streaming indicator */}
-        {isStreaming && (
-          <div className="flex items-center gap-2 text-gray-500 text-sm">
-            <div className="animate-pulse">●</div>
-            <span>Generating...</span>
-            <button
-              onClick={handleCancel}
-              className="text-red-500 hover:text-red-600"
+        <div className="chat-topbar-right">
+          <div className="chat-model-select">
+            <span className="chat-model-label">Model</span>
+            <select
+              value={selectedModel}
+              onChange={(event) => setSelectedModel(event.target.value)}
+              className="chat-model-dropdown"
+              data-testid="model-select"
             >
-              Cancel
-            </button>
+              {(models.length
+                ? models
+                : [{ id: 'baseline', object: 'model', created: 0, owned_by: 'janus' }]
+              ).map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.id}
+                </option>
+              ))}
+            </select>
           </div>
-        )}
+          <button onClick={toggleReasoning} className="chat-toggle">
+            {showReasoning ? 'Thinking: On' : 'Thinking: Off'}
+          </button>
+        </div>
       </div>
 
-      {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isStreaming} />
+      <div className="flex-1 overflow-y-auto px-6 py-6">
+        <div className="max-w-4xl mx-auto">
+          {messages.length === 0 ? (
+            <div className="chat-empty">
+              <div>
+                <p className="chat-empty-title">Where should we begin?</p>
+                <p className="chat-empty-subtitle">
+                  Powered by Chutes. The world's open-source decentralized AI compute platform.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <>
+              {messages.map((message) => (
+                <MessageBubble
+                  key={message.id}
+                  message={message}
+                  showReasoning={showReasoning}
+                />
+              ))}
+              <div ref={messagesEndRef} />
+            </>
+          )}
+
+          {isStreaming && (
+            <div className="chat-streaming">
+              <span className="chat-streaming-dot" />
+              <span>Generating response</span>
+              <button onClick={handleCancel} className="chat-cancel">
+                Stop
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="px-6 pb-6">
+        <ChatInput onSend={handleSend} disabled={isStreaming} />
+      </div>
     </div>
   );
 }

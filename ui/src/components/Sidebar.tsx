@@ -1,46 +1,113 @@
 'use client';
 
+import { useMemo, useState } from 'react';
 import { useChatStore } from '@/store/chat';
 
-export function Sidebar() {
+interface SidebarProps {
+  isOpen?: boolean;
+  onClose?: () => void;
+}
+
+export function Sidebar({ isOpen = false, onClose }: SidebarProps) {
   const { sessions, currentSessionId, createSession, selectSession, deleteSession } =
     useChatStore();
+  const [query, setQuery] = useState('');
+
+  const filteredSessions = useMemo(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed) {
+      return sessions;
+    }
+    return sessions.filter((session) => session.title.toLowerCase().includes(trimmed));
+  }, [query, sessions]);
+
+  const sidebarClasses = [
+    'chat-sidebar',
+    isOpen ? 'chat-sidebar-open' : 'chat-sidebar-closed',
+  ].join(' ');
 
   return (
-    <div className="w-64 bg-gray-900 text-white flex flex-col h-full">
-      <div className="p-4 border-b border-gray-700">
+    <aside className={sidebarClasses}>
+      <div className="px-5 pt-5 pb-4 border-b border-[#1F2937]">
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-xs uppercase tracking-[0.3em] text-[#6B7280]">Workspace</div>
+            <div className="text-sm text-[#F3F4F6] mt-2 font-medium">Janus Auto</div>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-[#111726] border border-[#1F2937] flex items-center justify-center text-[#63D297]">
+            J
+          </div>
+        </div>
+
         <button
-          onClick={createSession}
-          className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+          onClick={() => {
+            createSession();
+            onClose?.();
+          }}
+          className="mt-5 w-full flex items-center justify-center gap-2 rounded-xl bg-[#63D297] text-[#111827] px-4 py-2.5 text-sm font-semibold transition-transform hover:-translate-y-0.5"
         >
-          + New Chat
+          <span className="text-base leading-none">+</span>
+          New Chat
         </button>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className="mt-3 w-full rounded-xl border border-[#1F2937] px-4 py-2 text-sm text-[#9CA3AF] lg:hidden"
+        >
+          Close
+        </button>
+
+        <div className="mt-4 search-input">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search chats"
+            aria-label="Search chats"
+          />
+        </div>
+
+        <div className="mt-4 space-y-1">
+          <button type="button" className="chat-sidebar-item w-full">
+            Library
+          </button>
+          <button type="button" className="chat-sidebar-item w-full">
+            Agents
+          </button>
+          <button type="button" className="chat-sidebar-item w-full">
+            Studio
+          </button>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {sessions.length === 0 ? (
-          <div className="p-4 text-gray-400 text-sm">No conversations yet</div>
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="text-xs uppercase tracking-[0.3em] text-[#6B7280] mb-3">
+          Chats
+        </div>
+        {filteredSessions.length === 0 ? (
+          <div className="text-sm text-[#6B7280]">No conversations yet</div>
         ) : (
-          <ul className="py-2">
-            {sessions.map((session) => (
-              <li key={session.id}>
+          <ul className="space-y-1">
+            {filteredSessions.map((session) => (
+              <li key={session.id} className="relative group">
                 <button
-                  onClick={() => selectSession(session.id)}
-                  className={`w-full px-4 py-3 text-left text-sm hover:bg-gray-800 transition-colors flex items-center justify-between group ${
-                    session.id === currentSessionId ? 'bg-gray-800' : ''
+                  onClick={() => {
+                    selectSession(session.id);
+                    onClose?.();
+                  }}
+                  className={`chat-sidebar-item w-full justify-between ${
+                    session.id === currentSessionId ? 'active' : ''
                   }`}
                 >
-                  <span className="truncate flex-1">{session.title}</span>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteSession(session.id);
-                    }}
-                    className="opacity-0 group-hover:opacity-100 text-gray-400 hover:text-red-400 ml-2"
-                    title="Delete"
-                  >
-                    ×
-                  </button>
+                  <span className="truncate">{session.title}</span>
+                </button>
+                <button
+                  onClick={() => deleteSession(session.id)}
+                  className="absolute right-2 top-2.5 text-xs text-[#6B7280] opacity-0 group-hover:opacity-100 hover:text-[#FA5D19]"
+                  title="Delete"
+                  aria-label={`Delete ${session.title}`}
+                >
+                  x
                 </button>
               </li>
             ))}
@@ -48,9 +115,9 @@ export function Sidebar() {
         )}
       </div>
 
-      <div className="p-4 border-t border-gray-700 text-xs text-gray-500">
+      <div className="px-5 py-4 border-t border-[#1F2937] text-xs text-[#6B7280]">
         Janus PoC
       </div>
-    </div>
+    </aside>
   );
 }

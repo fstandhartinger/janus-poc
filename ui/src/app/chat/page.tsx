@@ -1,15 +1,23 @@
 'use client';
 
+import { useState } from 'react';
 import { Sidebar, ChatArea } from '@/components';
-import { Header } from '@/components/landing';
 
 export default function ChatPage() {
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   return (
-    <div className="flex flex-col h-screen bg-[#0B0F14]">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <Sidebar />
-        <ChatArea />
+    <div className="min-h-screen chat-aurora-bg">
+      <div className="chat-shell">
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+            aria-hidden="true"
+          />
+        )}
+        <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+        <ChatArea onMenuClick={() => setSidebarOpen(true)} />
       </div>
     </div>
   );

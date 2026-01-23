@@ -35,12 +35,22 @@ test.describe('Landing Page', () => {
     await page.goto('/');
 
     // Click the primary CTA
-    const ctaButton = page.locator('a:has-text("Try Manus Chat")');
+    const ctaButton = page.locator('main a:has-text("Janus Chat")').first();
     await expect(ctaButton).toBeVisible();
     await ctaButton.click();
 
     // Verify navigation to chat page
     await expect(page).toHaveURL('/chat');
+  });
+
+  test('API section is visible', async ({ page }) => {
+    await page.goto('/');
+
+    const apiSection = page.locator('text=Drop-in API for agent builders');
+    await expect(apiSection).toBeVisible();
+
+    const codeBlock = page.locator('pre code');
+    await expect(codeBlock.first()).toContainText('/v1/chat/completions');
   });
 
   test('feature cards are displayed', async ({ page }) => {
@@ -95,6 +105,6 @@ test.describe('Landing Page', () => {
 
     // Verify mobile nav links are visible
     const mobileNav = page.locator('nav.flex.flex-col');
-    await expect(mobileNav.locator('a:has-text("Chat")')).toBeVisible();
+    await expect(mobileNav.getByRole('link', { name: 'Chat', exact: true })).toBeVisible();
   });
 });

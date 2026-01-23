@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -26,6 +26,13 @@ class Settings(BaseSettings):
     request_timeout: int = Field(default=300, description="Request timeout in seconds")
     max_request_size: int = Field(default=10_485_760, description="Max request size in bytes (10MB)")
     keep_alive_interval: float = Field(default=1.5, description="SSE keep-alive interval in seconds")
+
+    # Competitor routing
+    baseline_url: str = Field(
+        default="http://localhost:8001",
+        description="Baseline competitor base URL",
+        validation_alias=AliasChoices("BASELINE_URL", "JANUS_BASELINE_URL"),
+    )
 
     # Sandy settings
     sandy_base_url: Optional[str] = Field(default=None, description="Sandy API base URL")

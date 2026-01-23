@@ -22,28 +22,28 @@ test.describe('Chat UI', () => {
       ]);
       await fileChooser.setFiles(testImagePath);
 
-    // Verify image preview appears
-    const imagePreview = page.locator('img[alt="Upload preview"]');
-    await expect(imagePreview).toBeVisible();
+      // Verify image preview appears
+      const imagePreview = page.locator('img[alt="Upload preview"]');
+      await expect(imagePreview).toBeVisible();
 
-    // Enter a prompt
-    const textarea = page.locator('textarea[placeholder="Type a message..."]');
-    await textarea.fill('What is in this image?');
+      // Enter a prompt
+      const textarea = page.locator('[data-testid="chat-input"]');
+      await textarea.fill('What is in this image?');
 
-    // Submit the message
-    const sendButton = page.getByRole('button', { name: 'Send' });
-    await sendButton.click();
+      // Submit the message
+      const sendButton = page.locator('[data-testid="send-button"]');
+      await sendButton.click();
 
-    // Verify user message appears (the message bubble div, not buttons)
-    const userMessageBubble = page.locator('div.max-w-\\[80\\%\\].rounded-lg.bg-blue-600');
-    await expect(userMessageBubble.first()).toBeVisible();
+      // Verify user message appears (the message bubble div, not buttons)
+      const userMessageBubble = page.locator('[data-testid="user-message"]');
+      await expect(userMessageBubble.first()).toBeVisible();
 
-    // Verify the message contains our text
-    await expect(userMessageBubble.first()).toContainText('What is in this image?');
+      // Verify the message contains our text
+      await expect(userMessageBubble.first()).toContainText('What is in this image?');
 
-    // Verify attached image appears in the message
-    const attachedImage = userMessageBubble.first().locator('img[alt="Attached"]');
-    await expect(attachedImage).toBeVisible();
+      // Verify attached image appears in the message
+      const attachedImage = userMessageBubble.first().locator('img[alt="Attached"]');
+      await expect(attachedImage).toBeVisible();
     } finally {
       // Clean up test image
       if (fs.existsSync(testImagePath)) {
@@ -53,40 +53,52 @@ test.describe('Chat UI', () => {
   });
 
   test('shows streaming responses incrementally', async ({ page }) => {
+    await page.route('**/v1/chat/completions', async (route) => {
+      const streamChunks = [
+        'data: {"id":"chatcmpl-test","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
+        'data: {"id":"chatcmpl-test","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"Hello from Janus"},"finish_reason":null}]}',
+        'data: [DONE]',
+      ];
+      await route.fulfill({
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+        body: streamChunks.join('\n\n'),
+      });
+    });
+
     await page.goto('/chat');
 
     // Enter a prompt
-    const textarea = page.locator('textarea[placeholder="Type a message..."]');
+    const textarea = page.locator('[data-testid="chat-input"]');
     await textarea.fill('Hello, how are you?');
 
     // Submit the message
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.locator('[data-testid="send-button"]').click();
 
-    // Verify user message bubble appears (the message bubble div, not buttons)
-    const userMessageBubble = page.locator('div.max-w-\\[80\\%\\].rounded-lg.bg-blue-600');
-    await expect(userMessageBubble.first()).toBeVisible();
-
-    // Verify the message contains our text
+    const userMessageBubble = page.locator('[data-testid="user-message"]');
     await expect(userMessageBubble.first()).toContainText('Hello, how are you?');
+
+    const assistantMessage = page.locator('[data-testid="assistant-message"]');
+    await expect(assistantMessage.first()).toContainText('Hello from Janus');
   });
 
   test('reasoning panel can be toggled', async ({ page }) => {
     await page.goto('/chat');
 
     // Find the reasoning toggle button
-    const toggleButton = page.locator('button:has-text("Thinking:")');
+    const toggleButton = page.locator('button:has-text("Thinking")');
     await expect(toggleButton).toBeVisible();
 
     // Initially should show "Thinking: OFF"
-    await expect(toggleButton).toContainText('OFF');
+    await expect(toggleButton).toContainText('Off');
 
     // Click to enable
     await toggleButton.click();
-    await expect(toggleButton).toContainText('ON');
+    await expect(toggleButton).toContainText('On');
 
     // Click to disable
     await toggleButton.click();
-    await expect(toggleButton).toContainText('OFF');
+    await expect(toggleButton).toContainText('Off');
   });
 
   test('displays artifact links with download capability', async ({ page }) => {
@@ -100,7 +112,7 @@ test.describe('Chat UI', () => {
     await expect(chatArea).toBeVisible();
 
     // The artifact links are rendered with the following structure:
-    // - Link with 📎 icon
+    // - Attachment label
     // - Display name
     // - Size in KB
     // This is verified through component code, as real artifacts require server integration
@@ -117,7 +129,7 @@ test.describe('Chat UI', () => {
     await newChatButton.click();
 
     // Verify empty state appears
-    const emptyState = page.locator('text=Start a conversation');
+    const emptyState = page.locator('text=Where should we begin?');
     await expect(emptyState).toBeVisible();
   });
 });

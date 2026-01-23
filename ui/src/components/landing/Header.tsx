@@ -40,7 +40,7 @@ export function Header() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <Link href="/chat" className="btn-primary">
-              Get Started
+              Janus Chat
             </Link>
           </div>
 
@@ -81,7 +81,7 @@ export function Header() {
                 className="btn-primary mt-4"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Get Started
+                Janus Chat
               </Link>
             </nav>
           </div>

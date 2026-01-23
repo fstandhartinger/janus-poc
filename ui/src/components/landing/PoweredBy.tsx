@@ -9,11 +9,11 @@ export function PoweredBy() {
   return (
     <section className="py-12 lg:py-16 border-t border-b border-[#1F2937]/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <p className="text-center text-sm text-[#6B7280] uppercase tracking-wider mb-8">
+        <p data-reveal className="reveal text-center text-sm text-[#6B7280] uppercase tracking-wider mb-8">
           Powered By
         </p>
 
-        <div className="flex flex-wrap justify-center items-center gap-8 lg:gap-16">
+        <div data-reveal className="reveal flex flex-wrap justify-center items-center gap-8 lg:gap-16">
           {partners.map((partner) => (
             <div
               key={partner.name}

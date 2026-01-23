@@ -47,39 +47,41 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="border-t dark:border-gray-700 p-4">
+    <form onSubmit={handleSubmit} className="chat-input-wrapper">
       {/* Image previews */}
       {images.length > 0 && (
-        <div className="flex flex-wrap gap-2 mb-2">
+        <div className="flex flex-wrap gap-2 mb-3">
           {images.map((img, i) => (
             <div key={i} className="relative group">
               <img
                 src={img}
                 alt="Upload preview"
-                className="w-16 h-16 object-cover rounded"
+                className="w-16 h-16 object-cover rounded-lg border border-[#1F2937]"
               />
               <button
                 type="button"
                 onClick={() => removeImage(i)}
-                className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                className="absolute -top-1 -right-1 w-5 h-5 bg-[#FA5D19] text-white rounded-full text-xs opacity-0 group-hover:opacity-100 transition-opacity"
               >
-                ×
+                x
               </button>
             </div>
           ))}
         </div>
       )}
 
-      <div className="flex items-end gap-2">
-        {/* File upload button */}
+      <div className="chat-input-container">
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 disabled:opacity-50"
+          className="w-9 h-9 rounded-full border border-[#1F2937] flex items-center justify-center text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#374151] transition-colors disabled:opacity-50"
+          aria-label="Attach image"
           title="Attach image"
         >
-          📷
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
         </button>
         <input
           ref={fileInputRef}
@@ -88,9 +90,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           multiple
           onChange={handleFileChange}
           className="hidden"
+          data-testid="file-input"
         />
 
-        {/* Text input */}
         <textarea
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -100,19 +102,36 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
               handleSubmit(e);
             }
           }}
-          placeholder="Type a message..."
+          placeholder="Ask anything..."
           disabled={disabled}
           rows={1}
-          className="flex-1 resize-none rounded-lg border dark:border-gray-600 bg-white dark:bg-gray-800 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+          className="chat-input"
+          data-testid="chat-input"
         />
 
-        {/* Send button */}
+        <button
+          type="button"
+          disabled={disabled}
+          className="w-9 h-9 rounded-full border border-[#1F2937] flex items-center justify-center text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#374151] transition-colors disabled:opacity-50"
+          aria-label="Voice input"
+        >
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 11a7 7 0 0014 0" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v3" />
+          </svg>
+        </button>
+
         <button
           type="submit"
           disabled={disabled || (!input.trim() && images.length === 0)}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="chat-send-btn disabled:cursor-not-allowed"
+          data-testid="send-button"
+          aria-label="Send message"
         >
-          Send
+          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M4 12h16M14 6l6 6-6 6" />
+          </svg>
         </button>
       </div>
     </form>

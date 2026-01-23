@@ -44,13 +44,40 @@ class LLMService:
         """Generate a completion ID."""
         return f"chatcmpl-baseline-{uuid.uuid4().hex[:12]}"
 
+    def _should_mock(self) -> bool:
+        return not self._settings.openai_api_key and not self._settings.openai_base_url
+
+    def _mock_text(self) -> str:
+        return (
+            "Hello! The Janus Baseline is running in mock mode. "
+            "Set BASELINE_OPENAI_API_KEY to enable live responses."
+        )
+
     async def complete(
         self,
         request: ChatCompletionRequest,
     ) -> ChatCompletionResponse:
         """Make a non-streaming completion request."""
-        client = self._get_client()
         request_id = self._generate_id()
+
+        if self._should_mock():
+            logger.info("llm_mock_response", mode="non_streaming")
+            return ChatCompletionResponse(
+                id=request_id,
+                model=request.model or self._settings.model,
+                choices=[
+                    Choice(
+                        message=Message(
+                            role=MessageRole.ASSISTANT,
+                            content=self._mock_text(),
+                        ),
+                        finish_reason=FinishReason.STOP,
+                    )
+                ],
+                usage=Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+            )
+
+        client = self._get_client()
 
         try:
             # Convert messages to OpenAI format
@@ -111,9 +138,35 @@ class LLMService:
         request: ChatCompletionRequest,
     ) -> AsyncGenerator[ChatCompletionChunk, None]:
         """Make a streaming completion request."""
-        client = self._get_client()
         request_id = self._generate_id()
         model = request.model or self._settings.model
+
+        if self._should_mock():
+            logger.info("llm_mock_response", mode="streaming")
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[ChunkChoice(delta=Delta(role=MessageRole.ASSISTANT))],
+            )
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[ChunkChoice(delta=Delta(reasoning_content="Running in mock mode... "))],
+            )
+            for word in self._mock_text().split():
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[ChunkChoice(delta=Delta(content=f"{word} "))],
+                )
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)],
+            )
+            return
+
+        client = self._get_client()
 
         try:
             # Convert messages to OpenAI format
