@@ -6,6 +6,10 @@ test.describe('Competition Page', () => {
 
     await expect(page.locator('text=Rodeo Rankings')).toBeVisible();
     await expect(page.getByRole('table').getByText('baseline-v1')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Five Steps to the Janus Rodeo' })
+    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'The Prize Pool' })).toBeVisible();
 
     const faqButton = page.locator('button:has-text("How do I stream intermediate steps?")');
     await expect(faqButton).toBeVisible();

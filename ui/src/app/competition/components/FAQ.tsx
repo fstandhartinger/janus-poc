@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 
-const faqs = [
+const faqs: { question: string; answer: ReactNode }[] = [
   {
     question: 'What technology can I use?',
     answer:
@@ -24,9 +24,42 @@ const faqs = [
       'Public benchmarks refresh daily. Real-time updates arrive once the automated submission pipeline launches.',
   },
   {
+    question: 'How does the prize pool work?',
+    answer: (
+      <>
+        The pool grows daily while the same implementation holds #1. When a new
+        champion takes the top spot, they claim the entire accumulated balance and the
+        pool resets. See the{' '}
+        <a href="#prize-pool" className="text-[#63D297] hover:underline">
+          Prize Pool
+        </a>{' '}
+        section for the full breakdown.
+      </>
+    ),
+  },
+  {
     question: 'What are the prizes?',
     answer:
-      'Prize pool allocations are announced each epoch. Top 3 competitors earn rewards when the round closes.',
+      'Rewards are paid from the accumulating prize pool. In Phase 1, payouts are manual after verification. Phase 2 moves the full process on-chain for automated settlement.',
+  },
+  {
+    question: 'What happens if two submissions tie for #1?',
+    answer:
+      'The earliest verified submission timestamp breaks ties. If verification is still pending, payouts pause until the tie is resolved.',
+  },
+  {
+    question: 'What if a champion is disqualified or disputed?',
+    answer: (
+      <>
+        Disqualifications void the claim and the pool moves to the next highest
+        verified submission. Disputes trigger an audit window and funds are released
+        only after the review. See{' '}
+        <a href="#pool-rules" className="text-[#63D297] hover:underline">
+          Claim Rules
+        </a>{' '}
+        for details.
+      </>
+    ),
   },
 ];
 

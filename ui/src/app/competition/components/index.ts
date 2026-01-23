@@ -1,9 +1,11 @@
 export { ArchitectureOverview } from './ArchitectureOverview';
 export { BenchRunner } from './BenchRunner';
+export { CompetitionOverview } from './CompetitionOverview';
 export { FAQ } from './FAQ';
 export { HeroSection } from './HeroSection';
 export { HowItWorks } from './HowItWorks';
 export { Leaderboard } from './Leaderboard';
+export { PrizePool } from './PrizePool';
 export { ScoringBreakdown } from './ScoringBreakdown';
 export { SubmissionForm } from './SubmissionForm';
 export { TechRequirements } from './TechRequirements';

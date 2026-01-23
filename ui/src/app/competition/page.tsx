@@ -2,10 +2,12 @@ import { Header, Footer } from '@/components/landing';
 import {
   ArchitectureOverview,
   BenchRunner,
+  CompetitionOverview,
   FAQ,
   HeroSection,
   HowItWorks,
   Leaderboard,
+  PrizePool,
   ScoringBreakdown,
   SubmissionForm,
   TechRequirements,
@@ -17,8 +19,10 @@ export default function CompetitionPage() {
       <Header />
       <main className="flex-1">
         <HeroSection />
+        <CompetitionOverview />
         <Leaderboard />
         <HowItWorks />
+        <PrizePool />
         <ScoringBreakdown />
         <ArchitectureOverview />
         <TechRequirements />

@@ -1,6 +1,6 @@
 # Spec: Process Steps & Prize Pool Mechanism
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

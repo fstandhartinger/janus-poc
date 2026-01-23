@@ -14,18 +14,31 @@ interface CompetitorDetails {
 interface CompetitorRow {
   rank: number;
   competitor: string;
+  miner: string;
   score: number;
   quality: number;
   speed: number;
   cost: number;
   streaming: number;
   modality: number;
+  submitted: string;
+  daysAtTop: number | null;
   details: CompetitorDetails;
 }
 
 type SortKey = keyof Pick<
   CompetitorRow,
-  'rank' | 'competitor' | 'score' | 'quality' | 'speed' | 'cost' | 'streaming' | 'modality'
+  | 'rank'
+  | 'competitor'
+  | 'miner'
+  | 'score'
+  | 'quality'
+  | 'speed'
+  | 'cost'
+  | 'streaming'
+  | 'modality'
+  | 'submitted'
+  | 'daysAtTop'
 >;
 
 type SortDirection = 'asc' | 'desc';
@@ -34,12 +47,15 @@ const leaderboardData: CompetitorRow[] = [
   {
     rank: 1,
     competitor: 'baseline-v1',
+    miner: '5F4c...1B7',
     score: 78.4,
     quality: 82.1,
     speed: 71.2,
     cost: 85.0,
     streaming: 76.3,
     modality: 70.8,
+    submitted: '2025-01-12',
+    daysAtTop: 14,
     details: {
       suite: 'public/dev',
       ttft: '0.92s',
@@ -51,12 +67,15 @@ const leaderboardData: CompetitorRow[] = [
   {
     rank: 2,
     competitor: 'rodeo-alpha',
+    miner: '5G9a...C21',
     score: 75.2,
     quality: 79.4,
     speed: 69.8,
     cost: 80.5,
     streaming: 72.0,
     modality: 74.1,
+    submitted: '2025-01-10',
+    daysAtTop: null,
     details: {
       suite: 'public/dev',
       ttft: '1.04s',
@@ -68,12 +87,15 @@ const leaderboardData: CompetitorRow[] = [
   {
     rank: 3,
     competitor: 'engine-x',
+    miner: '5H2d...E9F',
     score: 72.8,
     quality: 76.3,
     speed: 68.9,
     cost: 78.4,
     streaming: 69.5,
     modality: 71.2,
+    submitted: '2025-01-08',
+    daysAtTop: null,
     details: {
       suite: 'public/dev',
       ttft: '1.21s',
@@ -85,12 +107,15 @@ const leaderboardData: CompetitorRow[] = [
   {
     rank: 4,
     competitor: 'coyote-r1',
+    miner: '5J7b...A10',
     score: 70.6,
     quality: 73.9,
     speed: 66.8,
     cost: 75.2,
     streaming: 68.1,
     modality: 67.4,
+    submitted: '2025-01-06',
+    daysAtTop: null,
     details: {
       suite: 'public/dev',
       ttft: '1.34s',
@@ -102,12 +127,15 @@ const leaderboardData: CompetitorRow[] = [
   {
     rank: 5,
     competitor: 'trailblazer',
+    miner: '5K3e...D44',
     score: 68.9,
     quality: 71.5,
     speed: 64.7,
     cost: 74.0,
     streaming: 66.2,
     modality: 65.8,
+    submitted: '2025-01-04',
+    daysAtTop: null,
     details: {
       suite: 'public/dev',
       ttft: '1.41s',
@@ -121,15 +149,33 @@ const leaderboardData: CompetitorRow[] = [
 const columns: { key: SortKey; label: string; numeric?: boolean }[] = [
   { key: 'rank', label: 'Rank' },
   { key: 'competitor', label: 'Implementation' },
-  { key: 'score', label: 'Score', numeric: true },
+  { key: 'miner', label: 'Miner' },
+  { key: 'score', label: 'Composite', numeric: true },
   { key: 'quality', label: 'Quality', numeric: true },
   { key: 'speed', label: 'Speed', numeric: true },
   { key: 'cost', label: 'Cost', numeric: true },
   { key: 'streaming', label: 'Streaming', numeric: true },
   { key: 'modality', label: 'Modality', numeric: true },
+  { key: 'submitted', label: 'Submitted' },
+  { key: 'daysAtTop', label: 'Days at #1', numeric: true },
+];
+
+const columnDefinitions = [
+  { label: 'Rank', description: 'Current position.' },
+  { label: 'Implementation', description: 'Name or identifier of the submission.' },
+  { label: 'Miner', description: 'Bittensor hotkey (truncated).' },
+  { label: 'Composite', description: 'Overall score on a 0-100 scale.' },
+  { label: 'Quality', description: 'Aggregate task performance.' },
+  { label: 'Speed', description: 'Latency and throughput score.' },
+  { label: 'Cost', description: 'Resource efficiency score.' },
+  { label: 'Streaming', description: 'Continuity and pacing score.' },
+  { label: 'Modality', description: 'Multi-modal handling score.' },
+  { label: 'Submitted', description: 'Date of submission.' },
+  { label: 'Days at #1', description: 'Time at the top for the current leader.' },
 ];
 
 const formatScore = (value: number) => value.toFixed(1);
+const formatDaysAtTop = (value: number | null) => (value === null ? '—' : `${value} days`);
 
 export function Leaderboard() {
   const [sortKey, setSortKey] = useState<SortKey>('rank');
@@ -140,8 +186,14 @@ export function Leaderboard() {
     const data = [...leaderboardData];
     const direction = sortDirection === 'asc' ? 1 : -1;
     data.sort((a, b) => {
-      if (sortKey === 'competitor') {
-        return a.competitor.localeCompare(b.competitor) * direction;
+      if (sortKey === 'competitor' || sortKey === 'miner') {
+        return a[sortKey].localeCompare(b[sortKey]) * direction;
+      }
+      if (sortKey === 'submitted') {
+        return (Date.parse(a.submitted) - Date.parse(b.submitted)) * direction;
+      }
+      if (sortKey === 'daysAtTop') {
+        return ((a.daysAtTop ?? -1) - (b.daysAtTop ?? -1)) * direction;
       }
       return (a[sortKey] - b[sortKey]) * direction;
     });
@@ -154,7 +206,8 @@ export function Leaderboard() {
       return;
     }
     setSortKey(key);
-    setSortDirection(key === 'rank' || key === 'competitor' ? 'asc' : 'desc');
+    const isAscending = key === 'rank' || key === 'competitor' || key === 'miner' || key === 'submitted';
+    setSortDirection(isAscending ? 'asc' : 'desc');
   };
 
   const toggleExpanded = (competitor: string) => {
@@ -168,7 +221,7 @@ export function Leaderboard() {
   const lastUpdated = 'Updated 2 hours ago · 2025-01-22 14:32 UTC';
 
   return (
-    <section className="py-16 lg:py-24">
+    <section id="leaderboard" className="py-16 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-8">
           <div>
@@ -177,8 +230,9 @@ export function Leaderboard() {
               Rodeo Rankings
             </h2>
             <p className="text-[#9CA3AF] mt-3 max-w-2xl">
-              Scores combine quality, speed, cost, streaming continuity, and modality
-              handling. Sort any column to explore trade-offs across implementations.
+              Composite scores blend task performance with production metrics like speed,
+              cost, streaming continuity, and modality handling. Sort any column to
+              explore trade-offs across implementations.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
@@ -252,16 +306,21 @@ export function Leaderboard() {
                             </button>
                           </div>
                         </td>
+                        <td className="py-3 px-3 text-[#D1D5DB]">{row.miner}</td>
                         <td className="py-3 px-3 text-[#F3F4F6]">{formatScore(row.score)}</td>
                         <td className="py-3 px-3 text-[#D1D5DB]">{formatScore(row.quality)}</td>
                         <td className="py-3 px-3 text-[#D1D5DB]">{formatScore(row.speed)}</td>
                         <td className="py-3 px-3 text-[#D1D5DB]">{formatScore(row.cost)}</td>
                         <td className="py-3 px-3 text-[#D1D5DB]">{formatScore(row.streaming)}</td>
                         <td className="py-3 px-3 text-[#D1D5DB]">{formatScore(row.modality)}</td>
+                        <td className="py-3 px-3 text-[#D1D5DB]">{row.submitted}</td>
+                        <td className="py-3 px-3 text-[#D1D5DB]">
+                          {formatDaysAtTop(row.daysAtTop)}
+                        </td>
                       </tr>
                       {isExpanded && (
                         <tr id={detailsId} className="bg-[#0B111A]">
-                          <td colSpan={8} className="px-4 pb-4">
+                          <td colSpan={11} className="px-4 pb-4">
                             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-[#D1D5DB]">
                               <div>
                                 <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">Suite</p>
@@ -315,6 +374,9 @@ export function Leaderboard() {
                     <div>Cost: {formatScore(row.cost)}</div>
                     <div>Streaming: {formatScore(row.streaming)}</div>
                     <div>Modality: {formatScore(row.modality)}</div>
+                    <div>Miner: {row.miner}</div>
+                    <div>Submitted: {row.submitted}</div>
+                    <div>Days at #1: {formatDaysAtTop(row.daysAtTop)}</div>
                   </div>
                   <button
                     type="button"
@@ -336,6 +398,20 @@ export function Leaderboard() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        <div className="glass-card p-6 mt-6">
+          <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+            Leaderboard columns
+          </p>
+          <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+            {columnDefinitions.map((column) => (
+              <div key={column.label} className="space-y-1">
+                <p className="text-[#F3F4F6] font-semibold">{column.label}</p>
+                <p className="text-[#9CA3AF]">{column.description}</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
