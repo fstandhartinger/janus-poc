@@ -1,12 +1,23 @@
-'use client';
+import {
+  Header,
+  HeroSection,
+  FeatureCards,
+  HowItWorks,
+  PoweredBy,
+  Footer,
+} from '@/components/landing';
 
-import { Sidebar, ChatArea } from '@/components';
-
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex h-screen bg-white dark:bg-gray-900">
-      <Sidebar />
-      <ChatArea />
+    <div className="min-h-screen aurora-bg">
+      <Header />
+      <main>
+        <HeroSection />
+        <FeatureCards />
+        <HowItWorks />
+        <PoweredBy />
+      </main>
+      <Footer />
     </div>
   );
 }

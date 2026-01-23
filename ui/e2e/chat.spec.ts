@@ -8,7 +8,7 @@ const PNG_BASE64 =
 
 test.describe('Chat UI', () => {
   test('uploads an image and submits a prompt', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/chat');
 
     // Create a temp test image for this test
     const testImagePath = path.join(__dirname, `test-image-${Date.now()}.png`);
@@ -53,7 +53,7 @@ test.describe('Chat UI', () => {
   });
 
   test('shows streaming responses incrementally', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/chat');
 
     // Enter a prompt
     const textarea = page.locator('textarea[placeholder="Type a message..."]');
@@ -71,7 +71,7 @@ test.describe('Chat UI', () => {
   });
 
   test('reasoning panel can be toggled', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/chat');
 
     // Find the reasoning toggle button
     const toggleButton = page.locator('button:has-text("Thinking:")');
@@ -92,7 +92,7 @@ test.describe('Chat UI', () => {
   test('displays artifact links with download capability', async ({ page }) => {
     // This test verifies the artifact rendering component
     // In a real scenario, we'd need a mock server returning artifacts
-    await page.goto('/');
+    await page.goto('/chat');
 
     // Verify the message bubble component is set up to render artifacts
     // We can test this by checking the component exists and can render
@@ -107,7 +107,7 @@ test.describe('Chat UI', () => {
   });
 
   test('can create new chat session', async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/chat');
 
     // Find the new chat button in sidebar
     const newChatButton = page.locator('button:has-text("New Chat")');
