@@ -14,3 +14,4 @@ class JanusToolUseAdapter(BenchmarkAdapter):
     description = "Function calling and tool integration capabilities"
     data_file = "tool_use_items.json"
     task_type = TaskType.TOOL_USE
+    subtask_metadata_key = "tool_use_task_type"

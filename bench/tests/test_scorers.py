@@ -175,6 +175,70 @@ class TestMultimodalScorer:
         )
         assert score == 1.0  # N/A
 
+    def test_image_generation_fallback_without_clip(self, monkeypatch):
+        """Test image generation scoring without CLIP evaluator."""
+        monkeypatch.setattr(
+            "janus_bench.scorers.multimodal._get_clip_evaluator",
+            lambda: None,
+        )
+        score = score_multimodal(
+            "Here is the image: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
+            has_image_input=False,
+            metadata={
+                "multimodal_task_type": "image_generation",
+                "evaluation": {
+                    "reference_prompt": "red apple on white background",
+                    "min_score": 0.25,
+                },
+            },
+        )
+        assert score == 0.8
+
+    def test_image_understanding_key_facts(self):
+        """Test image understanding scoring with expected elements."""
+        score = score_multimodal(
+            "The chart shows an upward increase over time.",
+            has_image_input=True,
+            metadata={
+                "multimodal_task_type": "image_understanding",
+                "evaluation": {
+                    "expected_elements": ["upward", "growth", "increase"],
+                    "min_matches": 1,
+                },
+            },
+        )
+        assert score == 1.0
+
+    def test_mixed_media_contains_any(self):
+        """Test mixed media scoring with contains_any evaluation."""
+        score = score_multimodal(
+            "That looks like a golden retriever.",
+            has_image_input=True,
+            metadata={
+                "multimodal_task_type": "mixed_media",
+                "evaluation": {"type": "contains_any", "expected": ["retriever", "labrador"]},
+            },
+        )
+        assert score == 1.0
+
+    def test_modality_routing_behavior(self):
+        """Test modality routing scoring for expected behavior."""
+        score = score_multimodal(
+            "Here is the image: data:image/png;base64,AAA",
+            has_image_input=False,
+            metadata={
+                "multimodal_task_type": "modality_routing",
+                "expected_behavior": "generate_image",
+                "evaluation": {
+                    "indicators": {
+                        "generate_image": ["data:image", "generated"],
+                        "refuse": ["cannot", "unable"],
+                    }
+                },
+            },
+        )
+        assert score == 1.0
+
 
 class TestCompositeScorer:
     """Tests for composite score calculation."""

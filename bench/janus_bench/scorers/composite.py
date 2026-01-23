@@ -18,6 +18,8 @@ def compute_task_scores(
     expected_answer: Optional[str] = None,
     expected_keywords: Optional[list[str]] = None,
     has_image_input: bool = False,
+    metadata: Optional[dict[str, Any]] = None,
+    prompt: Optional[str] = None,
 ) -> TaskResult:
     """Compute all component scores for a task result.
 
@@ -26,6 +28,8 @@ def compute_task_scores(
         expected_answer: Optional expected answer for quality scoring
         expected_keywords: Optional expected keywords for quality scoring
         has_image_input: Whether the task had image input
+        metadata: Optional metadata payload for task-specific scoring
+        prompt: Optional prompt string for scoring context
 
     Returns:
         Updated TaskResult with scores filled in
@@ -65,6 +69,8 @@ def compute_task_scores(
         result.response_text,
         has_image_input,
         expected_keywords,
+        metadata,
+        prompt,
     )
 
     return result

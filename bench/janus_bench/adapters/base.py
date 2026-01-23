@@ -31,6 +31,7 @@ class BenchmarkAdapter:
     category: str = "Janus Intelligence"
     data_file: str
     task_type: TaskType
+    subtask_metadata_key: str | None = None
 
     def __init__(self) -> None:
         self._items: list[dict[str, Any]] | None = None
@@ -87,7 +88,8 @@ class BenchmarkAdapter:
             if raw_task_type in TaskType._value2member_map_:
                 resolved_task_type = TaskType(raw_task_type)
             else:
-                metadata.setdefault("research_task_type", raw_task_type)
+                subtask_key = self.subtask_metadata_key or "task_type"
+                metadata.setdefault(subtask_key, raw_task_type)
                 resolved_task_type = self.task_type
 
             prompt = item.get("prompt") or item.get("query") or item.get("claim")

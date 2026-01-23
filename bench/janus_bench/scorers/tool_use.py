@@ -234,16 +234,20 @@ def score_tool_use(
     if task_type == "tool_selection":
         expected_tools = list(metadata.get("expected_tools") or [])
         alternatives = list(metadata.get("acceptable_alternatives") or [])
-        actual_tools = [
-            call.get("function") for call in tool_calls if call.get("function")
-        ]
+        actual_tools = []
+        for call in tool_calls:
+            name = call.get("function")
+            if isinstance(name, str):
+                actual_tools.append(name)
         return evaluate_tool_selection(expected_tools, actual_tools, alternatives)
 
     if task_type == "tool_chaining":
         expected_sequence = list(metadata.get("expected_sequence") or [])
-        actual_sequence = [
-            call.get("function") for call in tool_calls if call.get("function")
-        ]
+        actual_sequence = []
+        for call in tool_calls:
+            name = call.get("function")
+            if isinstance(name, str):
+                actual_sequence.append(name)
         partial_credit = evaluation.get("partial_credit", True)
         score, reasoning = evaluate_tool_sequence(
             expected_sequence,

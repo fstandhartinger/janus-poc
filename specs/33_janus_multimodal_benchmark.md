@@ -1,6 +1,6 @@
 # Spec 33: Janus Multimodal Benchmark
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

@@ -1,610 +1,1096 @@
 {
   "metadata": {
     "benchmark": "janus_multimodal",
-    "version": "1.0.0",
-    "created": "2026-01-23T20:51:43.223098Z",
-    "total_items": 60
+    "version": "1.1.0",
+    "created": "2026-01-23T22:22:21.490856Z",
+    "total_items": 60,
+    "categories": {
+      "image_generation": 20,
+      "image_understanding": 20,
+      "mixed_media": 10,
+      "modality_routing": 10
+    }
   },
   "items": [
     {
-      "id": "multimodal_001",
+      "id": "gen_001",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate an image of a red apple on a white background.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "red apple on white background",
+        "min_score": 0.25,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_002",
+      "id": "gen_002",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create an illustration of a futuristic city skyline at sunset.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "futuristic city skyline sunset",
+        "min_score": 0.22,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_003",
+      "id": "gen_003",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Draw a watercolor mountain landscape with a lake.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "watercolor mountain landscape lake",
+        "min_score": 0.22,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_004",
+      "id": "gen_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create a minimalist icon of a house inside a circle.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "minimalist house icon",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_005",
+      "id": "gen_005",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate a photo of a golden retriever sitting on grass.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "golden retriever sitting on grass",
+        "min_score": 0.22,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_006",
+      "id": "gen_006",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create a flat design of a coffee cup with steam.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "flat design coffee cup steam",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_007",
+      "id": "gen_007",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate a neon sign that says 'Open' in blue.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "blue neon open sign",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_008",
+      "id": "gen_008",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Draw a cartoon rocket launching into space.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "cartoon rocket launching space",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_009",
+      "id": "gen_009",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate an image of a stack of books with a plant on top.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "stack of books with plant",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_010",
+      "id": "gen_010",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create a logo for a yoga studio named 'Calm Flow'.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "yoga studio logo calm flow",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_011",
+      "id": "gen_011",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate an image of a bicycle leaning against a brick wall.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "bicycle leaning against brick wall",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_012",
+      "id": "gen_012",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create a 3D render of a glass sphere on a wooden table.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "glass sphere wooden table 3d",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_013",
+      "id": "gen_013",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Draw a simple icon of a cloud with rain.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "cloud rain icon",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_014",
+      "id": "gen_014",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate an image of a tropical beach with palm trees.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "tropical beach palm trees",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_015",
+      "id": "gen_015",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create a minimalist poster of a cat silhouette.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "cat silhouette minimalist poster",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_016",
+      "id": "gen_016",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate an image of a bowl of ramen with chopsticks.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "bowl of ramen chopsticks",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_017",
+      "id": "gen_017",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Draw a geometric pattern with triangles and circles.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "geometric pattern triangles circles",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_018",
+      "id": "gen_018",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create an illustration of a robot holding a flower.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "robot holding a flower illustration",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_019",
+      "id": "gen_019",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Generate an image of a night sky with stars and a crescent moon.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "night sky stars crescent moon",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_020",
+      "id": "gen_020",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_generation",
+      "prompt": "Create a stylized map icon with a location pin.",
+      "evaluation": {
+        "type": "clip_similarity",
+        "reference_prompt": "map icon location pin",
+        "min_score": 0.2,
+        "check_format": "png|jpg|webp"
+      }
     },
     {
-      "id": "multimodal_021",
+      "id": "vision_001",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_001.png",
+      "query": "What trend is shown in this chart?",
+      "prompt": "What trend is shown in this chart?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "upward",
+          "increase",
+          "growth"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_022",
+      "id": "vision_002",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_001.png",
+      "query": "Does the chart indicate growth or decline?",
+      "prompt": "Does the chart indicate growth or decline?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "increase",
+          "growth",
+          "upward"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_023",
+      "id": "vision_003",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_001.png",
+      "query": "Describe the direction of the line in the chart.",
+      "prompt": "Describe the direction of the line in the chart.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "upward",
+          "rising",
+          "increase"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_024",
+      "id": "vision_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_001.png",
+      "query": "Summarize the chart in one phrase.",
+      "prompt": "Summarize the chart in one phrase.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "upward",
+          "growth",
+          "increase"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_025",
+      "id": "vision_005",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_sales.png",
+      "query": "Describe the sales trend shown here.",
+      "prompt": "Describe the sales trend shown here.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "sales",
+          "increase",
+          "growth"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_026",
+      "id": "vision_006",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_sales.png",
+      "query": "Is the sales line rising or falling?",
+      "prompt": "Is the sales line rising or falling?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "rising",
+          "increase",
+          "upward"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_027",
+      "id": "vision_007",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_sales.png",
+      "query": "What direction do sales move over time?",
+      "prompt": "What direction do sales move over time?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "upward",
+          "growth",
+          "increase"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_028",
+      "id": "vision_008",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/chart_sales.png",
+      "query": "Explain the overall movement in the chart.",
+      "prompt": "Explain the overall movement in the chart.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "increase",
+          "growth",
+          "upward"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_029",
+      "id": "vision_009",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/code_screenshot.png",
+      "query": "What programming language is shown in this code?",
+      "prompt": "What programming language is shown in this code?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "python"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_030",
+      "id": "vision_010",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/code_screenshot.png",
+      "query": "Identify the language used in the snippet.",
+      "prompt": "Identify the language used in the snippet.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "python"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_031",
+      "id": "vision_011",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/code_screenshot.png",
+      "query": "Which language does this code belong to?",
+      "prompt": "Which language does this code belong to?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "python"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_032",
+      "id": "vision_012",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/code_screenshot.png",
+      "query": "Name the programming language visible here.",
+      "prompt": "Name the programming language visible here.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "python"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_033",
+      "id": "vision_013",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/dog_001.jpg",
+      "query": "What animal is shown in the photo?",
+      "prompt": "What animal is shown in the photo?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "dog"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_034",
+      "id": "vision_014",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/dog_001.jpg",
+      "query": "Identify the animal in the image.",
+      "prompt": "Identify the animal in the image.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "dog"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_035",
+      "id": "vision_015",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/dog_001.jpg",
+      "query": "What type of pet is in this image?",
+      "prompt": "What type of pet is in this image?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "dog"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_036",
+      "id": "vision_016",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/dog_001.jpg",
+      "query": "Is this a dog or a cat?",
+      "prompt": "Is this a dog or a cat?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "dog"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_037",
+      "id": "vision_017",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/cat_001.jpg",
+      "query": "What animal is shown in the photo?",
+      "prompt": "What animal is shown in the photo?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "cat"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_038",
+      "id": "vision_018",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/cat_001.jpg",
+      "query": "Identify the animal in the image.",
+      "prompt": "Identify the animal in the image.",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "cat"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_039",
+      "id": "vision_019",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/cat_001.jpg",
+      "query": "What type of pet is in this image?",
+      "prompt": "What type of pet is in this image?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "cat"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_040",
+      "id": "vision_020",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "image_understanding",
+      "image_url": "https://bench-data.janus.rodeo/multimodal/cat_001.jpg",
+      "query": "Is this a cat or a dog?",
+      "prompt": "Is this a cat or a dog?",
+      "evaluation": {
+        "type": "key_facts",
+        "expected_elements": [
+          "cat"
+        ],
+        "min_matches": 1
+      }
     },
     {
-      "id": "multimodal_041",
+      "id": "mixed_001",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "What breed of dog is this?",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "What breed of dog is this?"
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/dog_001.jpg"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "golden retriever",
+          "labrador",
+          "retriever"
+        ]
+      }
     },
     {
-      "id": "multimodal_042",
+      "id": "mixed_002",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "What animal is in this image?",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "What animal is in this image?"
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/cat_001.jpg"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "cat",
+          "feline",
+          "kitten"
+        ]
+      }
     },
     {
-      "id": "multimodal_043",
+      "id": "mixed_003",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "Summarize the trend in this chart.",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Summarize the trend in this chart."
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/chart_001.png"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "upward",
+          "increase",
+          "growth"
+        ]
+      }
     },
     {
-      "id": "multimodal_044",
+      "id": "mixed_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "Is the chart going up or down?",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Is the chart going up or down?"
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/chart_sales.png"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "up",
+          "increase",
+          "growth"
+        ]
+      }
     },
     {
-      "id": "multimodal_045",
+      "id": "mixed_005",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "Which programming language is shown in the image?",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Which programming language is shown in the image?"
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/code_screenshot.png"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "python"
+        ]
+      }
     },
     {
-      "id": "multimodal_046",
+      "id": "mixed_006",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "Describe the animal shown here in one word.",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Describe the animal shown here in one word."
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/dog_001.jpg"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "dog",
+          "retriever",
+          "labrador"
+        ]
+      }
     },
     {
-      "id": "multimodal_047",
+      "id": "mixed_007",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "Is this a cat or a dog?",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Is this a cat or a dog?"
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/cat_001.jpg"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "cat"
+        ]
+      }
     },
     {
-      "id": "multimodal_048",
+      "id": "mixed_008",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "What kind of content is in this image?",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "What kind of content is in this image?"
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/code_screenshot.png"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "code",
+          "python",
+          "programming"
+        ]
+      }
     },
     {
-      "id": "multimodal_049",
+      "id": "mixed_009",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "What does the chart indicate about sales?",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "What does the chart indicate about sales?"
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/chart_sales.png"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "sales",
+          "increase",
+          "growth"
+        ]
+      }
     },
     {
-      "id": "multimodal_050",
+      "id": "mixed_010",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
+      "task_type": "mixed_media",
+      "prompt": "Identify the animal and color if possible.",
+      "messages": [
+        {
+          "role": "user",
+          "content": [
+            {
+              "type": "text",
+              "text": "Identify the animal and color if possible."
+            },
+            {
+              "type": "image_url",
+              "image_url": {
+                "url": "https://bench-data.janus.rodeo/multimodal/dog_001.jpg"
+              }
+            }
+          ]
+        }
       ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "evaluation": {
+        "type": "contains_any",
+        "expected": [
+          "dog",
+          "golden"
+        ]
+      }
     },
     {
-      "id": "multimodal_051",
+      "id": "route_001",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Create a logo for a coffee shop called 'Bean Dream'.",
+      "expected_behavior": "generate_image",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "generate_image": [
+            "data:image",
+            "![",
+            "here is the image",
+            "generated"
+          ],
+          "refuse": [
+            "cannot",
+            "unable",
+            "text-only"
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_052",
+      "id": "route_002",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Draw me a picture of a mountain landscape.",
+      "expected_behavior": "generate_image",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "generate_image": [
+            "data:image",
+            "![",
+            "here is the image",
+            "generated"
+          ],
+          "refuse": [
+            "cannot",
+            "unable",
+            "text-only"
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_053",
+      "id": "route_003",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Generate an image of a neon city street at night.",
+      "expected_behavior": "generate_image",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "generate_image": [
+            "data:image",
+            "![",
+            "here is the image",
+            "generated"
+          ],
+          "refuse": [
+            "cannot",
+            "unable",
+            "text-only"
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_054",
+      "id": "route_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Make an icon of a cloud with rain.",
+      "expected_behavior": "generate_image",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "generate_image": [
+            "data:image",
+            "![",
+            "here is the image",
+            "generated"
+          ],
+          "refuse": [
+            "cannot",
+            "unable",
+            "text-only"
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_055",
+      "id": "route_005",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Design a poster for a jazz festival.",
+      "expected_behavior": "generate_image",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "generate_image": [
+            "data:image",
+            "![",
+            "here is the image",
+            "generated"
+          ],
+          "refuse": [
+            "cannot",
+            "unable",
+            "text-only"
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_056",
+      "id": "route_006",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "What is the capital of France?",
+      "expected_behavior": "text_response",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "text_response": [
+            "paris",
+            "capital"
+          ],
+          "generate_image": [
+            "data:image",
+            "!["
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_057",
+      "id": "route_007",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Summarize the plot of Hamlet in one sentence.",
+      "expected_behavior": "text_response",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "text_response": [
+            "hamlet",
+            "prince",
+            "denmark"
+          ],
+          "generate_image": [
+            "data:image",
+            "!["
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_058",
+      "id": "route_008",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Explain why the sky is blue.",
+      "expected_behavior": "text_response",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "text_response": [
+            "blue",
+            "light",
+            "scatter"
+          ],
+          "generate_image": [
+            "data:image",
+            "!["
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_059",
+      "id": "route_009",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Who won the 2018 FIFA World Cup?",
+      "expected_behavior": "text_response",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "text_response": [
+            "france",
+            "2018",
+            "world cup"
+          ],
+          "generate_image": [
+            "data:image",
+            "!["
+          ]
+        }
+      }
     },
     {
-      "id": "multimodal_060",
+      "id": "route_010",
       "suite": "janus/intelligence",
-      "prompt": "Describe the image and mention any dominant colors.",
-      "expected_keywords": [
-        "red"
-      ],
-      "image_url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
-      "task_type": "multimodal"
+      "task_type": "modality_routing",
+      "prompt": "Write a short poem about autumn.",
+      "expected_behavior": "text_response",
+      "evaluation": {
+        "type": "action_check",
+        "indicators": {
+          "text_response": [
+            "autumn",
+            "fall",
+            "leaves"
+          ],
+          "generate_image": [
+            "data:image",
+            "!["
+          ]
+        }
+      }
     }
   ]
 }

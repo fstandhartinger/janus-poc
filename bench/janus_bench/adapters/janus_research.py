@@ -14,3 +14,4 @@ class JanusResearchAdapter(BenchmarkAdapter):
     description = "Web research, search, and synthesis capabilities"
     data_file = "research_items.json"
     task_type = TaskType.RESEARCH
+    subtask_metadata_key = "research_task_type"

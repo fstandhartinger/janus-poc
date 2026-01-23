@@ -11,6 +11,7 @@ class JanusMultimodalAdapter(BenchmarkAdapter):
 
     name = BenchmarkName.JANUS_MULTIMODAL
     display_name = "Janus Multimodal"
-    description = "Image generation and vision handling capabilities"
+    description = "Image generation, vision understanding, and routing"
     data_file = "multimodal_items.json"
     task_type = TaskType.MULTIMODAL
+    subtask_metadata_key = "multimodal_task_type"

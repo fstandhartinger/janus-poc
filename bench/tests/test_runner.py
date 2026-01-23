@@ -70,6 +70,26 @@ class TestBenchmarkRunner:
         assert content[1]["type"] == "image_url"
         assert content[1]["image_url"]["url"] == "data:image/png;base64,abc123"
 
+    def test_has_image_input_from_messages(self, runner):
+        """Test image detection from message overrides."""
+        task = BenchmarkTask(
+            id="multi_002",
+            suite=Suite.PUBLIC_DEV,
+            type=TaskType.MULTIMODAL,
+            prompt="Describe this image",
+        )
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "What is shown?"},
+                    {"type": "image_url", "image_url": {"url": "https://example.com/img.png"}},
+                ],
+            }
+        ]
+
+        assert runner._has_image_input(task, messages) is True
+
     @pytest.mark.asyncio
     async def test_run_task_success(self, runner, sample_task, mock_sse_response):
         """Test running a task successfully."""

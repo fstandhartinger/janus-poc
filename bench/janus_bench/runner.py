@@ -59,15 +59,17 @@ class BenchmarkRunner:
         Returns:
             TaskResult with response data and metrics
         """
-        # Build the request
-        messages = [{"role": "user", "content": self._build_content(task)}]
+        task_metadata = dict(task.metadata or {})
+        messages = task_metadata.get("messages")
+        if not isinstance(messages, list) or not messages:
+            messages = [{"role": "user", "content": self._build_content(task)}]
+        has_image_input = self._has_image_input(task, messages)
 
         payload = {
             "model": self.settings.model,
             "messages": messages,
             "stream": True,
         }
-        task_metadata = dict(task.metadata or {})
         available_tools = task_metadata.get("available_tools") or task_metadata.get("tools")
         if available_tools:
             payload["tools"] = available_tools
@@ -148,10 +150,19 @@ class BenchmarkRunner:
                                                 entry["type"] = tool_call["type"]
                                             if "function" in tool_call:
                                                 function = tool_call["function"]
-                                                if function.get("name"):
-                                                    entry["function"]["name"] = function["name"]
-                                                if "arguments" in function and function["arguments"] is not None:
-                                                    entry["function"]["arguments"] += function["arguments"]
+                                                if isinstance(function, dict):
+                                                    entry_function = entry.get("function")
+                                                    if not isinstance(entry_function, dict):
+                                                        entry_function = {"name": "", "arguments": ""}
+                                                        entry["function"] = entry_function
+                                                    name = function.get("name")
+                                                    if isinstance(name, str):
+                                                        entry_function["name"] = name
+                                                    arguments_fragment = function.get("arguments")
+                                                    if arguments_fragment is not None:
+                                                        entry_function["arguments"] = (
+                                                            f"{entry_function.get('arguments', '')}{arguments_fragment}"
+                                                        )
                                     content = delta.get("content", "")
                                     if content:
                                         response_text += content
@@ -271,7 +282,9 @@ class BenchmarkRunner:
             result,
             expected_answer=task.expected_answer,
             expected_keywords=task.expected_keywords,
-            has_image_input=task.image_url is not None,
+            has_image_input=has_image_input,
+            metadata=task_metadata,
+            prompt=task.prompt,
         )
 
         logger.info(
@@ -301,6 +314,22 @@ class BenchmarkRunner:
                 {"type": "image_url", "image_url": {"url": task.image_url}},
             ]
         return task.prompt
+
+    def _has_image_input(self, task: BenchmarkTask, messages: object) -> bool:
+        if task.image_url:
+            return True
+        if not isinstance(messages, list):
+            return False
+        for message in messages:
+            if not isinstance(message, dict):
+                continue
+            content = message.get("content")
+            if not isinstance(content, list):
+                continue
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "image_url":
+                    return True
+        return False
 
     def _judge_headers(self) -> dict[str, str]:
         headers: dict[str, str] = {}

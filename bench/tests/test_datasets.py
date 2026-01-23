@@ -100,7 +100,28 @@ class TestDatasetLoader:
         multimodal_tasks = get_tasks(task_type=TaskType.MULTIMODAL)
 
         for task in multimodal_tasks:
-            assert task.image_url is not None, f"Multimodal task {task.id} missing image_url"
+            subtype = None
+            if task.metadata:
+                subtype = task.metadata.get("multimodal_task_type")
+            if subtype == "image_understanding":
+                assert task.image_url is not None, (
+                    f"Multimodal task {task.id} missing image_url"
+                )
+            if subtype == "mixed_media":
+                messages = task.metadata.get("messages") if task.metadata else None
+                has_message_image = False
+                if isinstance(messages, list):
+                    for message in messages:
+                        content = message.get("content") if isinstance(message, dict) else None
+                        if isinstance(content, list):
+                            has_message_image = any(
+                                part.get("type") == "image_url"
+                                for part in content
+                                if isinstance(part, dict)
+                            )
+                        if has_message_image:
+                            break
+                assert has_message_image, f"Mixed media task {task.id} missing image content"
 
     def test_private_tasks_are_stubs(self):
         """Test that private test tasks are marked as stubs."""
@@ -146,6 +167,40 @@ class TestDatasetLoader:
             "comparative": 20,
             "synthesis": 20,
             "deep_dive": 20,
+        }
+
+        for task in tasks:
+            assert task.metadata is not None
+            assert "evaluation" in task.metadata
+
+    def test_tool_use_task_type_breakdown(self):
+        """Ensure tool-use tasks include 4 subtypes with required counts."""
+        tasks = get_tasks(suite=Suite.JANUS_INTELLIGENCE, benchmark="janus_tool_use")
+
+        assert len(tasks) == 80
+        counts = Counter(task.metadata.get("tool_use_task_type") for task in tasks)
+        assert counts == {
+            "function_calling": 25,
+            "tool_selection": 20,
+            "tool_chaining": 20,
+            "code_execution": 15,
+        }
+
+        for task in tasks:
+            assert task.metadata is not None
+            assert "available_tools" in task.metadata
+
+    def test_multimodal_task_type_breakdown(self):
+        """Ensure multimodal tasks include 4 subtypes with required counts."""
+        tasks = get_tasks(suite=Suite.JANUS_INTELLIGENCE, benchmark="janus_multimodal")
+
+        assert len(tasks) == 60
+        counts = Counter(task.metadata.get("multimodal_task_type") for task in tasks)
+        assert counts == {
+            "image_generation": 20,
+            "image_understanding": 20,
+            "mixed_media": 10,
+            "modality_routing": 10,
         }
 
         for task in tasks:

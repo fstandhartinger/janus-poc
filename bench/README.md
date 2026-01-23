@@ -9,6 +9,9 @@ cd bench
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
+
+# Optional: enable CLIP-based image scoring
+pip install -e ".[dev,multimodal]"
 ```
 
 ## Usage
@@ -63,7 +66,7 @@ The composite score (0-100) is calculated from weighted components:
 | Speed | 20% | TTFT and token throughput (TPS) for streaming tasks |
 | Cost | 15% | Token usage, USD cost, sandbox seconds |
 | Streaming | 15% | Continuity score based on streaming metrics |
-| Multimodal | 10% | Image input acknowledgment and processing |
+| Multimodal | 10% | Image generation, vision understanding, mixed media, and routing (CLIP-based when available) |
 
 ## Benchmark Suites
 
@@ -79,7 +82,7 @@ The composite score (0-100) is calculated from weighted components:
 - **tool_use** - Function calling and tool integration
 - **coding** - Code generation tasks
 - **streaming** - Tasks that test streaming continuity
-- **multimodal** - Tasks with image input
+- **multimodal** - Image generation, image understanding, and multimodal routing
 - **cost** - Token efficiency tasks
 
 ## Janus Intelligence Benchmarks

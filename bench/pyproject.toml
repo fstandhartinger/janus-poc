@@ -21,6 +21,11 @@ dev = [
     "mypy>=1.8.0",
     "ruff>=0.1.0",
 ]
+multimodal = [
+    "torch>=2.1.0",
+    "transformers>=4.40.0",
+    "pillow>=10.0.0",
+]
 
 [project.scripts]
 janus-bench = "janus_bench.cli:main"
@@ -41,3 +46,9 @@ ignore_missing_imports = true
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+[tool.hatch.build.targets.wheel]
+include = ["janus_bench/datasets/data/**"]
+
+[tool.hatch.build.targets.sdist]
+include = ["janus_bench/datasets/data/**"]
