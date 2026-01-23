@@ -1,0 +1,245 @@
+[
+  {
+    "id": "cmp.research.web-search",
+    "name": "Web Search Agent",
+    "description": "Brave and Google search integration with result parsing",
+    "longDescription": "A lightweight web search agent that normalizes results across providers, extracts titles and snippets, and streams structured metadata back to your miner.",
+    "author": "Chutes Team",
+    "authorUrl": "https://chutes.ai",
+    "category": "research",
+    "icon": "/marketplace/research.svg",
+    "status": "available",
+    "version": "0.3.1",
+    "usageCount": 18,
+    "rating": 4.7,
+    "contract": {
+      "type": "mcp",
+      "url": "https://components.janus.local/web-search",
+      "tools": ["search_web", "get_page_content"]
+    },
+    "integrationExample": "{\n  \"id\": \"cmp.research.web-search\",\n  \"version\": \"0.3.1\",\n  \"entrypoint\": \"https://components.janus.local/web-search\",\n  \"contract\": {\n    \"type\": \"mcp\",\n    \"tools\": [\"search_web\", \"get_page_content\"]\n  }\n}\n\n# In your Janus implementation\nfrom janus_components import WebSearchComponent\n\nsearch = WebSearchComponent()\nresults = await search.search_web(\"latest AI news\")",
+    "tags": ["search", "brave", "google", "parsing"],
+    "createdAt": "2024-11-12",
+    "updatedAt": "2025-01-10",
+    "totalCalls": 18230,
+    "earnings": 920,
+    "versionHistory": ["0.1.0", "0.2.0", "0.3.1"],
+    "reviews": [
+      {
+        "author": "Miner-12",
+        "comment": "Saved me hours of manual crawling. Clean API."
+      }
+    ]
+  },
+  {
+    "id": "cmp.research.deep-research",
+    "name": "Deep Research Node",
+    "description": "Multi-step research with source synthesis",
+    "longDescription": "Chains multiple search runs, clusters sources, and emits a ranked synthesis so miners can cite structured evidence.",
+    "author": "Chutes Team",
+    "authorUrl": "https://chutes.ai",
+    "category": "research",
+    "icon": "/marketplace/research.svg",
+    "status": "available",
+    "version": "0.2.4",
+    "usageCount": 12,
+    "rating": 4.5,
+    "contract": {
+      "type": "mcp",
+      "url": "https://components.janus.local/deep-research",
+      "tools": ["research_plan", "research_run"]
+    },
+    "integrationExample": "# In your Janus implementation\nfrom janus_components import DeepResearchNode\n\nnode = DeepResearchNode()\nreport = await node.run(\"compare open-source LLM eval suites\")",
+    "tags": ["research", "synthesis", "sources"],
+    "createdAt": "2024-10-28",
+    "updatedAt": "2025-01-02",
+    "totalCalls": 9020,
+    "earnings": 610,
+    "versionHistory": ["0.1.0", "0.2.0", "0.2.4"],
+    "reviews": [
+      {
+        "author": "Miner-06",
+        "comment": "High quality summaries, great for long-form answers."
+      }
+    ]
+  },
+  {
+    "id": "cmp.coding.sandbox",
+    "name": "Code Sandbox",
+    "description": "Secure code execution in Firecracker VMs via Sandy",
+    "longDescription": "Isolated execution layer that spins up short-lived Firecracker microVMs for code evaluation, sandboxed tooling, and file output.",
+    "author": "Chutes Team",
+    "authorUrl": "https://chutes.ai",
+    "category": "coding",
+    "icon": "/marketplace/coding.svg",
+    "status": "available",
+    "version": "1.1.0",
+    "usageCount": 21,
+    "rating": 4.8,
+    "contract": {
+      "type": "openapi",
+      "url": "https://components.janus.local/sandbox/openapi.json"
+    },
+    "integrationExample": "# In your Janus implementation\nfrom janus_components import CodeSandbox\n\nsandbox = CodeSandbox()\nresult = await sandbox.run_python(\"print(2 + 2)\")",
+    "tags": ["sandbox", "python", "firecracker"],
+    "createdAt": "2024-09-10",
+    "updatedAt": "2025-01-05",
+    "totalCalls": 25600,
+    "earnings": 1420,
+    "versionHistory": ["1.0.0", "1.0.5", "1.1.0"],
+    "reviews": [
+      {
+        "author": "Miner-04",
+        "comment": "Stable sandboxes with predictable cold start times."
+      }
+    ]
+  },
+  {
+    "id": "cmp.tools.browser-automation",
+    "name": "Browser Automation",
+    "description": "Headless browser for web interaction (Puppeteer/Playwright)",
+    "longDescription": "Drives headless Chrome sessions for scraping, form filling, and UI automation with strict request throttling.",
+    "author": "Chutes Team",
+    "authorUrl": "https://chutes.ai",
+    "category": "tools",
+    "icon": "/marketplace/tools.svg",
+    "status": "available",
+    "version": "0.9.2",
+    "usageCount": 15,
+    "rating": 4.2,
+    "contract": {
+      "type": "mcp",
+      "url": "https://components.janus.local/browser",
+      "tools": ["open_page", "click", "screenshot"]
+    },
+    "integrationExample": "# In your Janus implementation\nfrom janus_components import BrowserAutomation\n\nbrowser = BrowserAutomation()\nawait browser.open_page(\"https://example.com\")",
+    "tags": ["browser", "automation", "scraping"],
+    "createdAt": "2024-08-22",
+    "updatedAt": "2024-12-19",
+    "totalCalls": 11800,
+    "earnings": 780,
+    "versionHistory": ["0.8.0", "0.9.0", "0.9.2"],
+    "reviews": [
+      {
+        "author": "Miner-19",
+        "comment": "Great for filling complex forms and capturing screenshots."
+      }
+    ]
+  },
+  {
+    "id": "cmp.memory.vector-memory",
+    "name": "Vector Memory",
+    "description": "Persistent vector store for conversation context",
+    "longDescription": "Drops in a managed vector index with fast similarity search so miners can persist and retrieve long-term memories.",
+    "author": "Community",
+    "authorUrl": "https://chutes.ai",
+    "category": "memory",
+    "icon": "/marketplace/memory.svg",
+    "status": "coming_soon",
+    "version": "0.1.0",
+    "usageCount": 0,
+    "rating": 0,
+    "contract": {
+      "type": "openapi",
+      "url": "https://components.janus.local/vector-memory/openapi.json"
+    },
+    "integrationExample": "# In your Janus implementation\nfrom janus_components import VectorMemory\n\nmemory = VectorMemory()\nawait memory.upsert(\"session-123\", \"summary text\")",
+    "tags": ["memory", "vector", "embedding"],
+    "createdAt": "2025-02-01",
+    "updatedAt": "2025-02-01",
+    "totalCalls": 0,
+    "earnings": 0,
+    "versionHistory": ["0.1.0"],
+    "reviews": []
+  },
+  {
+    "id": "cmp.models.router",
+    "name": "Model Router",
+    "description": "Intelligent routing between Chutes models based on task",
+    "longDescription": "Scores requests and routes to the best-fit model based on latency, quality targets, and reward constraints.",
+    "author": "Community",
+    "authorUrl": "https://chutes.ai",
+    "category": "models",
+    "icon": "/marketplace/models.svg",
+    "status": "coming_soon",
+    "version": "0.4.0",
+    "usageCount": 0,
+    "rating": 0,
+    "contract": {
+      "type": "openapi",
+      "url": "https://components.janus.local/model-router/openapi.json"
+    },
+    "integrationExample": "# In your Janus implementation\nfrom janus_components import ModelRouter\n\nrouter = ModelRouter()\nmodel = await router.pick_model(\"complex reasoning\")",
+    "tags": ["routing", "models", "latency"],
+    "createdAt": "2025-01-20",
+    "updatedAt": "2025-01-20",
+    "totalCalls": 0,
+    "earnings": 0,
+    "versionHistory": ["0.4.0"],
+    "reviews": []
+  },
+  {
+    "id": "cmp.tools.youtube-downloader",
+    "name": "YouTube Downloader",
+    "description": "Download and transcribe YouTube videos",
+    "longDescription": "Fetches YouTube videos, extracts audio, and returns transcripts with timestamps for downstream summarization.",
+    "author": "Squad API",
+    "authorUrl": "https://github.com/Squad-API",
+    "category": "tools",
+    "icon": "/marketplace/tools.svg",
+    "status": "available",
+    "version": "0.7.0",
+    "usageCount": 9,
+    "rating": 4.4,
+    "contract": {
+      "type": "mcp",
+      "url": "https://components.janus.local/youtube",
+      "tools": ["download_video", "transcribe"]
+    },
+    "integrationExample": "# In your Janus implementation\nfrom janus_components import YouTubeDownloader\n\nmedia = YouTubeDownloader()\ntranscript = await media.transcribe(\"https://youtu.be/dQw4w9WgXcQ\")",
+    "tags": ["youtube", "transcription", "media"],
+    "createdAt": "2024-07-05",
+    "updatedAt": "2024-12-01",
+    "totalCalls": 4300,
+    "earnings": 350,
+    "versionHistory": ["0.5.0", "0.6.0", "0.7.0"],
+    "reviews": [
+      {
+        "author": "Miner-21",
+        "comment": "Fast transcripts with clean timestamps."
+      }
+    ]
+  },
+  {
+    "id": "cmp.tools.twitter-poster",
+    "name": "Twitter X Poster",
+    "description": "Post to Twitter X (requires API key)",
+    "longDescription": "Automates posting to X with rate limits, formatting helpers, and safe-guarded content checks.",
+    "author": "Squad API",
+    "authorUrl": "https://github.com/Squad-API",
+    "category": "tools",
+    "icon": "/marketplace/tools.svg",
+    "status": "available",
+    "version": "0.6.3",
+    "usageCount": 7,
+    "rating": 4.1,
+    "contract": {
+      "type": "mcp",
+      "url": "https://components.janus.local/twitter",
+      "tools": ["post", "schedule"]
+    },
+    "integrationExample": "# In your Janus implementation\nfrom janus_components import TwitterPoster\n\nposter = TwitterPoster()\nawait poster.post(\"Shipping a new Janus build today\")",
+    "tags": ["twitter", "social", "publishing"],
+    "createdAt": "2024-07-18",
+    "updatedAt": "2024-11-30",
+    "totalCalls": 2700,
+    "earnings": 280,
+    "versionHistory": ["0.5.1", "0.6.0", "0.6.3"],
+    "reviews": [
+      {
+        "author": "Miner-02",
+        "comment": "Easy posting flow, just bring your own API key."
+      }
+    ]
+  }
+]

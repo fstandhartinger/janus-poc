@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { MermaidDiagram } from './MermaidDiagram';
+import { MermaidDiagram } from '@/components/MermaidDiagram';
 
 const diagram = `flowchart TB
     subgraph Competition
@@ -80,7 +80,11 @@ export function ArchitectureOverview() {
 
           <div ref={containerRef} className="glass-card p-6 min-h-[320px]">
             {isVisible ? (
-              <MermaidDiagram chart={diagram} className="w-full" />
+              <MermaidDiagram
+                chart={diagram}
+                className="w-full"
+                ariaLabel="Competition pipeline diagram"
+              />
             ) : (
               <div className="h-full flex items-center justify-center text-sm text-[#9CA3AF] animate-pulse">
                 Loading architecture diagram...

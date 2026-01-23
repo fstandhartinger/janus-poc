@@ -8,9 +8,10 @@ let mermaidInitialized = false;
 interface MermaidDiagramProps {
   chart: string;
   className?: string;
+  ariaLabel?: string;
 }
 
-export function MermaidDiagram({ chart, className }: MermaidDiagramProps) {
+export function MermaidDiagram({ chart, className, ariaLabel }: MermaidDiagramProps) {
   const id = useId();
   const [svg, setSvg] = useState('');
   const [hasError, setHasError] = useState(false);
@@ -61,7 +62,7 @@ export function MermaidDiagram({ chart, className }: MermaidDiagramProps) {
   if (hasError) {
     return (
       <div className="text-sm text-[#9CA3AF]">
-        Architecture diagram failed to load. Please refresh the page.
+        Diagram failed to load. Please refresh the page.
       </div>
     );
   }
@@ -70,7 +71,7 @@ export function MermaidDiagram({ chart, className }: MermaidDiagramProps) {
     <div
       className={className}
       role="img"
-      aria-label="Competition architecture diagram"
+      aria-label={ariaLabel ?? 'Mermaid diagram'}
       dangerouslySetInnerHTML={{ __html: svg }}
     />
   );
