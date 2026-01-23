@@ -5,7 +5,7 @@ import { MermaidDiagram } from '@/components/MermaidDiagram';
 
 const diagram = `flowchart TB
     subgraph Competition
-        MINER[Your Container]
+        IMPL[Your Implementation]
         BENCH[Benchmark Runner]
         LEADERBOARD[Leaderboard]
     end
@@ -16,11 +16,11 @@ const diagram = `flowchart TB
     end
 
     BENCH -->|Requests| GW
-    GW -->|Routes to| MINER
-    MINER -->|Streams| GW
+    GW -->|Routes to| IMPL
+    IMPL -->|Streams| GW
     GW -->|Streams| BENCH
     BENCH -->|Scores| LEADERBOARD
-    MINER -.->|Allowed calls| SERVICES`;
+    IMPL -.->|Allowed calls| SERVICES`;
 
 export function ArchitectureOverview() {
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -67,12 +67,12 @@ export function ArchitectureOverview() {
               How the Competition Pipeline Works
             </h2>
             <p className="text-[#9CA3AF]">
-              Benchmarks fire through the Janus Gateway, route into your container,
-              and stream results back for scoring. Platform services remain available
-              behind strict network guardrails.
+              Benchmarks fire through the Janus Gateway, route into your implementation
+              container, and stream results back for scoring. Platform services remain
+              available behind strict network guardrails.
             </p>
             <div className="space-y-3 text-sm text-[#D1D5DB]">
-              <p>• Competitor contract: OpenAI-compatible chat completions (spec 10).</p>
+              <p>• Implementation contract: OpenAI-compatible chat completions (spec 10).</p>
               <p>• Platform services: web proxy, search, sandbox, Chutes inference.</p>
               <p>• Network guardrails: egress whitelist, no external paid APIs.</p>
             </div>

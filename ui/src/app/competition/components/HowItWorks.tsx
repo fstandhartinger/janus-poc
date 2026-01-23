@@ -1,8 +1,8 @@
 const steps = [
   {
-    title: 'Build Your Agent',
+    title: 'Build Your Intelligence Engine',
     description:
-      'Create a Docker container exposing /v1/chat/completions with OpenAI-compatible streaming.',
+      'Create a Docker container exposing /v1/chat/completions for your Janus implementation.',
     icon: (
       <svg
         className="w-6 h-6"
@@ -80,11 +80,11 @@ export function HowItWorks() {
         <div className="text-center mb-12">
           <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">How it works</p>
           <h2 className="text-3xl sm:text-4xl font-semibold text-[#F3F4F6] mt-3">
-            Four Steps to the Janus Rodeo
+            Four Steps to Ride the Rodeo
           </h2>
           <p className="text-lg text-[#9CA3AF] max-w-2xl mx-auto mt-4">
             Build, evaluate, submit, and compete. The public dev suite is open for
-            iteration while private benchmarks power the leaderboard.
+            iteration while private benchmarks power the arena rankings.
           </p>
         </div>
 

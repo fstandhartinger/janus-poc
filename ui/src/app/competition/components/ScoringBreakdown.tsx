@@ -40,8 +40,8 @@ export function ScoringBreakdown() {
             </h2>
             <p className="text-[#9CA3AF]">
               The leaderboard reflects a weighted composite that balances quality and
-              efficiency. Streaming and modality are baked in so the best miners feel
-              fast, safe, and multimodal.
+              efficiency. Streaming and modality are baked in so the best implementations
+              feel fast, safe, and multimodal.
             </p>
             <div className="glass p-4 rounded-2xl font-mono text-sm text-[#D1D5DB]">
               <p>Composite Score = (Quality × 0.45) + (Speed × 0.20) + (Cost × 0.15)</p>

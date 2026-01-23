@@ -50,7 +50,7 @@ const leaderboardData: CompetitorRow[] = [
   },
   {
     rank: 2,
-    competitor: 'miner-alpha',
+    competitor: 'rodeo-alpha',
     score: 75.2,
     quality: 79.4,
     speed: 69.8,
@@ -67,7 +67,7 @@ const leaderboardData: CompetitorRow[] = [
   },
   {
     rank: 3,
-    competitor: 'agent-x',
+    competitor: 'engine-x',
     score: 72.8,
     quality: 76.3,
     speed: 68.9,
@@ -120,7 +120,7 @@ const leaderboardData: CompetitorRow[] = [
 
 const columns: { key: SortKey; label: string; numeric?: boolean }[] = [
   { key: 'rank', label: 'Rank' },
-  { key: 'competitor', label: 'Competitor' },
+  { key: 'competitor', label: 'Implementation' },
   { key: 'score', label: 'Score', numeric: true },
   { key: 'quality', label: 'Quality', numeric: true },
   { key: 'speed', label: 'Speed', numeric: true },
@@ -172,13 +172,13 @@ export function Leaderboard() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-8">
           <div>
-            <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">Leaderboard</p>
+            <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">The Arena</p>
             <h2 className="text-3xl sm:text-4xl font-semibold text-[#F3F4F6] mt-3">
-              Current Competition Rankings
+              Rodeo Rankings
             </h2>
             <p className="text-[#9CA3AF] mt-3 max-w-2xl">
               Scores combine quality, speed, cost, streaming continuity, and modality
-              handling. Sort any column to explore trade-offs across miners.
+              handling. Sort any column to explore trade-offs across implementations.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">

@@ -6,7 +6,7 @@ const faqs = [
   {
     question: 'What technology can I use?',
     answer:
-      'Any stack works: CLI agents, workflows, custom Python/Node, or hybrid systems. We only enforce the OpenAI API contract.',
+      'Any stack works: CLI implementations, workflow engines, custom Python/Node, or hybrid systems. We only enforce the OpenAI API contract.',
   },
   {
     question: 'How do I stream intermediate steps?',
@@ -39,10 +39,10 @@ export function FAQ() {
         <div className="text-center mb-10">
           <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">FAQ</p>
           <h2 className="text-3xl sm:text-4xl font-semibold text-[#F3F4F6] mt-3">
-            Competition Questions Answered
+            Rodeo Questions Answered
           </h2>
           <p className="text-[#9CA3AF] mt-4">
-            Need a quick answer before you build? Start here.
+            Need a quick answer before you ride? Start here.
           </p>
         </div>
 

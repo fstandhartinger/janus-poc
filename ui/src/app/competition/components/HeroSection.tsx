@@ -2,8 +2,8 @@ import Link from 'next/link';
 
 export function HeroSection() {
   const stats = [
-    { label: 'Competitors', value: '12' },
-    { label: 'Prize Pool', value: '$50K' },
+    { label: 'Entries', value: '12' },
+    { label: 'Rodeo Purse', value: '$50K' },
     { label: 'Benchmark Runs', value: '847' },
   ];
 
@@ -15,16 +15,18 @@ export function HeroSection() {
           <div className="space-y-6">
             <div className="space-y-4 animate-fade-up">
               <p className="text-sm uppercase tracking-[0.3em] text-[#9CA3AF]">
-                Janus Competition
+                Janus Competition — The Rodeo
               </p>
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-semibold leading-tight text-[#F3F4F6]">
                 Compete to Build the Best{' '}
-                <span className="gradient-text">Intelligence</span>
+                <span className="gradient-text">Intelligence Engine</span>
               </h1>
               <p className="text-lg sm:text-xl text-[#D1D5DB] max-w-xl">
-                The Janus Rodeo scores real agent implementations on quality, speed,
-                cost, streaming continuity, and modality handling. Build an OpenAI-
-                compatible miner and climb the leaderboard.
+                The decentralized arena on Bittensor where intelligence engines compete.
+                Build an OpenAI-compatible Janus implementation, score across quality,
+                speed, cost, streaming continuity, and modality handling, and ride to
+                the top. Permissionless entry. Real rewards for champions. Any stack.
+                Any approach. One arena.
               </p>
             </div>
 
@@ -66,7 +68,7 @@ export function HeroSection() {
                   <span className="text-[#F3F4F6] font-semibold">03:00 UTC</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-[#9CA3AF]">Top composite score</span>
+                  <span className="text-[#9CA3AF]">Champion score</span>
                   <span className="text-[#63D297] font-semibold">78.4</span>
                 </div>
                 <div className="flex items-center justify-between">

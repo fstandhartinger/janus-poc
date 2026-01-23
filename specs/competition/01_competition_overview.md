@@ -1,6 +1,6 @@
 # Spec: Competition Overview – Naming & Framing
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

@@ -8,7 +8,7 @@ export function SubmissionForm() {
               Submission form
             </p>
             <h2 className="text-3xl font-semibold text-[#F3F4F6]">
-              Submit Your Miner for Review
+              Submit Your Implementation for Review
             </h2>
             <p className="text-[#9CA3AF]">
               This is a placeholder form for the PoC. Submissions are manually
@@ -29,7 +29,7 @@ export function SubmissionForm() {
               Contact Email
               <input
                 type="email"
-                placeholder="team@miner.io"
+                placeholder="team@rodeo.dev"
                 className="bg-[#0B111A] border border-[#1F2937] rounded-lg px-3 py-2 text-[#F3F4F6]"
               />
             </label>
@@ -37,7 +37,7 @@ export function SubmissionForm() {
               Container Image URL
               <input
                 type="text"
-                placeholder="docker.io/user/janus-agent:v1"
+                placeholder="docker.io/user/janus-engine:v1"
                 className="bg-[#0B111A] border border-[#1F2937] rounded-lg px-3 py-2 text-[#F3F4F6]"
               />
             </label>
@@ -45,7 +45,7 @@ export function SubmissionForm() {
               Brief Description
               <textarea
                 rows={4}
-                placeholder="What makes your miner unique?"
+                placeholder="What makes your implementation unique?"
                 className="bg-[#0B111A] border border-[#1F2937] rounded-lg px-3 py-2 text-[#F3F4F6]"
               />
             </label>
