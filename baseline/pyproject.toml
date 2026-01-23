@@ -1,0 +1,14 @@
+[project]
+name = "janus-baseline"
+version = "0.1.0"
+description = "Legacy baseline shim for Render"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.103.0",
+    "uvicorn>=0.23.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
