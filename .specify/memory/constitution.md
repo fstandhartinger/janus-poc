@@ -56,6 +56,95 @@ AI coding agents work autonomously:
 
 ---
 
+## Autonomous Working Standards
+
+These principles apply to ALL agent sessions, not just Ralph loops.
+
+### Full Autonomy Mode
+- Work as autonomously as possible
+- You have full trust and authority to make decisions
+- Don't ask unnecessary questions
+- Only come back when you've completed the task or are truly stuck
+- Make informed decisions based on context
+- Research extensively if needed (online, source code, third-party projects)
+
+### Testing Requirements
+
+**Always run complete test suites:**
+```bash
+# Unit + Integration tests
+cd gateway && pytest
+cd ui && npm test
+
+# Type checking
+cd gateway && mypy janus_gateway
+cd ui && npm run typecheck
+```
+
+**Add tests proactively:**
+- Add unit and integration tests for new functionality
+- Update outdated tests
+- Remove tests that no longer make sense
+- All tests must pass before marking complete
+
+### Visual Testing
+
+**Test the UI visually in browser:**
+- Use Playwright (Claude Code), Browser MCP (Cursor), or Puppeteer MCP (Codex)
+- Take screenshots on multiple viewports:
+  - Desktop (1920x1080)
+  - Tablet (768x1024)
+  - Mobile (375x812)
+
+**Check for:**
+- No JavaScript console errors
+- No failed network requests
+- UI matches design system (Chutes style guide)
+- No visual regressions
+- Test functionality including authenticated areas
+
+**If issues found:** Fix them and retest before marking complete.
+
+### Commit & Push Protocol
+- Commit all changes with clear, descriptive messages
+- Push to remote
+- Ensure nothing is left uncommitted
+- Scope commits to the current project/task
+
+### Deploy & Verify
+- Deploy changes (via Render auto-deploy on push, or manual deployment)
+- Watch deployment logs for errors
+- Test the deployed application
+- Verify functionality in production
+
+### Documentation
+Keep documentation up to date:
+- **README.md**: Features, usage, setup instructions
+- **INTERNAL.md** (if exists): Implementation details, infrastructure, secrets (gitignored)
+
+Focus on information that future agents need but would lose when starting a new session.
+
+### Completion Verification
+
+Before marking any task complete, verify:
+- [ ] All requirements met
+- [ ] All tests passing (unit, integration, smoke)
+- [ ] All edge cases handled
+- [ ] Documentation updated
+- [ ] No TODOs left incomplete
+- [ ] Visual testing passed (if UI changes)
+- [ ] Deployed and verified (if applicable)
+
+**Don't stop until the task is fully done.**
+
+### Research When Needed
+- Search online for solutions
+- Read source code (project and third-party)
+- Check past chat histories for similar examples
+- Summarize findings before proceeding
+
+---
+
 ## Technical Stack
 
 | Layer | Technology | Notes |
@@ -96,6 +185,66 @@ janus-poc/
 ### Work Item Source
 - **Source**: Existing Specs
 - **Location**: `specs/` folder with numbered markdown files (00_xxx.md, 01_xxx.md, etc.)
+
+### History Tracking (TODO: Implement)
+
+The Ralph loop should maintain a history file to track progress and milestones:
+
+**History File**: `.ralph/history.log`
+
+**Format**:
+```
+[2025-01-23T10:15:00Z] STARTED spec: 41_enhanced_agent_system_prompt.md
+[2025-01-23T10:45:00Z] COMPLETED spec: 41_enhanced_agent_system_prompt.md
+[2025-01-23T10:45:05Z] STARTED spec: 42_sandbox_file_serving.md
+...
+```
+
+**Log Events**:
+- STARTED: When beginning work on a spec
+- COMPLETED: When spec marked as COMPLETE
+- FAILED: If spec implementation fails and needs retry
+- MILESTONE: Major progress points within a spec
+
+### Telegram Notifications (TODO: Implement)
+
+Send progress updates to Telegram for monitoring Ralph loop sessions.
+
+**Environment Variables**:
+```bash
+TG_BOT_TOKEN="<bot-token>"  # Telegram bot token
+TG_CHAT_ID="<chat-id>"      # Target chat for notifications
+```
+
+**Notification Triggers**:
+1. **Session Start**: When Ralph loop begins
+2. **Spec Completed**: When a spec is marked COMPLETE
+3. **Session Summary**: Every N iterations (e.g., 5) or on completion
+
+**Message Format**:
+```
+🤖 *Janus Ralph Loop Update*
+
+✅ Recently Completed:
+- Spec 41: Enhanced Agent System Prompt
+- Spec 42: Sandbox File Serving
+
+📋 Still Open (Next Up):
+- Spec 43: Agent Sandbox Management
+- Spec 44: Deep Research Integration
+- Spec 45: Browser Automation
+
+📊 Progress: 42/49 specs complete (86%)
+```
+
+**Implementation**:
+```bash
+# Send Telegram notification
+curl -s -X POST "https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage" \
+  -d chat_id="${TG_CHAT_ID}" \
+  -d parse_mode="Markdown" \
+  -d text="${MESSAGE}"
+```
 
 ### Ralph Loop Scripts
 Located in `scripts/`:
