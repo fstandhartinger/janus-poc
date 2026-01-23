@@ -1,6 +1,6 @@
 export function SubmissionForm() {
   return (
-    <section className="py-16 lg:py-24">
+    <section id="submission-portal" className="py-16 lg:py-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="glass-card p-8 lg:p-10">
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-10">

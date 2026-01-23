@@ -44,7 +44,7 @@ const benchmarkTransparency = [
 
 export function BenchRunner() {
   return (
-    <section className="py-16 lg:py-24 bg-[#111726]/50">
+    <section id="benchmark-docs" className="py-16 lg:py-24 bg-[#111726]/50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
         <div className="glass-card p-8 grid lg:grid-cols-[1.1fr_0.9fr] gap-8 items-start">
           <div className="space-y-5">

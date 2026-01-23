@@ -1,6 +1,6 @@
 # Spec: FAQ & Marketplace Integration
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

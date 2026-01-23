@@ -2,6 +2,7 @@ import { Header, Footer } from '@/components/landing';
 import {
   ArchitectureOverview,
   BenchRunner,
+  ComponentMarketplace,
   CompetitionOverview,
   FAQ,
   HeroSection,
@@ -24,6 +25,7 @@ export default function CompetitionPage() {
         <Leaderboard />
         <HowItWorks />
         <PrizePool />
+        <ComponentMarketplace />
         <ScoringBreakdown />
         <ArchitectureOverview />
         <TechRequirements />

@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test.describe('Competition Page', () => {
-  test('shows leaderboard and FAQ interactions', async ({ page }) => {
+  test('shows leaderboard and FAQ content', async ({ page }) => {
     await page.goto('/competition');
 
     await expect(page.locator('text=Rodeo Rankings')).toBeVisible();
@@ -9,14 +9,23 @@ test.describe('Competition Page', () => {
     await expect(
       page.getByRole('heading', { name: 'Five Steps to the Janus Rodeo' })
     ).toBeVisible();
-    await expect(page.getByRole('heading', { name: 'The Prize Pool' })).toBeVisible();
-
-    const faqButton = page.locator('button:has-text("How do I stream intermediate steps?")');
-    await expect(faqButton).toBeVisible();
-    await faqButton.click();
+    await expect(
+      page.getByRole('heading', { name: 'The Prize Pool', level: 2 })
+    ).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Component Marketplace', level: 2 })
+    ).toBeVisible();
 
     await expect(
-      page.locator('text=Stream reasoning_content in your SSE chunks')
+      page.getByRole('heading', { name: 'Frequently Asked Questions' })
     ).toBeVisible();
+    const faqSection = page.locator('#faq');
+    await expect(
+      faqSection.getByRole('heading', {
+        name: 'What is the Janus Competition?',
+        level: 4,
+      })
+    ).toBeVisible();
+    await expect(faqSection.locator('text=OpenAI-compatible')).toBeVisible();
   });
 });
