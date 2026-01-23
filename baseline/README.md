@@ -52,5 +52,6 @@ pytest
 | `BASELINE_ENABLE_WEB_SEARCH` | `true` | Enable web search tools |
 | `BASELINE_ENABLE_CODE_EXECUTION` | `true` | Enable code execution tools |
 | `BASELINE_ENABLE_FILE_TOOLS` | `true` | Enable file tooling |
+| `BASELINE_ALWAYS_USE_AGENT` | `false` | Always route requests to the agent path |
 | `SANDY_BASE_URL` | - | Sandy API base URL |
 | `SANDY_API_KEY` | - | Sandy API key |

@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     complexity_threshold: int = Field(
         default=100, description="Token count threshold for complex path"
     )
+    always_use_agent: bool = Field(
+        default=False,
+        description="Always route to agent sandbox, bypass complexity detection",
+    )
 
     # Logging
     log_level: str = Field(default="INFO", description="Log level")

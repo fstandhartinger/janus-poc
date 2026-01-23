@@ -99,7 +99,20 @@ async def stream_response(
     sandy_service: SandyService,
 ) -> AsyncGenerator[str, None]:
     """Generate streaming response based on complexity."""
-    is_complex, reason = complexity_detector.is_complex(request.messages)
+    analysis = complexity_detector.analyze(request.messages)
+    is_complex = analysis.is_complex
+    reason = analysis.reason
+
+    logger.info(
+        "complexity_check",
+        is_complex=is_complex,
+        reason=reason,
+        keywords_matched=analysis.keywords_matched,
+        multimodal_detected=analysis.multimodal_detected,
+        sandy_available=sandy_service.is_available,
+        text_preview=analysis.text_preview,
+        always_use_agent=settings.always_use_agent,
+    )
 
     logger.info(
         "chat_completion_request",
@@ -110,7 +123,7 @@ async def stream_response(
         message_count=len(request.messages),
     )
 
-    if is_complex and sandy_service.is_available:
+    if settings.always_use_agent or (is_complex and sandy_service.is_available):
         # Complex path with Sandy
         async for chunk in sandy_service.execute_complex(request):
             yield f"data: {chunk.model_dump_json()}\n\n"
@@ -142,7 +155,19 @@ async def chat_completions(
         )
     else:
         # Non-streaming - always use fast path
-        is_complex, reason = complexity_detector.is_complex(request.messages)
+        analysis = complexity_detector.analyze(request.messages)
+        is_complex = analysis.is_complex
+        reason = analysis.reason
+        logger.info(
+            "complexity_check",
+            is_complex=is_complex,
+            reason=reason,
+            keywords_matched=analysis.keywords_matched,
+            multimodal_detected=analysis.multimodal_detected,
+            sandy_available=sandy_service.is_available,
+            text_preview=analysis.text_preview,
+            always_use_agent=settings.always_use_agent,
+        )
         logger.info(
             "chat_completion_request",
             model=request.model,

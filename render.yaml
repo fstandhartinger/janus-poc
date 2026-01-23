@@ -1,0 +1,69 @@
+services:
+  # Janus Gateway - OpenAI-compatible proxy
+  - type: web
+    name: janus-gateway
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: gateway
+    buildCommand: pip install -e .
+    startCommand: uvicorn janus_gateway.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: JANUS_DEBUG
+        value: "false"
+      - key: JANUS_LOG_FORMAT
+        value: "json"
+      - key: BASELINE_URL
+        fromService:
+          type: web
+          name: janus-baseline
+          property: hostport
+          envVarKey: BASELINE_URL
+    healthCheckPath: /health
+
+  # Janus Baseline - Reference competitor implementation
+  - type: web
+    name: janus-baseline
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: baseline
+    buildCommand: pip install -e .
+    startCommand: uvicorn janus_baseline.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: BASELINE_DEBUG
+        value: "false"
+      - key: BASELINE_OPENAI_API_KEY
+        sync: false
+      - key: SANDY_BASE_URL
+        value: "https://sandy.chutes.ai"
+      - key: SANDY_API_KEY
+        sync: false
+    healthCheckPath: /health
+
+  # Janus Chat UI - Next.js frontend
+  - type: web
+    name: janus-ui
+    runtime: node
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: ui
+    buildCommand: npm install && npm run build
+    startCommand: npm run start -- --port $PORT
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NEXT_PUBLIC_GATEWAY_URL
+        fromService:
+          type: web
+          name: janus-gateway
+          property: host
+          envVarKey: NEXT_PUBLIC_GATEWAY_URL
+    healthCheckPath: /

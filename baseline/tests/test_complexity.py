@@ -56,6 +56,27 @@ def test_debug_request(detector: ComplexityDetector) -> None:
     assert reason == "complex_keywords"
 
 
+def test_multimodal_detection(detector: ComplexityDetector) -> None:
+    """Test that multimodal and research requests are complex."""
+    messages = [Message(role=MessageRole.USER, content="generate an image of a cat")]
+    is_complex, reason = detector.is_complex(messages)
+    assert is_complex
+    assert reason == "multimodal_request"
+
+    messages = [Message(role=MessageRole.USER, content="create a picture of sunset")]
+    is_complex, reason = detector.is_complex(messages)
+    assert is_complex
+    assert reason == "multimodal_request"
+
+    messages = [Message(role=MessageRole.USER, content="text to speech: hello")]
+    is_complex, _ = detector.is_complex(messages)
+    assert is_complex
+
+    messages = [Message(role=MessageRole.USER, content="search the web for python docs")]
+    is_complex, _ = detector.is_complex(messages)
+    assert is_complex
+
+
 def test_empty_messages(detector: ComplexityDetector) -> None:
     """Test that empty messages are not complex."""
     is_complex, reason = detector.is_complex([])
