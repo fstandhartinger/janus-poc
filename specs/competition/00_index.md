@@ -1,6 +1,6 @@
 # Competition Page Overhaul — Spec Index
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Overview
 
