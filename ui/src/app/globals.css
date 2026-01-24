@@ -641,6 +641,122 @@ html {
     0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
+/* Why Janus section */
+.why-janus-section {
+  background: rgba(17, 23, 38, 0.35);
+}
+
+.audience-group {
+  padding: 1.5rem;
+  border: 1px solid rgba(31, 41, 55, 0.6);
+  border-radius: 1.5rem;
+  background: rgba(17, 23, 38, 0.4);
+}
+
+.audience-label {
+  margin-bottom: 1.5rem;
+}
+
+.audience-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.45rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.audience-badge.user {
+  background: rgba(99, 210, 151, 0.15);
+  color: var(--accent-moss);
+  border: 1px solid rgba(99, 210, 151, 0.3);
+}
+
+.audience-badge.builder {
+  background: rgba(250, 93, 25, 0.15);
+  color: var(--accent-papaya);
+  border: 1px solid rgba(250, 93, 25, 0.3);
+}
+
+.benefit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.5rem;
+}
+
+.benefit-card {
+  background: linear-gradient(180deg, rgba(17, 23, 38, 0.85) 0%, rgba(17, 23, 38, 0.65) 100%);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid rgba(31, 41, 55, 0.6);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  transition: all 0.3s ease;
+}
+
+.benefit-card:hover {
+  transform: translateY(-2px);
+}
+
+.benefit-card.user:hover {
+  border-color: rgba(99, 210, 151, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(99, 210, 151, 0.08),
+    0 16px 32px -18px rgba(0, 0, 0, 0.55);
+}
+
+.benefit-card.builder:hover {
+  border-color: rgba(250, 93, 25, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(250, 93, 25, 0.08),
+    0 16px 32px -18px rgba(0, 0, 0, 0.55);
+}
+
+.benefit-icon {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.benefit-card.user .benefit-icon {
+  background: rgba(99, 210, 151, 0.12);
+  color: var(--accent-moss);
+}
+
+.benefit-card.builder .benefit-icon {
+  background: rgba(250, 93, 25, 0.12);
+  color: var(--accent-papaya);
+}
+
+.benefit-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.benefit-description {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .audience-group {
+    padding: 1.25rem;
+  }
+
+  .benefit-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Marketplace component cards */
 .component-card {
   background: linear-gradient(180deg, rgba(17, 23, 38, 0.8) 0%, rgba(17, 23, 38, 0.6) 100%);
@@ -1717,4 +1833,107 @@ html {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+/* Audio Player */
+.audio-player {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 0.75rem;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+
+.audio-title {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.audio-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.audio-play-btn {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent-moss);
+  border: none;
+  border-radius: 50%;
+  color: var(--bg-base);
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.audio-play-btn:hover {
+  transform: scale(1.05);
+}
+
+.audio-progress-container {
+  flex: 1;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  position: relative;
+}
+
+.audio-progress-bar {
+  height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.audio-progress-fill {
+  height: 100%;
+  background: var(--accent-moss);
+  transition: width 0.1s linear;
+}
+
+.audio-loading {
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+.audio-time {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  min-width: 80px;
+  text-align: right;
+}
+
+.audio-download-btn {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: 1px solid var(--border-color);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.audio-download-btn:hover {
+  background: var(--card-bg-hover);
+  color: var(--text-primary);
+}
+
+.audio-error {
+  margin-top: 0.5rem;
+  font-size: 0.75rem;
+  color: var(--error-text);
+}
+
+/* Music player variant */
+.music-player {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(99, 210, 151, 0.05) 100%);
 }

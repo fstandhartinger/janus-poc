@@ -33,6 +33,8 @@ def _select_doc(task: str) -> str:
         return "text-to-video.md"
     if "image" in task_lower:
         return "text-to-image.md"
+    if "music" in task_lower or "song" in task_lower or "lyrics" in task_lower:
+        return "music-generation.md"
     if "speech" in task_lower or "tts" in task_lower:
         return "text-to-speech.md"
     return "llm.md"
@@ -114,6 +116,29 @@ def _render_lip_sync_response(endpoints: list[str]) -> str:
     )
 
 
+def _render_music_response(endpoints: list[str]) -> str:
+    endpoint = endpoints[0] if endpoints else "https://chutes-diffrhythm.chutes.ai/generate"
+    return "\n".join(
+        [
+            "I checked /workspace/docs/models/music-generation.md for DiffRhythm.",
+            f"Endpoint: {endpoint}",
+            "Example (Python):",
+            "```python",
+            "import requests",
+            "payload = {",
+            "    \"steps\": 32,",
+            "    \"lyrics\": None,",
+            "    \"style_prompt\": \"Lo-fi beats with soft piano\"",
+            "}",
+            f"resp = requests.post(\"{endpoint}\", json=payload, timeout=120)",
+            "resp.raise_for_status()",
+            "with open(\"output.wav\", \"wb\") as f:",
+            "    f.write(resp.content)",
+            "```",
+        ]
+    )
+
+
 def _render_llm_response(endpoints: list[str]) -> str:
     endpoint = endpoints[0] if endpoints else "https://llm.chutes.ai/v1/chat/completions"
     return "\n".join(
@@ -165,6 +190,8 @@ def main() -> int:
         response = _render_video_response(endpoints)
     elif doc_name == "lip-sync.md":
         response = _render_lip_sync_response(endpoints)
+    elif doc_name == "music-generation.md":
+        response = _render_music_response(endpoints)
     else:
         response = _render_llm_response(endpoints)
 

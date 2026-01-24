@@ -11,6 +11,7 @@ from janus_baseline_langchain.config import Settings
 from janus_baseline_langchain.tools import (
     code_execution_tool,
     image_generation_tool,
+    music_generation_tool,
     text_to_speech_tool,
     web_search_tool,
 )
@@ -20,11 +21,13 @@ SYSTEM_PROMPT = """You are Janus, an intelligent assistant competing in The Rode
 You have access to these tools:
 - image_generation: Generate images using AI (Chutes API)
 - text_to_speech: Convert text to audio (Kokoro TTS)
+- music_generation: Generate full songs or instrumentals (DiffRhythm)
 - web_search: Search the web for current information
 - code_execution: Execute Python code safely
 
 Always use the appropriate tool for the task. For image requests, use image_generation.
 For audio/speech requests, use text_to_speech.
+For music or song generation, use music_generation.
 For questions about current events or real-time data, use web_search.
 For calculations or data processing, use code_execution.
 """
@@ -50,6 +53,7 @@ def create_agent(settings: Settings) -> AgentExecutor:
     tools = [
         image_generation_tool,
         text_to_speech_tool,
+        music_generation_tool,
         web_search_tool,
         code_execution_tool,
     ]

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.tools.music import MUSIC_TOOL
 
 GUI_TOOLS = [
     {
@@ -200,6 +201,7 @@ _BASE_TOOL_DEFINITIONS = {
             "required": ["path", "content"],
         },
     },
+    "generate_music": MUSIC_TOOL["function"],
 }
 
 
@@ -221,6 +223,7 @@ def get_registered_tools(settings: Settings | None = None) -> dict[str, dict]:
     if settings.enable_file_tools:
         tools["file_read"] = _BASE_TOOL_DEFINITIONS["file_read"]
         tools["file_write"] = _BASE_TOOL_DEFINITIONS["file_write"]
+    tools["generate_music"] = _BASE_TOOL_DEFINITIONS["generate_music"]
 
     return tools
 

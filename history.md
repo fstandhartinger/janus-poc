@@ -28,3 +28,4 @@
 - Completed spec 50_canvas_feature.md with canvas parsing, CodeMirror editor panel, AI shortcuts, version history, persistence, and chat integration.
 - Completed spec 51_why_janus_section_clarity.md with split user/builder benefit groups and updated Why Janus messaging on the landing page.
 - Completed spec 52_comprehensive_baseline_testing.md with shared smoke suite, baseline unit/integration coverage, test utilities/docs, and CI workflow for baseline tests.
+- Completed spec 53_music_generation_diffrhythm.md with DiffRhythm baseline tooling/docs, chat audio playback UI, and additional LangChain tests.

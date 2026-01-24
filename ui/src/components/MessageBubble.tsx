@@ -1,6 +1,7 @@
 'use client';
 import type { Message } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
+import { AudioPlayer } from './AudioPlayer';
 import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
 import { RichContent } from './viz/RichContent';
@@ -8,6 +9,26 @@ import { RichContent } from './viz/RichContent';
 interface MessageBubbleProps {
   message: Message;
   showReasoning: boolean;
+}
+
+const AUDIO_DATA_REGEX = /data:audio\/(wav|mp3|ogg);base64,[A-Za-z0-9+/=]+/g;
+
+function extractAudioContent(content: string) {
+  if (!content) {
+    return { cleanedText: content, audioUrls: [] as string[] };
+  }
+
+  const audioUrls = content.match(AUDIO_DATA_REGEX) ?? [];
+  if (audioUrls.length === 0) {
+    return { cleanedText: content, audioUrls };
+  }
+
+  const cleanedText = content
+    .replace(AUDIO_DATA_REGEX, '')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+
+  return { cleanedText, audioUrls };
 }
 
 export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
@@ -21,6 +42,8 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
           .map((c) => c.text)
           .join('\n');
   const textContent = stripCanvasBlocks(rawTextContent);
+  const { cleanedText, audioUrls } = extractAudioContent(textContent);
+  const hasText = Boolean(cleanedText);
 
   return (
     <div
@@ -47,13 +70,26 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
         )}
 
         {/* Message content */}
-        {textContent && (
-          <RichContent content={textContent} />
+        {hasText && (
+          <RichContent content={cleanedText} />
         )}
 
-        {!isUser && textContent && (
+        {audioUrls.length > 0 && (
+          <div className="mt-3 space-y-2">
+            {audioUrls.map((url, index) => (
+              <AudioPlayer
+                key={`${message.id}-audio-${index}`}
+                src={url}
+                title={`Generated Audio ${index + 1}`}
+                downloadName={`audio-${index + 1}.wav`}
+              />
+            ))}
+          </div>
+        )}
+
+        {!isUser && hasText && (
           <div className="message-actions">
-            <TTSPlayer text={textContent} className="mt-2" />
+            <TTSPlayer text={cleanedText} className="mt-2" />
           </div>
         )}
 

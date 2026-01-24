@@ -9,6 +9,7 @@ import type {
   VideoContent,
 } from '@/types/chat';
 import { detectFileCategoryFromMetadata, formatBytes } from '@/lib/file-utils';
+import { AudioPlayer } from './AudioPlayer';
 import { FileIcon } from './FileIcon';
 
 type MediaItem = ImageUrlContent | VideoContent | AudioContent | FileContent;
@@ -50,7 +51,13 @@ function MediaItemView({ item }: { item: MediaItem }) {
     case 'video':
       return <VideoPlayer video={item.video} />;
     case 'audio':
-      return <AudioPlayer audio={item.audio} />;
+      return (
+        <AudioPlayer
+          src={item.audio.url}
+          title="Audio clip"
+          downloadName={getAudioDownloadName(item.audio)}
+        />
+      );
     case 'file':
       return <FileDownload file={item.file} />;
     default:
@@ -149,26 +156,18 @@ function VideoPlayer({ video }: { video: VideoContent['video'] }) {
   );
 }
 
-function AudioPlayer({ audio }: { audio: AudioContent['audio'] }) {
-  const [loaded, setLoaded] = useState(false);
-
-  return (
-    <div className="relative flex items-center gap-3 p-3 rounded-lg bg-[#111726]/70 border border-[#1F2937] min-w-[250px]">
-      {!loaded && <div className="absolute inset-0 animate-pulse bg-[#111726]" aria-hidden="true" />}
-      <div className="relative z-10 flex h-10 w-10 items-center justify-center rounded-full bg-[#63D297]/15 text-[#63D297]">
-        <MusicIcon className="h-5 w-5" />
-      </div>
-      <audio
-        src={audio.url}
-        controls
-        preload="metadata"
-        onLoadedMetadata={() => setLoaded(true)}
-        className="relative z-10 flex-1 h-8"
-      >
-        Your browser does not support audio playback.
-      </audio>
-    </div>
-  );
+function getAudioDownloadName(audio: AudioContent['audio']) {
+  const mimeType = audio.mime_type || '';
+  if (mimeType.includes('mpeg') || mimeType.includes('mp3')) {
+    return 'audio.mp3';
+  }
+  if (mimeType.includes('ogg')) {
+    return 'audio.ogg';
+  }
+  if (mimeType.includes('wav')) {
+    return 'audio.wav';
+  }
+  return 'audio.wav';
 }
 
 function FileDownload({ file }: { file: FileContent['file'] }) {

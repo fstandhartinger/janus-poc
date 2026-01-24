@@ -135,6 +135,7 @@ text, shots = await browse_and_extract(
 
 Your workspace contains API docs at `docs/models/`:
 - `docs/models/text-to-speech.md` - Kokoro TTS API (generate speech audio)
+- `docs/models/music-generation.md` - DiffRhythm music generation (songs + instrumentals)
 - `docs/models/text-to-image.md` - Qwen/HunYuan image generation
 - `docs/models/text-to-video.md` - WAN-2/LTX video generation
 - `docs/models/lip-sync.md` - MuseTalk lip-sync API
