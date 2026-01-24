@@ -10,6 +10,7 @@ import structlog
 
 from janus_baseline_agent_cli.config import Settings, get_settings
 from janus_baseline_agent_cli.models import Message, MessageContent
+from janus_baseline_agent_cli.services.vision import contains_images, count_images
 
 logger = structlog.get_logger()
 
@@ -85,6 +86,8 @@ class ComplexityAnalysis:
     reason: str
     keywords_matched: list[str]
     multimodal_detected: bool
+    has_images: bool
+    image_count: int
     text_preview: str
 
 
@@ -241,6 +244,22 @@ class ComplexityDetector:
 
         return False
 
+    def _needs_agent_for_images(self, text: str) -> bool:
+        """Check if image analysis requires tools beyond vision."""
+        agent_triggers = [
+            "search for",
+            "find more",
+            "look up",
+            "write code",
+            "execute",
+            "run this",
+            "compare with",
+            "fetch",
+            "download",
+        ]
+        text_lower = text.lower()
+        return any(trigger in text_lower for trigger in agent_triggers)
+
     def analyze(self, messages: list[Message]) -> ComplexityAnalysis:
         """Analyze the request for complexity routing."""
         if not messages:
@@ -249,8 +268,13 @@ class ComplexityDetector:
                 reason="empty_messages",
                 keywords_matched=[],
                 multimodal_detected=False,
+                has_images=False,
+                image_count=0,
                 text_preview="",
             )
+
+        has_images = contains_images(messages)
+        image_count = count_images(messages) if has_images else 0
 
         # Get the last user message
         last_user_msg = self._get_last_user_message(messages)
@@ -261,6 +285,8 @@ class ComplexityDetector:
                 reason="no_user_message",
                 keywords_matched=[],
                 multimodal_detected=False,
+                has_images=has_images,
+                image_count=image_count,
                 text_preview="",
             )
 
@@ -276,6 +302,8 @@ class ComplexityDetector:
                 reason="multimodal_request",
                 keywords_matched=keywords_matched,
                 multimodal_detected=True,
+                has_images=has_images,
+                image_count=image_count,
                 text_preview=text_preview,
             )
 
@@ -286,6 +314,8 @@ class ComplexityDetector:
                 reason="complex_keywords",
                 keywords_matched=keywords_matched,
                 multimodal_detected=multimodal_detected,
+                has_images=has_images,
+                image_count=image_count,
                 text_preview=text_preview,
             )
 
@@ -297,17 +327,32 @@ class ComplexityDetector:
                 reason="code_context",
                 keywords_matched=keywords_matched,
                 multimodal_detected=multimodal_detected,
+                has_images=has_images,
+                image_count=image_count,
                 text_preview=text_preview,
             )
 
         # Check token length
         total_tokens = sum(self._estimate_tokens(self._extract_text(m.content)) for m in messages)
+        if has_images and self._needs_agent_for_images(text):
+            return ComplexityAnalysis(
+                is_complex=True,
+                reason="image_with_tools",
+                keywords_matched=keywords_matched,
+                multimodal_detected=multimodal_detected,
+                has_images=has_images,
+                image_count=image_count,
+                text_preview=text_preview,
+            )
+
         if total_tokens > self._threshold:
             return ComplexityAnalysis(
                 is_complex=True,
                 reason="token_threshold",
                 keywords_matched=keywords_matched,
                 multimodal_detected=multimodal_detected,
+                has_images=has_images,
+                image_count=image_count,
                 text_preview=text_preview,
             )
 
@@ -316,6 +361,8 @@ class ComplexityDetector:
             reason="simple",
             keywords_matched=keywords_matched,
             multimodal_detected=multimodal_detected,
+            has_images=has_images,
+            image_count=image_count,
             text_preview=text_preview,
         )
 
@@ -404,6 +451,8 @@ class ComplexityDetector:
                         reason=f"llm_second_pass: {reason}",
                         keywords_matched=first_pass.keywords_matched,
                         multimodal_detected=first_pass.multimodal_detected,
+                        has_images=first_pass.has_images,
+                        image_count=first_pass.image_count,
                         text_preview=first_pass.text_preview,
                     )
 

@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Any, Optional
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic_settings.sources import DotEnvSettingsSource, EnvSettingsSource
 
@@ -57,6 +57,29 @@ class Settings(BaseSettings):
     model: str = Field(default="gpt-4o-mini", description="Default model for fast path")
     max_tokens: int = Field(default=4096, description="Max tokens for responses")
     temperature: float = Field(default=0.7, description="Default temperature")
+
+    # Chutes API
+    chutes_api_key: Optional[str] = Field(
+        default=None,
+        description="Chutes API key",
+        validation_alias=AliasChoices("CHUTES_API_KEY", "JANUS_CHUTES_API_KEY"),
+    )
+
+    # Vision settings
+    vision_model_primary: str = Field(
+        default="Qwen/Qwen3-VL-235B-A22B-Instruct",
+        description="Primary vision model for image understanding",
+    )
+    vision_model_fallback: str = Field(
+        default="chutesai/Mistral-Small-3.2-24B-Instruct-2506",
+        description="Fallback vision model for image understanding",
+    )
+    vision_model_timeout: float = Field(
+        default=60.0, description="Timeout in seconds for vision models"
+    )
+    enable_vision_routing: bool = Field(
+        default=True, description="Enable routing to vision models when images are present"
+    )
 
     # Sandy settings (for complex path)
     sandy_base_url: Optional[str] = Field(

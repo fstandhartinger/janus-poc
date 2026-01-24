@@ -4,7 +4,13 @@ import httpx
 import pytest
 
 from janus_baseline_agent_cli.config import Settings
-from janus_baseline_agent_cli.models import Message, MessageRole
+from janus_baseline_agent_cli.models import (
+    ImageUrl,
+    ImageUrlContent,
+    Message,
+    MessageRole,
+    TextContent,
+)
 from janus_baseline_agent_cli.services import ComplexityDetector
 
 
@@ -76,6 +82,39 @@ def test_multimodal_detection(detector: ComplexityDetector) -> None:
     messages = [Message(role=MessageRole.USER, content="search the web for python docs")]
     is_complex, _ = detector.is_complex(messages)
     assert is_complex
+
+
+def test_image_request_stays_simple(detector: ComplexityDetector) -> None:
+    """Image understanding without tool hints should stay on fast path."""
+    messages = [
+        Message(
+            role=MessageRole.USER,
+            content=[
+                TextContent(text="What's in this image?"),
+                ImageUrlContent(image_url=ImageUrl(url="https://example.com/a.png")),
+            ],
+        )
+    ]
+    analysis = detector.analyze(messages)
+    assert analysis.is_complex is False
+    assert analysis.has_images is True
+    assert analysis.image_count == 1
+
+
+def test_image_with_tool_trigger(detector: ComplexityDetector) -> None:
+    """Image requests that need tools should be complex."""
+    messages = [
+        Message(
+            role=MessageRole.USER,
+            content=[
+                TextContent(text="Search for similar photos online"),
+                ImageUrlContent(image_url=ImageUrl(url="https://example.com/a.png")),
+            ],
+        )
+    ]
+    analysis = detector.analyze(messages)
+    assert analysis.is_complex is True
+    assert analysis.reason == "image_with_tools"
 
 
 def test_empty_messages(detector: ComplexityDetector) -> None:
