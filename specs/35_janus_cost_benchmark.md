@@ -1,6 +1,6 @@
 # Spec 35: Janus Cost Efficiency Benchmark
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -620,3 +620,5 @@ chutes-bench-runner/backend/app/benchmarks/
     └── janus/
         └── cost_items.json        # Test data (40 items)
 ```
+
+NR_OF_TRIES: 1

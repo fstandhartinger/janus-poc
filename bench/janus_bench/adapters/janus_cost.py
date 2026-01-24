@@ -10,7 +10,8 @@ class JanusCostAdapter(BenchmarkAdapter):
     """Benchmark for cost efficiency metrics."""
 
     name = BenchmarkName.JANUS_COST
-    display_name = "Janus Cost"
-    description = "Token and cost efficiency across tasks"
+    display_name = "Janus Cost Efficiency"
+    description = "Token efficiency, conciseness, and tool usage discipline"
     data_file = "cost_items.json"
     task_type = TaskType.COST
+    subtask_metadata_key = "cost_task_type"

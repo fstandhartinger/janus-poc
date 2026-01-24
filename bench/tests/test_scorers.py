@@ -10,6 +10,7 @@ from janus_bench.scorers import (
     score_streaming,
     score_multimodal,
     compute_composite_score,
+    compute_task_scores,
 )
 
 
@@ -492,3 +493,59 @@ class TestCompositeScorer:
 
         scores = compute_composite_score(results)
         assert scores["composite_score"] == pytest.approx(73.0, rel=0.01)
+
+
+class TestCostBenchmarkMetrics:
+    """Tests for cost benchmark scoring overrides and metrics."""
+
+    def test_cost_override_preserves_score(self):
+        result = TaskResult(
+            task_id="cost_override",
+            benchmark="janus_cost",
+            task_type=TaskType.COST,
+            success=True,
+            response_text="Answer: 30.",
+            latency_seconds=1.0,
+            total_tokens=15,
+            cost_score=0.9,
+            quality_score=0.7,
+            speed_score=0.0,
+            streaming_score=0.0,
+            multimodal_score=0.0,
+            metadata={"cost_override": True, "quality_override": True},
+        )
+        updated = compute_task_scores(result, metadata=result.metadata)
+        assert updated.cost_score == pytest.approx(0.9)
+
+    def test_cost_metrics_include_efficiency(self):
+        results = [
+            TaskResult(
+                task_id="cost_001",
+                benchmark="janus_cost",
+                task_type=TaskType.COST,
+                success=True,
+                response_text="Answer: 30.",
+                latency_seconds=1.0,
+                prompt_tokens=10,
+                completion_tokens=20,
+                total_tokens=30,
+                quality_score=0.7,
+                speed_score=0.0,
+                cost_score=0.8,
+                streaming_score=0.0,
+                multimodal_score=0.0,
+                judge_output={
+                    "input_tokens": 10,
+                    "output_tokens": 20,
+                    "total_tokens": 30,
+                    "baseline_tokens": 40,
+                    "quality_score": 0.7,
+                    "efficiency_score": 0.8,
+                },
+            )
+        ]
+        scores = compute_composite_score(results)
+        metrics = scores["benchmark_metrics"]["janus_cost"]
+        assert metrics["avg_efficiency_score"] == pytest.approx(0.8)
+        assert metrics["baseline_tokens"] == pytest.approx(40.0)
+        assert metrics["token_savings_pct"] == pytest.approx(50.0)

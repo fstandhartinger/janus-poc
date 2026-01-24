@@ -5,3 +5,6 @@
 
 ## 2026-01-23
 - Completed spec 34_janus_streaming_benchmark.md (streaming benchmark metrics/data already implemented in bench runner).
+
+## 2026-01-24
+- Completed spec 35_janus_cost_benchmark.md with cost efficiency scoring, dataset, metrics, and tests in the bench runner.

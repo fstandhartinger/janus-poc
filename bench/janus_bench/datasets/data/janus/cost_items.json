@@ -2,289 +2,690 @@
   "metadata": {
     "benchmark": "janus_cost",
     "version": "1.0.0",
-    "created": "2026-01-23T20:51:43.223526Z",
-    "total_items": 40
+    "created": "2026-01-24T05:37:45Z",
+    "total_items": 40,
+    "categories": {
+      "concise_response": 15,
+      "efficient_explanation": 10,
+      "minimal_tools": 10,
+      "direct_answer": 5
+    }
   },
   "items": [
     {
-      "id": "cost_001",
+      "id": "concise_001",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What year did World War II end? Answer in one sentence.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["1945"],
+        "max_words": 20,
+        "baseline_tokens": 50
+      }
     },
     {
-      "id": "cost_002",
+      "id": "concise_002",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "Who wrote 'Pride and Prejudice'? Answer with the author's name only.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["jane austen"],
+        "max_words": 5,
+        "baseline_tokens": 20
+      }
     },
     {
-      "id": "cost_003",
+      "id": "concise_003",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What is the chemical symbol for water? One word.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["h2o"],
+        "max_words": 3,
+        "baseline_tokens": 10
+      }
     },
     {
-      "id": "cost_004",
+      "id": "concise_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "Name the largest planet in our solar system. One word answer.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["jupiter"],
+        "max_words": 5,
+        "baseline_tokens": 20
+      }
     },
     {
-      "id": "cost_005",
+      "id": "concise_005",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What year was the first iPhone released? One sentence only.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["2007"],
+        "max_words": 15,
+        "baseline_tokens": 30
+      }
     },
     {
-      "id": "cost_006",
+      "id": "concise_006",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What is the capital of Japan? Answer with the city name only.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["tokyo"],
+        "max_words": 3,
+        "baseline_tokens": 15
+      }
     },
     {
-      "id": "cost_007",
+      "id": "concise_007",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "Who painted the Mona Lisa? Answer in one short sentence.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["leonardo"],
+        "max_words": 20,
+        "baseline_tokens": 40
+      }
     },
     {
-      "id": "cost_008",
+      "id": "concise_008",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What is the square root of 81? Answer with a number.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["9"],
+        "max_words": 3,
+        "baseline_tokens": 10
+      }
     },
     {
-      "id": "cost_009",
+      "id": "concise_009",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What gas do plants absorb from the atmosphere? One word.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["carbon dioxide"],
+        "max_words": 5,
+        "baseline_tokens": 20
+      }
     },
     {
-      "id": "cost_010",
+      "id": "concise_010",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "How many continents are there? Answer with a number.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["7"],
+        "max_words": 3,
+        "baseline_tokens": 10
+      }
     },
     {
-      "id": "cost_011",
+      "id": "concise_011",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What is the boiling point of water in Celsius? Answer with a number and unit.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["100"],
+        "max_words": 5,
+        "baseline_tokens": 15
+      }
     },
     {
-      "id": "cost_012",
+      "id": "concise_012",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "Who is known as the father of computers? One sentence.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["babbage"],
+        "max_words": 20,
+        "baseline_tokens": 40
+      }
     },
     {
-      "id": "cost_013",
+      "id": "concise_013",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What is the currency of the United Kingdom? One word.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["pound"],
+        "max_words": 5,
+        "baseline_tokens": 15
+      }
     },
     {
-      "id": "cost_014",
+      "id": "concise_014",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What planet is known as the Red Planet? One word.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["mars"],
+        "max_words": 3,
+        "baseline_tokens": 10
+      }
     },
     {
-      "id": "cost_015",
+      "id": "concise_015",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "concise_response",
+      "prompt": "What is the smallest prime number? Answer with a number.",
+      "evaluation": {
+        "type": "contains_and_length",
+        "required": ["2"],
+        "max_words": 3,
+        "baseline_tokens": 10
+      }
     },
     {
-      "id": "cost_016",
+      "id": "explain_001",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Explain what an API is in simple terms.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["interface", "communicate", "applications"],
+        "min_matches": 2,
+        "baseline_tokens": 150,
+        "max_tokens": 300
+      }
     },
     {
-      "id": "cost_017",
+      "id": "explain_002",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "What is machine learning? Keep it under 100 words.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["data", "learn", "patterns", "predictions"],
+        "min_matches": 2,
+        "baseline_tokens": 80,
+        "max_tokens": 150
+      }
     },
     {
-      "id": "cost_018",
+      "id": "explain_003",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Explain what DNS does in one paragraph.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["domain", "ip address", "translate", "internet"],
+        "min_matches": 2,
+        "baseline_tokens": 100,
+        "max_tokens": 180
+      }
     },
     {
-      "id": "cost_019",
+      "id": "explain_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Describe what a database index does in plain language.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["search", "speed", "lookup", "table"],
+        "min_matches": 2,
+        "baseline_tokens": 120,
+        "max_tokens": 200
+      }
     },
     {
-      "id": "cost_020",
+      "id": "explain_005",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Explain the purpose of caching in web apps in 2-3 sentences.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["store", "faster", "response", "data"],
+        "min_matches": 2,
+        "baseline_tokens": 110,
+        "max_tokens": 180
+      }
     },
     {
-      "id": "cost_021",
+      "id": "explain_006",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Summarize what OAuth is used for.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["authorization", "access", "tokens", "third-party"],
+        "min_matches": 2,
+        "baseline_tokens": 120,
+        "max_tokens": 200
+      }
     },
     {
-      "id": "cost_022",
+      "id": "explain_007",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Explain what containerization means in software.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["isolated", "environment", "package", "dependencies"],
+        "min_matches": 2,
+        "baseline_tokens": 120,
+        "max_tokens": 200
+      }
     },
     {
-      "id": "cost_023",
+      "id": "explain_008",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Describe what latency means in networking.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["delay", "time", "request", "response"],
+        "min_matches": 2,
+        "baseline_tokens": 100,
+        "max_tokens": 170
+      }
     },
     {
-      "id": "cost_024",
+      "id": "explain_009",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Explain what load balancing does.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["traffic", "servers", "distribution", "availability"],
+        "min_matches": 2,
+        "baseline_tokens": 120,
+        "max_tokens": 200
+      }
     },
     {
-      "id": "cost_025",
+      "id": "explain_010",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "efficient_explanation",
+      "prompt": "Describe what encryption does in one paragraph.",
+      "evaluation": {
+        "type": "quality_and_tokens",
+        "quality_criteria": ["data", "secure", "key", "scramble"],
+        "min_matches": 2,
+        "baseline_tokens": 120,
+        "max_tokens": 200
+      }
     },
     {
-      "id": "cost_026",
+      "id": "tool_001",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "What is 25 * 4?",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 0,
+        "expected_answer_contains": ["100"],
+        "baseline_tokens": 30
+      }
     },
     {
-      "id": "cost_027",
+      "id": "tool_002",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "Calculate the square root of 144.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 1,
+        "expected_answer_contains": ["12"],
+        "baseline_tokens": 40
+      }
     },
     {
-      "id": "cost_028",
+      "id": "tool_003",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "What is 15% of 200?",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 1,
+        "expected_answer_contains": ["30"],
+        "baseline_tokens": 50
+      }
     },
     {
-      "id": "cost_029",
+      "id": "tool_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "Add 123 and 456.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 0,
+        "expected_answer_contains": ["579"],
+        "baseline_tokens": 40
+      }
     },
     {
-      "id": "cost_030",
+      "id": "tool_005",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "What is 7 cubed?",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 0,
+        "expected_answer_contains": ["343"],
+        "baseline_tokens": 40
+      }
     },
     {
-      "id": "cost_031",
+      "id": "tool_006",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "Convert 5 kilometers to meters.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 0,
+        "expected_answer_contains": ["5000"],
+        "baseline_tokens": 40
+      }
     },
     {
-      "id": "cost_032",
+      "id": "tool_007",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "What is 12 * 12?",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 0,
+        "expected_answer_contains": ["144"],
+        "baseline_tokens": 30
+      }
     },
     {
-      "id": "cost_033",
+      "id": "tool_008",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "Divide 100 by 4.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 0,
+        "expected_answer_contains": ["25"],
+        "baseline_tokens": 30
+      }
     },
     {
-      "id": "cost_034",
+      "id": "tool_009",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "What is 18 + 27?",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 0,
+        "expected_answer_contains": ["45"],
+        "baseline_tokens": 30
+      }
     },
     {
-      "id": "cost_035",
+      "id": "tool_010",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "minimal_tools",
+      "prompt": "Calculate 3.5 * 2.",
+      "available_tools": [
+        {
+          "type": "function",
+          "function": {
+            "name": "calculator",
+            "description": "Evaluate a math expression",
+            "parameters": {
+              "type": "object",
+              "properties": {
+                "expression": {
+                  "type": "string",
+                  "description": "Math expression"
+                }
+              },
+              "required": ["expression"]
+            }
+          }
+        }
+      ],
+      "evaluation": {
+        "type": "tool_count",
+        "max_tool_calls": 1,
+        "expected_answer_contains": ["7"],
+        "baseline_tokens": 30
+      }
     },
     {
-      "id": "cost_036",
+      "id": "direct_001",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the benefits of open-source software in two sentences.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "direct_answer",
+      "prompt": "What is 20% of 150?",
+      "evaluation": {
+        "type": "directness",
+        "answer_must_appear_within_first": 20,
+        "baseline_tokens": 30
+      }
     },
     {
-      "id": "cost_037",
+      "id": "direct_002",
       "suite": "janus/intelligence",
-      "prompt": "Explain why latency matters for user experience in one paragraph.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "direct_answer",
+      "prompt": "Compute 9 * 11.",
+      "evaluation": {
+        "type": "directness",
+        "answer_must_appear_within_first": 10,
+        "baseline_tokens": 20
+      }
     },
     {
-      "id": "cost_038",
+      "id": "direct_003",
       "suite": "janus/intelligence",
-      "prompt": "Provide a concise overview of serverless architectures.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "direct_answer",
+      "prompt": "How many minutes are in 2 hours? Answer directly.",
+      "evaluation": {
+        "type": "directness",
+        "answer_must_appear_within_first": 10,
+        "baseline_tokens": 25
+      }
     },
     {
-      "id": "cost_039",
+      "id": "direct_004",
       "suite": "janus/intelligence",
-      "prompt": "Describe the role of caching in web applications.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "direct_answer",
+      "prompt": "What is 100 minus 37?",
+      "evaluation": {
+        "type": "directness",
+        "answer_must_appear_within_first": 15,
+        "baseline_tokens": 25
+      }
     },
     {
-      "id": "cost_040",
+      "id": "direct_005",
       "suite": "janus/intelligence",
-      "prompt": "Summarize the pros and cons of microservices.",
-      "expected_keywords": null,
-      "task_type": "cost"
+      "task_type": "direct_answer",
+      "prompt": "What is 5 squared?",
+      "evaluation": {
+        "type": "directness",
+        "answer_must_appear_within_first": 10,
+        "baseline_tokens": 20
+      }
     }
   ]
 }

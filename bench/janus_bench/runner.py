@@ -27,6 +27,7 @@ from .scorers import (
     score_quality,
     score_tool_use,
 )
+from .scorers.cost_efficiency import score_cost_task
 from .scorers.research import (
     build_judge_prompt,
     detect_citations,
@@ -306,6 +307,23 @@ class BenchmarkRunner:
                 "tool_calls": tool_calls,
             }
             result.quality_score = tool_score
+        elif task.type == TaskType.COST and error is None and response_text:
+            quality_score, efficiency_score, cost_details = score_cost_task(
+                response_text=response_text,
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                total_tokens=total_tokens,
+                tool_calls=tool_calls,
+                metadata=task_metadata,
+                reasoning_content=reasoning_content,
+            )
+            task_metadata = dict(task_metadata or {})
+            task_metadata["quality_override"] = True
+            task_metadata["cost_override"] = True
+            result.metadata = task_metadata
+            result.quality_score = quality_score
+            result.cost_score = efficiency_score
+            result.judge_output = cost_details
 
         # Compute scores
         result = compute_task_scores(

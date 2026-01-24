@@ -57,11 +57,12 @@ def compute_task_scores(
     result.speed_score = score_speed(result.latency_seconds, ttft, tps)
 
     # Cost score
-    result.cost_score = score_cost(
-        result.total_tokens,
-        result.cost_usd,
-        result.sandbox_seconds,
-    )
+    if not (result.metadata and result.metadata.get("cost_override")):
+        result.cost_score = score_cost(
+            result.total_tokens,
+            result.cost_usd,
+            result.sandbox_seconds,
+        )
 
     # Streaming score
     result.streaming_score = score_streaming(result.streaming_metrics, metadata)
@@ -215,6 +216,41 @@ def _build_benchmark_results(results: list[TaskResult]) -> dict[str, dict[str, A
             cost_metrics["tokens_per_task"] = _average(token_values)
         if cost_values:
             cost_metrics["cost_per_task"] = _average(cost_values)
+        valid_cost = [r for r in cost_results if r.judge_output]
+        total_input = 0
+        total_output = 0
+        total_tokens = 0
+        total_baseline = 0
+        quality_scores: list[float] = []
+        efficiency_scores: list[float] = []
+        conciseness_scores: list[float] = []
+
+        for result in valid_cost:
+            output = result.judge_output or {}
+            total_input += int(output.get("input_tokens", 0))
+            total_output += int(output.get("output_tokens", 0))
+            total_tokens += int(output.get("total_tokens", 0))
+            total_baseline += int(output.get("baseline_tokens", 0))
+            quality_scores.append(float(output.get("quality_score", 0.0)))
+            efficiency_scores.append(float(output.get("efficiency_score", result.cost_score)))
+            if "conciseness_score" in output:
+                conciseness_scores.append(float(output.get("conciseness_score", 0.0)))
+
+        n = len(valid_cost)
+        if n:
+            cost_metrics["avg_input_tokens"] = total_input / n
+            cost_metrics["avg_output_tokens"] = total_output / n
+            cost_metrics["avg_total_tokens"] = total_tokens / n
+            cost_metrics["avg_quality_score"] = _average(quality_scores)
+            cost_metrics["avg_efficiency_score"] = _average(efficiency_scores)
+            if conciseness_scores:
+                cost_metrics["avg_conciseness_score"] = _average(conciseness_scores)
+            cost_metrics["baseline_tokens"] = total_baseline
+            cost_metrics["samples"] = float(n)
+            if total_baseline > 0:
+                cost_metrics["token_savings_pct"] = (
+                    (total_baseline - total_output) / total_baseline * 100
+                )
         add_benchmark("janus_cost", [r.cost_score for r in cost_results], cost_metrics)
 
     return benchmark_results
