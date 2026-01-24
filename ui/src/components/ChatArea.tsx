@@ -3,11 +3,14 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
+import { useCanvasStore } from '@/store/canvas';
 import { fetchModels, streamChatCompletion, streamDeepResearch } from '@/lib/api';
+import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress';
 import { ScreenshotStream } from './ScreenshotStream';
+import { CanvasPanel } from './canvas';
 import type { ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { AttachedFile } from '@/lib/file-types';
 
@@ -29,6 +32,7 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const processedCanvasMessagesRef = useRef<Set<string>>(new Set());
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('baseline');
   const [researchStages, setResearchStages] = useState<ResearchStage[]>([]);
@@ -327,8 +331,43 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
     abortControllerRef.current?.abort();
   };
 
+  const getMessageText = (content: MessageContent) => {
+    if (typeof content === 'string') {
+      return content;
+    }
+    return (content || [])
+      .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+      .map((part) => part.text)
+      .join('\n');
+  };
+
+  useEffect(() => {
+    if (isStreaming) return;
+    const lastAssistantMessage = [...messages].reverse().find((message) => message.role === 'assistant');
+    if (!lastAssistantMessage) return;
+    if (processedCanvasMessagesRef.current.has(lastAssistantMessage.id)) return;
+
+    const textContent = getMessageText(lastAssistantMessage.content);
+    if (!textContent) return;
+
+    const blocks = parseCanvasBlocks(textContent);
+    if (blocks.length === 0) return;
+
+    handleCanvasContent(textContent);
+    processedCanvasMessagesRef.current.add(lastAssistantMessage.id);
+  }, [isStreaming, messages]);
+
+  const handleAIEdit = (instruction: string) => {
+    if (isStreaming) return;
+    const doc = useCanvasStore.getState().getActiveDocument();
+    if (!doc) return;
+    const message = `Please edit the canvas content (${doc.title}):\n\nInstruction: ${instruction}\n\nCurrent content:\n\n\`\`\`${doc.language}\n${doc.content}\n\`\`\``;
+    handleSend(message, []);
+  };
+
   return (
-    <div className="flex-1 flex flex-col min-h-0">
+    <div className="chat-area flex-1 flex flex-col min-h-0">
+      <CanvasPanel onAIEdit={handleAIEdit} disabled={isStreaming} />
       <div className="chat-topbar shrink-0">
         <div className="chat-topbar-left">
           <button

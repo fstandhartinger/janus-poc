@@ -13,8 +13,16 @@
     "test:ui": "playwright test --ui"
   },
   "dependencies": {
+    "@codemirror/lang-css": "^6.2.0",
+    "@codemirror/lang-html": "^6.4.0",
+    "@codemirror/lang-javascript": "^6.2.0",
+    "@codemirror/lang-json": "^6.0.0",
+    "@codemirror/lang-markdown": "^6.2.0",
+    "@codemirror/lang-python": "^6.1.0",
+    "@codemirror/theme-one-dark": "^6.1.0",
     "@novnc/novnc": "^1.4.0",
     "chart.js": "^4.4.0",
+    "codemirror": "^6.0.0",
     "mammoth": "^1.6.0",
     "mermaid": "^11.12.2",
     "next": "16.1.4",

@@ -25,3 +25,4 @@
 - Implemented spec 47_text_to_speech_response_playback.md (TTS playback, voice selection, caching, and tests); blocked until CHUTES_API_KEY is configured on Render gateway for /api/tts.
 - Completed spec 48_rich_data_visualization.md with rich chart, spreadsheet, diagram rendering, content parsing, and agent documentation.
 - Completed spec 49_complexity_detection_improvements.md with conservative LLM routing, URL interaction detection, keyword updates, README diagram fixes, and new tests.
+- Completed spec 50_canvas_feature.md with canvas parsing, CodeMirror editor panel, AI shortcuts, version history, persistence, and chat integration.

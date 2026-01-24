@@ -3,11 +3,13 @@
 import { useEffect, useState } from 'react';
 import { Sidebar, ChatArea } from '@/components';
 import { Header } from '@/components/landing';
+import { useCanvasStore } from '@/store/canvas';
 
 export default function ChatPage() {
   const [isMounted, setIsMounted] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const isCanvasOpen = useCanvasStore((state) => state.isOpen);
 
   useEffect(() => {
     setIsMounted(true);
@@ -34,7 +36,7 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen chat-aurora-bg flex flex-col">
       <Header />
-      <div className="chat-shell flex-1">
+      <div className={`chat-shell flex-1 ${isCanvasOpen ? 'canvas-open' : ''}`}>
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-30 lg:hidden"

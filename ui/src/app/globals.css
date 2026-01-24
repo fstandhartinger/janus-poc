@@ -886,6 +886,17 @@ html {
   height: calc(100dvh - 64px);
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
+}
+
+.chat-shell.canvas-open .chat-area {
+  margin-right: clamp(0px, 50vw, 800px);
+}
+
+@media (max-width: 1024px) {
+  .chat-shell.canvas-open .chat-area {
+    margin-right: 0;
+  }
 }
 
 .chat-sidebar {
@@ -1424,4 +1435,286 @@ html {
   border-radius: var(--radius-md);
   background: var(--bg-ink-950);
   overflow: hidden;
+}
+
+/* Canvas Panel */
+.canvas-panel {
+  position: fixed;
+  top: 64px;
+  right: 0;
+  width: min(50vw, 800px);
+  min-width: 320px;
+  height: calc(100dvh - 64px);
+  background: var(--bg-elevated);
+  border-left: 1px solid var(--border-default);
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
+  box-shadow: -20px 0 40px rgba(0, 0, 0, 0.35);
+  animation: canvas-slide-in 0.2s ease;
+}
+
+@keyframes canvas-slide-in {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 1024px) {
+  .canvas-panel {
+    top: 0;
+    width: 100%;
+    min-width: 0;
+    height: 100dvh;
+  }
+}
+
+.canvas-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-default);
+  background: var(--card-bg);
+}
+
+.canvas-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.canvas-readonly {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  padding: 0.1rem 0.35rem;
+  border-radius: 999px;
+}
+
+.canvas-icon {
+  color: var(--accent-moss);
+}
+
+.canvas-actions {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.canvas-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  background: none;
+  border: none;
+  border-radius: 0.375rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.canvas-actions button:hover {
+  background: var(--card-bg-hover);
+  color: var(--text-primary);
+}
+
+.canvas-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.canvas-editor {
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Canvas Shortcuts */
+.canvas-shortcuts {
+  border-bottom: 1px solid var(--border-default);
+  background: var(--card-bg);
+}
+
+.canvas-shortcuts-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.canvas-shortcuts-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.canvas-shortcuts-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0 1rem 0.5rem;
+}
+
+@media (max-width: 640px) {
+  .canvas-shortcuts-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.canvas-shortcut-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-ink-900);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.canvas-shortcut-btn:hover {
+  background: var(--card-bg-hover);
+  border-color: rgba(99, 210, 151, 0.5);
+  color: var(--text-primary);
+}
+
+.canvas-shortcut-icon {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: var(--accent-moss);
+  letter-spacing: 0.08em;
+}
+
+.canvas-shortcuts-custom {
+  padding: 0.5rem 1rem 1rem;
+}
+
+.canvas-shortcuts-custom input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border-default);
+  border-radius: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+.canvas-shortcuts-custom input:focus {
+  outline: none;
+  border-color: rgba(99, 210, 151, 0.6);
+}
+
+/* Canvas History */
+.canvas-history {
+  position: absolute;
+  top: 3.5rem;
+  right: 1rem;
+  width: 280px;
+  max-height: 400px;
+  background: var(--card-bg);
+  border: 1px solid var(--border-default);
+  border-radius: 0.75rem;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  z-index: 10;
+}
+
+.canvas-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-default);
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.canvas-history-close {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.canvas-history-list {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.canvas-history-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-default);
+  gap: 0.75rem;
+}
+
+.canvas-history-item:last-child {
+  border-bottom: none;
+}
+
+.canvas-history-item.current {
+  background: rgba(99, 210, 151, 0.12);
+}
+
+.canvas-history-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.canvas-history-desc {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.canvas-history-time {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.canvas-history-restore {
+  padding: 0.25rem 0.5rem;
+  background: none;
+  border: 1px solid var(--border-default);
+  border-radius: 0.25rem;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.canvas-history-restore:hover {
+  background: var(--card-bg-hover);
+  color: var(--text-primary);
+}
+
+.canvas-history-current-badge {
+  padding: 0.125rem 0.375rem;
+  background: var(--accent-moss);
+  border-radius: 0.25rem;
+  color: var(--bg-ink-950);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }

@@ -1,5 +1,6 @@
 'use client';
 import type { Message } from '@/types/chat';
+import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
 import { RichContent } from './viz/RichContent';
@@ -12,13 +13,14 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const contentParts = typeof message.content === 'string' ? [] : message.content || [];
-  const textContent =
+  const rawTextContent =
     typeof message.content === 'string'
       ? message.content
       : contentParts
           .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
           .map((c) => c.text)
           .join('\n');
+  const textContent = stripCanvasBlocks(rawTextContent);
 
   return (
     <div
