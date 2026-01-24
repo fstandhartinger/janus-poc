@@ -11,6 +11,7 @@ ChatGPT-like interface for the Janus gateway with streaming support and reasonin
 - Collapsible "Thinking" panel for reasoning_content
 - Competitor selector (baseline only in MVP)
 - Artifact links with download support
+- Voice input with speech-to-text transcription
 
 ## Installation
 
@@ -69,6 +70,7 @@ ui/
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `NEXT_PUBLIC_GATEWAY_URL` | `http://localhost:8000` | Janus gateway URL |
+| `NEXT_PUBLIC_ENABLE_VOICE_INPUT` | `false` | Toggle voice input UI |
 
 ## API Integration
 

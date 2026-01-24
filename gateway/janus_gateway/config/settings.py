@@ -51,6 +51,13 @@ class Settings(BaseSettings):
     sandy_api_key: Optional[str] = Field(default=None, description="Sandy API key")
     sandy_preferred_upstream: Optional[str] = Field(default=None, description="Sandy preferred upstream")
 
+    # Chutes API
+    chutes_api_key: Optional[str] = Field(
+        default=None,
+        description="Chutes API key",
+        validation_alias=AliasChoices("CHUTES_API_KEY", "JANUS_CHUTES_API_KEY"),
+    )
+
     # Artifact storage
     artifact_storage_path: str = Field(default="/tmp/janus_artifacts", description="Local artifact storage path")
     artifact_ttl_seconds: int = Field(default=3600, description="Artifact TTL in seconds")

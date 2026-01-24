@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useRef, type FormEvent, type ChangeEvent } from 'react';
+import { useCallback, useRef, useState, type FormEvent, type ChangeEvent } from 'react';
 import { FilePreview } from './FilePreview';
+import { MicrophonePermissionBanner } from './MicrophonePermissionDialog';
+import { VoiceInputButton } from './VoiceInputButton';
 import {
   ALL_ACCEPT_TYPES,
   MAX_FILES_PER_MESSAGE,
@@ -25,6 +27,16 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   );
   const [processingFiles, setProcessingFiles] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const voiceInputEnabled = process.env.NEXT_PUBLIC_ENABLE_VOICE_INPUT === 'true';
+
+  const handleTranscription = useCallback((text: string) => {
+    setInput((prev) => {
+      const separator = prev.trim() ? ' ' : '';
+      return prev + separator + text;
+    });
+    textareaRef.current?.focus();
+  }, []);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -112,6 +124,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 
   return (
     <form onSubmit={handleSubmit} className="chat-input-wrapper">
+      {voiceInputEnabled && <MicrophonePermissionBanner />}
+
       {statusMessage && (
         <div
           className={`mb-2 text-xs ${
@@ -162,6 +176,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         />
 
         <textarea
+          ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => {
@@ -177,18 +192,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           data-testid="chat-input"
         />
 
-        <button
-          type="button"
-          disabled={disabled}
-          className="w-9 h-9 rounded-full border border-[#1F2937] flex items-center justify-center text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#374151] transition-colors disabled:opacity-50"
-          aria-label="Voice input"
-        >
-          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 11a7 7 0 0014 0" />
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v3" />
-          </svg>
-        </button>
+        {voiceInputEnabled && (
+          <VoiceInputButton onTranscription={handleTranscription} disabled={disabled} />
+        )}
 
         <button
           type="submit"

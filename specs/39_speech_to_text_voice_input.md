@@ -1,6 +1,6 @@
 # Spec 39: Speech-to-Text Voice Input
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -829,3 +829,5 @@ gateway/
 - `specs/11_chat_ui.md` - Original chat UI spec
 - `specs/37_extended_file_attachments.md` - File handling patterns
 - `specs/competition/05_architecture_overview.md` - Platform services
+
+NR_OF_TRIES: 1

@@ -10,3 +10,5 @@
 - Completed spec 35_janus_cost_benchmark.md with cost efficiency scoring, dataset, metrics, and tests in the bench runner.
 - Completed spec 36_janus_bench_ui_section.md with Janus UI/category metadata, composite score endpoint, and run detail UI updates in chutes-bench-runner.
 - Completed spec 37_extended_file_attachments.md with multi-format file handling, previews, backend extraction, and tests.
+- Completed spec 38_multimodal_vision_models.md with vision routing, image detection, fallback, LangChain vision support, agent docs, and tests.
+- Completed spec 39_speech_to_text_voice_input.md with voice recording UI, transcription proxy, env toggles, and unit tests.

@@ -18,7 +18,7 @@ function normalizeGatewayUrl(rawUrl: string): string {
   return `https://${trimmed}`;
 }
 
-const GATEWAY_URL = normalizeGatewayUrl(
+export const GATEWAY_URL = normalizeGatewayUrl(
   process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8000'
 );
 

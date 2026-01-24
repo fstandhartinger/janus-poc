@@ -140,6 +140,8 @@ See individual component READMEs for full configuration:
 | `BASELINE_AGENT_CLI_PORT` | Baseline agent CLI port (default: 8001) |
 | `BASELINE_LANGCHAIN_PORT` | Baseline LangChain port (default: 8002) |
 | `NEXT_PUBLIC_GATEWAY_URL` | Gateway URL for UI |
+| `NEXT_PUBLIC_ENABLE_VOICE_INPUT` | Toggle voice input in the UI |
+| `CHUTES_API_KEY` | Chutes Whisper API key for transcription |
 | `SANDY_BASE_URL` | Sandy sandbox service URL |
 | `SANDY_API_KEY` | Sandy API key |
 | `BASELINE_AGENT_CLI_OPENAI_API_KEY` | OpenAI API key for baseline |

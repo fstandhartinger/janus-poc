@@ -56,5 +56,6 @@ pytest
 | `JANUS_BASELINE_LANGCHAIN_URL` | `http://localhost:8002` | Baseline LangChain competitor base URL |
 | `JANUS_SANDY_BASE_URL` | - | Sandy API base URL |
 | `JANUS_SANDY_API_KEY` | - | Sandy API key |
+| `CHUTES_API_KEY` | - | Chutes Whisper API key for transcription |
 
 `BASELINE_AGENT_CLI_URL` and `BASELINE_URL` are accepted as aliases for `JANUS_BASELINE_URL`. `BASELINE_LANGCHAIN_URL` is accepted as an alias for `JANUS_BASELINE_LANGCHAIN_URL`.

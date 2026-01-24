@@ -28,6 +28,8 @@ services:
           name: janus-baseline-langchain
           property: hostport
           envVarKey: BASELINE_LANGCHAIN_URL
+      - key: CHUTES_API_KEY
+        sync: false
     healthCheckPath: /health
 
   # Janus Baseline Agent - Reference competitor implementation
@@ -97,4 +99,6 @@ services:
           name: janus-gateway
           property: host
           envVarKey: NEXT_PUBLIC_GATEWAY_URL
+      - key: NEXT_PUBLIC_ENABLE_VOICE_INPUT
+        value: "true"
     healthCheckPath: /
