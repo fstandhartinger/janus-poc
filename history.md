@@ -16,3 +16,4 @@
 - Completed spec 41_enhanced_agent_system_prompt.md with expanded agent prompt guidance, sandbox env variables, and artifact URL patterns.
 - Completed spec 42_sandbox_file_serving.md with CORS-ready artifact server, agent artifact helpers, and URL resolution.
 - Completed spec 43_agent_sandbox_management.md with auth pass-through, sandbox management helpers, web app hosting utility, and prompt updates.
+- Follow-up: mapped baseline model aliases to configured model to restore production chat completions.

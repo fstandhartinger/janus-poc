@@ -94,3 +94,13 @@ def test_select_model_respects_disabled_routing() -> None:
         ],
     )
     assert service.select_model(request) == "custom-model"
+
+
+def test_select_model_uses_default_for_baseline_alias() -> None:
+    settings = Settings(model="gpt-4o-mini")
+    service = LLMService(settings)
+    request = ChatCompletionRequest(
+        model="baseline",
+        messages=[Message(role=MessageRole.USER, content="Hello")],
+    )
+    assert service.select_model(request) == settings.model

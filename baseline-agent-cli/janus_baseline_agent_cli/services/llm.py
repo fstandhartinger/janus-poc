@@ -64,13 +64,16 @@ class LLMService:
 
     def select_model(self, request: ChatCompletionRequest) -> str:
         """Select the appropriate model based on message content."""
+        requested_model = request.model or self._settings.model
+        if requested_model in {"baseline", "baseline-langchain"}:
+            requested_model = self._settings.model
         if self._enable_vision_routing and contains_images(request.messages):
             logger.info(
                 "vision_routing_enabled",
                 model=self._vision_model_primary,
             )
             return self._vision_model_primary
-        return request.model or self._settings.model
+        return requested_model
 
     def _is_vision_model(self, model: str) -> bool:
         return model in {self._vision_model_primary, self._vision_model_fallback}
