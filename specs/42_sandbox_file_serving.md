@@ -1,6 +1,6 @@
 # Spec 42: Sandbox File Serving & Public URLs
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -374,3 +374,5 @@ baseline-agent-cli/
 
 - `specs/41_enhanced_agent_system_prompt.md` - Agent capabilities
 - `specs/43_agent_sandbox_management.md` - Sandbox creation
+
+NR_OF_TRIES: 1

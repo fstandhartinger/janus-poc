@@ -29,6 +29,8 @@ from janus_baseline_agent_cli.models import (
     MessageRole,
     Usage,
 )
+from janus_baseline_agent_cli.services.vision import contains_images, get_image_urls
+from janus_baseline_agent_cli.services.response_processor import process_agent_response
 
 logger = structlog.get_logger()
 
@@ -94,30 +96,63 @@ class SandyService:
             return f"{self._base_url.rstrip('/')}/sandbox/{sandbox_id}/artifacts"
         return "/artifacts"
 
-    def _build_agent_env(self, sandbox_id: str, public_url: str | None) -> dict[str, str]:
+    def _sandbox_url(self, sandbox_id: str, public_url: str | None) -> str:
+        """Resolve the base URL for sandbox access."""
+        if public_url:
+            return public_url.rstrip("/")
+        if self._base_url:
+            return f"{self._base_url.rstrip('/')}/sandbox/{sandbox_id}"
+        return ""
+
+    def _build_agent_env(
+        self,
+        sandbox_id: str,
+        public_url: str | None,
+        has_images: bool = False,
+    ) -> dict[str, str]:
         """Build environment variables for the CLI agent."""
+        sandbox_url = self._sandbox_url(sandbox_id, public_url)
+        artifact_base = self._artifact_url_base(sandbox_id, public_url)
+        chutes_api_key = self._settings.chutes_api_key or self._settings.openai_api_key or ""
+        chutes_api_url = self._settings.openai_base_url or "https://api.chutes.ai/v1"
         return {
+            "JANUS_WORKSPACE": "/workspace",
             "JANUS_AGENT_PACK": self._agent_pack_dest_root(),
             "JANUS_DOCS_ROOT": "/workspace/docs/models",
             "JANUS_SYSTEM_PROMPT_PATH": "/agent-pack/prompts/system.md",
-            "JANUS_ENABLE_WEB_SEARCH": "1" if self._settings.enable_web_search else "0",
-            "JANUS_ENABLE_CODE_EXECUTION": "1"
-            if self._settings.enable_code_execution
-            else "0",
-            "JANUS_ENABLE_FILE_TOOLS": "1" if self._settings.enable_file_tools else "0",
+            "JANUS_ENABLE_WEB_SEARCH": str(self._settings.enable_web_search).lower(),
+            "JANUS_ENABLE_CODE_EXECUTION": str(self._settings.enable_code_execution).lower(),
+            "JANUS_ENABLE_FILE_TOOLS": str(self._settings.enable_file_tools).lower(),
+            "JANUS_ENABLE_NETWORK": "true",
+            "CHUTES_API_KEY": chutes_api_key,
+            "CHUTES_API_URL": chutes_api_url,
             "JANUS_SANDBOX_ID": sandbox_id,
+            "JANUS_SANDBOX_URL": sandbox_url,
             "JANUS_SANDBOX_PUBLIC_URL": public_url or "",
-            "JANUS_ARTIFACT_URL_BASE": self._artifact_url_base(sandbox_id, public_url),
+            "JANUS_ARTIFACT_URL_BASE": artifact_base,
+            "JANUS_ARTIFACT_BASE_URL": artifact_base,
             "JANUS_ARTIFACTS_DIR": self._artifact_dir,
             "JANUS_ARTIFACT_PORT": str(self._artifact_port),
+            "JANUS_VISION_MODEL": self._settings.vision_model_primary,
+            "JANUS_VISION_FALLBACK": self._settings.vision_model_fallback,
+            "JANUS_HAS_IMAGES": str(has_images).lower(),
             "PATH": self._default_path,
         }
 
-    def _build_agent_command(self, agent: str, task: str, sandbox_id: str, public_url: str | None) -> str:
+    def _build_agent_command(
+        self,
+        agent: str,
+        task: str,
+        sandbox_id: str,
+        public_url: str | None,
+        has_images: bool = False,
+    ) -> str:
         """Build the CLI agent command."""
         env_parts = [
             f"{key}={shlex.quote(str(value))}"
-            for key, value in self._build_agent_env(sandbox_id, public_url).items()
+            for key, value in self._build_agent_env(
+                sandbox_id, public_url, has_images
+            ).items()
         ]
         quoted_task = shlex.quote(task)
         if agent == "builtin":
@@ -337,11 +372,14 @@ class SandyService:
         client: httpx.AsyncClient,
         sandbox_id: str,
         public_url: str | None,
+        has_images: bool = False,
     ) -> tuple[str, str, int]:
         """Run the agent pack bootstrap script inside the sandbox."""
         env_parts = [
             f"{key}={shlex.quote(str(value))}"
-            for key, value in self._build_agent_env(sandbox_id, public_url).items()
+            for key, value in self._build_agent_env(
+                sandbox_id, public_url, has_images
+            ).items()
         ]
         command = " ".join(
             [
@@ -425,14 +463,29 @@ class SandyService:
         """Extract the task description from the request."""
         for msg in reversed(request.messages):
             if msg.role.value == "user" and msg.content:
+                task_text = ""
+                image_urls = get_image_urls(msg)
+
                 if isinstance(msg.content, str):
-                    return msg.content
-                # Handle list of content parts
-                for part in msg.content:
-                    if hasattr(part, "text"):
-                        return part.text
-                    elif isinstance(part, dict) and part.get("type") == "text":
-                        return part.get("text", "")
+                    task_text = msg.content
+                else:
+                    # Handle list of content parts
+                    for part in msg.content:
+                        if hasattr(part, "text"):
+                            task_text = part.text
+                            break
+                        elif isinstance(part, dict) and part.get("type") == "text":
+                            task_text = part.get("text", "")
+                            break
+
+                if image_urls:
+                    task_text = task_text or "Image analysis request"
+                    task_text += (
+                        f"\n\n[{len(image_urls)} image(s) attached - "
+                        "use vision capabilities to analyze]"
+                    )
+
+                return task_text
         return "No task specified"
 
     async def complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
@@ -440,6 +493,7 @@ class SandyService:
         request_id = self._generate_id()
         model = request.model
         task = self._extract_task(request)
+        has_images = contains_images(request.messages)
 
         if not self.is_available:
             content = (
@@ -482,6 +536,7 @@ class SandyService:
                 )
 
             sandbox_id, public_url = sandbox_info
+            sandbox_url = self._sandbox_url(sandbox_id, public_url)
             artifacts: list[Artifact] = []
 
             try:
@@ -502,8 +557,8 @@ class SandyService:
                         ],
                     )
 
-                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = (
-                    await self._run_bootstrap(client, sandbox_id, public_url)
+                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
+                    client, sandbox_id, public_url, has_images
                 )
                 if bootstrap_exit != 0:
                     error_detail = bootstrap_stderr or "Bootstrap failed."
@@ -526,7 +581,7 @@ class SandyService:
 
                 selected_agent = await self._select_agent(client, sandbox_id)
                 command = self._build_agent_command(
-                    selected_agent, task, sandbox_id, public_url
+                    selected_agent, task, sandbox_id, public_url, has_images
                 )
                 stdout, stderr, exit_code = await self._exec_in_sandbox(
                     client, sandbox_id, command
@@ -544,6 +599,8 @@ class SandyService:
                 if artifacts:
                     links = self._format_artifact_links(artifacts)
                     result = f"{result}\n\nArtifacts available:\n{links}"
+
+                result = process_agent_response(result, sandbox_url)
 
                 return ChatCompletionResponse(
                     id=request_id,
@@ -577,6 +634,7 @@ class SandyService:
         request_id = self._generate_id()
         model = request.model
         task = self._extract_task(request)
+        has_images = contains_images(request.messages)
 
         # Emit initial role
         yield ChatCompletionChunk(
@@ -671,6 +729,7 @@ class SandyService:
                 return
 
             sandbox_id, public_url = sandbox_info
+            sandbox_url = self._sandbox_url(sandbox_id, public_url)
             artifacts: list[Artifact] = []
 
             yield ChatCompletionChunk(
@@ -732,8 +791,8 @@ class SandyService:
                     ],
                 )
 
-                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = (
-                    await self._run_bootstrap(client, sandbox_id, public_url)
+                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
+                    client, sandbox_id, public_url, has_images
                 )
                 if bootstrap_exit != 0:
                     error_detail = bootstrap_stderr or "Bootstrap failed."
@@ -788,7 +847,7 @@ class SandyService:
                 )
 
                 command = self._build_agent_command(
-                    selected_agent, task, sandbox_id, public_url
+                    selected_agent, task, sandbox_id, public_url, has_images
                 )
                 stdout, stderr, exit_code = await self._exec_in_sandbox(
                     client, sandbox_id, command
@@ -814,6 +873,8 @@ class SandyService:
                     result = "Agent returned no output."
                 if stderr:
                     result = f"{result}\n\nErrors:\n{stderr.strip()}"
+
+                result = process_agent_response(result, sandbox_url)
 
                 yield ChatCompletionChunk(
                     id=request_id,

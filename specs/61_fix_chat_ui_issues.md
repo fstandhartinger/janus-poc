@@ -38,6 +38,7 @@ The LangChain baseline service may be misconfigured or unavailable on Render.
 - Rename "baseline" to "baseline-cli-agent" in UI
 - Improve dropdown styling for better contrast and appearance
 - Scan and fix similar styling issues across the frontend
+- Fix or remove non-functional hamburger menu button
 
 ## Functional Requirements
 
@@ -623,6 +624,115 @@ code {
 }
 ```
 
+### FR-8: Fix or Remove Non-Functional Hamburger Menu Button
+
+The hamburger menu button (left of the home button in chat header) is non-functional. The button exists with class `chat-menu-btn lg:hidden` and is intended to open the sidebar on mobile, but:
+
+1. It may be visible on desktop when it shouldn't be (due to CSS issues)
+2. The sidebar toggle may not be working as expected
+
+**Option A: Remove the button entirely** (if sidebar is always accessible via other means):
+
+```tsx
+// ui/src/components/ChatArea.tsx - Remove lines 168-177
+
+// REMOVE this entire button block:
+// <button
+//   type="button"
+//   onClick={onMenuClick}
+//   className="chat-menu-btn lg:hidden"
+//   aria-label="Open sidebar"
+// >
+//   <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+//     <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+//   </svg>
+// </button>
+```
+
+**Option B: Fix the button to properly toggle sidebar** (recommended for mobile UX):
+
+```tsx
+// ui/src/components/ChatArea.tsx
+
+interface ChatAreaProps {
+  onMenuClick?: () => void;
+  isSidebarOpen?: boolean;  // Add this prop
+}
+
+export function ChatArea({ onMenuClick, isSidebarOpen }: ChatAreaProps) {
+  // ...
+
+  return (
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="chat-topbar shrink-0">
+        <div className="chat-topbar-left">
+          {/* Only show hamburger on mobile when sidebar is hidden */}
+          {onMenuClick && (
+            <button
+              type="button"
+              onClick={onMenuClick}
+              className="chat-menu-btn"
+              aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+              aria-expanded={isSidebarOpen}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+                {isSidebarOpen ? (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                )}
+              </svg>
+            </button>
+          )}
+          {/* ... rest of topbar */}
+```
+
+Update the CSS to properly show/hide on breakpoints:
+
+```css
+/* ui/src/app/globals.css */
+
+.chat-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(55, 65, 81, 0.6);
+  background: rgba(17, 23, 38, 0.7);
+  color: #9CA3AF;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chat-menu-btn:hover {
+  background: rgba(17, 23, 38, 0.9);
+  color: #F3F4F6;
+  border-color: rgba(99, 210, 151, 0.4);
+}
+
+/* Hide on large screens where sidebar is always visible */
+@media (min-width: 1024px) {
+  .chat-menu-btn {
+    display: none;
+  }
+}
+```
+
+Update chat page to pass sidebar state:
+
+```tsx
+// ui/src/app/chat/page.tsx
+
+<ChatArea
+  onMenuClick={() => setSidebarOpen(!sidebarOpen)}
+  isSidebarOpen={sidebarOpen}
+/>
+```
+
+**Decision**: If the sidebar provides essential navigation that users need on mobile, implement Option B. If the hamburger menu adds complexity without clear value, implement Option A and remove it.
+
 ## Deployment Steps
 
 ### Step 1: Update Render Environment
@@ -663,6 +773,11 @@ git push
 - [ ] Vision model returns proper analysis (not placeholder tokens)
 - [ ] All form elements have consistent dark styling
 - [ ] Focus states are visible and consistent
+- [ ] Hamburger menu button is NOT visible on desktop (lg breakpoint)
+- [ ] Hamburger menu button IS visible on mobile/tablet
+- [ ] Clicking hamburger opens sidebar on mobile
+- [ ] Clicking hamburger again (or X) closes sidebar
+- [ ] Sidebar overlay dismisses when clicking outside
 
 ## Acceptance Criteria
 
@@ -672,6 +787,7 @@ git push
 - [ ] Image requests routed to vision models
 - [ ] No more placeholder tokens in vision responses
 - [ ] Styling audit complete with fixes applied
+- [ ] Hamburger menu button fixed or removed
 - [ ] All tests pass
 
 ## Files to Modify
@@ -685,9 +801,11 @@ gateway/
 ui/
 ├── src/
 │   ├── app/
-│   │   └── globals.css             # Dropdown styling, global fixes
+│   │   ├── globals.css             # Dropdown styling, global fixes, hamburger btn
+│   │   └── chat/
+│   │       └── page.tsx            # Pass sidebar state to ChatArea
 │   └── components/
-│       ├── ChatArea.tsx            # Use new dropdown
+│       ├── ChatArea.tsx            # Use new dropdown, fix hamburger menu
 │       └── ModelSelector.tsx       # NEW: Custom dropdown component
 
 baseline-agent-cli/
