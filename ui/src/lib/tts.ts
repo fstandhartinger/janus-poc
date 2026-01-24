@@ -2,6 +2,8 @@
  * Text-to-speech helpers for assistant playback.
  */
 
+import { GATEWAY_URL } from './api';
+
 export interface TTSVoice {
   id: string;
   name: string;
@@ -25,6 +27,7 @@ export const VOICES: TTSVoice[] = [
 export const DEFAULT_VOICE = 'af_sky';
 
 const TTS_ENDPOINT = 'https://chutes-kokoro.chutes.ai/speak';
+const TTS_PROXY_ENDPOINT = `${GATEWAY_URL}/api/tts`;
 
 // Audio cache to avoid re-generating
 const audioCache = new Map<string, string>();
@@ -71,7 +74,9 @@ export async function generateSpeech(
     headers.Authorization = `Bearer ${apiKey}`;
   }
 
-  const response = await fetch(TTS_ENDPOINT, {
+  const endpoint = apiKey ? TTS_ENDPOINT : TTS_PROXY_ENDPOINT;
+
+  const response = await fetch(endpoint, {
     method: 'POST',
     headers,
     body: JSON.stringify({
