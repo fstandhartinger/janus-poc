@@ -33,6 +33,7 @@ from .janus import (
     ModelInfo,
     ModelsResponse,
 )
+from .streaming import ScreenshotEvent, format_screenshot_sse
 
 __all__ = [
     # OpenAI models
@@ -66,4 +67,6 @@ __all__ = [
     "HealthResponse",
     "ModelInfo",
     "ModelsResponse",
+    "ScreenshotEvent",
+    "format_screenshot_sse",
 ]

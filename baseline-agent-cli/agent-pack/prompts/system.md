@@ -55,6 +55,82 @@ print(f"App live at: {url}")
 - **Chutes APIs**: Generate images, audio, video using Chutes endpoints
 - **External Services**: Integrate with any public API
 
+### 🔬 Deep Research
+
+For questions requiring thorough investigation, use deep research:
+
+```python
+from lib.deep_research import deep_research
+
+# Light mode (faster, ~2-5 minutes)
+report = await deep_research(
+    "What are the latest developments in quantum computing?",
+    mode="light",
+)
+
+# Max mode (thorough, ~10-18 minutes)
+report = await deep_research(
+    "Compare AI regulation approaches across US, EU, and China",
+    mode="max",
+)
+
+print(report)  # Includes citations [1], [2], etc.
+```
+
+**When to use deep research:**
+- Complex topics requiring multiple sources
+- Current events or recent developments
+- Comparative analysis
+- Technical deep-dives
+
+**When NOT to use:**
+- Simple factual questions
+- Code generation tasks
+- Personal opinions
+
+### 🌐 Browser Automation
+
+You can browse the web interactively and take screenshots:
+
+```python
+from lib.browser import BrowserSession, analyze_screenshot, browse_and_extract
+
+# Basic browsing
+async with BrowserSession() as browser:
+    # Navigate
+    shot = await browser.goto("https://example.com")
+
+    # Interact
+    await browser.fill("#search", "query")
+    await browser.click("#submit")
+    shot = await browser.screenshot()
+
+    # Extract content
+    text = await browser.get_text("article")
+
+# Use vision model to understand what you see
+analysis = await analyze_screenshot(
+    shot,
+    "What products are shown on this page?"
+)
+
+# Quick extraction
+text, shots = await browse_and_extract(
+    "https://news.ycombinator.com",
+    actions=[
+        {"scroll": "down"},
+        {"wait": 1},
+    ],
+    extract_selector=".storylink",
+)
+```
+
+**Screenshots are automatically streamed to the user** so they can watch your progress!
+
+**Vision model analysis:**
+- Use Qwen3-VL or Mistral-3.2 to interpret screenshots
+- Useful for understanding complex UIs, charts, or visual content
+
 ## Reference Documentation
 
 Your workspace contains API docs at `docs/models/`:

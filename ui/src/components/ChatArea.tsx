@@ -3,10 +3,12 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
-import { fetchModels, streamChatCompletion } from '@/lib/api';
+import { fetchModels, streamChatCompletion, streamDeepResearch } from '@/lib/api';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
-import type { MessageContent, Model } from '@/types/chat';
+import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress';
+import { ScreenshotStream } from './ScreenshotStream';
+import type { ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { AttachedFile } from '@/lib/file-types';
 
 interface ChatAreaProps {
@@ -29,6 +31,10 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('baseline');
+  const [researchStages, setResearchStages] = useState<ResearchStage[]>([]);
+  const [researchActive, setResearchActive] = useState(false);
+  const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
+  const [screenshotsLive, setScreenshotsLive] = useState(false);
 
   const session = getCurrentSession();
   const messages = session?.messages || [];
@@ -64,16 +70,10 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
   }, []);
 
   type MessageContentPart = Exclude<MessageContent, string>[number];
+  type SendOptions = { deepResearch?: boolean; researchMode?: 'light' | 'max' };
+  type ResearchSource = { title: string; url: string; snippet: string };
 
-  const handleSend = async (content: string, files: AttachedFile[]) => {
-    // Ensure we have a session
-    let sessionId = currentSessionId;
-    if (!sessionId) {
-      sessionId = createSession();
-    }
-
-    // Build message content
-    let messageContent: MessageContent;
+  const buildMessageContent = (content: string, files: AttachedFile[]): MessageContent => {
     const trimmedContent = content.trim();
     if (files.length > 0) {
       const parts: MessageContentPart[] = [];
@@ -95,10 +95,116 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
           });
         }
       });
-      messageContent = parts;
-    } else {
-      messageContent = trimmedContent;
+      return parts;
     }
+    return trimmedContent;
+  };
+
+  const normalizeStageStatus = (status?: string): ResearchStage['status'] => {
+    if (status === 'pending' || status === 'running' || status === 'complete' || status === 'error') {
+      return status;
+    }
+    return 'pending';
+  };
+
+  const updateResearchStage = (payload: { label?: string; status?: string; detail?: string }) => {
+    const label = payload.label?.trim();
+    if (!label) return;
+    const status = normalizeStageStatus(payload.status);
+    const detail = payload.detail?.trim();
+    setResearchStages((prev) => {
+      const next = [...prev];
+      const existingIndex = next.findIndex((stage) => stage.label === label);
+      if (existingIndex >= 0) {
+        next[existingIndex] = {
+          ...next[existingIndex],
+          status,
+          detail,
+        };
+      } else {
+        next.push({
+          id: label,
+          label,
+          status,
+          detail,
+        });
+      }
+      return next;
+    });
+  };
+
+  const collectResearchSources = (
+    raw: unknown,
+    sources: ResearchSource[],
+    seen: Set<string>
+  ) => {
+    const entries: Array<Record<string, unknown>> = [];
+    if (Array.isArray(raw)) {
+      for (const entry of raw) {
+        if (Array.isArray(entry)) {
+          entries.push(...(entry.filter((item) => item && typeof item === 'object') as Record<string, unknown>[]));
+        } else if (entry && typeof entry === 'object') {
+          entries.push(entry as Record<string, unknown>);
+        }
+      }
+    } else if (raw && typeof raw === 'object') {
+      entries.push(raw as Record<string, unknown>);
+    }
+
+    for (const entry of entries) {
+      const metadata =
+        entry.metadata && typeof entry.metadata === 'object'
+          ? (entry.metadata as Record<string, unknown>)
+          : {};
+      const title = String(metadata.title ?? entry.title ?? '');
+      const url = String(metadata.url ?? entry.url ?? '');
+      const snippet = String(entry.pageContent ?? entry.snippet ?? '');
+      const key = url || title;
+      if (key && seen.has(key)) continue;
+      if (key) seen.add(key);
+      sources.push({ title, url, snippet: snippet.slice(0, 200) });
+    }
+  };
+
+  const appendResearchSources = (sources: ResearchSource[]) => {
+    const lines = sources.map((source, index) => {
+      const title = source.title || source.url || `Source ${index + 1}`;
+      if (source.url) {
+        return `${index + 1}. [${title}](${source.url})`;
+      }
+      return `${index + 1}. ${title}`;
+    });
+    appendToLastMessage(`\n\n---\n\n## Sources\n\n${lines.join('\n')}`, '');
+  };
+
+  const pushScreenshot = (shot: ScreenshotData) => {
+    if (!shot.image_base64) return;
+    setScreenshots((prev) => [...prev, shot]);
+  };
+
+  const coerceScreenshotPayload = (payload: unknown): ScreenshotData | null => {
+    if (!payload || typeof payload !== 'object') return null;
+    const data = payload as Record<string, unknown>;
+    const image = typeof data.image_base64 === 'string' ? data.image_base64 : '';
+    if (!image) return null;
+    return {
+      url: typeof data.url === 'string' ? data.url : '',
+      title: typeof data.title === 'string' ? data.title : '',
+      image_base64: image,
+      timestamp: typeof data.timestamp === 'number' ? data.timestamp : Date.now() / 1000,
+    };
+  };
+
+  const handleSend = async (content: string, files: AttachedFile[], options?: SendOptions) => {
+    // Ensure we have a session
+    let sessionId = currentSessionId;
+    if (!sessionId) {
+      sessionId = createSession();
+    }
+
+    // Build message content
+    const messageContent = buildMessageContent(content, files);
+    const trimmedContent = content.trim();
 
     // Add user message
     addMessage({
@@ -115,43 +221,103 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
 
     // Start streaming
     setStreaming(true);
+    setScreenshots([]);
+    setScreenshotsLive(true);
     abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
+    const useDeepResearch = Boolean(options?.deepResearch && trimmedContent);
+    const sources: ResearchSource[] = [];
+    const seenSources = new Set<string>();
+    let aborted = false;
+
+    if (useDeepResearch) {
+      setResearchStages([]);
+      setResearchActive(true);
+    }
 
     try {
-      // Build request messages from current session
-      const currentSession = getCurrentSession();
-      const requestMessages = (currentSession?.messages || [])
-        .slice(0, -1) // Exclude the placeholder
-        .map((m) => ({
-          role: m.role,
-          content: m.content,
-        }));
+      if (useDeepResearch) {
+        for await (const event of streamDeepResearch(
+          {
+            query: trimmedContent,
+            mode: options?.researchMode ?? 'light',
+            optimization: 'balanced',
+          },
+          signal
+        )) {
+          if (event.type === 'progress') {
+            updateResearchStage({
+              label: event.data?.label,
+              status: event.data?.status,
+              detail: event.data?.detail,
+            });
+          } else if (event.type === 'response') {
+            appendToLastMessage(event.data || '', '');
+          } else if (event.type === 'sources') {
+            collectResearchSources(event.data, sources, seenSources);
+          } else if (event.type === 'error') {
+            const detail = event.data?.detail;
+            if (detail) {
+              appendToLastMessage(`\n\n*${detail}*`, '');
+            }
+          }
+        }
+      } else {
+        // Build request messages from current session
+        const currentSession = getCurrentSession();
+        const requestMessages = (currentSession?.messages || [])
+          .slice(0, -1) // Exclude the placeholder
+          .map((m) => ({
+            role: m.role,
+            content: m.content,
+          }));
 
-      for await (const chunk of streamChatCompletion(
-        {
-          model: selectedModel,
-          messages: requestMessages,
-          stream: true,
-        },
-        abortControllerRef.current.signal
-      )) {
-        const delta = chunk.choices[0]?.delta;
-        if (delta) {
-          const contentDelta = delta.content || '';
-          const reasoningDelta = delta.reasoning_content || '';
-          if (contentDelta || reasoningDelta) {
-            appendToLastMessage(contentDelta, reasoningDelta);
+        for await (const chunk of streamChatCompletion(
+          {
+            model: selectedModel,
+            messages: requestMessages,
+            stream: true,
+          },
+          signal
+        )) {
+          if ('type' in chunk && chunk.type === 'screenshot') {
+            pushScreenshot(chunk.data);
+            continue;
+          }
+          const completionChunk = chunk as ChatCompletionChunk;
+          const delta = completionChunk.choices[0]?.delta;
+          if (delta?.janus?.event === 'screenshot') {
+            const payload = coerceScreenshotPayload(delta.janus.payload);
+            if (payload) {
+              pushScreenshot(payload);
+            }
+            continue;
+          }
+          if (delta) {
+            const contentDelta = delta.content || '';
+            const reasoningDelta = delta.reasoning_content || '';
+            if (contentDelta || reasoningDelta) {
+              appendToLastMessage(contentDelta, reasoningDelta);
+            }
           }
         }
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         // User cancelled
+        aborted = true;
       } else {
         console.error('Streaming error:', error);
         appendToLastMessage('\n\n*Error: Failed to get response*', '');
       }
     } finally {
+      if (useDeepResearch && !aborted && sources.length > 0) {
+        appendResearchSources(sources);
+      }
+      if (useDeepResearch) {
+        setResearchActive(false);
+      }
+      setScreenshotsLive(false);
       setStreaming(false);
       abortControllerRef.current = null;
     }
@@ -208,6 +374,8 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
 
       <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6">
         <div className="max-w-4xl mx-auto">
+          <DeepResearchProgress stages={researchStages} isActive={researchActive} />
+          <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
           {messages.length === 0 ? (
             <div className="chat-empty">
               <div>
@@ -233,7 +401,7 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
           {isStreaming && (
             <div className="chat-streaming">
               <span className="chat-streaming-dot" />
-              <span>Generating response</span>
+              <span>{researchActive ? 'Running deep research' : 'Generating response'}</span>
               <button onClick={handleCancel} className="chat-cancel">
                 Stop
               </button>

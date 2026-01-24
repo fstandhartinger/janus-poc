@@ -3,6 +3,7 @@
 import asyncio
 import base64
 import hashlib
+import json
 import mimetypes
 import shlex
 import uuid
@@ -57,6 +58,7 @@ class SandyService:
         self._artifact_port = settings.artifact_port
         self._artifact_dir = settings.artifact_dir
         self._artifact_ttl = settings.artifact_ttl_seconds
+        self._screenshot_dir = f"{self._artifact_dir.rstrip('/')}/screenshots"
         self._baseline_agent = settings.baseline_agent.strip() if settings.baseline_agent else "aider"
 
     @property
@@ -135,6 +137,7 @@ class SandyService:
             "JANUS_ARTIFACT_BASE_URL": artifact_base,
             "JANUS_ARTIFACTS_DIR": self._artifact_dir,
             "JANUS_ARTIFACT_PORT": str(self._artifact_port),
+            "JANUS_SCREENSHOT_DIR": self._screenshot_dir,
             "JANUS_VISION_MODEL": self._settings.vision_model_primary,
             "JANUS_VISION_FALLBACK": self._settings.vision_model_fallback,
             "JANUS_HAS_IMAGES": str(has_images).lower(),
@@ -288,6 +291,84 @@ class SandyService:
         if exit_code != 0 or not stdout:
             return []
         return [line.strip() for line in stdout.splitlines() if line.strip()]
+
+    async def _list_screenshot_metadata_paths(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+    ) -> list[str]:
+        """List screenshot metadata files in the sandbox."""
+        command = (
+            f"find {shlex.quote(self._screenshot_dir)} -maxdepth 1 "
+            "-type f -name '*.json' 2>/dev/null"
+        )
+        stdout, _, exit_code = await self._exec_in_sandbox(client, sandbox_id, command)
+        if exit_code != 0 or not stdout:
+            return []
+        return [line.strip() for line in stdout.splitlines() if line.strip()]
+
+    async def _load_screenshot_payload(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        metadata_path: str,
+    ) -> Optional[dict[str, object]]:
+        """Load screenshot metadata and image data into a payload."""
+        metadata_bytes = await self._read_file(client, sandbox_id, metadata_path)
+        if not metadata_bytes:
+            return None
+        try:
+            metadata = json.loads(metadata_bytes.decode("utf-8"))
+        except json.JSONDecodeError:
+            return None
+        if not isinstance(metadata, dict):
+            return None
+
+        image_path = f"{self._screenshot_dir.rstrip('/')}/{Path(metadata_path).stem}.png"
+        image_bytes = await self._read_file(client, sandbox_id, image_path)
+        if not image_bytes:
+            return None
+
+        return {
+            "url": str(metadata.get("url", "")),
+            "title": str(metadata.get("title", "")),
+            "timestamp": float(metadata.get("timestamp", 0.0)),
+            "image_base64": base64.b64encode(image_bytes).decode("utf-8"),
+        }
+
+    async def _collect_screenshot_events(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        seen: set[str],
+        request_id: str,
+        model: str,
+    ) -> list[ChatCompletionChunk]:
+        """Collect new screenshot events from the sandbox."""
+        metadata_paths = await self._list_screenshot_metadata_paths(client, sandbox_id)
+        if not metadata_paths:
+            return []
+
+        events: list[ChatCompletionChunk] = []
+        for path in sorted(metadata_paths):
+            if path in seen:
+                continue
+            payload = await self._load_screenshot_payload(client, sandbox_id, path)
+            if not payload:
+                continue
+            seen.add(path)
+            events.append(
+                ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(
+                            delta=Delta(janus={"event": "screenshot", "payload": payload})
+                        )
+                    ],
+                )
+            )
+        return events
 
     def _artifact_type_for(self, mime_type: str) -> ArtifactType:
         """Map MIME type to artifact type."""
@@ -863,9 +944,29 @@ class SandyService:
                 command = self._build_agent_command(
                     selected_agent, task, sandbox_id, public_url, request, has_images
                 )
-                stdout, stderr, exit_code = await self._exec_in_sandbox(
-                    client, sandbox_id, command
+                agent_task = asyncio.create_task(
+                    self._exec_in_sandbox(client, sandbox_id, command)
                 )
+                screenshot_seen: set[str] = set()
+                poll_interval = 0.5
+
+                while True:
+                    try:
+                        await asyncio.wait_for(asyncio.shield(agent_task), timeout=poll_interval)
+                        break
+                    except asyncio.TimeoutError:
+                        pass
+
+                    for event in await self._collect_screenshot_events(
+                        client, sandbox_id, screenshot_seen, request_id, model
+                    ):
+                        yield event
+
+                stdout, stderr, exit_code = await agent_task
+                for event in await self._collect_screenshot_events(
+                    client, sandbox_id, screenshot_seen, request_id, model
+                ):
+                    yield event
 
                 yield ChatCompletionChunk(
                     id=request_id,

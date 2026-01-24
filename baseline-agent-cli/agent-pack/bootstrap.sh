@@ -22,6 +22,16 @@ fi
 export JANUS_ARTIFACTS_DIR="${JANUS_ARTIFACTS_DIR:-/workspace/artifacts}"
 export JANUS_ARTIFACT_PORT="${JANUS_ARTIFACT_PORT:-8787}"
 mkdir -p "$JANUS_ARTIFACTS_DIR"
+mkdir -p "${JANUS_SCREENSHOT_DIR:-/workspace/artifacts/screenshots}"
+
+# Install Playwright for browser automation
+if ! python3 - <<'PY' >/dev/null 2>&1
+import playwright  # noqa: F401
+PY
+then
+  pip install playwright
+fi
+python3 -m playwright install chromium
 
 start_artifact_server() {
   python3 - <<'PY'

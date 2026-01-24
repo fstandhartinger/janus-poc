@@ -1,6 +1,6 @@
 # Spec 45: Browser Automation & Screenshot Streaming
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -502,3 +502,5 @@ gateway/
 - `specs/38_multimodal_vision_models.md` - Vision model integration
 - `specs/44_deep_research_integration.md` - Uses Playwright
 - `specs/46_gui_automation.md` - Desktop GUI control
+
+NR_OF_TRIES: 1

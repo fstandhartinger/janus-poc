@@ -19,3 +19,4 @@
 - Completed spec 44_deep_research_integration.md with deep research client, gateway proxy streaming, UI progress tracking, and tests.
 - Follow-up: mapped baseline model aliases to configured model to restore production chat completions.
 - Verified spec 44 deep research integration end-to-end, fixed deep research SSE typing, and marked the spec COMPLETE.
+- Completed spec 45_browser_automation_screenshots.md with Playwright browser helper, sandbox screenshot streaming hooks, UI screenshot stream rendering, and SSE formatting helper.

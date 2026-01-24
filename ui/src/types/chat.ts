@@ -108,10 +108,28 @@ export interface ChatCompletionChunk {
       role?: MessageRole;
       content?: string;
       reasoning_content?: string;
+      janus?: {
+        event: string;
+        payload?: Record<string, unknown>;
+      };
     };
     finish_reason?: 'stop' | 'length' | 'tool_calls' | 'content_filter';
   }[];
 }
+
+export interface ScreenshotData {
+  url: string;
+  title: string;
+  image_base64: string;
+  timestamp: number;
+}
+
+export interface ScreenshotStreamEvent {
+  type: 'screenshot';
+  data: ScreenshotData;
+}
+
+export type ChatStreamEvent = ChatCompletionChunk | ScreenshotStreamEvent;
 
 export interface Model {
   id: string;

@@ -47,7 +47,9 @@ test.describe('API client', () => {
         messages: [{ role: 'user', content: 'Hi' }],
         stream: true,
       })) {
-        chunks.push(chunk);
+        if ('choices' in chunk) {
+          chunks.push(chunk);
+        }
       }
       expect(chunks).toHaveLength(1);
       expect(chunks[0].choices[0].delta.content).toBe('Hello');

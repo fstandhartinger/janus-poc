@@ -2,7 +2,7 @@
  * API client for communicating with the Janus Gateway.
  */
 
-import type { ChatCompletionRequest, ChatCompletionChunk, Model } from '@/types/chat';
+import type { ChatCompletionRequest, ChatCompletionChunk, ChatStreamEvent, Model } from '@/types/chat';
 
 function normalizeGatewayUrl(rawUrl: string): string {
   const trimmed = rawUrl.trim().replace(/\/+$/, '');
@@ -34,7 +34,7 @@ export async function fetchModels(): Promise<Model[]> {
 export async function* streamChatCompletion(
   request: ChatCompletionRequest,
   signal?: AbortSignal
-): AsyncGenerator<ChatCompletionChunk> {
+): AsyncGenerator<ChatStreamEvent> {
   const response = await fetch(`${GATEWAY_URL}/v1/chat/completions`, {
     method: 'POST',
     headers: {
@@ -79,8 +79,20 @@ export async function* streamChatCompletion(
           return;
         }
         try {
-          const chunk: ChatCompletionChunk = JSON.parse(data);
-          yield chunk;
+          const parsed = JSON.parse(data) as ChatStreamEvent;
+          if (
+            parsed &&
+            typeof parsed === 'object' &&
+            'type' in parsed &&
+            parsed.type === 'screenshot'
+          ) {
+            yield parsed;
+            continue;
+          }
+          const chunk = parsed as ChatCompletionChunk;
+          if (chunk && Array.isArray(chunk.choices)) {
+            yield chunk;
+          }
         } catch {
           console.warn('Failed to parse SSE chunk:', data);
         }
