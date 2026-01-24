@@ -1,6 +1,6 @@
 # Spec 44: Deep Research Integration
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -457,3 +457,5 @@ ui/
 
 - `specs/41_enhanced_agent_system_prompt.md` - Agent capabilities
 - `specs/45_browser_automation.md` - Browser control
+
+NR_OF_TRIES: 1
