@@ -1,6 +1,6 @@
 # Spec 37: Extended File Attachment Support
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -675,3 +675,5 @@ gateway/
 - `specs/11_chat_ui.md` - Original chat UI spec
 - `specs/28_chat_ui_improvements.md` - Chat UI enhancements
 - `specs/38_multimodal_vision_models.md` - Vision model support
+
+NR_OF_TRIES: 1

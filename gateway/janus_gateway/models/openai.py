@@ -37,8 +37,24 @@ class ImageUrlContent(BaseModel):
     image_url: ImageUrl
 
 
+class FileInfo(BaseModel):
+    """File content metadata."""
+
+    name: str
+    mime_type: str
+    content: str
+    size: int
+
+
+class FileContent(BaseModel):
+    """File content part."""
+
+    type: Literal["file"] = "file"
+    file: FileInfo
+
+
 # Content can be string or list of content parts
-MessageContent = Union[str, list[Union[TextContent, ImageUrlContent]]]
+MessageContent = Union[str, list[Union[TextContent, ImageUrlContent, FileContent]]]
 
 
 class FunctionCall(BaseModel):

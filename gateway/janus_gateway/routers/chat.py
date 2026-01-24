@@ -24,10 +24,11 @@ from janus_gateway.models import (
     MessageRole,
     Usage,
 )
-from janus_gateway.services import CompetitorRegistry, get_competitor_registry
+from janus_gateway.services import CompetitorRegistry, MessageProcessor, get_competitor_registry
 
 router = APIRouter(prefix="/v1", tags=["chat"])
 logger = structlog.get_logger()
+message_processor = MessageProcessor()
 
 
 def generate_request_id() -> str:
@@ -242,6 +243,11 @@ async def chat_completions(
         message_count=len(request.messages),
     )
 
+    processed_messages = [
+        message_processor.process_message(message) for message in request.messages
+    ]
+    processed_request = request.model_copy(update={"messages": processed_messages})
+
     # Resolve competitor: explicit competitor_id overrides model-based selection.
     competitor = registry.get(request.competitor_id) if request.competitor_id else None
     if competitor is None and request.competitor_id is None:
@@ -253,7 +259,7 @@ async def chat_completions(
             async def stream_with_logging() -> AsyncGenerator[str, None]:
                 async with httpx.AsyncClient() as client:
                     async for chunk in stream_from_competitor(
-                        client, competitor.url, request, request_id, settings
+                        client, competitor.url, processed_request, request_id, settings
                     ):
                         yield chunk
                 logger.info(
@@ -274,7 +280,7 @@ async def chat_completions(
         else:
             # Mock response for development
             async def mock_with_logging() -> AsyncGenerator[str, None]:
-                async for chunk in mock_streaming_response(request, request_id, settings):
+                async for chunk in mock_streaming_response(processed_request, request_id, settings):
                     yield chunk
                 logger.info(
                     "chat_completion_complete",
@@ -298,13 +304,12 @@ async def chat_completions(
         if competitor:
             async with httpx.AsyncClient() as client:
                 try:
-                    competitor_request = request.model_dump(
-                        exclude_none=True,
-                        exclude={"competitor_id"},
-                    )
                     response = await client.post(
                         f"{competitor.url}/v1/chat/completions",
-                        json=competitor_request,
+                        json=processed_request.model_dump(
+                            exclude_none=True,
+                            exclude={"competitor_id"},
+                        ),
                         timeout=settings.request_timeout,
                     )
                     response.raise_for_status()

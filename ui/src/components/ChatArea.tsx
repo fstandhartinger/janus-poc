@@ -7,6 +7,7 @@ import { fetchModels, streamChatCompletion } from '@/lib/api';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import type { MessageContent, Model } from '@/types/chat';
+import type { AttachedFile } from '@/lib/file-types';
 
 interface ChatAreaProps {
   onMenuClick?: () => void;
@@ -63,7 +64,9 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
     };
   }, []);
 
-  const handleSend = async (content: string, images: string[]) => {
+  type MessageContentPart = Exclude<MessageContent, string>[number];
+
+  const handleSend = async (content: string, files: AttachedFile[]) => {
     // Ensure we have a session
     let sessionId = currentSessionId;
     if (!sessionId) {
@@ -72,17 +75,30 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
 
     // Build message content
     let messageContent: MessageContent;
-    if (images.length > 0) {
-      const parts: MessageContent = [];
-      if (content) {
-        parts.push({ type: 'text', text: content });
+    const trimmedContent = content.trim();
+    if (files.length > 0) {
+      const parts: MessageContentPart[] = [];
+      if (trimmedContent) {
+        parts.push({ type: 'text', text: trimmedContent });
       }
-      images.forEach((url) => {
-        parts.push({ type: 'image_url', image_url: { url } });
+      files.forEach((file) => {
+        if (file.category === 'images') {
+          parts.push({ type: 'image_url', image_url: { url: file.content } });
+        } else {
+          parts.push({
+            type: 'file',
+            file: {
+              name: file.name,
+              mime_type: file.type || 'application/octet-stream',
+              content: file.content,
+              size: file.size,
+            },
+          });
+        }
       });
       messageContent = parts;
     } else {
-      messageContent = content;
+      messageContent = trimmedContent;
     }
 
     // Add user message

@@ -17,7 +17,17 @@ export interface ImageUrlContent {
   };
 }
 
-export type MessageContent = string | (TextContent | ImageUrlContent)[];
+export interface FileContent {
+  type: 'file';
+  file: {
+    name: string;
+    mime_type: string;
+    content: string;
+    size: number;
+  };
+}
+
+export type MessageContent = string | (TextContent | ImageUrlContent | FileContent)[];
 
 export interface Artifact {
   id: string;

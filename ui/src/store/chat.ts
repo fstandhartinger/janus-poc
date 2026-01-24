@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Session, Message, MessageContent } from '@/types/chat';
+import type { Session, Message, MessageContent, TextContent } from '@/types/chat';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -84,12 +84,19 @@ export const useChatStore = create<ChatState>()(
             if (session.id === state.currentSessionId) {
               // Update session title from first user message
               let title = session.title;
-              if (
-                message.role === 'user' &&
-                session.messages.length === 0 &&
-                typeof message.content === 'string'
-              ) {
-                title = message.content.slice(0, 50) + (message.content.length > 50 ? '...' : '');
+              if (message.role === 'user' && session.messages.length === 0) {
+                let titleSource = '';
+                if (typeof message.content === 'string') {
+                  titleSource = message.content;
+                } else if (Array.isArray(message.content)) {
+                  const textPart = message.content.find(
+                    (part): part is TextContent => part.type === 'text'
+                  );
+                  titleSource = textPart?.text || '';
+                }
+                if (titleSource) {
+                  title = titleSource.slice(0, 50) + (titleSource.length > 50 ? '...' : '');
+                }
               }
               return {
                 ...session,
