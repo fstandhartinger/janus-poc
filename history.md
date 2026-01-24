@@ -29,3 +29,6 @@
 - Completed spec 51_why_janus_section_clarity.md with split user/builder benefit groups and updated Why Janus messaging on the landing page.
 - Completed spec 52_comprehensive_baseline_testing.md with shared smoke suite, baseline unit/integration coverage, test utilities/docs, and CI workflow for baseline tests.
 - Completed spec 53_music_generation_diffrhythm.md with DiffRhythm baseline tooling/docs, chat audio playback UI, and additional LangChain tests.
+- Completed spec 54_enhanced_audio_output.md with unified audio response UI, audio parsing, expanded Kokoro docs, and baseline TTS tool updates.
+- Completed spec 55_baseline_containerization.md with baseline/gateway Dockerfiles, compose workflow, container scripts, Sandy runner scaffold, and documentation updates.
+- Re-verified spec 55_baseline_containerization.md artifacts and marked the spec COMPLETE with NR_OF_TRIES tracking.

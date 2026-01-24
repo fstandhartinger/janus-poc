@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field
+from pydantic import AliasChoices, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,33 +18,119 @@ class Settings(BaseSettings):
     )
 
     # Server settings
-    host: str = Field(default="0.0.0.0", description="Server host")
-    port: int = Field(default=8002, description="Server port")
-    debug: bool = Field(default=False, description="Enable debug mode")
+    host: str = Field(
+        default="0.0.0.0",
+        description="Server host",
+        validation_alias=AliasChoices(
+            "HOST",
+            "BASELINE_LANGCHAIN_HOST",
+        ),
+    )
+    port: int = Field(
+        default=8080,
+        description="Server port",
+        validation_alias=AliasChoices(
+            "PORT",
+            "BASELINE_LANGCHAIN_PORT",
+        ),
+    )
+    debug: bool = Field(
+        default=False,
+        description="Enable debug mode",
+        validation_alias=AliasChoices(
+            "DEBUG",
+            "BASELINE_LANGCHAIN_DEBUG",
+        ),
+    )
 
     # LLM settings
     model: str = Field(default="gpt-4o-mini", description="Default model")
-    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
+    openai_api_key: Optional[str] = Field(
+        default=None,
+        description="OpenAI API key",
+        validation_alias=AliasChoices(
+            "OPENAI_API_KEY",
+            "BASELINE_LANGCHAIN_OPENAI_API_KEY",
+        ),
+    )
     openai_base_url: str = Field(
         default="https://api.openai.com/v1",
         description="OpenAI-compatible base URL",
+        validation_alias=AliasChoices(
+            "OPENAI_BASE_URL",
+            "BASELINE_LANGCHAIN_OPENAI_BASE_URL",
+        ),
     )
     temperature: float = Field(default=0.7, description="Model temperature")
 
+    # Vision settings
+    vision_model_primary: str = Field(
+        default="Qwen/Qwen3-VL-235B-A22B-Instruct",
+        validation_alias=AliasChoices(
+            "BASELINE_VISION_MODEL_PRIMARY",
+            "BASELINE_LANGCHAIN_VISION_MODEL_PRIMARY",
+        ),
+        description="Primary vision model for image understanding",
+    )
+    vision_model_fallback: str = Field(
+        default="chutesai/Mistral-Small-3.2-24B-Instruct-2506",
+        validation_alias=AliasChoices(
+            "BASELINE_VISION_MODEL_FALLBACK",
+            "BASELINE_LANGCHAIN_VISION_MODEL_FALLBACK",
+        ),
+        description="Fallback vision model for image understanding",
+    )
+    vision_model_timeout: float = Field(
+        default=60.0,
+        validation_alias=AliasChoices(
+            "BASELINE_VISION_MODEL_TIMEOUT",
+            "BASELINE_LANGCHAIN_VISION_MODEL_TIMEOUT",
+        ),
+        description="Timeout in seconds for vision models",
+    )
+    enable_vision_routing: bool = Field(
+        default=True,
+        validation_alias=AliasChoices(
+            "BASELINE_ENABLE_VISION_ROUTING",
+            "BASELINE_LANGCHAIN_ENABLE_VISION_ROUTING",
+        ),
+        description="Enable routing to vision models when images are present",
+    )
+
     # Chutes settings
     chutes_api_key: Optional[str] = Field(
-        default=None, description="Chutes API key for image and TTS"
+        default=None,
+        description="Chutes API key for image and TTS",
+        validation_alias=AliasChoices(
+            "CHUTES_API_KEY",
+            "JANUS_CHUTES_API_KEY",
+            "BASELINE_LANGCHAIN_CHUTES_API_KEY",
+        ),
     )
 
     # Web search
-    tavily_api_key: Optional[str] = Field(default=None, description="Tavily API key")
+    tavily_api_key: Optional[str] = Field(
+        default=None,
+        description="Tavily API key",
+        validation_alias=AliasChoices(
+            "TAVILY_API_KEY",
+            "BASELINE_LANGCHAIN_TAVILY_API_KEY",
+        ),
+    )
 
     # HTTP behavior
     request_timeout: float = Field(default=30.0, description="HTTP request timeout")
     max_retries: int = Field(default=2, description="Max retries for external APIs")
 
     # Logging
-    log_level: str = Field(default="INFO", description="Log level")
+    log_level: str = Field(
+        default="INFO",
+        description="Log level",
+        validation_alias=AliasChoices(
+            "LOG_LEVEL",
+            "BASELINE_LANGCHAIN_LOG_LEVEL",
+        ),
+    )
 
 
 @lru_cache

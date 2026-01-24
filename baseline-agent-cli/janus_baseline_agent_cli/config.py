@@ -45,14 +45,52 @@ class Settings(BaseSettings):
         )
 
     # Server settings
-    host: str = Field(default="0.0.0.0", description="Server host")
-    port: int = Field(default=8001, description="Server port")
-    debug: bool = Field(default=False, description="Enable debug mode")
+    host: str = Field(
+        default="0.0.0.0",
+        description="Server host",
+        validation_alias=AliasChoices(
+            "HOST",
+            "BASELINE_AGENT_CLI_HOST",
+            "BASELINE_HOST",
+        ),
+    )
+    port: int = Field(
+        default=8080,
+        description="Server port",
+        validation_alias=AliasChoices(
+            "PORT",
+            "BASELINE_AGENT_CLI_PORT",
+            "BASELINE_PORT",
+        ),
+    )
+    debug: bool = Field(
+        default=False,
+        description="Enable debug mode",
+        validation_alias=AliasChoices(
+            "DEBUG",
+            "BASELINE_AGENT_CLI_DEBUG",
+            "BASELINE_DEBUG",
+        ),
+    )
 
     # LLM settings
-    openai_api_key: Optional[str] = Field(default=None, description="OpenAI API key")
+    openai_api_key: Optional[str] = Field(
+        default=None,
+        description="OpenAI API key",
+        validation_alias=AliasChoices(
+            "OPENAI_API_KEY",
+            "BASELINE_AGENT_CLI_OPENAI_API_KEY",
+            "BASELINE_OPENAI_API_KEY",
+        ),
+    )
     openai_base_url: Optional[str] = Field(
-        default=None, description="Custom OpenAI-compatible base URL"
+        default=None,
+        description="Custom OpenAI-compatible base URL",
+        validation_alias=AliasChoices(
+            "OPENAI_BASE_URL",
+            "BASELINE_AGENT_CLI_OPENAI_BASE_URL",
+            "BASELINE_OPENAI_BASE_URL",
+        ),
     )
     model: str = Field(default="gpt-4o-mini", description="Default model for fast path")
     max_tokens: int = Field(default=4096, description="Max tokens for responses")
@@ -144,7 +182,15 @@ class Settings(BaseSettings):
     )
 
     # Logging
-    log_level: str = Field(default="INFO", description="Log level")
+    log_level: str = Field(
+        default="INFO",
+        description="Log level",
+        validation_alias=AliasChoices(
+            "LOG_LEVEL",
+            "BASELINE_AGENT_CLI_LOG_LEVEL",
+            "BASELINE_LOG_LEVEL",
+        ),
+    )
 
 
 @lru_cache
