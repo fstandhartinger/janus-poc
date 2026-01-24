@@ -1,6 +1,6 @@
 # Spec 43: Agent Sandy Sandbox Management
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -498,3 +498,5 @@ baseline-agent-cli/
 - `specs/41_enhanced_agent_system_prompt.md` - Agent capabilities
 - `specs/42_sandbox_file_serving.md` - File serving
 - `specs/08_sandy_integration.md` - Original Sandy spec
+
+NR_OF_TRIES: 1

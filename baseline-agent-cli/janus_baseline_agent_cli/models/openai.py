@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 
 class MessageRole(str, Enum):
@@ -119,6 +119,8 @@ class StreamOptions(BaseModel):
 
 class ChatCompletionRequest(BaseModel):
     """OpenAI-compatible chat completion request."""
+
+    _auth_token: Optional[str] = PrivateAttr(default=None)
 
     model: str
     messages: list[Message]

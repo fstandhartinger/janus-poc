@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Union
 
 import structlog
-from fastapi import FastAPI, Depends
+from fastapi import Depends, FastAPI, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -46,6 +46,18 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+
+
+def _extract_auth_token(authorization: str | None) -> str | None:
+    if not authorization:
+        return None
+    token = authorization.strip()
+    if not token:
+        return None
+    parts = token.split()
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1]
+    return token
 
 
 @asynccontextmanager
@@ -109,6 +121,8 @@ async def stream_response(
         reason=reason,
         keywords_matched=analysis.keywords_matched,
         multimodal_detected=analysis.multimodal_detected,
+        has_images=analysis.has_images,
+        image_count=analysis.image_count,
         sandy_available=sandy_service.is_available,
         text_preview=analysis.text_preview,
         always_use_agent=settings.always_use_agent,
@@ -141,8 +155,13 @@ async def chat_completions(
     complexity_detector: ComplexityDetector = Depends(get_complexity_detector),
     llm_service: LLMService = Depends(get_llm_service),
     sandy_service: SandyService = Depends(get_sandy_service),
+    authorization: str | None = Header(default=None, alias="Authorization"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
+
+    auth_token = _extract_auth_token(authorization)
+    if auth_token:
+        request._auth_token = auth_token
 
     if request.stream:
         return StreamingResponse(
@@ -164,6 +183,8 @@ async def chat_completions(
             reason=reason,
             keywords_matched=analysis.keywords_matched,
             multimodal_detected=analysis.multimodal_detected,
+            has_images=analysis.has_images,
+            image_count=analysis.image_count,
             sandy_available=sandy_service.is_available,
             text_preview=analysis.text_preview,
             always_use_agent=settings.always_use_agent,

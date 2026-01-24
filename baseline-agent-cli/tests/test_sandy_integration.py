@@ -205,6 +205,36 @@ async def test_complex_path_returns_artifacts() -> None:
 
 
 @pytest.mark.asyncio
+async def test_sandy_env_passes_auth_token() -> None:
+    fake_client = FakeAsyncClient()
+    settings = Settings(
+        sandy_base_url="http://sandy.test",
+        sandy_api_key="fallback",
+        baseline_agent="aider",
+        enable_llm_routing=False,
+    )
+    service = SandyService(settings, client_factory=lambda: fake_client)
+
+    request = ChatCompletionRequest(
+        model="baseline",
+        messages=[Message(role=MessageRole.USER, content="Check sandbox env")],
+        stream=False,
+    )
+    request._auth_token = "child-token"
+
+    await service.complete(request)
+
+    agent_command = next(
+        cmd
+        for cmd in fake_client.exec_commands
+        if ("aider" in cmd or "run_agent.py" in cmd) and "command -v" not in cmd
+    )
+    assert "SANDY_API_KEY=child-token" in agent_command
+    assert "SANDY_BASE_URL=" in agent_command
+    assert "sandy.test" in agent_command
+
+
+@pytest.mark.asyncio
 async def test_streaming_includes_sandbox_events() -> None:
     fake_client = FakeAsyncClient()
     settings = Settings(

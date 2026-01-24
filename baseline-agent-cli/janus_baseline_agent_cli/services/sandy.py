@@ -108,6 +108,7 @@ class SandyService:
         self,
         sandbox_id: str,
         public_url: str | None,
+        request: ChatCompletionRequest | None = None,
         has_images: bool = False,
     ) -> dict[str, str]:
         """Build environment variables for the CLI agent."""
@@ -115,6 +116,7 @@ class SandyService:
         artifact_base = self._artifact_url_base(sandbox_id, public_url)
         chutes_api_key = self._settings.chutes_api_key or self._settings.openai_api_key or ""
         chutes_api_url = self._settings.openai_base_url or "https://api.chutes.ai/v1"
+        auth_token = self._resolve_auth_token(request)
         return {
             "JANUS_WORKSPACE": "/workspace",
             "JANUS_AGENT_PACK": self._agent_pack_dest_root(),
@@ -136,8 +138,18 @@ class SandyService:
             "JANUS_VISION_MODEL": self._settings.vision_model_primary,
             "JANUS_VISION_FALLBACK": self._settings.vision_model_fallback,
             "JANUS_HAS_IMAGES": str(has_images).lower(),
+            "SANDY_API_KEY": auth_token or "",
+            "SANDY_BASE_URL": self._settings.sandy_base_url or "",
+            "JANUS_MAX_CHILD_SANDBOXES": "5",
+            "JANUS_DEFAULT_SANDBOX_TTL": "600",
             "PATH": self._default_path,
         }
+
+    def _resolve_auth_token(self, request: ChatCompletionRequest | None) -> str | None:
+        if request is None:
+            return self._settings.sandy_api_key
+        auth_token = getattr(request, "_auth_token", None)
+        return auth_token or self._settings.sandy_api_key
 
     def _build_agent_command(
         self,
@@ -145,13 +157,14 @@ class SandyService:
         task: str,
         sandbox_id: str,
         public_url: str | None,
+        request: ChatCompletionRequest | None = None,
         has_images: bool = False,
     ) -> str:
         """Build the CLI agent command."""
         env_parts = [
             f"{key}={shlex.quote(str(value))}"
             for key, value in self._build_agent_env(
-                sandbox_id, public_url, has_images
+                sandbox_id, public_url, request, has_images
             ).items()
         ]
         quoted_task = shlex.quote(task)
@@ -372,13 +385,14 @@ class SandyService:
         client: httpx.AsyncClient,
         sandbox_id: str,
         public_url: str | None,
+        request: ChatCompletionRequest | None = None,
         has_images: bool = False,
     ) -> tuple[str, str, int]:
         """Run the agent pack bootstrap script inside the sandbox."""
         env_parts = [
             f"{key}={shlex.quote(str(value))}"
             for key, value in self._build_agent_env(
-                sandbox_id, public_url, has_images
+                sandbox_id, public_url, request, has_images
             ).items()
         ]
         command = " ".join(
@@ -558,7 +572,7 @@ class SandyService:
                     )
 
                 bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
-                    client, sandbox_id, public_url, has_images
+                    client, sandbox_id, public_url, request, has_images
                 )
                 if bootstrap_exit != 0:
                     error_detail = bootstrap_stderr or "Bootstrap failed."
@@ -581,7 +595,7 @@ class SandyService:
 
                 selected_agent = await self._select_agent(client, sandbox_id)
                 command = self._build_agent_command(
-                    selected_agent, task, sandbox_id, public_url, has_images
+                    selected_agent, task, sandbox_id, public_url, request, has_images
                 )
                 stdout, stderr, exit_code = await self._exec_in_sandbox(
                     client, sandbox_id, command
@@ -792,7 +806,7 @@ class SandyService:
                 )
 
                 bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
-                    client, sandbox_id, public_url, has_images
+                    client, sandbox_id, public_url, request, has_images
                 )
                 if bootstrap_exit != 0:
                     error_detail = bootstrap_stderr or "Bootstrap failed."
@@ -847,7 +861,7 @@ class SandyService:
                 )
 
                 command = self._build_agent_command(
-                    selected_agent, task, sandbox_id, public_url, has_images
+                    selected_agent, task, sandbox_id, public_url, request, has_images
                 )
                 stdout, stderr, exit_code = await self._exec_in_sandbox(
                     client, sandbox_id, command

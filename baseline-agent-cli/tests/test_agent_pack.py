@@ -113,20 +113,27 @@ def test_agent_pack_files_exist() -> None:
     assert (AGENT_PACK_ROOT / "models" / "text-to-video.md").exists()
     assert (AGENT_PACK_ROOT / "models" / "lip-sync.md").exists()
     assert (AGENT_PACK_ROOT / "models" / "llm.md").exists()
+    assert (AGENT_PACK_ROOT / "models" / "vision.md").exists()
     assert (AGENT_PACK_ROOT / "bootstrap.sh").exists()
     assert (AGENT_PACK_ROOT / "prompts" / "system.md").exists()
+    assert (AGENT_PACK_ROOT / "lib" / "sandy_client.py").exists()
+    assert (AGENT_PACK_ROOT / "lib" / "webapp_host.py").exists()
 
 
 def test_system_prompt_content() -> None:
     """System prompt should reference tools and documentation."""
     prompt_path = BASELINE_ROOT / "agent-pack" / "prompts" / "system.md"
     content = prompt_path.read_text(encoding="utf-8")
-    assert "File tools" in content
-    assert "Web search" in content
-    assert "Code execution" in content
-    assert "Shell commands" in content
+    assert "Research & Discovery" in content
+    assert "Code Execution" in content
+    assert "File Operations" in content
+    assert "Network & APIs" in content
+    assert "File URL Patterns" in content
+    assert "Safety Guardrails" in content
+    assert "Sandbox Management" in content
     assert "docs/models/text-to-image.md" in content
     assert "docs/models/text-to-speech.md" in content
+    assert "docs/models/vision.md" in content
 
 
 def test_bootstrap_script_content() -> None:
