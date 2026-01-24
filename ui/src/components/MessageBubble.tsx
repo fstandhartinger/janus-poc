@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import type { Message } from '@/types/chat';
 import { MediaRenderer } from './MediaRenderer';
+import { TTSPlayer } from './TTSPlayer';
 
 interface MessageBubbleProps {
   message: Message;
@@ -49,6 +50,12 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
         {textContent && (
           <div className="prose prose-invert prose-sm max-w-none">
             <ReactMarkdown remarkPlugins={[remarkGfm]}>{textContent}</ReactMarkdown>
+          </div>
+        )}
+
+        {!isUser && textContent && (
+          <div className="message-actions">
+            <TTSPlayer text={textContent} className="mt-2" />
           </div>
         )}
 
