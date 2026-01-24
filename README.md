@@ -12,6 +12,7 @@
 | **Janus Gateway** | https://janus-gateway-bqou.onrender.com | [![Gateway](https://img.shields.io/badge/live-online-63D297)](https://janus-gateway-bqou.onrender.com/health) |
 | **Janus Baseline Agent** | https://janus-baseline-agent.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-agent.onrender.com/health) |
 | **Janus Baseline LangChain** | https://janus-baseline-langchain.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-langchain.onrender.com/health) |
+| **Janus Scoring Service** | https://janus-scoring-service.onrender.com | [![Scoring](https://img.shields.io/badge/live-online-63D297)](https://janus-scoring-service.onrender.com/health) |
 
 ## Components
 
@@ -19,9 +20,10 @@
 |-----------|-------------|------------|
 | [Gateway](gateway/) | OpenAI-compatible proxy and routing | 8000 |
 | [Chat UI](ui/) | Next.js frontend with landing, chat, competition & marketplace pages | 3000 |
-| [Baseline Agent CLI](baseline-agent-cli/) | Reference competitor implementation | 8001 |
-| [Baseline LangChain](baseline-langchain/) | LangChain-based baseline competitor | 8002 |
+| [Baseline Agent CLI](baseline-agent-cli/) | Reference competitor implementation | 8081 |
+| [Baseline LangChain](baseline-langchain/) | LangChain-based baseline competitor | 8082 |
 | [Bench](bench/) | Evaluation harness and scoring | CLI |
+| [Scoring Service](scoring-service/) | Benchmark scoring backend | 8100 |
 
 ## Quick Start
 
@@ -43,18 +45,25 @@ python -m janus_gateway.main
 cd baseline-agent-cli
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m janus_baseline_agent_cli.main
+BASELINE_AGENT_CLI_PORT=8081 python -m janus_baseline_agent_cli.main
 
 # Terminal 3 (optional): Baseline LangChain
 cd baseline-langchain
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
-python -m janus_baseline_langchain.main
+BASELINE_LANGCHAIN_PORT=8082 python -m janus_baseline_langchain.main
 
 # Terminal 4: Chat UI
 cd ui
 npm install
 npm run dev
+
+# Terminal 5: Scoring Service (optional)
+cd scoring-service
+python -m venv .venv && source .venv/bin/activate
+pip install -e "../bench"
+pip install -r requirements.txt
+uvicorn scoring_service.main:app --reload --port 8100
 ```
 
 Open http://localhost:3000 to use the chat interface.
@@ -110,6 +119,7 @@ Test matrix (component -> category):
 | Gateway | Unit/Integration | `cd gateway && pytest` |
 | Baseline Agent CLI | Unit/Integration | `cd baseline-agent-cli && pytest` |
 | Bench | Unit/Integration | `cd bench && pytest` |
+| Scoring Service | Unit/Integration | `cd scoring-service && pytest` |
 | UI | UI | `cd ui && npm test` |
 | End-to-end | Smoke | Run gateway + baseline + UI and verify `/health` + a chat request |
 
@@ -126,6 +136,9 @@ cd baseline-langchain && pytest
 # Benchmark runner tests
 cd bench && pytest
 
+# Scoring service tests
+cd scoring-service && pytest
+
 # UI tests
 cd ui && npm test
 ```
@@ -137,8 +150,8 @@ See individual component READMEs for full configuration:
 | Variable | Description |
 |----------|-------------|
 | `JANUS_PORT` | Gateway port (default: 8000) |
-| `BASELINE_AGENT_CLI_PORT` | Baseline agent CLI port (default: 8001) |
-| `BASELINE_LANGCHAIN_PORT` | Baseline LangChain port (default: 8002) |
+| `BASELINE_AGENT_CLI_PORT` | Baseline agent CLI port (default: 8080) |
+| `BASELINE_LANGCHAIN_PORT` | Baseline LangChain port (default: 8080) |
 | `NEXT_PUBLIC_GATEWAY_URL` | Gateway URL for UI |
 | `NEXT_PUBLIC_ENABLE_VOICE_INPUT` | Toggle voice input in the UI |
 | `CHUTES_API_KEY` | Chutes Whisper API key for transcription |
@@ -156,6 +169,7 @@ janus-poc/
 ├── baseline-agent-cli/ # Reference competitor
 ├── baseline-langchain/ # LangChain baseline competitor
 ├── bench/            # Benchmark runner CLI
+├── scoring-service/  # Scoring service backend
 ├── specs/            # Implementation specifications
 ├── docs/             # Architecture and runbook
 └── scripts/          # Automation scripts

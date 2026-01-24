@@ -1,16 +1,17 @@
 [project]
-name = "janus-bench"
+name = "janus-scoring-service"
 version = "0.1.0"
-description = "Janus Benchmark Runner - Evaluation harness for Janus competitors"
+description = "Janus scoring service backend"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "httpx>=0.26.0",
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
     "pydantic>=2.5.0",
     "pydantic-settings>=2.1.0",
-    "structlog>=24.1.0",
-    "click>=8.1.0",
-    "rich>=13.7.0",
+    "sqlalchemy>=2.0.0",
+    "asyncpg>=0.29.0",
+    "httpx>=0.26.0",
 ]
 
 [project.optional-dependencies]
@@ -18,17 +19,11 @@ dev = [
     "pytest>=7.4.0",
     "pytest-asyncio>=0.23.0",
     "pytest-cov>=4.1.0",
+    "aiosqlite>=0.19.0",
+    "httpx>=0.26.0",
     "mypy>=1.8.0",
     "ruff>=0.1.0",
 ]
-multimodal = [
-    "torch>=2.1.0",
-    "transformers>=4.40.0",
-    "pillow>=10.0.0",
-]
-
-[project.scripts]
-janus-bench = "janus_bench.cli:main"
 
 [build-system]
 requires = ["hatchling"]
@@ -48,9 +43,7 @@ line-length = 100
 target-version = "py311"
 
 [tool.hatch.build.targets.wheel]
-include = ["janus_bench/datasets/data/**"]
-packages = ["janus_bench"]
+packages = ["scoring_service"]
 
 [tool.hatch.build.targets.sdist]
-include = ["janus_bench/datasets/data/**"]
-packages = ["janus_bench"]
+packages = ["scoring_service"]

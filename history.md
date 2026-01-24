@@ -32,3 +32,4 @@
 - Completed spec 54_enhanced_audio_output.md with unified audio response UI, audio parsing, expanded Kokoro docs, and baseline TTS tool updates.
 - Completed spec 55_baseline_containerization.md with baseline/gateway Dockerfiles, compose workflow, container scripts, Sandy runner scaffold, and documentation updates.
 - Re-verified spec 55_baseline_containerization.md artifacts and marked the spec COMPLETE with NR_OF_TRIES tracking.
+- Completed spec 56_scoring_service_backend.md with the new scoring-service backend, Neon schema, janus-bench integration, tests, and Render blueprint updates.

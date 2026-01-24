@@ -80,6 +80,31 @@ services:
         sync: false
     healthCheckPath: /health
 
+  # Janus Scoring Service - Benchmark evaluation backend
+  - type: web
+    name: janus-scoring-service
+    runtime: python
+    plan: starter
+    region: oregon
+    branch: main
+    rootDir: scoring-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn scoring_service.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DATABASE_URL
+        sync: false
+      - key: SANDY_API_URL
+        value: "https://sandbox.janus.rodeo"
+      - key: JUDGE_URL
+        sync: false
+      - key: JUDGE_API_KEY
+        sync: false
+      - key: SCORING_MAX_CONCURRENT_RUNS
+        value: "5"
+    healthCheckPath: /health
+
   # Janus Chat UI - Next.js frontend
   - type: web
     name: janus-ui
