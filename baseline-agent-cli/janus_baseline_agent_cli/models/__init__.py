@@ -23,6 +23,7 @@ from .openai import (
     Artifact,
     ArtifactType,
 )
+from .utils import extract_images, extract_text_content
 
 __all__ = [
     "AssistantMessage",
@@ -46,4 +47,6 @@ __all__ = [
     "ToolCall",
     "Artifact",
     "ArtifactType",
+    "extract_images",
+    "extract_text_content",
 ]

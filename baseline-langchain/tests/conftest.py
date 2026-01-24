@@ -19,3 +19,9 @@ def reset_settings() -> None:
 def client() -> TestClient:
     """Create a test client for the baseline competitor."""
     return TestClient(app)
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Register custom markers."""
+    config.addinivalue_line("markers", "integration: integration tests")
+    config.addinivalue_line("markers", "smoke: smoke tests")

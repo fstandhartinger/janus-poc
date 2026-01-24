@@ -74,6 +74,13 @@ class FakeAsyncClient:
         if "bootstrap.sh" in command:
             return FakeResponse({"stdout": "Bootstrap ok", "stderr": "", "exit_code": 0})
 
+        if command.startswith("echo "):
+            text = command.split("echo", 1)[1].strip().strip("'\"")
+            return FakeResponse({"stdout": f"{text}\n", "stderr": "", "exit_code": 0})
+
+        if "pip install" in command:
+            return FakeResponse({"stdout": "installed", "stderr": "", "exit_code": 0})
+
         if "aider" in command or "run_agent.py" in command:
             if self.simulate_timeout:
                 raise httpx.ReadTimeout("timeout")
@@ -279,3 +286,50 @@ async def test_timeout_terminates_sandbox() -> None:
 
     assert fake_client.terminated is True
     assert any(timeout == 1 for timeout in fake_client.exec_timeouts)
+
+
+@pytest.mark.asyncio
+async def test_create_and_terminate_sandbox() -> None:
+    fake_client = FakeAsyncClient()
+    settings = Settings(sandy_base_url="http://sandy.test")
+    service = SandyService(settings, client_factory=lambda: fake_client)
+
+    sandbox_id = await service.create_sandbox()
+    assert sandbox_id.startswith("sbx_")
+
+    await service.terminate(sandbox_id)
+    assert fake_client.terminated is True
+
+
+@pytest.mark.asyncio
+async def test_execute_command() -> None:
+    fake_client = FakeAsyncClient()
+    settings = Settings(sandy_base_url="http://sandy.test")
+    service = SandyService(settings, client_factory=lambda: fake_client)
+
+    sandbox_id = await service.create_sandbox()
+    result = await service.exec(sandbox_id, "echo 'hello'")
+    assert "hello" in result.stdout
+
+
+@pytest.mark.asyncio
+async def test_write_and_read_file() -> None:
+    fake_client = FakeAsyncClient()
+    settings = Settings(sandy_base_url="http://sandy.test")
+    service = SandyService(settings, client_factory=lambda: fake_client)
+
+    sandbox_id = await service.create_sandbox()
+    await service.write_file(sandbox_id, "/workspace/test.txt", "content")
+    content = await service.read_file(sandbox_id, "/workspace/test.txt")
+    assert content == "content"
+
+
+@pytest.mark.asyncio
+async def test_install_package() -> None:
+    fake_client = FakeAsyncClient()
+    settings = Settings(sandy_base_url="http://sandy.test")
+    service = SandyService(settings, client_factory=lambda: fake_client)
+
+    sandbox_id = await service.create_sandbox()
+    result = await service.exec(sandbox_id, "pip install requests")
+    assert result.exit_code == 0

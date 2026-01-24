@@ -7,6 +7,7 @@ import json
 import mimetypes
 import shlex
 import uuid
+from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
 from typing import AsyncGenerator, Callable, Optional
@@ -34,6 +35,15 @@ from janus_baseline_agent_cli.services.vision import contains_images, get_image_
 from janus_baseline_agent_cli.services.response_processor import process_agent_response
 
 logger = structlog.get_logger()
+
+
+@dataclass
+class ExecResult:
+    """Result for sandbox command execution."""
+
+    stdout: str
+    stderr: str
+    exit_code: int
 
 
 class SandyService:
@@ -65,6 +75,44 @@ class SandyService:
     def is_available(self) -> bool:
         """Check if Sandy is configured."""
         return bool(self._base_url)
+
+    async def create_sandbox(self) -> str:
+        """Create a new sandbox and return its ID."""
+        async with self._client_factory() as client:
+            result = await self._create_sandbox(client)
+        if not result:
+            raise RuntimeError("Failed to create sandbox")
+        sandbox_id, _ = result
+        return sandbox_id
+
+    async def exec(self, sandbox_id: str, command: str) -> ExecResult:
+        """Execute a command in a sandbox."""
+        async with self._client_factory() as client:
+            stdout, stderr, exit_code = await self._exec_in_sandbox(
+                client, sandbox_id, command
+            )
+        return ExecResult(stdout=stdout, stderr=stderr, exit_code=exit_code)
+
+    async def write_file(self, sandbox_id: str, path: str, content: str | bytes) -> bool:
+        """Write a file into the sandbox."""
+        data = content.encode("utf-8") if isinstance(content, str) else content
+        async with self._client_factory() as client:
+            if await self._write_file(client, sandbox_id, path, data):
+                return True
+            return await self._write_file_via_exec(client, sandbox_id, path, data)
+
+    async def read_file(self, sandbox_id: str, path: str) -> str:
+        """Read a file from the sandbox."""
+        async with self._client_factory() as client:
+            data = await self._read_file(client, sandbox_id, path)
+        if data is None:
+            raise FileNotFoundError(path)
+        return data.decode("utf-8", errors="replace")
+
+    async def terminate(self, sandbox_id: str) -> None:
+        """Terminate a sandbox."""
+        async with self._client_factory() as client:
+            await self._terminate_sandbox(client, sandbox_id)
 
     def _get_headers(self) -> dict[str, str]:
         """Get request headers."""
