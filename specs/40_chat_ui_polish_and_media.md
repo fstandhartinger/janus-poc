@@ -1,6 +1,6 @@
 # Spec 40: Chat UI Polish and Media Display
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -562,3 +562,5 @@ ui/src/
 - `specs/11_chat_ui.md` - Original chat UI spec
 - `specs/37_extended_file_attachments.md` - File attachment handling
 - `specs/39_speech_to_text_voice_input.md` - Voice input
+
+NR_OF_TRIES: 1

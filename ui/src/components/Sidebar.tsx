@@ -55,16 +55,6 @@ export function Sidebar({
         </svg>
       </button>
       <div className="px-5 pt-5 pb-4 border-b border-[#1F2937]">
-        <div className="flex items-center justify-between">
-          <div className="chat-sidebar-hide-collapsed">
-            <div className="text-xs uppercase tracking-[0.3em] text-[#6B7280]">Workspace</div>
-            <div className="text-sm text-[#F3F4F6] mt-2 font-medium">Janus Auto</div>
-          </div>
-          <div className="w-10 h-10 rounded-xl bg-[#111726] border border-[#1F2937] flex items-center justify-center text-[#63D297]">
-            J
-          </div>
-        </div>
-
         <Link
           href="/"
           onClick={onClose}

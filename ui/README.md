@@ -8,7 +8,7 @@ ChatGPT-like interface for the Janus gateway with streaming support and reasonin
 - Real-time streaming with incremental rendering
 - Markdown rendering with syntax highlighting
 - Image upload (base64 data URLs)
-- Collapsible "Thinking" panel for reasoning_content
+- Reasoning panel support for reasoning_content
 - Competitor selector (baseline only in MVP)
 - Artifact links with download support
 - Voice input with speech-to-text transcription

@@ -2,9 +2,8 @@
 
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { FileContent, Message } from '@/types/chat';
-import { FileIcon } from './FileIcon';
-import { detectFileCategoryFromMetadata, formatBytes } from '@/lib/file-utils';
+import type { Message } from '@/types/chat';
+import { MediaRenderer } from './MediaRenderer';
 
 interface MessageBubbleProps {
   message: Message;
@@ -14,25 +13,13 @@ interface MessageBubbleProps {
 export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const contentParts = typeof message.content === 'string' ? [] : message.content || [];
-  const content =
+  const textContent =
     typeof message.content === 'string'
       ? message.content
       : contentParts
           .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
           .map((c) => c.text)
           .join('\n');
-
-  const imageParts =
-    typeof message.content === 'string'
-      ? []
-      : message.content.filter(
-          (c): c is { type: 'image_url'; image_url: { url: string } } => c.type === 'image_url'
-        );
-
-  const fileParts =
-    typeof message.content === 'string'
-      ? []
-      : message.content.filter((c): c is FileContent => c.type === 'file');
 
   return (
     <div
@@ -44,42 +31,7 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
           isUser ? 'chat-message-user' : 'chat-message-assistant'
         }`}
       >
-        {fileParts.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
-            {fileParts.map((part, i) => {
-              const file = part.file;
-              const category = detectFileCategoryFromMetadata(file.name, file.mime_type) || 'text';
-              return (
-                <div
-                  key={`${file.name}-${i}`}
-                  className="flex items-center gap-2 rounded-lg border border-[#1F2937] bg-[#0F172A]/70 p-2 max-w-[240px]"
-                >
-                  <div className="flex h-10 w-10 items-center justify-center rounded bg-[#1F2937] text-[#9CA3AF]">
-                    <FileIcon category={category} className="h-5 w-5" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="truncate text-xs font-medium text-[#E5E7EB]">{file.name}</p>
-                    <p className="text-xs text-[#6B7280]">{formatBytes(file.size)}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Show attached images */}
-        {imageParts.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
-            {imageParts.map((part, i) => (
-              <img
-                key={i}
-                src={part.image_url.url}
-                alt="Attached"
-                className="max-w-[200px] max-h-[200px] rounded-lg border border-[#1F2937]"
-              />
-            ))}
-          </div>
-        )}
+        <MediaRenderer content={message.content} />
 
         {/* Show reasoning panel if available */}
         {showReasoning && message.reasoning_content && (
@@ -94,9 +46,11 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
         )}
 
         {/* Message content */}
-        <div className="prose prose-invert prose-sm max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-        </div>
+        {textContent && (
+          <div className="prose prose-invert prose-sm max-w-none">
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{textContent}</ReactMarkdown>
+          </div>
+        )}
 
         {/* Show artifacts */}
         {message.artifacts && message.artifacts.length > 0 && (

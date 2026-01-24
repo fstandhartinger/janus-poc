@@ -21,7 +21,6 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
     addMessage,
     appendToLastMessage,
     setStreaming,
-    toggleReasoning,
     createSession,
     getCurrentSession,
   } = useChatStore();
@@ -163,8 +162,8 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full">
-      <div className="chat-topbar">
+    <div className="flex-1 flex flex-col min-h-0">
+      <div className="chat-topbar shrink-0">
         <div className="chat-topbar-left">
           <button
             type="button"
@@ -204,13 +203,10 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
               ))}
             </select>
           </div>
-          <button onClick={toggleReasoning} className="chat-toggle">
-            {showReasoning ? 'Thinking: On' : 'Thinking: Off'}
-          </button>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-6 py-6">
+      <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6">
         <div className="max-w-4xl mx-auto">
           {messages.length === 0 ? (
             <div className="chat-empty">
@@ -246,7 +242,7 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
         </div>
       </div>
 
-      <div className="px-6 pb-6">
+      <div className="shrink-0 px-6 pb-6 pt-2">
         <ChatInput onSend={handleSend} disabled={isStreaming} />
       </div>
     </div>

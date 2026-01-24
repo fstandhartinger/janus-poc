@@ -12,6 +12,7 @@ test.describe('Chat UI', () => {
 
     // Create a temp test image for this test
     const testImagePath = path.join(__dirname, `test-image-${Date.now()}.png`);
+    const testImageName = path.basename(testImagePath);
     fs.writeFileSync(testImagePath, Buffer.from(PNG_BASE64, 'base64'));
 
     try {
@@ -19,7 +20,7 @@ test.describe('Chat UI', () => {
       await page.locator('[data-testid="file-input"]').setInputFiles(testImagePath);
 
       // Verify image preview appears
-      const imagePreview = page.locator('img[alt="Upload preview"]');
+      const imagePreview = page.locator(`img[alt="${testImageName}"]`);
       await expect(imagePreview).toBeVisible();
 
       // Enter a prompt
@@ -80,23 +81,11 @@ test.describe('Chat UI', () => {
     await expect(assistantMessage.first()).toContainText('Hello from Janus');
   });
 
-  test('reasoning panel can be toggled', async ({ page }) => {
+  test('reasoning toggle is not shown in the top bar', async ({ page }) => {
     await page.goto('/chat');
 
-    // Find the reasoning toggle button
     const toggleButton = page.locator('button:has-text("Thinking")');
-    await expect(toggleButton).toBeVisible();
-
-    // Initially should show "Thinking: OFF"
-    await expect(toggleButton).toContainText('Off');
-
-    // Click to enable
-    await toggleButton.click();
-    await expect(toggleButton).toContainText('On');
-
-    // Click to disable
-    await toggleButton.click();
-    await expect(toggleButton).toContainText('Off');
+    await expect(toggleButton).toHaveCount(0);
   });
 
   test('displays artifact links with download capability', async ({ page }) => {

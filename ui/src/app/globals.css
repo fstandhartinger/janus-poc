@@ -641,12 +641,15 @@ html {
     radial-gradient(ellipse 50% 40% at 90% 80%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
     radial-gradient(ellipse 40% 30% at 70% 90%, rgba(34, 197, 94, 0.12) 0%, transparent 40%),
     #0B0F14;
+  min-height: 100dvh;
+  height: 100dvh;
 }
 
 .chat-shell {
   display: flex;
   flex: 1;
   min-height: 0;
+  height: calc(100dvh - 64px);
   position: relative;
   overflow: hidden;
 }
@@ -826,23 +829,6 @@ html {
   outline: none;
 }
 
-.chat-toggle {
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(31, 41, 55, 0.8);
-  background: transparent;
-  color: #9CA3AF;
-  font-size: 11px;
-  letter-spacing: 0.2em;
-  text-transform: uppercase;
-  transition: all 0.2s ease;
-}
-
-.chat-toggle:hover {
-  border-color: rgba(99, 210, 151, 0.6);
-  color: #F3F4F6;
-}
-
 .chat-new-btn {
   padding: 6px 12px;
   border-radius: 999px;
@@ -969,6 +955,7 @@ html {
 @media (max-width: 1023px) {
   .chat-shell {
     flex-direction: column;
+    height: calc(100dvh - 64px);
   }
 
   .chat-sidebar {

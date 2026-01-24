@@ -17,17 +17,42 @@ export interface ImageUrlContent {
   };
 }
 
-export interface FileContent {
-  type: 'file';
-  file: {
-    name: string;
-    mime_type: string;
-    content: string;
-    size: number;
+export interface VideoContent {
+  type: 'video';
+  video: {
+    url: string;
+    mime_type?: string;
+    poster?: string;
   };
 }
 
-export type MessageContent = string | (TextContent | ImageUrlContent | FileContent)[];
+export interface AudioContent {
+  type: 'audio';
+  audio: {
+    url: string;
+    mime_type?: string;
+    duration?: number;
+  };
+}
+
+export interface FileContent {
+  type: 'file';
+  file: {
+    url?: string;
+    name: string;
+    mime_type: string;
+    size: number;
+    content?: string;
+  };
+}
+
+export type MessageContent = string | (
+  | TextContent
+  | ImageUrlContent
+  | VideoContent
+  | AudioContent
+  | FileContent
+)[];
 
 export interface Artifact {
   id: string;

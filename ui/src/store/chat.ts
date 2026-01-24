@@ -40,7 +40,7 @@ export const useChatStore = create<ChatState>()(
       sessions: [],
       currentSessionId: null,
       isStreaming: false,
-      showReasoning: false,
+      showReasoning: true,
 
       createSession: () => {
         const id = generateId();

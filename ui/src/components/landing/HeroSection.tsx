@@ -46,7 +46,6 @@ export function HeroSection() {
           <h1 className="hero-title">
             <span className="gradient-text">JANUS</span>
           </h1>
-          <p className="hero-tagline">the intelligence engine</p>
           <p className="hero-subtitle">
             Anything In. Anything Out. Build the intelligence engine for the decentralized
             intelligence network powered by Bittensor.

@@ -12,3 +12,4 @@
 - Completed spec 37_extended_file_attachments.md with multi-format file handling, previews, backend extraction, and tests.
 - Completed spec 38_multimodal_vision_models.md with vision routing, image detection, fallback, LangChain vision support, agent docs, and tests.
 - Completed spec 39_speech_to_text_voice_input.md with voice recording UI, transcription proxy, env toggles, and unit tests.
+- Completed spec 40_chat_ui_polish_and_media.md with chat layout fixes, simplified sidebar/topbar, rich media rendering, and test updates.
