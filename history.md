@@ -24,3 +24,4 @@
 - Completed spec 46_gui_automation_desktop_control.md with GUI automation tools, sandbox GUI config, and a VNC viewer component.
 - Implemented spec 47_text_to_speech_response_playback.md (TTS playback, voice selection, caching, and tests); blocked until CHUTES_API_KEY is configured on Render gateway for /api/tts.
 - Completed spec 48_rich_data_visualization.md with rich chart, spreadsheet, diagram rendering, content parsing, and agent documentation.
+- Completed spec 49_complexity_detection_improvements.md with conservative LLM routing, URL interaction detection, keyword updates, README diagram fixes, and new tests.

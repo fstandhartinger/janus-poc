@@ -134,10 +134,6 @@ class Settings(BaseSettings):
         default=False,
         description="Always route to agent sandbox, bypass complexity detection",
     )
-    enable_llm_routing: bool = Field(
-        default=True,
-        description="Enable LLM-based second pass for complexity detection",
-    )
     llm_routing_model: str = Field(
         default="zai-org/GLM-4.7-Flash",
         description="Fast model to use for routing decisions",

@@ -144,7 +144,7 @@ class StubSandyService:
 
 @pytest.mark.asyncio
 async def test_fast_path_skips_sandy_calls(monkeypatch: pytest.MonkeyPatch) -> None:
-    settings = Settings(enable_llm_routing=False, always_use_agent=False)
+    settings = Settings(always_use_agent=False)
     detector = ComplexityDetector(settings)
     llm = StubLLMService()
     sandy = StubSandyService()
@@ -170,7 +170,6 @@ async def test_complex_path_returns_artifacts() -> None:
     settings = Settings(
         sandy_base_url="http://sandy.test",
         baseline_agent="aider",
-        enable_llm_routing=False,
     )
     service = SandyService(settings, client_factory=lambda: fake_client)
 
@@ -211,7 +210,6 @@ async def test_sandy_env_passes_auth_token() -> None:
         sandy_base_url="http://sandy.test",
         sandy_api_key="fallback",
         baseline_agent="aider",
-        enable_llm_routing=False,
     )
     service = SandyService(settings, client_factory=lambda: fake_client)
 
@@ -240,7 +238,6 @@ async def test_streaming_includes_sandbox_events() -> None:
     settings = Settings(
         sandy_base_url="http://sandy.test",
         baseline_agent="aider",
-        enable_llm_routing=False,
     )
     service = SandyService(settings, client_factory=lambda: fake_client)
 
@@ -268,7 +265,6 @@ async def test_timeout_terminates_sandbox() -> None:
         sandy_base_url="http://sandy.test",
         sandy_timeout=1,
         baseline_agent="aider",
-        enable_llm_routing=False,
     )
     service = SandyService(settings, client_factory=lambda: fake_client)
 

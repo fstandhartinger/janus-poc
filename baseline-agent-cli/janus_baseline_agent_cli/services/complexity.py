@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from functools import lru_cache
 import json
+import re
 from typing import Optional
 
 import httpx
@@ -18,18 +19,25 @@ ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
 ROUTING_MODEL = "zai-org/GLM-4.7-Flash"
 ROUTING_PROMPT = """Analyze this user request and decide if it needs agent sandbox capabilities.
 
-Agent sandbox is needed for:
-- Image/video/audio generation (e.g., "generate an image of...", "create a video...")
-- Code execution (e.g., "run this code", "execute...")
-- Web search (e.g., "search for...", "find current...")
-- File operations (e.g., "download...", "save to file...")
-- Any task requiring external tools or APIs
+Agent sandbox is REQUIRED for:
+- Image/video/audio generation ("generate an image", "create a video", "text to speech")
+- Code execution ("run this code", "execute", "test this script")
+- Web search ("search for", "find current", "latest news")
+- File operations ("download", "save to file", "read file")
+- Browser automation ("test in browser", "open URL", "take screenshot", "click on")
+- GUI/Desktop interaction ("click button", "type into", "automate")
+- API calls ("call the API", "make a request", "curl")
+- Testing ("run tests", "verify", "check if working")
+- Any task requiring interaction with external systems, URLs, or tools
 
-Direct LLM response is sufficient for:
-- General conversation and questions
-- Explanations and summaries
-- Simple math (without code)
-- Writing assistance (without execution)
+Direct LLM response is ONLY sufficient for:
+- General conversation and chitchat
+- Explanations, definitions, and summaries
+- Simple math (without needing to run code)
+- Writing assistance (text generation without execution)
+- Questions that can be answered from knowledge alone
+
+IMPORTANT: When in doubt, choose needs_agent=true. It's better to use the agent unnecessarily than to fail a task that needs tools.
 
 User request: {user_message}
 
@@ -76,6 +84,8 @@ TRIVIAL_GREETINGS = {
     "thanks",
     "thank you",
 }
+
+URL_PATTERN = re.compile(r'https?://[^\s<>"\']+|www\.[^\s<>"\']+', re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -154,6 +164,58 @@ class ComplexityDetector:
         "extract data",
         "parse",
         "convert file",
+        "test in browser",
+        "test in a browser",
+        "open in browser",
+        "browser automation",
+        "playwright",
+        "puppeteer",
+        "selenium",
+        "click on",
+        "navigate to",
+        "take screenshot",
+        "screenshot of",
+        "load the page",
+        "open the url",
+        "open this url",
+        "visit the site",
+        "visit this site",
+        "check the website",
+        "test the website",
+        "verify the page",
+        "interact with",
+        "fill the form",
+        "submit the form",
+        "automation",
+        "automate",
+        "gui",
+        "desktop automation",
+        "click the button",
+        "type into",
+        "keyboard",
+        "mouse click",
+        "run the test",
+        "test this",
+        "verify this",
+        "check if",
+        "validate",
+        "smoke test",
+        "integration test",
+        "e2e test",
+        "end-to-end",
+        "call the api",
+        "make a request",
+        "http request",
+        "curl",
+        "post to",
+        "get from",
+        "api endpoint",
+        "run command",
+        "execute command",
+        "terminal",
+        "shell",
+        "bash",
+        "command line",
     ]
 
     MULTIMODAL_KEYWORDS = [
@@ -260,6 +322,37 @@ class ComplexityDetector:
         text_lower = text.lower()
         return any(trigger in text_lower for trigger in agent_triggers)
 
+    def _contains_url(self, text: str) -> bool:
+        """Check if text contains a URL."""
+        return bool(URL_PATTERN.search(text))
+
+    def _url_suggests_interaction(self, text: str) -> bool:
+        """Check if URL context suggests browser/API interaction."""
+        if not self._contains_url(text):
+            return False
+
+        interaction_hints = [
+            "test",
+            "check",
+            "visit",
+            "open",
+            "browse",
+            "verify",
+            "screenshot",
+            "load",
+            "fetch",
+            "scrape",
+            "interact",
+            "click",
+            "submit",
+            "form",
+            "login",
+            "api",
+            "endpoint",
+        ]
+        text_lower = text.lower()
+        return any(hint in text_lower for hint in interaction_hints)
+
     def analyze(self, messages: list[Message]) -> ComplexityAnalysis:
         """Analyze the request for complexity routing."""
         if not messages:
@@ -319,6 +412,17 @@ class ComplexityDetector:
                 text_preview=text_preview,
             )
 
+        if self._url_suggests_interaction(text):
+            return ComplexityAnalysis(
+                is_complex=True,
+                reason="url_interaction",
+                keywords_matched=keywords_matched,
+                multimodal_detected=multimodal_detected,
+                has_images=has_images,
+                image_count=image_count,
+                text_preview=text_preview,
+            )
+
         # Check for code blocks in context (suggesting code-related task)
         all_text = " ".join(self._extract_text(m.content) for m in messages)
         if self._has_code_blocks(all_text) and self._has_complex_keywords(text):
@@ -367,9 +471,9 @@ class ComplexityDetector:
         )
 
     async def _llm_routing_check(self, text: str) -> tuple[bool, str]:
-        """Second pass: Use LLM with tool calling to verify routing decision."""
+        """LLM verification for routing decision. Returns (needs_agent, reason)."""
         if not self._settings.openai_api_key:
-            return False, "no_api_key"
+            return True, "no_api_key"
 
         try:
             async with httpx.AsyncClient(timeout=self._routing_timeout) as client:
@@ -412,7 +516,11 @@ class ComplexityDetector:
                         args.get("reason", "llm_decision")
                     )
 
-                return False, "no_tool_call"
+                return True, "no_tool_call_conservative"
+
+        except httpx.TimeoutException:
+            logger.warning("llm_routing_timeout", text_preview=text[:100])
+            return True, "llm_check_error: timeout"
 
         except Exception as exc:
             logger.warning(
@@ -420,41 +528,60 @@ class ComplexityDetector:
                 error=str(exc),
                 text_preview=text[:100],
             )
-            return False, f"llm_check_error: {exc}"
+            return True, f"llm_check_error: {exc}"
 
     async def analyze_async(self, messages: list[Message]) -> ComplexityAnalysis:
-        """Async version of analyze with optional LLM second pass."""
-        # First pass: keyword-based (same as before)
+        """Async analysis with mandatory LLM verification for fast path."""
         first_pass = self.analyze(messages)
 
-        # If already complex, no need for second pass
         if first_pass.is_complex:
+            logger.info(
+                "complexity_keywords_matched",
+                reason=first_pass.reason,
+                keywords=first_pass.keywords_matched,
+            )
             return first_pass
 
-        # Second pass only if enabled and first pass said "simple"
-        if self._settings.enable_llm_routing:
-            last_user_msg = self._get_last_user_message(messages)
-            text = self._extract_text(last_user_msg.content) if last_user_msg else ""
-            if not self._should_skip_llm_check(text):
-                needs_agent, reason = await self._llm_routing_check(text)
-                logger.info(
-                    "llm_routing_decision",
-                    needs_agent=needs_agent,
+        last_user_msg = self._get_last_user_message(messages)
+        text = self._extract_text(last_user_msg.content) if last_user_msg else ""
+
+        if self._should_skip_llm_check(text):
+            logger.info("complexity_trivial_greeting", text_preview=text[:50])
+            return first_pass
+
+        needs_agent, reason = await self._llm_routing_check(text)
+        logger.info(
+            "complexity_llm_verification",
+            needs_agent=needs_agent,
+            reason=reason,
+            model=self._routing_model,
+            text_preview=text[:100],
+        )
+
+        if needs_agent or reason.startswith("llm_check_error") or reason == "no_api_key":
+            if reason.startswith("llm_check_error") or reason == "no_api_key":
+                logger.warning(
+                    "complexity_defaulting_to_agent",
                     reason=reason,
-                    model=self._routing_model,
                     text_preview=text[:100],
                 )
+                reason = f"conservative_default: {reason}"
 
-                if needs_agent:
-                    return ComplexityAnalysis(
-                        is_complex=True,
-                        reason=f"llm_second_pass: {reason}",
-                        keywords_matched=first_pass.keywords_matched,
-                        multimodal_detected=first_pass.multimodal_detected,
-                        has_images=first_pass.has_images,
-                        image_count=first_pass.image_count,
-                        text_preview=first_pass.text_preview,
-                    )
+            return ComplexityAnalysis(
+                is_complex=True,
+                reason=f"llm_verification: {reason}",
+                keywords_matched=first_pass.keywords_matched,
+                multimodal_detected=first_pass.multimodal_detected,
+                has_images=first_pass.has_images,
+                image_count=first_pass.image_count,
+                text_preview=first_pass.text_preview,
+            )
+
+        logger.info(
+            "complexity_confirmed_simple",
+            reason=reason,
+            text_preview=text[:100],
+        )
 
         return first_pass
 

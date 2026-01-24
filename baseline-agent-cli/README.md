@@ -13,7 +13,7 @@ flowchart TB
     subgraph Routing ["Complexity Detection"]
         DETECT["Complexity Detector"]
         KEYWORDS["Keyword Check"]
-        LLM_ROUTE["LLM Routing (GLM-4.7-Flash)"]
+        LLM_VERIFY["LLM Verification (GLM-4.7-Flash)"]
     end
 
     subgraph FastPath ["Fast Path (Simple Requests)"]
@@ -43,10 +43,11 @@ flowchart TB
 
     REQ --> DETECT
     DETECT --> KEYWORDS
-    KEYWORDS -->|"Complex keywords found"| LLM_ROUTE
-    KEYWORDS -->|"Simple request"| FAST_LLM
-    LLM_ROUTE -->|"use_agent: true"| SANDY
-    LLM_ROUTE -->|"use_agent: false"| FAST_LLM
+    KEYWORDS -->|"Complex keywords found"| SANDY
+    KEYWORDS -->|"No keywords match"| LLM_VERIFY
+    LLM_VERIFY -->|"needs_agent: true"| SANDY
+    LLM_VERIFY -->|"needs_agent: false"| FAST_LLM
+    LLM_VERIFY -->|"Error/Timeout"| SANDY
 
     FAST_LLM --> FAST_STREAM
     FAST_STREAM --> SSE
@@ -163,10 +164,11 @@ The baseline uses [Chutes](https://chutes.ai) as the inference provider. Chutes 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `BASELINE_AGENT_CLI_ALWAYS_USE_AGENT` | `false` | Always route requests to the agent path |
-| `BASELINE_AGENT_CLI_ENABLE_LLM_ROUTING` | `true` | Enable LLM-based complexity detection |
 | `BASELINE_AGENT_CLI_LLM_ROUTING_MODEL` | `zai-org/GLM-4.7-Flash` | Fast model for routing decisions |
 | `BASELINE_AGENT_CLI_LLM_ROUTING_TIMEOUT` | `3.0` | Timeout for routing check (seconds) |
 | `BASELINE_AGENT_CLI_COMPLEXITY_THRESHOLD` | `100` | Token threshold for complexity detection |
+
+> Note: LLM verification is always performed before using the fast path.
 
 ## Example Configuration
 
@@ -180,7 +182,6 @@ SANDY_BASE_URL=https://sandy.example.com
 SANDY_API_KEY=your_sandy_api_key
 
 BASELINE_AGENT_CLI_ALWAYS_USE_AGENT=false
-BASELINE_AGENT_CLI_ENABLE_LLM_ROUTING=true
 ```
 
 ## Agent Pack

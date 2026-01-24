@@ -135,7 +135,7 @@ def test_no_user_message(detector: ComplexityDetector) -> None:
 @pytest.mark.asyncio
 async def test_llm_routing_catches_multimodal(monkeypatch: pytest.MonkeyPatch) -> None:
     """LLM second pass should mark multimodal requests as complex."""
-    settings = Settings(openai_api_key="test", enable_llm_routing=True)
+    settings = Settings(openai_api_key="test")
     detector = ComplexityDetector(settings)
 
     async def fake_llm_check(text: str) -> tuple[bool, str]:
@@ -146,13 +146,13 @@ async def test_llm_routing_catches_multimodal(monkeypatch: pytest.MonkeyPatch) -
     messages = [Message(role=MessageRole.USER, content="what's the weather like today")]
     result = await detector.analyze_async(messages)
     assert result.is_complex is True
-    assert "llm_second_pass" in result.reason
+    assert "llm_verification" in result.reason
 
 
 @pytest.mark.asyncio
 async def test_llm_routing_timeout_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Timeouts during LLM routing should fall back to fast path."""
-    settings = Settings(openai_api_key="test", enable_llm_routing=True)
+    """Timeouts during LLM routing should fall back to agent path."""
+    settings = Settings(openai_api_key="test")
     detector = ComplexityDetector(settings)
 
     class TimeoutAsyncClient:
@@ -175,31 +175,14 @@ async def test_llm_routing_timeout_fallback(monkeypatch: pytest.MonkeyPatch) -> 
 
     messages = [Message(role=MessageRole.USER, content="what's the weather like today")]
     result = await detector.analyze_async(messages)
-    assert result.is_complex is False
-    assert result.reason == "simple"
-
-
-@pytest.mark.asyncio
-async def test_llm_routing_disabled_skips_check(monkeypatch: pytest.MonkeyPatch) -> None:
-    """Disabling LLM routing should skip the second pass."""
-    settings = Settings(openai_api_key="test", enable_llm_routing=False)
-    detector = ComplexityDetector(settings)
-
-    async def fail_llm_check(text: str) -> tuple[bool, str]:
-        raise AssertionError("LLM check should be skipped")
-
-    monkeypatch.setattr(detector, "_llm_routing_check", fail_llm_check)
-
-    messages = [Message(role=MessageRole.USER, content="what's the weather like today")]
-    result = await detector.analyze_async(messages)
-    assert result.is_complex is False
-    assert result.reason == "simple"
+    assert result.is_complex is True
+    assert "llm_verification" in result.reason
 
 
 @pytest.mark.asyncio
 async def test_llm_routing_skips_trivial_greeting(monkeypatch: pytest.MonkeyPatch) -> None:
     """Trivial greetings should stay on the fast path without LLM routing."""
-    settings = Settings(openai_api_key="test", enable_llm_routing=True)
+    settings = Settings(openai_api_key="test")
     detector = ComplexityDetector(settings)
 
     async def fail_llm_check(text: str) -> tuple[bool, str]:
