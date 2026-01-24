@@ -1,10 +1,8 @@
 'use client';
-
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import type { Message } from '@/types/chat';
 import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
+import { RichContent } from './viz/RichContent';
 
 interface MessageBubbleProps {
   message: Message;
@@ -48,9 +46,7 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
 
         {/* Message content */}
         {textContent && (
-          <div className="prose prose-invert prose-sm max-w-none">
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{textContent}</ReactMarkdown>
-          </div>
+          <RichContent content={textContent} />
         )}
 
         {!isUser && textContent && (
