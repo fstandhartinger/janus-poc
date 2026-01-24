@@ -63,12 +63,17 @@ export async function generateSpeech(
 
   // Strip markdown formatting for cleaner speech
   const cleanText = stripMarkdown(text);
+  const apiKey = process.env.NEXT_PUBLIC_CHUTES_API_KEY;
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+  };
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
 
   const response = await fetch(TTS_ENDPOINT, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
+    headers,
     body: JSON.stringify({
       text: cleanText,
       voice,
@@ -77,7 +82,9 @@ export async function generateSpeech(
   });
 
   if (!response.ok) {
-    throw new Error(`TTS failed: ${response.statusText}`);
+    const errorText = await response.text().catch(() => '');
+    const detail = errorText || response.statusText || String(response.status);
+    throw new Error(`TTS failed: ${detail}`);
   }
 
   // Convert audio buffer to blob URL
