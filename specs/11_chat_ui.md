@@ -6,10 +6,15 @@
 The PoC needs a minimal but polished ChatGPT-like UI to demo the Janus experience and
 streaming behavior. The UI should reuse patterns from `chutes-knowledge-agent`.
 
+**Note**: The Chat UI is now one section of the larger Janus application. It lives at `/chat`
+while the root `/` is the Landing Page (spec 18). Other pages include Competition (spec 19)
+and Marketplace (spec 20). The chat app may be referred to as "Manus Chat" in the UI.
+
 ## Goals
 - Provide a clean, minimal chat UX with streaming.
 - Support multimodal input (text + image upload).
 - Surface reasoning/steps in a collapsible panel.
+- Follow the Chutes style guide for premium dark mode aesthetic.
 
 ## Non-goals
 - Full user accounts or cloud sync.
@@ -49,7 +54,31 @@ sequenceDiagram
 ## UI implementation notes
 - Use Next.js (React 19) patterns from `chutes-knowledge-agent`.
 - Use `react-markdown` + `remark-gfm` for markdown rendering.
-- Provide lightweight styling via Tailwind or CSS modules.
+- Follow the Chutes style guide (`/home/flori/Dev/chutes/style/chutes_style.md`):
+  - Dark background with aurora gradient overlays
+  - Glass morphism cards and inputs
+  - Tomato Grotesk typography
+  - Moss green (`#63D297`) for primary accents
+  - Chat input styling per the style guide's `.chat-input-container`
+
+## Page structure
+The chat app lives at `/chat` within the Janus application:
+
+```
+/app
+  /page.tsx          → Landing page (spec 18)
+  /chat
+    /page.tsx        → Chat app (this spec)
+  /competition
+    /page.tsx        → Competition page (spec 19)
+  /marketplace
+    /page.tsx        → Marketplace page (spec 20)
+```
+
+The chat page should include:
+- Shared navigation header (links to all pages)
+- Full-height chat interface with sidebar
+- Aurora background gradient (as shown in chutes_chat_page.png)
 
 ## Acceptance criteria
 - A Playwright test uploads an image and submits a prompt.

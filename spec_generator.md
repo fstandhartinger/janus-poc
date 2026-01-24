@@ -42,8 +42,8 @@ When starting a new Claude Code session to add specs:
 ```
 janus-poc/
 ├── gateway/           # FastAPI gateway (routes to competitors)
-├── baseline/          # Reference implementation
-│   ├── janus_baseline/
+├── baseline-agent-cli/ # Reference implementation
+│   ├── janus_baseline_agent_cli/
 │   │   ├── services/
 │   │   │   ├── llm.py          # Direct LLM calls
 │   │   │   ├── complexity.py   # Routes fast vs complex path
@@ -151,7 +151,7 @@ This session covered the following work:
 
 **Problem**: Chat returned "model not found: baseline" error
 
-**Root Cause**: `baseline/janus_baseline/services/llm.py` was passing `request.model` ("baseline") to the upstream LLM instead of `self._settings.model` ("gpt-4o-mini")
+**Root Cause**: `baseline-agent-cli/janus_baseline_agent_cli/services/llm.py` was passing `request.model` ("baseline") to the upstream LLM instead of `self._settings.model` ("gpt-4o-mini")
 
 **Fix**: Changed lines 91 and 196 to always use `self._settings.model` for upstream API calls
 
@@ -280,7 +280,7 @@ Specs deployed automatically on push. Check status via Render MCP tools:
 
 ```bash
 # Backend tests
-cd baseline && pytest
+cd baseline-agent-cli && pytest
 
 # Frontend tests
 cd ui && npm test

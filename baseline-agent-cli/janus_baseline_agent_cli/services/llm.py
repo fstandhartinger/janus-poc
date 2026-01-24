@@ -2,13 +2,17 @@
 
 import uuid
 from functools import lru_cache
-from typing import AsyncGenerator, Optional
+from typing import AsyncGenerator, Optional, cast
 
 import structlog
-from openai import AsyncOpenAI
+from openai import AsyncOpenAI, AsyncStream
+from openai.types.chat import (
+    ChatCompletion as OpenAIChatCompletion,
+    ChatCompletionChunk as OpenAIChatCompletionChunk,
+)
 
-from janus_baseline.config import Settings, get_settings
-from janus_baseline.models import (
+from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.models import (
     ChatCompletionChunk,
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -50,7 +54,7 @@ class LLMService:
     def _mock_text(self) -> str:
         return (
             "Hello! The Janus Baseline is running in mock mode. "
-            "Set BASELINE_OPENAI_API_KEY to enable live responses."
+            "Set BASELINE_AGENT_CLI_OPENAI_API_KEY to enable live responses."
         )
 
     async def complete(
@@ -87,12 +91,15 @@ class LLMService:
                 if m.content is not None
             ]
 
-            response = await client.chat.completions.create(
-                model=self._settings.model,  # Always use configured model for upstream
-                messages=openai_messages,  # type: ignore
-                temperature=request.temperature or self._settings.temperature,
-                max_tokens=request.max_tokens or self._settings.max_tokens,
-                stream=False,
+            response = cast(
+                OpenAIChatCompletion,
+                await client.chat.completions.create(
+                    model=self._settings.model,  # Always use configured model for upstream
+                    messages=openai_messages,  # type: ignore
+                    temperature=request.temperature or self._settings.temperature,
+                    max_tokens=request.max_tokens or self._settings.max_tokens,
+                    stream=False,
+                ),
             )
 
             # Convert response
@@ -192,12 +199,15 @@ class LLMService:
                 choices=[ChunkChoice(delta=Delta(reasoning_content="Processing request... "))],
             )
 
-            stream = await client.chat.completions.create(
-                model=upstream_model,  # Always use configured model for upstream
-                messages=openai_messages,  # type: ignore
-                temperature=request.temperature or self._settings.temperature,
-                max_tokens=request.max_tokens or self._settings.max_tokens,
-                stream=True,
+            stream = cast(
+                AsyncStream[OpenAIChatCompletionChunk],
+                await client.chat.completions.create(
+                    model=upstream_model,  # Always use configured model for upstream
+                    messages=openai_messages,  # type: ignore
+                    temperature=request.temperature or self._settings.temperature,
+                    max_tokens=request.max_tokens or self._settings.max_tokens,
+                    stream=True,
+                ),
             )
 
             prompt_tokens = 0

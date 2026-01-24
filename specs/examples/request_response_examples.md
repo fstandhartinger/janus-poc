@@ -3,7 +3,7 @@
 ## Example 1: Text + Image request
 ```json
 {
-  "model": "janus-baseline",
+  "model": "janus-baseline-agent-cli",
   "messages": [
     {
       "role": "system",
@@ -27,7 +27,7 @@
   "id": "chatcmpl_01",
   "object": "chat.completion",
   "created": 1769088000,
-  "model": "janus-baseline",
+  "model": "janus-baseline-agent-cli",
   "choices": [
     {
       "index": 0,
@@ -53,7 +53,7 @@
   "id": "chatcmpl_02",
   "object": "chat.completion",
   "created": 1769088000,
-  "model": "janus-baseline",
+  "model": "janus-baseline-agent-cli",
   "choices": [
     {
       "index": 0,

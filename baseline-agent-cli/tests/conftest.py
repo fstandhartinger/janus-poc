@@ -3,7 +3,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from janus_baseline.main import app
+from janus_baseline_agent_cli.main import app
 
 
 @pytest.fixture

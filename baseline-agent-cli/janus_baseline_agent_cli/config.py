@@ -1,22 +1,48 @@
 """Configuration settings for the baseline competitor."""
 
 from functools import lru_cache
-from typing import Optional
+from typing import Any, Optional
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings.sources import DotEnvSettingsSource, EnvSettingsSource
 
 
 class Settings(BaseSettings):
     """Baseline competitor configuration settings."""
 
     model_config = SettingsConfigDict(
-        env_prefix="BASELINE_",
+        env_prefix="BASELINE_AGENT_CLI_",
         env_file=".env",
         env_file_encoding="utf-8",
         populate_by_name=True,
         extra="ignore",
     )
+
+    @classmethod
+    def settings_customise_sources(
+        cls,
+        settings_cls: type[BaseSettings],
+        init_settings: Any,
+        env_settings: Any,
+        dotenv_settings: Any,
+        file_secret_settings: Any,
+    ) -> tuple[Any, ...]:
+        legacy_env = EnvSettingsSource(settings_cls, env_prefix="BASELINE_")
+        legacy_dotenv = DotEnvSettingsSource(
+            settings_cls,
+            env_file=settings_cls.model_config.get("env_file"),
+            env_file_encoding=settings_cls.model_config.get("env_file_encoding"),
+            env_prefix="BASELINE_",
+        )
+        return (
+            init_settings,
+            env_settings,
+            legacy_env,
+            dotenv_settings,
+            legacy_dotenv,
+            file_secret_settings,
+        )
 
     # Server settings
     host: str = Field(default="0.0.0.0", description="Server host")
@@ -44,6 +70,19 @@ class Settings(BaseSettings):
         description="Sandy API key",
     )
     sandy_timeout: int = Field(default=300, description="Sandy sandbox timeout in seconds")
+    artifact_port: int = Field(
+        default=8787,
+        validation_alias="JANUS_ARTIFACT_PORT",
+        description="Sandbox artifact server port",
+    )
+    artifact_dir: str = Field(
+        default="/workspace/artifacts",
+        validation_alias="JANUS_ARTIFACTS_DIR",
+        description="Sandbox artifacts directory",
+    )
+    artifact_ttl_seconds: int = Field(
+        default=3600, description="Artifact TTL in seconds"
+    )
 
     # Agent pack configuration
     agent_pack_path: str = Field(
@@ -58,6 +97,11 @@ class Settings(BaseSettings):
         default=True, description="Enable code execution tools"
     )
     enable_file_tools: bool = Field(default=True, description="Enable file tooling")
+    baseline_agent: str = Field(
+        default="aider",
+        validation_alias="JANUS_BASELINE_AGENT",
+        description="CLI agent command to run inside the sandbox",
+    )
 
     # Complexity detection
     complexity_threshold: int = Field(
@@ -66,6 +110,18 @@ class Settings(BaseSettings):
     always_use_agent: bool = Field(
         default=False,
         description="Always route to agent sandbox, bypass complexity detection",
+    )
+    enable_llm_routing: bool = Field(
+        default=True,
+        description="Enable LLM-based second pass for complexity detection",
+    )
+    llm_routing_model: str = Field(
+        default="zai-org/GLM-4.7-Flash",
+        description="Fast model to use for routing decisions",
+    )
+    llm_routing_timeout: float = Field(
+        default=3.0,
+        description="Timeout in seconds for LLM routing check",
     )
 
     # Logging

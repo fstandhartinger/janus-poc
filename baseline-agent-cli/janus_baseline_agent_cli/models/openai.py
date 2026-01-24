@@ -48,6 +48,69 @@ class Message(BaseModel):
     name: Optional[str] = None
 
 
+class FunctionDefinition(BaseModel):
+    """OpenAI function definition."""
+
+    name: str
+    description: str
+    parameters: dict[str, Any]
+
+
+class ToolDefinition(BaseModel):
+    """OpenAI tool definition."""
+
+    type: Literal["function"] = "function"
+    function: FunctionDefinition
+
+
+class FunctionCall(BaseModel):
+    """Function call in tool_calls."""
+
+    name: str
+    arguments: str  # JSON string
+
+
+class ToolCall(BaseModel):
+    """Tool call in assistant message."""
+
+    id: str
+    type: Literal["function"] = "function"
+    function: FunctionCall
+
+
+class ArtifactType(str, Enum):
+    """Artifact types."""
+
+    IMAGE = "image"
+    FILE = "file"
+    DATASET = "dataset"
+    BINARY = "binary"
+
+
+class Artifact(BaseModel):
+    """Artifact descriptor for non-text outputs."""
+
+    id: str
+    type: ArtifactType
+    mime_type: str
+    display_name: str
+    size_bytes: int
+    sha256: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.now)
+    ttl_seconds: int = 3600
+    url: str
+
+
+class AssistantMessage(BaseModel):
+    """Assistant message with optional tool calls."""
+
+    role: Literal["assistant"] = "assistant"
+    content: Optional[str] = None
+    reasoning_content: Optional[str] = None
+    artifacts: Optional[list[Artifact]] = None
+    tool_calls: Optional[list[ToolCall]] = None
+
+
 class StreamOptions(BaseModel):
     """Streaming options."""
 
@@ -91,7 +154,7 @@ class Choice(BaseModel):
     """Non-streaming response choice."""
 
     index: int = 0
-    message: Message
+    message: Union[Message, AssistantMessage]
     finish_reason: Optional[FinishReason] = None
 
 
@@ -112,6 +175,7 @@ class Delta(BaseModel):
     role: Optional[MessageRole] = None
     content: Optional[str] = None
     reasoning_content: Optional[str] = None
+    janus: Optional[dict[str, Any]] = None
 
 
 class ChunkChoice(BaseModel):

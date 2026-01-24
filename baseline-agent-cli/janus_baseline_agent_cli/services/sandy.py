@@ -2,6 +2,8 @@
 
 import asyncio
 import base64
+import hashlib
+import mimetypes
 import shlex
 import uuid
 from functools import lru_cache
@@ -11,13 +13,19 @@ from typing import AsyncGenerator, Callable, Optional
 import httpx
 import structlog
 
-from janus_baseline.config import Settings, get_settings
-from janus_baseline.models import (
+from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.models import (
+    Artifact,
+    ArtifactType,
+    AssistantMessage,
     ChatCompletionChunk,
     ChatCompletionRequest,
+    ChatCompletionResponse,
+    Choice,
     ChunkChoice,
     Delta,
     FinishReason,
+    Message,
     MessageRole,
     Usage,
 )
@@ -27,6 +35,9 @@ logger = structlog.get_logger()
 
 class SandyService:
     """Service for executing tasks in Sandy sandboxes."""
+
+    _max_inline_bytes = 1_000_000
+    _default_path = "/agent-pack/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
     def __init__(
         self,
@@ -41,6 +52,10 @@ class SandyService:
         self._baseline_root = Path(__file__).resolve().parents[2]
         self._agent_pack_path = self._resolve_path(settings.agent_pack_path)
         self._system_prompt_path = self._resolve_path(settings.system_prompt_path)
+        self._artifact_port = settings.artifact_port
+        self._artifact_dir = settings.artifact_dir
+        self._artifact_ttl = settings.artifact_ttl_seconds
+        self._baseline_agent = settings.baseline_agent.strip() if settings.baseline_agent else "aider"
 
     @property
     def is_available(self) -> bool:
@@ -71,7 +86,15 @@ class SandyService:
             return []
         return [path for path in self._agent_pack_path.rglob("*") if path.is_file()]
 
-    def _build_agent_env(self) -> dict[str, str]:
+    def _artifact_url_base(self, sandbox_id: str, public_url: str | None) -> str:
+        """Resolve the base URL for sandbox artifacts."""
+        if public_url:
+            return f"{public_url.rstrip('/')}/artifacts"
+        if self._base_url:
+            return f"{self._base_url.rstrip('/')}/sandbox/{sandbox_id}/artifacts"
+        return "/artifacts"
+
+    def _build_agent_env(self, sandbox_id: str, public_url: str | None) -> dict[str, str]:
         """Build environment variables for the CLI agent."""
         return {
             "JANUS_AGENT_PACK": self._agent_pack_dest_root(),
@@ -82,21 +105,57 @@ class SandyService:
             if self._settings.enable_code_execution
             else "0",
             "JANUS_ENABLE_FILE_TOOLS": "1" if self._settings.enable_file_tools else "0",
+            "JANUS_SANDBOX_ID": sandbox_id,
+            "JANUS_SANDBOX_PUBLIC_URL": public_url or "",
+            "JANUS_ARTIFACT_URL_BASE": self._artifact_url_base(sandbox_id, public_url),
+            "JANUS_ARTIFACTS_DIR": self._artifact_dir,
+            "JANUS_ARTIFACT_PORT": str(self._artifact_port),
+            "PATH": self._default_path,
         }
 
-    def _build_agent_command(self, task: str) -> str:
+    def _build_agent_command(self, agent: str, task: str, sandbox_id: str, public_url: str | None) -> str:
         """Build the CLI agent command."""
-        env_parts = [f"{key}={value}" for key, value in self._build_agent_env().items()]
+        env_parts = [
+            f"{key}={shlex.quote(str(value))}"
+            for key, value in self._build_agent_env(sandbox_id, public_url).items()
+        ]
         quoted_task = shlex.quote(task)
-        return " ".join(
-            [
-                "env",
-                *env_parts,
+        if agent == "builtin":
+            command = [
                 "python",
                 f"{self._agent_pack_dest_root()}/run_agent.py",
                 quoted_task,
             ]
-        )
+        else:
+            command = [agent, quoted_task]
+        return " ".join(["env", *env_parts, *command])
+
+    def _agent_candidates(self) -> list[str]:
+        """Determine preferred agent order."""
+        requested = self._baseline_agent.strip().lower()
+        if requested in {"builtin", "run_agent"}:
+            return ["builtin"]
+        if requested:
+            return [requested, "openhands", "opencode", "builtin"]
+        return ["aider", "openhands", "opencode", "builtin"]
+
+    async def _select_agent(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+    ) -> str:
+        """Pick an available CLI agent inside the sandbox."""
+        for candidate in self._agent_candidates():
+            if candidate == "builtin":
+                return "builtin"
+            stdout, _, exit_code = await self._exec_in_sandbox(
+                client,
+                sandbox_id,
+                f"PATH={shlex.quote(self._default_path)} command -v {shlex.quote(candidate)}",
+            )
+            if exit_code == 0 and stdout.strip():
+                return candidate
+        return "builtin"
 
     async def _write_file(
         self,
@@ -150,6 +209,98 @@ class SandyService:
             )
         return exit_code == 0
 
+    async def _read_file(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        path: str,
+    ) -> Optional[bytes]:
+        """Read a file from the sandbox."""
+        try:
+            response = await client.get(
+                f"{self._base_url}/api/sandboxes/{sandbox_id}/files/read",
+                params={"path": path},
+                headers=self._get_headers(),
+                timeout=self._timeout,
+            )
+            response.raise_for_status()
+            return response.content
+        except Exception as e:
+            logger.warning("sandy_files_read_error", error=str(e), path=path)
+            return None
+
+    async def _list_artifact_paths(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+    ) -> list[str]:
+        """List artifact files in the sandbox."""
+        command = f"find {shlex.quote(self._artifact_dir)} -maxdepth 1 -type f"
+        stdout, _, exit_code = await self._exec_in_sandbox(client, sandbox_id, command)
+        if exit_code != 0 or not stdout:
+            return []
+        return [line.strip() for line in stdout.splitlines() if line.strip()]
+
+    def _artifact_type_for(self, mime_type: str) -> ArtifactType:
+        """Map MIME type to artifact type."""
+        if mime_type.startswith("image/"):
+            return ArtifactType.IMAGE
+        return ArtifactType.FILE
+
+    def _build_data_url(self, data: bytes, mime_type: str) -> str:
+        """Build base64 data URL for artifact payloads."""
+        encoded = base64.b64encode(data).decode("utf-8")
+        return f"data:{mime_type};base64,{encoded}"
+
+    async def _collect_artifacts(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        public_url: str | None,
+    ) -> list[Artifact]:
+        """Collect artifact descriptors from the sandbox."""
+        artifact_paths = await self._list_artifact_paths(client, sandbox_id)
+        if not artifact_paths:
+            return []
+
+        artifacts: list[Artifact] = []
+        artifact_base = self._artifact_url_base(sandbox_id, public_url)
+
+        for path in artifact_paths:
+            data = await self._read_file(client, sandbox_id, path)
+            if data is None:
+                continue
+            mime_type, _ = mimetypes.guess_type(path)
+            mime_type = mime_type or "application/octet-stream"
+            size_bytes = len(data)
+            sha256 = hashlib.sha256(data).hexdigest()
+            if size_bytes <= self._max_inline_bytes:
+                url = self._build_data_url(data, mime_type)
+            else:
+                filename = Path(path).name
+                url = f"{artifact_base.rstrip('/')}/{filename}"
+
+            artifacts.append(
+                Artifact(
+                    id=f"artf_{uuid.uuid4().hex[:12]}",
+                    type=self._artifact_type_for(mime_type),
+                    mime_type=mime_type,
+                    display_name=Path(path).name,
+                    size_bytes=size_bytes,
+                    sha256=sha256,
+                    ttl_seconds=self._artifact_ttl,
+                    url=url,
+                )
+            )
+
+        return artifacts
+
+    def _format_artifact_links(self, artifacts: list[Artifact]) -> str:
+        """Render artifact markdown links for responses."""
+        return "\n".join(
+            f"- [{artifact.display_name}]({artifact.url})" for artifact in artifacts
+        )
+
     async def _upload_agent_pack(
         self, client: httpx.AsyncClient, sandbox_id: str
     ) -> bool:
@@ -182,26 +333,49 @@ class SandyService:
         return True
 
     async def _run_bootstrap(
-        self, client: httpx.AsyncClient, sandbox_id: str
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        public_url: str | None,
     ) -> tuple[str, str, int]:
         """Run the agent pack bootstrap script inside the sandbox."""
-        command = f"bash {self._agent_pack_dest_root()}/bootstrap.sh"
+        env_parts = [
+            f"{key}={shlex.quote(str(value))}"
+            for key, value in self._build_agent_env(sandbox_id, public_url).items()
+        ]
+        command = " ".join(
+            [
+                "env",
+                *env_parts,
+                "bash",
+                f"{self._agent_pack_dest_root()}/bootstrap.sh",
+            ]
+        )
         return await self._exec_in_sandbox(client, sandbox_id, command)
 
-    async def _create_sandbox(self, client: httpx.AsyncClient) -> Optional[str]:
+    async def _create_sandbox(
+        self, client: httpx.AsyncClient
+    ) -> Optional[tuple[str, str | None]]:
         """Create a new Sandy sandbox."""
         try:
+            payload: dict[str, object] = {
+                "priority": "NORMAL",
+                "ttl_seconds": self._timeout,
+            }
+            if self._artifact_port:
+                payload["expose_ports"] = [self._artifact_port]
             response = await client.post(
                 f"{self._base_url}/api/sandboxes",
-                json={
-                    "priority": "NORMAL",
-                    "ttl_seconds": self._timeout,
-                },
+                json=payload,
                 headers=self._get_headers(),
             )
             response.raise_for_status()
             data = response.json()
-            return data.get("sandbox_id") or data.get("id")
+            sandbox_id = data.get("sandbox_id") or data.get("id")
+            if sandbox_id is None:
+                return None
+            public_url = data.get("public_url") or data.get("sandbox_url")
+            return str(sandbox_id), str(public_url) if public_url else None
         except Exception as e:
             logger.error("sandy_create_error", error=str(e))
             return None
@@ -216,7 +390,7 @@ class SandyService:
         try:
             response = await client.post(
                 f"{self._base_url}/api/sandboxes/{sandbox_id}/exec",
-                json={"command": command},
+                json={"command": command, "timeout": self._timeout},
                 headers=self._get_headers(),
                 timeout=self._timeout,
             )
@@ -260,6 +434,140 @@ class SandyService:
                     elif isinstance(part, dict) and part.get("type") == "text":
                         return part.get("text", "")
         return "No task specified"
+
+    async def complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+        """Execute a complex task and return a non-streaming response."""
+        request_id = self._generate_id()
+        model = request.model
+        task = self._extract_task(request)
+
+        if not self.is_available:
+            content = (
+                "I would execute this complex task in a Sandy sandbox:\n\n"
+                f"**Task:** {task}\n\nSandy is not currently configured, "
+                "so I cannot execute code. Please configure SANDY_BASE_URL "
+                "to enable sandbox execution."
+            )
+            return ChatCompletionResponse(
+                id=request_id,
+                model=model,
+                choices=[
+                    Choice(
+                        message=AssistantMessage(
+                            role="assistant",
+                            content=content,
+                        ),
+                        finish_reason=FinishReason.STOP,
+                    )
+                ],
+            )
+
+        sandbox_start = asyncio.get_event_loop().time()
+
+        async with self._client_factory() as client:
+            sandbox_info = await self._create_sandbox(client)
+            if not sandbox_info:
+                return ChatCompletionResponse(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        Choice(
+                            message=AssistantMessage(
+                                role="assistant",
+                                content="Error: Failed to create sandbox.",
+                            ),
+                            finish_reason=FinishReason.STOP,
+                        )
+                    ],
+                )
+
+            sandbox_id, public_url = sandbox_info
+            artifacts: list[Artifact] = []
+
+            try:
+                if not await self._upload_agent_pack(client, sandbox_id):
+                    return ChatCompletionResponse(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            Choice(
+                                message=AssistantMessage(
+                                    role="assistant",
+                                    content=(
+                                        "Error: Failed to upload agent pack to sandbox."
+                                    ),
+                                ),
+                                finish_reason=FinishReason.STOP,
+                            )
+                        ],
+                    )
+
+                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = (
+                    await self._run_bootstrap(client, sandbox_id, public_url)
+                )
+                if bootstrap_exit != 0:
+                    error_detail = bootstrap_stderr or "Bootstrap failed."
+                    return ChatCompletionResponse(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            Choice(
+                                message=AssistantMessage(
+                                    role="assistant",
+                                    content=error_detail,
+                                ),
+                                finish_reason=FinishReason.STOP,
+                            )
+                        ],
+                    )
+
+                if bootstrap_stdout:
+                    logger.info("sandy_bootstrap_output", stdout=bootstrap_stdout)
+
+                selected_agent = await self._select_agent(client, sandbox_id)
+                command = self._build_agent_command(
+                    selected_agent, task, sandbox_id, public_url
+                )
+                stdout, stderr, exit_code = await self._exec_in_sandbox(
+                    client, sandbox_id, command
+                )
+
+                result = stdout.strip() if stdout else ""
+                if not result:
+                    result = "Agent returned no output."
+                if stderr:
+                    result = f"{result}\n\nErrors:\n{stderr.strip()}"
+
+                artifacts = await self._collect_artifacts(
+                    client, sandbox_id, public_url
+                )
+                if artifacts:
+                    links = self._format_artifact_links(artifacts)
+                    result = f"{result}\n\nArtifacts available:\n{links}"
+
+                return ChatCompletionResponse(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        Choice(
+                            message=AssistantMessage(
+                                role="assistant",
+                                content=result,
+                                artifacts=artifacts or None,
+                            ),
+                            finish_reason=FinishReason.STOP,
+                        )
+                    ],
+                    usage=Usage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                        sandbox_seconds=asyncio.get_event_loop().time() - sandbox_start,
+                    ),
+                )
+
+            finally:
+                await self._terminate_sandbox(client, sandbox_id)
 
     async def execute_complex(
         self,
@@ -341,9 +649,9 @@ class SandyService:
         sandbox_start = asyncio.get_event_loop().time()
 
         async with self._client_factory() as client:
-            sandbox_id = await self._create_sandbox(client)
+            sandbox_info = await self._create_sandbox(client)
 
-            if not sandbox_id:
+            if not sandbox_info:
                 yield ChatCompletionChunk(
                     id=request_id,
                     model=model,
@@ -361,6 +669,9 @@ class SandyService:
                     ],
                 )
                 return
+
+            sandbox_id, public_url = sandbox_info
+            artifacts: list[Artifact] = []
 
             yield ChatCompletionChunk(
                 id=request_id,
@@ -422,7 +733,7 @@ class SandyService:
                 )
 
                 bootstrap_stdout, bootstrap_stderr, bootstrap_exit = (
-                    await self._run_bootstrap(client, sandbox_id)
+                    await self._run_bootstrap(client, sandbox_id, public_url)
                 )
                 if bootstrap_exit != 0:
                     error_detail = bootstrap_stderr or "Bootstrap failed."
@@ -458,12 +769,27 @@ class SandyService:
                     model=model,
                     choices=[
                         ChunkChoice(
-                            delta=Delta(reasoning_content="Launching CLI agent...\n")
+                            delta=Delta(reasoning_content="Selecting CLI agent...\n")
                         )
                     ],
                 )
 
-                command = self._build_agent_command(task)
+                selected_agent = await self._select_agent(client, sandbox_id)
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(
+                            delta=Delta(
+                                reasoning_content=f"Launching CLI agent ({selected_agent})...\n"
+                            )
+                        )
+                    ],
+                )
+
+                command = self._build_agent_command(
+                    selected_agent, task, sandbox_id, public_url
+                )
                 stdout, stderr, exit_code = await self._exec_in_sandbox(
                     client, sandbox_id, command
                 )
@@ -494,6 +820,32 @@ class SandyService:
                     model=model,
                     choices=[ChunkChoice(delta=Delta(content=result))],
                 )
+
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(
+                            delta=Delta(reasoning_content="Collecting artifacts...\n")
+                        )
+                    ],
+                )
+                artifacts = await self._collect_artifacts(
+                    client, sandbox_id, public_url
+                )
+                if artifacts:
+                    links = self._format_artifact_links(artifacts)
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    content=f"\n\nArtifacts available:\n{links}"
+                                )
+                            )
+                        ],
+                    )
 
             finally:
                 # Cleanup

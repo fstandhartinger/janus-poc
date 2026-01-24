@@ -1,10 +1,10 @@
 # Spec 25: LLM-Based Complexity Detection Second Pass
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
-The current complexity detection in `baseline/janus_baseline/services/complexity.py` uses keyword matching as a fast first pass. While this is efficient, it can miss nuanced cases where:
+The current complexity detection in `baseline-agent-cli/janus_baseline_agent_cli/services/complexity.py` uses keyword matching as a fast first pass. While this is efficient, it can miss nuanced cases where:
 - A request seems simple by keywords but actually needs agent capabilities
 - A request contains keywords but is actually simple (false positives)
 
@@ -27,7 +27,7 @@ Adding an LLM-based second pass after the keyword check will improve routing acc
 
 ### FR-1: Add Tool Calling Support to Models
 
-Update `baseline/janus_baseline/models/openai.py` to support tool calling:
+Update `baseline-agent-cli/janus_baseline_agent_cli/models/openai.py` to support tool calling:
 
 ```python
 class FunctionDefinition(BaseModel):
@@ -280,10 +280,10 @@ async def test_llm_routing_timeout_fallback():
 
 ## Files to Modify
 
-- `baseline/janus_baseline/models/openai.py` - Add tool calling models
-- `baseline/janus_baseline/services/complexity.py` - Add LLM second pass
-- `baseline/janus_baseline/config.py` - Add routing config
-- `baseline/janus_baseline/main.py` - Use async analysis
+- `baseline-agent-cli/janus_baseline_agent_cli/models/openai.py` - Add tool calling models
+- `baseline-agent-cli/janus_baseline_agent_cli/services/complexity.py` - Add LLM second pass
+- `baseline-agent-cli/janus_baseline_agent_cli/config.py` - Add routing config
+- `baseline-agent-cli/janus_baseline_agent_cli/main.py` - Use async analysis
 
 ## Open Questions
 

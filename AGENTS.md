@@ -14,12 +14,13 @@ This works directly from specs — no planning step needed.
 ## How Ralph Works
 
 1. Agent reads `specs/` folder
-2. Picks the **highest priority incomplete spec** (lowest number first)
+2. Picks the **highest priority incomplete spec** (lowest number first - or if tried that one without success too often, next one)
 3. Implements it completely
 4. Marks spec as `COMPLETE`
 5. Outputs `<promise>DONE</promise>`
-6. Loop restarts with fresh context
-7. Repeat until all specs are done
+6. Commmits and Pushes, watches deploy on Render (via MCP)
+7. Loop restarts with fresh context
+8. Repeat until all specs are done
 
 ---
 

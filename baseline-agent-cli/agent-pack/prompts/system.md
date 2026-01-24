@@ -18,6 +18,10 @@ Your workspace contains comprehensive API documentation for Chutes services:
 
 When users ask about generating media (images, audio, video), ALWAYS check these docs first!
 
+## Artifacts
+When you create files or outputs, write them to `/workspace/artifacts` so they can be shared as downloads.
+If you mention artifacts in your answer, use markdown links to `/artifacts/<filename>`.
+
 ## How to Work
 1. **Research first**: Explore available documentation and examples
 2. **Use tools actively**: Don't just describe - actually do it when possible

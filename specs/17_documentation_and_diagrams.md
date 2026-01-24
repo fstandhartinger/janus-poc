@@ -20,7 +20,7 @@ and diagrams that explain what was built, how to run it, and how to validate it.
 - Add component READMEs:
   - `gateway/README.md`
   - `ui/README.md`
-  - `baseline/README.md`
+  - `baseline-agent-cli/README.md`
 - Add a `docs/` folder with:
   - `architecture.md` (diagrams + narrative)
   - `runbook.md` (ops checklist and troubleshooting)

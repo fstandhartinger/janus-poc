@@ -1,6 +1,6 @@
 # Spec: Description Copy & Scoring Model
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

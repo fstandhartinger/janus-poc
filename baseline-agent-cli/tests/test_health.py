@@ -2,7 +2,7 @@
 
 from fastapi.testclient import TestClient
 
-from janus_baseline import __version__
+from janus_baseline_agent_cli import __version__
 
 
 def test_health_check(client: TestClient) -> None:

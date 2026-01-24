@@ -14,7 +14,7 @@ Janus: "I can't generate images directly right now, but I can help you create a 
 
 This happens because:
 
-1. **Complexity detector doesn't recognize multimodal tasks**: The `ComplexityDetector` class in `baseline/janus_baseline/services/complexity.py` only has coding-related keywords like "write code", "implement", "debug". It lacks keywords for:
+1. **Complexity detector doesn't recognize multimodal tasks**: The `ComplexityDetector` class in `baseline-agent-cli/janus_baseline_agent_cli/services/complexity.py` only has coding-related keywords like "write code", "implement", "debug". It lacks keywords for:
    - Image generation ("generate image", "create picture", "draw")
    - Audio generation ("text to speech", "generate audio", "create voice")
    - Video generation ("create video", "generate animation")
@@ -266,9 +266,9 @@ curl -X POST https://janus-gateway.../v1/chat/completions \
 
 ## Files to Modify
 
-- `baseline/janus_baseline/services/complexity.py` - Add keywords and multimodal detection
-- `baseline/janus_baseline/main.py` - Add optional always-agent mode
-- `baseline/janus_baseline/config.py` - Add always_use_agent setting
+- `baseline-agent-cli/janus_baseline_agent_cli/services/complexity.py` - Add keywords and multimodal detection
+- `baseline-agent-cli/janus_baseline_agent_cli/main.py` - Add optional always-agent mode
+- `baseline-agent-cli/janus_baseline_agent_cli/config.py` - Add always_use_agent setting
 - Render environment variables - Add SANDY_BASE_URL
 
 ## Dependencies

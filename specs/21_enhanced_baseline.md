@@ -14,7 +14,7 @@ The reference implementation (baseline competitor) currently uses a minimal syst
 
 ### 21.1 Agent Pack Reference Files
 
-Create a `baseline/agent-pack/` directory with comprehensive MD reference files:
+Create a `baseline-agent-cli/agent-pack/` directory with comprehensive MD reference files:
 
 #### 21.1.1 `models/text-to-speech.md`
 Document the Kokoro TTS API:
@@ -153,7 +153,7 @@ POST https://llm.chutes.ai/v1/chat/completions
 
 ### 21.2 Enhanced System Prompt
 
-Update `baseline/janus_baseline/prompts/system.md`:
+Update `baseline-agent-cli/janus_baseline_agent_cli/prompts/system.md`:
 
 ```markdown
 You are a Janus baseline agent with full access to coding tools and research capabilities.
@@ -193,7 +193,7 @@ When users ask about generating media (images, audio, video), ALWAYS check these
 
 ### 21.3 Agent Pack Bootstrap
 
-Create `baseline/agent-pack/bootstrap.sh`:
+Create `baseline-agent-cli/agent-pack/bootstrap.sh`:
 
 ```bash
 #!/bin/bash
@@ -214,7 +214,7 @@ echo "Agent pack initialized. Reference docs available at /workspace/docs/"
 
 ### 21.4 Configuration Updates
 
-Update `baseline/janus_baseline/config.py`:
+Update `baseline-agent-cli/janus_baseline_agent_cli/config.py`:
 ```python
 class Settings(BaseSettings):
     # Existing settings...
@@ -229,7 +229,7 @@ class Settings(BaseSettings):
 
 ### 21.5 Sandy Integration Updates
 
-Update `baseline/janus_baseline/services/sandy.py` to:
+Update `baseline-agent-cli/janus_baseline_agent_cli/services/sandy.py` to:
 1. Mount the agent-pack directory into the sandbox
 2. Run bootstrap.sh before starting the agent
 3. Pass enhanced configuration to the CLI agent

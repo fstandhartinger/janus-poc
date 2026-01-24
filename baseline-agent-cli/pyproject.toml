@@ -1,5 +1,5 @@
 [project]
-name = "janus-baseline"
+name = "janus-baseline-agent-cli"
 version = "0.1.0"
 description = "Janus Baseline Competitor - Reference implementation with CLI agent support"
 readme = "README.md"
@@ -14,6 +14,9 @@ dependencies = [
     "structlog>=24.1.0",
     "openai>=1.10.0",
 ]
+
+[project.scripts]
+janus-baseline-agent-cli = "janus_baseline_agent_cli.main:main"
 
 [project.optional-dependencies]
 dev = [

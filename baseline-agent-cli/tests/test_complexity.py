@@ -1,10 +1,11 @@
 """Tests for complexity detection."""
 
+import httpx
 import pytest
 
-from janus_baseline.models import Message, MessageRole
-from janus_baseline.services import ComplexityDetector
-from janus_baseline.config import Settings
+from janus_baseline_agent_cli.config import Settings
+from janus_baseline_agent_cli.models import Message, MessageRole
+from janus_baseline_agent_cli.services import ComplexityDetector
 
 
 @pytest.fixture
@@ -90,3 +91,84 @@ def test_no_user_message(detector: ComplexityDetector) -> None:
     is_complex, reason = detector.is_complex(messages)
     assert not is_complex
     assert reason == "no_user_message"
+
+
+@pytest.mark.asyncio
+async def test_llm_routing_catches_multimodal(monkeypatch: pytest.MonkeyPatch) -> None:
+    """LLM second pass should mark multimodal requests as complex."""
+    settings = Settings(openai_api_key="test", enable_llm_routing=True)
+    detector = ComplexityDetector(settings)
+
+    async def fake_llm_check(text: str) -> tuple[bool, str]:
+        return True, "needs_image"
+
+    monkeypatch.setattr(detector, "_llm_routing_check", fake_llm_check)
+
+    messages = [Message(role=MessageRole.USER, content="what's the weather like today")]
+    result = await detector.analyze_async(messages)
+    assert result.is_complex is True
+    assert "llm_second_pass" in result.reason
+
+
+@pytest.mark.asyncio
+async def test_llm_routing_timeout_fallback(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Timeouts during LLM routing should fall back to fast path."""
+    settings = Settings(openai_api_key="test", enable_llm_routing=True)
+    detector = ComplexityDetector(settings)
+
+    class TimeoutAsyncClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self) -> "TimeoutAsyncClient":
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        async def post(self, *args, **kwargs):
+            raise httpx.ReadTimeout("timeout")
+
+    monkeypatch.setattr(
+        "janus_baseline_agent_cli.services.complexity.httpx.AsyncClient",
+        TimeoutAsyncClient,
+    )
+
+    messages = [Message(role=MessageRole.USER, content="what's the weather like today")]
+    result = await detector.analyze_async(messages)
+    assert result.is_complex is False
+    assert result.reason == "simple"
+
+
+@pytest.mark.asyncio
+async def test_llm_routing_disabled_skips_check(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Disabling LLM routing should skip the second pass."""
+    settings = Settings(openai_api_key="test", enable_llm_routing=False)
+    detector = ComplexityDetector(settings)
+
+    async def fail_llm_check(text: str) -> tuple[bool, str]:
+        raise AssertionError("LLM check should be skipped")
+
+    monkeypatch.setattr(detector, "_llm_routing_check", fail_llm_check)
+
+    messages = [Message(role=MessageRole.USER, content="what's the weather like today")]
+    result = await detector.analyze_async(messages)
+    assert result.is_complex is False
+    assert result.reason == "simple"
+
+
+@pytest.mark.asyncio
+async def test_llm_routing_skips_trivial_greeting(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Trivial greetings should stay on the fast path without LLM routing."""
+    settings = Settings(openai_api_key="test", enable_llm_routing=True)
+    detector = ComplexityDetector(settings)
+
+    async def fail_llm_check(text: str) -> tuple[bool, str]:
+        raise AssertionError("LLM check should be skipped for greetings")
+
+    monkeypatch.setattr(detector, "_llm_routing_check", fail_llm_check)
+
+    messages = [Message(role=MessageRole.USER, content="Hello!")]
+    result = await detector.analyze_async(messages)
+    assert result.is_complex is False
+    assert result.reason == "simple"

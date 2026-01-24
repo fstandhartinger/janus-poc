@@ -70,6 +70,63 @@ When you're in **Ralph Loop Mode** (fed via stdin from the bash loop):
 - Output `<promise>DONE</promise>` when done
 
 When you're in **Interactive Mode** (chatting with user):
-- Be conversational
-- Ask clarifying questions
-- Help with specs and planning
+- Still work autonomously when given tasks
+- Only ask when genuinely stuck or need clarification
+- Make informed decisions based on context
+
+---
+
+## Autonomous Working Standards
+
+**These apply to ALL sessions, not just Ralph loops.**
+
+### Full Autonomy
+- Work autonomously — you have full trust and authority
+- Don't ask unnecessary questions
+- Research extensively if needed (online, source code, third-party projects)
+- Only come back when task is complete or you're truly stuck
+
+### Testing (Required)
+```bash
+# Run all tests
+cd gateway && pytest
+cd ui && npm test
+
+# Type checking
+cd gateway && mypy janus_gateway
+cd ui && npm run typecheck
+```
+- Add tests for new functionality
+- Update/remove outdated tests
+- **All tests must pass before marking complete**
+
+### Visual Testing (For UI Changes)
+- Use Playwright MCP to test in browser
+- Screenshot on Desktop (1920x1080), Tablet (768x1024), Mobile (375x812)
+- Check: No console errors, no failed requests, UI matches design system
+- **If issues found: fix and retest**
+
+### Commit & Deploy
+- Commit with clear messages, push to remote
+- Deploy via Render (auto on push) or watch deployment logs
+- Test deployed app, verify in production
+
+### Completion Checklist
+Before marking done:
+- [ ] All requirements met
+- [ ] All tests passing
+- [ ] Visual testing passed (if UI)
+- [ ] Documentation updated
+- [ ] Deployed and verified
+
+**Don't stop until fully done.**
+
+---
+
+## Style Guide
+
+Follow the Chutes design system: `/home/flori/Dev/chutes/style/chutes_style.md`
+- Dark mode with aurora gradients
+- Glass morphism cards
+- Tomato Grotesk typography
+- Moss green (#63D297) accents

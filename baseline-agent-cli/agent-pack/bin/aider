@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+TASK="${*:-}"
+if [ -z "$TASK" ]; then
+  TASK="${JANUS_TASK:-}"
+fi
+
+if [ -z "$TASK" ]; then
+  echo "No task provided."
+  exit 0
+fi
+
+exec python /agent-pack/run_agent.py "$TASK"

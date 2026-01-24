@@ -110,12 +110,38 @@ cd ui && npm run typecheck
 - Push to remote
 - Ensure nothing is left uncommitted
 - Scope commits to the current project/task
+- After commmits and pushes, if it's a Render hosted project, watche deploy on Render (via MCP) unt il successful (Florians Workspace, Id tea-cspqj3l6l47c739nvitg)
 
 ### Deploy & Verify
-- Deploy changes (via Render auto-deploy on push, or manual deployment)
-- Watch deployment logs for errors
-- Test the deployed application
-- Verify functionality in production
+
+After every commit/push, deployment verification is **mandatory**:
+
+**1. Watch Deployment via Render MCP**
+- Use the Render MCP tools to monitor the deployment
+- Call `list_services` to find the service IDs
+- Call `list_deploys` to get the current deployment status
+- Call `get_deploy` repeatedly until deployment completes
+- Check `list_logs` if deployment fails to diagnose issues
+- **Do NOT mark task complete until deployment succeeds**
+
+**2. Test Backend on Production**
+- Use API calls (via `curl` or similar) against the deployed gateway
+- Test key endpoints: health check, chat completions, model listing
+- Verify responses are correct and match expectations
+- Check for error responses or unexpected behavior
+
+**3. Test Frontend on Production**
+- Use browser automation (Playwright MCP) to visit the deployed UI
+- Navigate through key user flows
+- Take screenshots to verify UI renders correctly
+- Check browser console for JavaScript errors
+- Verify API calls from frontend succeed
+
+**4. Only Then Mark Complete**
+- Deployment must be successful (not just pushed)
+- Backend API tests must pass
+- Frontend visual/functional tests must pass
+- If any step fails, fix and redeploy before marking complete
 
 ### Documentation
 Keep documentation up to date:
@@ -123,6 +149,8 @@ Keep documentation up to date:
 - **INTERNAL.md** (if exists): Implementation details, infrastructure, secrets (gitignored)
 
 Focus on information that future agents need but would lose when starting a new session.
+
+Also update the history.md (create if missing) with the most relevant milestones and also note down there which specs you are working on.
 
 ### Completion Verification
 
@@ -133,7 +161,9 @@ Before marking any task complete, verify:
 - [ ] Documentation updated
 - [ ] No TODOs left incomplete
 - [ ] Visual testing passed (if UI changes)
-- [ ] Deployed and verified (if applicable)
+- [ ] Render deployment watched and succeeded (via Render MCP)
+- [ ] Backend API tested on production
+- [ ] Frontend tested in browser on production (if UI changes)
 
 **Don't stop until the task is fully done.**
 
@@ -206,9 +236,12 @@ The Ralph loop should maintain a history file to track progress and milestones:
 - FAILED: If spec implementation fails and needs retry
 - MILESTONE: Major progress points within a spec
 
-### Telegram Notifications (TODO: Implement)
+### Telegram Notifications
 
 Send progress updates to Telegram for monitoring Ralph loop sessions.
+Howto is described in ../affine/memory.md. there.
+additionally send as audio as explained in 
+/home/flori/Dev/chutes/.cursor/commands/notify-telegram-audio.md
 
 **Environment Variables**:
 ```bash

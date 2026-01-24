@@ -2,10 +2,79 @@
 
 from dataclasses import dataclass
 from functools import lru_cache
+import json
 from typing import Optional
 
-from janus_baseline.config import Settings, get_settings
-from janus_baseline.models import Message, MessageContent
+import httpx
+import structlog
+
+from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.models import Message, MessageContent
+
+logger = structlog.get_logger()
+
+ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
+ROUTING_MODEL = "zai-org/GLM-4.7-Flash"
+ROUTING_PROMPT = """Analyze this user request and decide if it needs agent sandbox capabilities.
+
+Agent sandbox is needed for:
+- Image/video/audio generation (e.g., "generate an image of...", "create a video...")
+- Code execution (e.g., "run this code", "execute...")
+- Web search (e.g., "search for...", "find current...")
+- File operations (e.g., "download...", "save to file...")
+- Any task requiring external tools or APIs
+
+Direct LLM response is sufficient for:
+- General conversation and questions
+- Explanations and summaries
+- Simple math (without code)
+- Writing assistance (without execution)
+
+User request: {user_message}
+
+Call the use_agent function with your decision."""
+
+USE_AGENT_TOOL = {
+    "type": "function",
+    "function": {
+        "name": "use_agent",
+        "description": (
+            "Decide whether this request needs the agent sandbox with tools (for image "
+            "generation, code execution, web search, etc.) or can be answered directly by LLM."
+        ),
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "needs_agent": {
+                    "type": "boolean",
+                    "description": (
+                        "True if request needs agent sandbox (image gen, code exec, web search, "
+                        "file ops). False if LLM can answer directly."
+                    ),
+                },
+                "reason": {
+                    "type": "string",
+                    "description": "Brief explanation of the decision",
+                },
+            },
+            "required": ["needs_agent", "reason"],
+            "additionalProperties": False,
+        },
+    },
+}
+
+TRIVIAL_GREETINGS = {
+    "hello",
+    "hi",
+    "hey",
+    "hi there",
+    "hello there",
+    "good morning",
+    "good afternoon",
+    "good evening",
+    "thanks",
+    "thank you",
+}
 
 
 @dataclass(frozen=True)
@@ -104,7 +173,27 @@ class ComplexityDetector:
     ]
 
     def __init__(self, settings: Settings) -> None:
+        self._settings = settings
         self._threshold = settings.complexity_threshold
+        self._routing_model = settings.llm_routing_model or ROUTING_MODEL
+        self._routing_timeout = settings.llm_routing_timeout
+
+    def _get_last_user_message(self, messages: list[Message]) -> Optional[Message]:
+        """Get the most recent user message from the list."""
+        for msg in reversed(messages):
+            if msg.role.value == "user":
+                return msg
+        return None
+
+    def _normalize_text(self, text: str) -> str:
+        cleaned = "".join(
+            ch for ch in text.lower() if ch.isalnum() or ch.isspace()
+        ).strip()
+        return " ".join(cleaned.split())
+
+    def _should_skip_llm_check(self, text: str) -> bool:
+        normalized = self._normalize_text(text)
+        return not normalized or normalized in TRIVIAL_GREETINGS
 
     def _extract_text(self, content: Optional[MessageContent]) -> str:
         """Extract text from message content."""
@@ -164,11 +253,7 @@ class ComplexityDetector:
             )
 
         # Get the last user message
-        last_user_msg = None
-        for msg in reversed(messages):
-            if msg.role.value == "user":
-                last_user_msg = msg
-                break
+        last_user_msg = self._get_last_user_message(messages)
 
         if not last_user_msg:
             return ComplexityAnalysis(
@@ -233,6 +318,96 @@ class ComplexityDetector:
             multimodal_detected=multimodal_detected,
             text_preview=text_preview,
         )
+
+    async def _llm_routing_check(self, text: str) -> tuple[bool, str]:
+        """Second pass: Use LLM with tool calling to verify routing decision."""
+        if not self._settings.openai_api_key:
+            return False, "no_api_key"
+
+        try:
+            async with httpx.AsyncClient(timeout=self._routing_timeout) as client:
+                response = await client.post(
+                    ROUTING_ENDPOINT,
+                    headers={
+                        "Authorization": f"Bearer {self._settings.openai_api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": self._routing_model,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": ROUTING_PROMPT.format(user_message=text[:500]),
+                            }
+                        ],
+                        "tools": [USE_AGENT_TOOL],
+                        "tool_choice": {
+                            "type": "function",
+                            "function": {"name": "use_agent"},
+                        },
+                        "max_tokens": 100,
+                        "temperature": 0.0,
+                    },
+                )
+                response.raise_for_status()
+                data = response.json()
+
+                message = data["choices"][0]["message"]
+                tool_calls = message.get("tool_calls") if isinstance(message, dict) else None
+                if tool_calls:
+                    tool_call = tool_calls[0]
+                    arguments = tool_call.get("function", {}).get("arguments", "{}")
+                    if isinstance(arguments, dict):
+                        args = arguments
+                    else:
+                        args = json.loads(arguments)
+                    return bool(args.get("needs_agent", False)), str(
+                        args.get("reason", "llm_decision")
+                    )
+
+                return False, "no_tool_call"
+
+        except Exception as exc:
+            logger.warning(
+                "llm_routing_error",
+                error=str(exc),
+                text_preview=text[:100],
+            )
+            return False, f"llm_check_error: {exc}"
+
+    async def analyze_async(self, messages: list[Message]) -> ComplexityAnalysis:
+        """Async version of analyze with optional LLM second pass."""
+        # First pass: keyword-based (same as before)
+        first_pass = self.analyze(messages)
+
+        # If already complex, no need for second pass
+        if first_pass.is_complex:
+            return first_pass
+
+        # Second pass only if enabled and first pass said "simple"
+        if self._settings.enable_llm_routing:
+            last_user_msg = self._get_last_user_message(messages)
+            text = self._extract_text(last_user_msg.content) if last_user_msg else ""
+            if not self._should_skip_llm_check(text):
+                needs_agent, reason = await self._llm_routing_check(text)
+                logger.info(
+                    "llm_routing_decision",
+                    needs_agent=needs_agent,
+                    reason=reason,
+                    model=self._routing_model,
+                    text_preview=text[:100],
+                )
+
+                if needs_agent:
+                    return ComplexityAnalysis(
+                        is_complex=True,
+                        reason=f"llm_second_pass: {reason}",
+                        keywords_matched=first_pass.keywords_matched,
+                        multimodal_detected=first_pass.multimodal_detected,
+                        text_preview=first_pass.text_preview,
+                    )
+
+        return first_pass
 
     def is_complex(self, messages: list[Message]) -> tuple[bool, str]:
         """

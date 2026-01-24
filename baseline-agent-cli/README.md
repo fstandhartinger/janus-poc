@@ -1,4 +1,4 @@
-# Janus Baseline - Agent CLI Reference Implementation
+# Janus Baseline Agent CLI - Reference Implementation
 
 Reference implementation for the Janus competitive intelligence network. This baseline demonstrates how to build a Janus-compatible intelligence engine using a CLI agent approach.
 
@@ -101,10 +101,10 @@ pip install -e ".[dev]"
 
 ```bash
 # Development mode
-python -m janus_baseline.main
+python -m janus_baseline_agent_cli.main
 
 # Or with uvicorn directly
-uvicorn janus_baseline.main:app --port 8001 --reload
+uvicorn janus_baseline_agent_cli.main:app --port 8001 --reload
 ```
 
 ## Testing
@@ -115,13 +115,15 @@ pytest
 
 ## Environment Variables
 
+Legacy `BASELINE_` prefixed environment variables are still accepted.
+
 ### Server Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `BASELINE_HOST` | `0.0.0.0` | Server host |
-| `BASELINE_PORT` | `8001` | Server port |
-| `BASELINE_DEBUG` | `false` | Enable debug mode |
+| `BASELINE_AGENT_CLI_HOST` | `0.0.0.0` | Server host |
+| `BASELINE_AGENT_CLI_PORT` | `8001` | Server port |
+| `BASELINE_AGENT_CLI_DEBUG` | `false` | Enable debug mode |
 
 ### Chutes API Configuration
 
@@ -129,9 +131,9 @@ The baseline uses [Chutes](https://chutes.ai) as the inference provider. Chutes 
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `BASELINE_OPENAI_API_KEY` | - | **Chutes API key** (named for OpenAI client compatibility) |
-| `BASELINE_OPENAI_BASE_URL` | - | Chutes API URL: `https://api.chutes.ai/v1` |
-| `BASELINE_MODEL` | `gpt-4o-mini` | Model for fast path (must be available on Chutes) |
+| `BASELINE_AGENT_CLI_OPENAI_API_KEY` | - | **Chutes API key** (named for OpenAI client compatibility) |
+| `BASELINE_AGENT_CLI_OPENAI_BASE_URL` | - | Chutes API URL: `https://api.chutes.ai/v1` |
+| `BASELINE_AGENT_CLI_MODEL` | `gpt-4o-mini` | Model for fast path (must be available on Chutes) |
 
 > **Note**: Despite the `OPENAI_` prefix, these variables configure access to **Chutes**, not OpenAI. The prefix exists because the implementation uses the OpenAI Python client library, which Chutes supports via its OpenAI-compatible API.
 
@@ -141,41 +143,44 @@ The baseline uses [Chutes](https://chutes.ai) as the inference provider. Chutes 
 |----------|---------|-------------|
 | `SANDY_BASE_URL` | - | Sandy API base URL for agent execution |
 | `SANDY_API_KEY` | - | Sandy API key |
-| `BASELINE_SANDY_TIMEOUT` | `300` | Sandbox timeout in seconds |
+| `BASELINE_AGENT_CLI_SANDY_TIMEOUT` | `300` | Sandbox timeout in seconds |
+| `JANUS_ARTIFACT_PORT` | `8787` | Sandbox artifact server port |
+| `JANUS_ARTIFACTS_DIR` | `/workspace/artifacts` | Directory for sandbox artifacts |
 
 ### Agent Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `BASELINE_AGENT_PACK_PATH` | `./agent-pack` | Path to agent documentation and prompts |
-| `BASELINE_SYSTEM_PROMPT_PATH` | `./agent-pack/prompts/system.md` | System prompt for the CLI agent |
-| `BASELINE_ENABLE_WEB_SEARCH` | `true` | Enable web search tools |
-| `BASELINE_ENABLE_CODE_EXECUTION` | `true` | Enable code execution tools |
-| `BASELINE_ENABLE_FILE_TOOLS` | `true` | Enable file tooling |
+| `BASELINE_AGENT_CLI_AGENT_PACK_PATH` | `./agent-pack` | Path to agent documentation and prompts |
+| `BASELINE_AGENT_CLI_SYSTEM_PROMPT_PATH` | `./agent-pack/prompts/system.md` | System prompt for the CLI agent |
+| `BASELINE_AGENT_CLI_ENABLE_WEB_SEARCH` | `true` | Enable web search tools |
+| `BASELINE_AGENT_CLI_ENABLE_CODE_EXECUTION` | `true` | Enable code execution tools |
+| `BASELINE_AGENT_CLI_ENABLE_FILE_TOOLS` | `true` | Enable file tooling |
+| `JANUS_BASELINE_AGENT` | `aider` | CLI agent command to run in the sandbox |
 
 ### Routing Configuration
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `BASELINE_ALWAYS_USE_AGENT` | `false` | Always route requests to the agent path |
-| `BASELINE_ENABLE_LLM_ROUTING` | `true` | Enable LLM-based complexity detection |
-| `BASELINE_LLM_ROUTING_MODEL` | `zai-org/GLM-4.7-Flash` | Fast model for routing decisions |
-| `BASELINE_LLM_ROUTING_TIMEOUT` | `3.0` | Timeout for routing check (seconds) |
-| `BASELINE_COMPLEXITY_THRESHOLD` | `100` | Token threshold for complexity detection |
+| `BASELINE_AGENT_CLI_ALWAYS_USE_AGENT` | `false` | Always route requests to the agent path |
+| `BASELINE_AGENT_CLI_ENABLE_LLM_ROUTING` | `true` | Enable LLM-based complexity detection |
+| `BASELINE_AGENT_CLI_LLM_ROUTING_MODEL` | `zai-org/GLM-4.7-Flash` | Fast model for routing decisions |
+| `BASELINE_AGENT_CLI_LLM_ROUTING_TIMEOUT` | `3.0` | Timeout for routing check (seconds) |
+| `BASELINE_AGENT_CLI_COMPLEXITY_THRESHOLD` | `100` | Token threshold for complexity detection |
 
 ## Example Configuration
 
 ```bash
 # .env file
-BASELINE_OPENAI_API_KEY=cpk_your_chutes_api_key
-BASELINE_OPENAI_BASE_URL=https://api.chutes.ai/v1
-BASELINE_MODEL=gpt-4o-mini
+BASELINE_AGENT_CLI_OPENAI_API_KEY=cpk_your_chutes_api_key
+BASELINE_AGENT_CLI_OPENAI_BASE_URL=https://api.chutes.ai/v1
+BASELINE_AGENT_CLI_MODEL=gpt-4o-mini
 
 SANDY_BASE_URL=https://sandy.example.com
 SANDY_API_KEY=your_sandy_api_key
 
-BASELINE_ALWAYS_USE_AGENT=false
-BASELINE_ENABLE_LLM_ROUTING=true
+BASELINE_AGENT_CLI_ALWAYS_USE_AGENT=false
+BASELINE_AGENT_CLI_ENABLE_LLM_ROUTING=true
 ```
 
 ## Agent Pack

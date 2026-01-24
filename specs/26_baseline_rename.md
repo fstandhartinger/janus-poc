@@ -1,6 +1,6 @@
 # Spec 26: Rename Baseline to baseline-agent-cli
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

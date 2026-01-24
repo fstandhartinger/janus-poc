@@ -1,6 +1,6 @@
 # Spec 30: Janus Benchmark Integration Overview
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

@@ -9,13 +9,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
-from janus_baseline import __version__
-from janus_baseline.config import Settings, get_settings
-from janus_baseline.models import (
+from janus_baseline_agent_cli import __version__
+from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.models import (
     ChatCompletionRequest,
     ChatCompletionResponse,
 )
-from janus_baseline.services import (
+from janus_baseline_agent_cli.services import (
     ComplexityDetector,
     LLMService,
     SandyService,
@@ -99,7 +99,7 @@ async def stream_response(
     sandy_service: SandyService,
 ) -> AsyncGenerator[str, None]:
     """Generate streaming response based on complexity."""
-    analysis = complexity_detector.analyze(request.messages)
+    analysis = await complexity_detector.analyze_async(request.messages)
     is_complex = analysis.is_complex
     reason = analysis.reason
 
@@ -154,7 +154,7 @@ async def chat_completions(
             },
         )
     else:
-        # Non-streaming - always use fast path
+        # Non-streaming - route based on complexity
         analysis = complexity_detector.analyze(request.messages)
         is_complex = analysis.is_complex
         reason = analysis.reason
@@ -175,6 +175,8 @@ async def chat_completions(
             is_complex=is_complex,
             complexity_reason=reason,
         )
+        if settings.always_use_agent or (is_complex and sandy_service.is_available):
+            return await sandy_service.complete(request)
         return await llm_service.complete(request)
 
 
@@ -183,7 +185,7 @@ def main() -> None:
     import uvicorn
 
     uvicorn.run(
-        "janus_baseline.main:app",
+        "janus_baseline_agent_cli.main:app",
         host=settings.host,
         port=settings.port,
         reload=settings.debug,

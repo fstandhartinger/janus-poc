@@ -23,7 +23,7 @@ class Settings(BaseSettings):
         description="Target gateway URL",
     )
     model: str = Field(
-        default="janus-baseline",
+        default="janus-baseline-agent-cli",
         description="Model name to use in requests",
     )
 
@@ -32,10 +32,10 @@ class Settings(BaseSettings):
     ttft_timeout: int = Field(default=5, description="Time to first token timeout in seconds")
 
     # Scoring weights (must sum to 100)
-    weight_quality: int = Field(default=45, description="Quality score weight percentage")
+    weight_quality: int = Field(default=40, description="Quality score weight percentage")
     weight_speed: int = Field(default=20, description="Speed score weight percentage")
     weight_cost: int = Field(default=15, description="Cost score weight percentage")
-    weight_streaming: int = Field(default=10, description="Streaming continuity weight percentage")
+    weight_streaming: int = Field(default=15, description="Streaming continuity weight percentage")
     weight_multimodal: int = Field(default=10, description="Multimodal handling weight percentage")
 
     # Output settings

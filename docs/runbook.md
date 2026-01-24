@@ -25,20 +25,28 @@ python -m janus_gateway.main
 # Gateway runs on http://localhost:8000
 
 # 3. Start the Baseline Competitor (new terminal)
-cd baseline
+cd baseline-agent-cli
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-python -m janus_baseline.main
+python -m janus_baseline_agent_cli.main
 # Baseline runs on http://localhost:8001
 
-# 4. Start the Chat UI (new terminal)
+# 4. (Optional) Start the Baseline LangChain competitor (new terminal)
+cd baseline-langchain
+python -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev]"
+python -m janus_baseline_langchain.main
+# Baseline LangChain runs on http://localhost:8002
+
+# 5. Start the Chat UI (new terminal)
 cd ui
 npm install
 npm run dev
 # UI runs on http://localhost:3000
 
-# 5. (Optional) Run Benchmarks
+# 6. (Optional) Run Benchmarks
 cd bench
 python -m venv .venv
 source .venv/bin/activate
@@ -62,6 +70,13 @@ curl http://localhost:8001/health
 # Expected: {"status":"ok","version":"0.1.0"}
 ```
 
+### Baseline LangChain
+
+```bash
+curl http://localhost:8002/health
+# Expected: {"status":"ok","version":"0.1.0"}
+```
+
 ### UI
 
 ```bash
@@ -73,10 +88,11 @@ curl http://localhost:3000
 
 ### Pre-Deployment
 
-- [ ] All unit tests pass: `cd gateway && pytest` / `cd baseline && pytest` / `cd bench && pytest`
+- [ ] All unit tests pass: `cd gateway && pytest` / `cd baseline-agent-cli && pytest` / `cd bench && pytest`
+- [ ] Baseline LangChain tests pass: `cd baseline-langchain && pytest`
 - [ ] Type checks pass: `cd gateway && mypy janus_gateway`
 - [ ] UI builds: `cd ui && npm run build`
-- [ ] Lint passes: `ruff check gateway/ baseline/ bench/`
+- [ ] Lint passes: `ruff check gateway/ baseline-agent-cli/ bench/`
 
 ### Post-Deployment
 
@@ -94,7 +110,10 @@ curl http://localhost:3000
 cd gateway && pytest -v
 
 # Baseline
-cd baseline && pytest -v
+cd baseline-agent-cli && pytest -v
+
+# Baseline LangChain
+cd baseline-langchain && pytest -v
 
 # Benchmark runner
 cd bench && pytest -v
@@ -104,14 +123,15 @@ cd bench && pytest -v
 
 ```bash
 cd gateway && mypy janus_gateway
-cd baseline && mypy janus_baseline
+cd baseline-agent-cli && mypy janus_baseline_agent_cli
+cd baseline-langchain && mypy janus_baseline_langchain
 cd bench && mypy janus_bench
 ```
 
 ### Run Linter
 
 ```bash
-ruff check gateway/ baseline/ bench/
+ruff check gateway/ baseline-agent-cli/ baseline-langchain/ bench/
 ```
 
 ### Run Full Benchmark Suite
@@ -153,7 +173,7 @@ pip install -e ".[dev]"
 ```bash
 curl -N -X POST http://localhost:8000/v1/chat/completions \
   -H "Content-Type: application/json" \
-  -d '{"model": "janus-baseline", "messages": [{"role": "user", "content": "Count to 5"}], "stream": true}'
+  -d '{"model": "janus-baseline-agent-cli", "messages": [{"role": "user", "content": "Count to 5"}], "stream": true}'
 ```
 
 ### Baseline returns errors
@@ -161,9 +181,9 @@ curl -N -X POST http://localhost:8000/v1/chat/completions \
 **Symptom**: 500 errors from baseline competitor
 
 **Check**:
-1. OpenAI API key configured: `echo $BASELINE_OPENAI_API_KEY`
+1. OpenAI API key configured: `echo $BASELINE_AGENT_CLI_OPENAI_API_KEY`
 2. Sandy service reachable (if using complex path)
-3. Logs: `tail -f logs/baseline.log`
+3. Logs: `tail -f logs/baseline-agent-cli.log`
 
 ### Benchmark runner timeout
 

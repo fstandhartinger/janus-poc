@@ -133,6 +133,18 @@ def _render_llm_response(endpoints: list[str]) -> str:
     )
 
 
+def _write_artifact(task: str, content: str) -> None:
+    artifacts_dir = Path(os.environ.get("JANUS_ARTIFACTS_DIR", "/workspace/artifacts"))
+    try:
+        artifacts_dir.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
+
+    artifact_path = artifacts_dir / "agent_output.txt"
+    payload = f"Task: {task}\n\n{content}\n"
+    artifact_path.write_text(payload, encoding="utf-8")
+
+
 def main() -> int:
     task = " ".join(sys.argv[1:]).strip() or os.environ.get("JANUS_TASK", "")
     if not task:
@@ -146,15 +158,18 @@ def main() -> int:
     endpoints = _extract_endpoints(doc_text)
 
     if doc_name == "text-to-image.md":
-        print(_render_image_response(endpoints))
+        response = _render_image_response(endpoints)
     elif doc_name == "text-to-speech.md":
-        print(_render_tts_response(endpoints))
+        response = _render_tts_response(endpoints)
     elif doc_name == "text-to-video.md":
-        print(_render_video_response(endpoints))
+        response = _render_video_response(endpoints)
     elif doc_name == "lip-sync.md":
-        print(_render_lip_sync_response(endpoints))
+        response = _render_lip_sync_response(endpoints)
     else:
-        print(_render_llm_response(endpoints))
+        response = _render_llm_response(endpoints)
+
+    print(response)
+    _write_artifact(task, response)
 
     return 0
 

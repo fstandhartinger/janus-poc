@@ -9,9 +9,9 @@ import sys
 from pathlib import Path
 
 import pytest
-from janus_baseline.config import Settings
-from janus_baseline.models import ChatCompletionRequest, Message, MessageRole
-from janus_baseline.services.sandy import SandyService
+from janus_baseline_agent_cli.config import Settings
+from janus_baseline_agent_cli.models import ChatCompletionRequest, Message, MessageRole
+from janus_baseline_agent_cli.services.sandy import SandyService
 
 BASELINE_ROOT = Path(__file__).resolve().parents[1]
 AGENT_PACK_ROOT = BASELINE_ROOT / "agent-pack"

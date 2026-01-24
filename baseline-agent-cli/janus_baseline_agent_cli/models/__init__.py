@@ -1,6 +1,7 @@
 """Pydantic models for the baseline competitor."""
 
 from .openai import (
+    AssistantMessage,
     ChatCompletionRequest,
     ChatCompletionResponse,
     ChatCompletionChunk,
@@ -12,9 +13,16 @@ from .openai import (
     Delta,
     Usage,
     FinishReason,
+    FunctionDefinition,
+    ToolDefinition,
+    FunctionCall,
+    ToolCall,
+    Artifact,
+    ArtifactType,
 )
 
 __all__ = [
+    "AssistantMessage",
     "ChatCompletionRequest",
     "ChatCompletionResponse",
     "ChatCompletionChunk",
@@ -26,4 +34,10 @@ __all__ = [
     "Delta",
     "Usage",
     "FinishReason",
+    "FunctionDefinition",
+    "ToolDefinition",
+    "FunctionCall",
+    "ToolCall",
+    "Artifact",
+    "ArtifactType",
 ]
