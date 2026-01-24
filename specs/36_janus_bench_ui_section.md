@@ -1,6 +1,6 @@
 # Spec 36: Janus UI Section in Bench Runner
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
