@@ -19,7 +19,7 @@ services:
       - key: BASELINE_URL
         fromService:
           type: web
-          name: janus-baseline-agent-cli
+          name: janus-baseline-agent
           property: hostport
           envVarKey: BASELINE_URL
       - key: BASELINE_LANGCHAIN_URL
@@ -30,11 +30,11 @@ services:
           envVarKey: BASELINE_LANGCHAIN_URL
     healthCheckPath: /health
 
-  # Janus Baseline Agent CLI - Reference competitor implementation
+  # Janus Baseline Agent - Reference competitor implementation
   - type: web
-    name: janus-baseline-agent-cli
+    name: janus-baseline-agent
     runtime: python
-    plan: free
+    plan: starter
     region: oregon
     branch: main
     rootDir: baseline-agent-cli
@@ -42,15 +42,15 @@ services:
     startCommand: uvicorn janus_baseline_agent_cli.main:app --host 0.0.0.0 --port $PORT
     envVars:
       - key: PYTHON_VERSION
-        value: "3.11"
-      - key: BASELINE_AGENT_CLI_DEBUG
+        value: "3.11.7"
+      - key: BASELINE_DEBUG
         value: "false"
-      - key: BASELINE_AGENT_CLI_OPENAI_API_KEY
+      - key: BASELINE_MODEL
+        value: "moonshotai/Kimi-K2-Instruct"
+      - key: BASELINE_OPENAI_API_KEY
         sync: false
-      - key: SANDY_BASE_URL
-        value: "https://sandy.65.109.64.180.nip.io"
-      - key: SANDY_API_KEY
-        sync: false
+      - key: BASELINE_OPENAI_BASE_URL
+        value: "https://llm.chutes.ai/v1"
       - key: CHUTES_API_KEY
         sync: false
     healthCheckPath: /health

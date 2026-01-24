@@ -52,7 +52,7 @@ pytest
 | `JANUS_PORT` | `8000` | Server port |
 | `JANUS_DEBUG` | `false` | Enable debug mode |
 | `JANUS_LOG_LEVEL` | `INFO` | Log level |
-| `JANUS_BASELINE_URL` | `https://janus-baseline-agent-cli.onrender.com` | Baseline competitor base URL |
+| `JANUS_BASELINE_URL` | `https://janus-baseline-agent.onrender.com` | Baseline competitor base URL |
 | `JANUS_BASELINE_LANGCHAIN_URL` | `http://localhost:8002` | Baseline LangChain competitor base URL |
 | `JANUS_SANDY_BASE_URL` | - | Sandy API base URL |
 | `JANUS_SANDY_API_KEY` | - | Sandy API key |

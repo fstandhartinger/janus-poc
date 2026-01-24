@@ -10,7 +10,7 @@
 |---------|-----|--------|
 | **Janus UI** | https://janus-ui.onrender.com | [![UI](https://img.shields.io/badge/live-online-63D297)](https://janus-ui.onrender.com) |
 | **Janus Gateway** | https://janus-gateway-bqou.onrender.com | [![Gateway](https://img.shields.io/badge/live-online-63D297)](https://janus-gateway-bqou.onrender.com/health) |
-| **Janus Baseline Agent CLI** | https://janus-baseline-agent-cli.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-agent-cli.onrender.com/health) |
+| **Janus Baseline Agent** | https://janus-baseline-agent.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-agent.onrender.com/health) |
 | **Janus Baseline LangChain** | https://janus-baseline-langchain.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-langchain.onrender.com/health) |
 
 ## Components

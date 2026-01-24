@@ -29,7 +29,7 @@ class Settings(BaseSettings):
 
     # Competitor routing
     baseline_url: str = Field(
-        default="https://janus-baseline-agent-cli.onrender.com",
+        default="https://janus-baseline-agent.onrender.com",
         description="Baseline agent CLI competitor base URL",
         validation_alias=AliasChoices(
             "BASELINE_AGENT_CLI_URL",
