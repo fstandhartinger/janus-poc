@@ -1,6 +1,6 @@
 # Spec 47: Text-to-Speech Response Playback
 
-## Status: COMPLETE
+## Status: DRAFT
 
 ## Context / Why
 

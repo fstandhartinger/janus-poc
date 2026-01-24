@@ -22,4 +22,4 @@
 - Completed spec 45_browser_automation_screenshots.md with Playwright browser helper, sandbox screenshot streaming hooks, UI screenshot stream rendering, and SSE formatting helper.
 - Restored the DeepResearchProgress component to fix janus-ui production builds.
 - Completed spec 46_gui_automation_desktop_control.md with GUI automation tools, sandbox GUI config, and a VNC viewer component.
-- Completed spec 47_text_to_speech_response_playback.md with TTS playback controls, voice selection, caching, and unit coverage.
+- Implemented spec 47_text_to_speech_response_playback.md (TTS playback, voice selection, caching, and tests); blocked until CHUTES_API_KEY is configured on Render gateway for /api/tts.
