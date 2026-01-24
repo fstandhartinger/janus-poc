@@ -60,6 +60,26 @@ class StreamingMetrics(BaseModel):
     total_chunks: int = Field(description="Total number of SSE chunks received")
     keep_alive_count: int = Field(description="Number of keep-alive pings received")
     total_duration_seconds: float = Field(description="Total stream duration")
+    avg_tps: Optional[float] = Field(default=None, description="Average tokens per second")
+    peak_tps: Optional[float] = Field(default=None, description="Peak tokens per second")
+    min_tps: Optional[float] = Field(default=None, description="Minimum tokens per second")
+    total_tokens: Optional[int] = Field(default=None, description="Total streamed tokens")
+    continuity_score: Optional[float] = Field(
+        default=None,
+        description="Continuity score (0-1)",
+    )
+    continuity_gap_count: Optional[int] = Field(
+        default=None,
+        description="Number of significant gaps",
+    )
+    continuity_max_gap_seconds: Optional[float] = Field(
+        default=None,
+        description="Longest gap between tokens in seconds",
+    )
+    continuity_coefficient_of_variation: Optional[float] = Field(
+        default=None,
+        description="Coefficient of variation for inter-token timing",
+    )
 
 
 class TaskResult(BaseModel):

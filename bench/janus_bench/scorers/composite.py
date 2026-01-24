@@ -51,6 +51,8 @@ def compute_task_scores(
         token_count = result.completion_tokens or result.total_tokens
         if token_count:
             tps = token_count / result.streaming_metrics.total_duration_seconds
+        elif result.streaming_metrics.avg_tps is not None:
+            tps = result.streaming_metrics.avg_tps
     result.tokens_per_second = tps
     result.speed_score = score_speed(result.latency_seconds, ttft, tps)
 
@@ -62,7 +64,7 @@ def compute_task_scores(
     )
 
     # Streaming score
-    result.streaming_score = score_streaming(result.streaming_metrics)
+    result.streaming_score = score_streaming(result.streaming_metrics, metadata)
 
     # Multimodal score
     result.multimodal_score = score_multimodal(
@@ -78,6 +80,16 @@ def compute_task_scores(
 
 def _average(values: list[float]) -> float:
     return sum(values) / len(values) if values else 0.0
+
+
+def _percentile(values: list[float], percentile: float) -> float | None:
+    if not values:
+        return None
+    ordered = sorted(values)
+    index = int(len(ordered) * percentile)
+    if index >= len(ordered):
+        index = len(ordered) - 1
+    return ordered[index]
 
 
 def _build_benchmark_results(results: list[TaskResult]) -> dict[str, dict[str, Any]]:
@@ -153,13 +165,21 @@ def _build_benchmark_results(results: list[TaskResult]) -> dict[str, dict[str, A
             r.streaming_metrics.ttft_seconds * 1000
             for r in streaming_results
             if r.streaming_metrics
+            and (not r.metadata or r.metadata.get("first_token_received", True))
         ]
-        tps_values = [
-            r.tokens_per_second
-            for r in streaming_results
-            if r.tokens_per_second is not None
-        ]
-        continuity_scores = [r.streaming_score for r in streaming_results]
+        tps_values: list[float] = []
+        continuity_values: list[float] = []
+        streaming_scores = [r.streaming_score for r in streaming_results]
+        for result in streaming_results:
+            if result.streaming_metrics and result.streaming_metrics.avg_tps is not None:
+                tps_values.append(result.streaming_metrics.avg_tps)
+            elif result.tokens_per_second is not None:
+                tps_values.append(result.tokens_per_second)
+            if (
+                result.streaming_metrics
+                and result.streaming_metrics.continuity_score is not None
+            ):
+                continuity_values.append(result.streaming_metrics.continuity_score)
         chunk_regularities = [
             max(0.0, 1.0 - (r.streaming_metrics.max_gap_seconds / r.streaming_metrics.total_duration_seconds))
             for r in streaming_results
@@ -168,13 +188,25 @@ def _build_benchmark_results(results: list[TaskResult]) -> dict[str, dict[str, A
         streaming_metrics: dict[str, float] = {}
         if ttft_values:
             streaming_metrics["avg_ttft_ms"] = _average(ttft_values)
+            p90 = _percentile(ttft_values, 0.90)
+            p95 = _percentile(ttft_values, 0.95)
+            p99 = _percentile(ttft_values, 0.99)
+            if p90 is not None:
+                streaming_metrics["p90_ttft_ms"] = p90
+            if p95 is not None:
+                streaming_metrics["p95_ttft_ms"] = p95
+            if p99 is not None:
+                streaming_metrics["p99_ttft_ms"] = p99
         if tps_values:
             streaming_metrics["avg_tps"] = _average(tps_values)
-        if continuity_scores:
-            streaming_metrics["continuity_score"] = _average(continuity_scores)
+        if continuity_values:
+            avg_continuity = _average(continuity_values)
+            streaming_metrics["avg_continuity"] = avg_continuity
+            streaming_metrics["continuity_score"] = avg_continuity
         if chunk_regularities:
             streaming_metrics["chunk_regularity"] = _average(chunk_regularities)
-        add_benchmark("janus_streaming", continuity_scores, streaming_metrics)
+        streaming_metrics["samples"] = float(len(ttft_values))
+        add_benchmark("janus_streaming", streaming_scores, streaming_metrics)
     if cost_results:
         token_values = [float(r.total_tokens) for r in cost_results if r.total_tokens is not None]
         cost_values = [r.cost_usd for r in cost_results if r.cost_usd is not None]

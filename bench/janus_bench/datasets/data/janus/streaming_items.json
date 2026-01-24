@@ -2,359 +2,644 @@
   "metadata": {
     "benchmark": "janus_streaming",
     "version": "1.0.0",
-    "created": "2026-01-23T20:51:43.223361Z",
-    "total_items": 50
+    "created": "2026-01-23T22:45:08.813595+00:00",
+    "total_items": 50,
+    "categories": {
+      "short_response": 20,
+      "long_response": 20,
+      "reasoning_response": 10
+    }
   },
   "items": [
     {
-      "id": "stream_001",
+      "id": "short_001",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is 2 + 2?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_002",
+      "id": "short_002",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "Name three primary colors.",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_003",
+      "id": "short_003",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is the capital of France?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_004",
+      "id": "short_004",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What day comes after Monday?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_005",
+      "id": "short_005",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "Translate 'hello' to Spanish.",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_006",
+      "id": "short_006",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is the square root of 81?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_007",
+      "id": "short_007",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "How many minutes are in an hour?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_008",
+      "id": "short_008",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "Name a mammal that can fly.",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_009",
+      "id": "short_009",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is the chemical symbol for water?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_010",
+      "id": "short_010",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "Who wrote 'Romeo and Juliet'?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_011",
+      "id": "short_011",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is 7 * 6?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_012",
+      "id": "short_012",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "Which planet is known as the Red Planet?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_013",
+      "id": "short_013",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is the boiling point of water in Celsius?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_014",
+      "id": "short_014",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "Name the largest ocean on Earth.",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_015",
+      "id": "short_015",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is the opposite of 'cold'?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_016",
+      "id": "short_016",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is the capital of Japan?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_017",
+      "id": "short_017",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "How many days are in a week?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_018",
+      "id": "short_018",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is the first letter of the Greek alphabet?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_019",
+      "id": "short_019",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "What is 100 divided by 4?",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_020",
+      "id": "short_020",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "short_response",
+      "prompt": "Name one renewable energy source.",
+      "expected_length": "short",
+      "evaluation": {
+        "ttft_target_ms": 500,
+        "min_tokens": 5,
+        "tps_target": 20
+      }
     },
     {
-      "id": "stream_021",
+      "id": "long_001",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Write a detailed explanation of how photosynthesis works, including the light and dark reactions.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_022",
+      "id": "long_002",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain the process of machine learning model training, including data preparation, feature engineering, model selection, training, validation, and deployment.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_023",
+      "id": "long_003",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Write a comprehensive guide to REST API design best practices, covering URL structure, HTTP methods, status codes, versioning, authentication, error handling, and documentation.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_024",
+      "id": "long_004",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Describe how the internet works from a user's click to a webpage loading, including DNS, TCP, and HTTP.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_025",
+      "id": "long_005",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain the causes and effects of climate change and outline common mitigation strategies.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_026",
+      "id": "long_006",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Provide a detailed overview of the solar system, including planets, moons, and notable features.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_027",
+      "id": "long_007",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain how a blockchain works, including blocks, hashing, consensus, and use cases.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_028",
+      "id": "long_008",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Write a long-form overview of the history of computing from early mechanical devices to modern smartphones.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_029",
+      "id": "long_009",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain the steps involved in building a web application, from requirements to deployment.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_030",
+      "id": "long_010",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Describe how vaccines work and the stages of vaccine development and testing.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_031",
+      "id": "long_011",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain how search engines index and rank web pages.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_032",
+      "id": "long_012",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Write a detailed explanation of the water cycle and its impact on ecosystems.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_033",
+      "id": "long_013",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Provide a comprehensive summary of the causes, key events, and outcomes of World War II.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_034",
+      "id": "long_014",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain how electricity is generated and transmitted from power plants to homes.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_035",
+      "id": "long_015",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Describe the basics of human digestion, from mouth to intestines, including major organs.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_036",
+      "id": "long_016",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain the role of enzymes in biological processes with examples.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_037",
+      "id": "long_017",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Write a guide to personal budgeting, including income tracking, expenses, and savings strategies.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_038",
+      "id": "long_018",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain the basics of object-oriented programming, including classes, objects, inheritance, and polymorphism.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_039",
+      "id": "long_019",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Describe how modern smartphones communicate with cellular networks and Wi-Fi.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_040",
+      "id": "long_020",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "long_response",
+      "prompt": "Explain the greenhouse effect and why it matters for Earth's climate.",
+      "expected_length": "long",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 200,
+        "tps_target": 15,
+        "continuity_target": 0.6
+      }
     },
     {
-      "id": "stream_041",
+      "id": "reason_001",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "Solve this step by step: If a train travels 120 miles in 2 hours, then stops for 30 minutes, then travels 60 more miles in 1 hour, what is the average speed for the entire journey?",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_042",
+      "id": "reason_002",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "A farmer has 15 chickens and 10 cows. Each chicken has 2 legs and each cow has 4 legs. How many legs are there in total? Show your reasoning step by step.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_043",
+      "id": "reason_003",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "If you buy 3 notebooks for $2 each and a pen for $1.50, how much do you spend total? Show your reasoning.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_044",
+      "id": "reason_004",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "A rectangle has a width of 8 and a height of 3. What is its area and perimeter? Explain your steps.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_045",
+      "id": "reason_005",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "If a recipe needs 2 cups of flour for 4 servings, how many cups are needed for 10 servings? Show the calculation.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_046",
+      "id": "reason_006",
       "suite": "janus/intelligence",
-      "prompt": "List the first 10 prime numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "A car travels 150 km in 3 hours and then 90 km in 1.5 hours. What is the average speed? Show your reasoning.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_047",
+      "id": "reason_007",
       "suite": "janus/intelligence",
-      "prompt": "Count from 1 to 15, one number per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "If a store gives a 20% discount on a $50 item, what is the final price? Show your steps.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_048",
+      "id": "reason_008",
       "suite": "janus/intelligence",
-      "prompt": "List the first 8 Fibonacci numbers, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "You roll a fair six-sided die twice. What is the probability of getting a sum of 7? Explain.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_049",
+      "id": "reason_009",
       "suite": "janus/intelligence",
-      "prompt": "Write the alphabet from A to Z, one letter per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "A tank holds 120 liters. It is filled at 15 liters per minute for 6 minutes, then drained at 10 liters per minute for 4 minutes. How many liters are in the tank afterward? Show reasoning.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     },
     {
-      "id": "stream_050",
+      "id": "reason_010",
       "suite": "janus/intelligence",
-      "prompt": "List the first 12 months, one per line.",
-      "expected_keywords": null,
-      "task_type": "streaming"
+      "task_type": "reasoning_response",
+      "prompt": "If a book has 300 pages and you read 45 pages per day, how many days will it take to finish? Show your calculation.",
+      "expected_length": "medium",
+      "evaluation": {
+        "ttft_target_ms": 1000,
+        "min_tokens": 50,
+        "tps_target": 10,
+        "check_reasoning_content": true
+      }
     }
   ]
 }

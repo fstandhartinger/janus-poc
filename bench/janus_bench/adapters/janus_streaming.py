@@ -11,6 +11,6 @@ class JanusStreamingAdapter(BenchmarkAdapter):
 
     name = BenchmarkName.JANUS_STREAMING
     display_name = "Janus Streaming"
-    description = "Streaming quality metrics including TTFT and continuity"
+    description = "Streaming quality metrics including TTFT, TPS, and continuity"
     data_file = "streaming_items.json"
     task_type = TaskType.STREAMING

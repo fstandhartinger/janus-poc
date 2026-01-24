@@ -7,23 +7,23 @@ from typing import Any
 
 def normalize_ttft(
     ttft_ms: float | None,
-    target_ms: float = 1000.0,
-    max_ms: float = 5000.0,
+    target_ms: float = 500.0,
+    ceiling_ms: float = 5000.0,
 ) -> float:
     """Normalize TTFT (ms) to a 0-1 score."""
     if ttft_ms is None:
         return 0.0
     if ttft_ms <= target_ms:
         return 1.0
-    if ttft_ms >= max_ms:
+    if ttft_ms >= ceiling_ms:
         return 0.0
-    return max(0.0, 1.0 - (ttft_ms - target_ms) / (max_ms - target_ms))
+    return max(0.0, 1.0 - (ttft_ms - target_ms) / (ceiling_ms - target_ms))
 
 
 def normalize_tps(
     tps: float | None,
-    min_tps: float = 1.0,
-    target_tps: float = 10.0,
+    target_tps: float = 30.0,
+    min_tps: float = 5.0,
 ) -> float:
     """Normalize tokens-per-second to a 0-1 score."""
     if tps is None:

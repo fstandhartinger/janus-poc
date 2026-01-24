@@ -1,6 +1,6 @@
 # Spec 34: Janus Streaming Benchmark
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 

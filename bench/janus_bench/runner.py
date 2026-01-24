@@ -20,6 +20,7 @@ from .models import (
     TaskResult,
     TaskType,
 )
+from .streaming_metrics import calculate_continuity, calculate_tps
 from .scorers import (
     compute_composite_score,
     compute_task_scores,
@@ -86,6 +87,10 @@ class BenchmarkRunner:
         total_chunks = 0
         keep_alive_count = 0
         response_text = ""
+        token_chunks: list[str] = []
+        token_timestamps: list[float] = []
+        reasoning_content = ""
+        has_reasoning_content = False
         usage_data: dict[str, object] = {}
         error: Optional[str] = None
         tool_call_chunks: dict[int, dict[str, object]] = {}
@@ -122,14 +127,18 @@ class BenchmarkRunner:
                                 chunk = json.loads(data)
                                 total_chunks += 1
 
-                                # Track TTFT
-                                if first_token_time is None:
-                                    first_token_time = current_time
-
-                                # Extract content
                                 choices = chunk.get("choices", [])
                                 if choices:
                                     delta = choices[0].get("delta", {})
+                                    content = delta.get("content", "")
+                                    reasoning_delta = (
+                                        delta.get("reasoning_content")
+                                        or delta.get("reasoning")
+                                    )
+
+                                    if first_token_time is None and (content or reasoning_delta):
+                                        first_token_time = current_time
+
                                     if "tool_calls" in delta:
                                         for tool_call in delta["tool_calls"]:
                                             index = tool_call.get("index", 0)
@@ -163,9 +172,14 @@ class BenchmarkRunner:
                                                         entry_function["arguments"] = (
                                                             f"{entry_function.get('arguments', '')}{arguments_fragment}"
                                                         )
-                                    content = delta.get("content", "")
                                     if content:
                                         response_text += content
+                                        token_chunks.append(content)
+                                        token_timestamps.append(current_time)
+
+                                    if reasoning_delta:
+                                        reasoning_content += str(reasoning_delta)
+                                        has_reasoning_content = True
 
                                 # Extract usage (usually in final chunk)
                                 if "usage" in chunk:
@@ -187,13 +201,24 @@ class BenchmarkRunner:
         latency = end_time - start_time
 
         # Build streaming metrics
+        first_token_received = first_token_time is not None
         ttft = (first_token_time - start_time) if first_token_time else latency
+        tps_metric = calculate_tps(token_chunks, token_timestamps)
+        continuity_metric = calculate_continuity(token_timestamps)
         streaming_metrics = StreamingMetrics(
             ttft_seconds=ttft,
             max_gap_seconds=max_gap,
             total_chunks=total_chunks,
             keep_alive_count=keep_alive_count,
             total_duration_seconds=latency,
+            avg_tps=tps_metric.avg_tps,
+            peak_tps=tps_metric.peak_tps,
+            min_tps=tps_metric.min_tps,
+            total_tokens=tps_metric.total_tokens,
+            continuity_score=continuity_metric.score,
+            continuity_gap_count=continuity_metric.gap_count,
+            continuity_max_gap_seconds=continuity_metric.max_gap_ms / 1000,
+            continuity_coefficient_of_variation=continuity_metric.coefficient_of_variation,
         )
 
         prompt_tokens = cast(Optional[int], usage_data.get("prompt_tokens"))
@@ -227,6 +252,11 @@ class BenchmarkRunner:
             if entry.get("type"):
                 tool_call_payload["type"] = entry["type"]
             tool_calls.append(tool_call_payload)
+
+        task_metadata["has_reasoning_content"] = has_reasoning_content
+        task_metadata["first_token_received"] = first_token_received
+        if reasoning_content:
+            task_metadata["reasoning_content_length"] = len(reasoning_content)
 
         # Create result
         result = TaskResult(

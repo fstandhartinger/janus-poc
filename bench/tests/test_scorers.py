@@ -321,7 +321,7 @@ class TestCompositeScorer:
             ),
         ]
         scores = compute_composite_score(results)
-        assert scores["composite_score"] == pytest.approx(100.0, rel=1e-6)
+        assert scores["composite_score"] == pytest.approx(96.0, rel=1e-6)
 
     def test_research_metrics_in_results(self):
         """Ensure research metrics are aggregated in benchmark metrics."""
@@ -491,4 +491,4 @@ class TestCompositeScorer:
         ]
 
         scores = compute_composite_score(results)
-        assert scores["composite_score"] == pytest.approx(77.0, rel=0.01)
+        assert scores["composite_score"] == pytest.approx(73.0, rel=0.01)
