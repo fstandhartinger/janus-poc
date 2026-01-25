@@ -14,7 +14,6 @@ from pydantic.v1 import SecretStr
 
 from janus_baseline_langchain.router.classifier import TaskClassifier
 from janus_baseline_langchain.router.models import (
-    MODEL_REGISTRY,
     ModelConfig,
     TaskType,
     get_fallback_models,
