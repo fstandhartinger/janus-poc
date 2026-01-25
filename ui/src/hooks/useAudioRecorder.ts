@@ -27,6 +27,7 @@ const SUPPORTED_MIME_TYPES = [
   'audio/ogg;codecs=opus',
   'audio/ogg',
   'audio/mp4',
+  'audio/wav',
 ];
 
 const initialState: AudioRecorderState = {

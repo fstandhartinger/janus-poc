@@ -1,21 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-class MockFileReader {
-  result: string | null = null;
-  onloadend: ((ev: ProgressEvent<FileReader>) => void) | null = null;
-  onerror: ((ev: ProgressEvent<FileReader>) => void) | null = null;
-
-  readAsDataURL(_blob: Blob) {
-    this.result = 'data:audio/webm;base64,Zm9v';
-    this.onloadend?.(new Event('loadend') as ProgressEvent<FileReader>);
-  }
-}
-
 describe('transcription', () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
-    vi.stubGlobal('FileReader', MockFileReader as unknown as typeof FileReader);
     vi.stubGlobal('fetch', mockFetch);
   });
 
@@ -41,6 +29,11 @@ describe('transcription', () => {
       'http://localhost:9999/api/transcribe',
       expect.objectContaining({ method: 'POST' })
     );
+
+    const [, init] = mockFetch.mock.calls[0];
+    expect(init?.body).toBeInstanceOf(FormData);
+    const formData = init?.body as FormData;
+    expect(formData.get('model')).toBe('whisper-1');
     expect(result.text).toBe('hello');
   });
 
@@ -70,6 +63,8 @@ describe('transcription', () => {
         headers: expect.objectContaining({ Authorization: 'Bearer test-key' }),
       })
     );
+    const [, init] = mockFetch.mock.calls[0];
+    expect(init?.body).toBeInstanceOf(FormData);
     expect(result.text).toBe('hello');
   });
 });

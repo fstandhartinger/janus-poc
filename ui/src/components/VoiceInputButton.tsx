@@ -99,6 +99,7 @@ export function VoiceInputButton({ onTranscription, disabled, className }: Voice
           onTranscription(text);
         }
       } catch (err) {
+        console.error('Transcription error:', err);
         if (err instanceof TranscriptionFailedError) {
           setTranscriptionError(err.suggestion || err.message);
           setErrorSuggestion(err.suggestion || null);

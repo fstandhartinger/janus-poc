@@ -56,3 +56,10 @@
 - Re-verified spec 77_memory_management_ui.md status formatting for Ralph loop detection.
 - Completed spec 78_plus_menu_generation_tags.md with the plus menu UI, generation flag wiring, baseline routing/prompt updates, and new tests.
 - Completed spec 79_baseline_langchain_feature_parity.md with complexity routing, deep research/video/audio/file tools, artifact streaming, auth passthrough, and updated LangChain baseline tests/docs.
+- Verified spec 80_debug_mode_flow_visualization.md implementation, updated status/NR_OF_TRIES, and recorded completion.
+- Re-validated spec 55_baseline_containerization.md, fixing LangChain auth fallback + docker-compose defaults, confirming container health/chat completions, and resetting gateway timeout defaults to satisfy guardrails tests.
+
+## 2026-01-26
+- Completed spec 81_baseline_documentation_pages.md with a new baselines section on the competition page plus dedicated CLI agent and LangChain documentation pages.
+- Completed spec 82_chat_ui_polish.md with streaming message indicators, reasoning filtering, TTS icon update, and input layout fixes.
+- Completed spec 83_fix_transcription_api.md with multipart audio uploads to the gateway/Chutes, updated UI transcription requests, and refreshed tests/error logging.

@@ -34,9 +34,13 @@ class MockAsyncClient:
         return None
 
     async def post(
-        self, url: str, headers: Dict[str, str], json: Dict[str, Any]
+        self,
+        url: str,
+        headers: Dict[str, str],
+        files: Dict[str, Any],
+        data: Dict[str, Any],
     ) -> DummyResponse:
-        self.request = {"url": url, "headers": headers, "json": json}
+        self.request = {"url": url, "headers": headers, "files": files, "data": data}
         return self.response
 
     async def options(self, url: str) -> DummyResponse:
@@ -59,7 +63,11 @@ def test_transcribe_audio_success(client, monkeypatch) -> None:
         "janus_gateway.routers.transcription.httpx.AsyncClient", mock_client
     )
 
-    result = client.post("/api/transcribe", json={"audio_b64": "Zm9v", "language": "en"})
+    result = client.post(
+        "/api/transcribe",
+        files={"file": ("recording.webm", b"foo", "audio/webm")},
+        data={"language": "en"},
+    )
     assert result.status_code == 200
     assert result.json() == {"text": "hello", "language": "en", "duration": 1.2}
 
@@ -68,7 +76,10 @@ def test_transcribe_audio_missing_api_key(client, monkeypatch) -> None:
     monkeypatch.delenv("CHUTES_API_KEY", raising=False)
     get_settings.cache_clear()
 
-    result = client.post("/api/transcribe", json={"audio_b64": "Zm9v"})
+    result = client.post(
+        "/api/transcribe",
+        files={"file": ("recording.webm", b"foo", "audio/webm")},
+    )
     assert result.status_code == 503
     detail = result.json()["detail"]
     assert detail["code"] == "TRANSCRIPTION_NOT_CONFIGURED"
@@ -80,7 +91,11 @@ def test_transcribe_audio_missing_audio(client, monkeypatch) -> None:
     monkeypatch.setenv("CHUTES_API_KEY", "test-key")
     get_settings.cache_clear()
 
-    result = client.post("/api/transcribe", json={"audio_b64": "", "language": "en"})
+    result = client.post(
+        "/api/transcribe",
+        files={"file": ("recording.webm", b"", "audio/webm")},
+        data={"language": "en"},
+    )
     assert result.status_code == 400
     detail = result.json()["detail"]
     assert detail["code"] == "MISSING_AUDIO"
@@ -100,7 +115,10 @@ def test_transcribe_audio_upstream_error(client, monkeypatch) -> None:
         "janus_gateway.routers.transcription.httpx.AsyncClient", mock_client
     )
 
-    result = client.post("/api/transcribe", json={"audio_b64": "Zm9v"})
+    result = client.post(
+        "/api/transcribe",
+        files={"file": ("recording.webm", b"foo", "audio/webm")},
+    )
     assert result.status_code == 500
     detail = result.json()["detail"]
     assert detail["code"] == "UPSTREAM_ERROR"
@@ -118,7 +136,7 @@ def test_transcribe_audio_timeout(client, monkeypatch) -> None:
         async def __aexit__(self, exc_type, exc, tb) -> None:
             return None
 
-        async def post(self, url, headers, json) -> DummyResponse:
+        async def post(self, url, headers, files, data) -> DummyResponse:
             raise httpx.TimeoutException("timeout")
 
     monkeypatch.setattr(
@@ -126,7 +144,10 @@ def test_transcribe_audio_timeout(client, monkeypatch) -> None:
         lambda *args, **kwargs: TimeoutClient(),
     )
 
-    result = client.post("/api/transcribe", json={"audio_b64": "Zm9v"})
+    result = client.post(
+        "/api/transcribe",
+        files={"file": ("recording.webm", b"foo", "audio/webm")},
+    )
     assert result.status_code == 504
     detail = result.json()["detail"]
     assert detail["code"] == "TIMEOUT"
@@ -146,7 +167,10 @@ def test_transcribe_audio_rate_limit(client, monkeypatch) -> None:
         "janus_gateway.routers.transcription.httpx.AsyncClient", mock_client
     )
 
-    result = client.post("/api/transcribe", json={"audio_b64": "Zm9v"})
+    result = client.post(
+        "/api/transcribe",
+        files={"file": ("recording.webm", b"foo", "audio/webm")},
+    )
     assert result.status_code == 429
     detail = result.json()["detail"]
     assert detail["code"] == "RATE_LIMITED"
@@ -166,7 +190,10 @@ def test_transcribe_audio_invalid_api_key(client, monkeypatch) -> None:
         "janus_gateway.routers.transcription.httpx.AsyncClient", mock_client
     )
 
-    result = client.post("/api/transcribe", json={"audio_b64": "Zm9v"})
+    result = client.post(
+        "/api/transcribe",
+        files={"file": ("recording.webm", b"foo", "audio/webm")},
+    )
     assert result.status_code == 503
     detail = result.json()["detail"]
     assert detail["code"] == "INVALID_API_KEY"
