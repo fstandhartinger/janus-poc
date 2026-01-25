@@ -25,10 +25,10 @@ class CompetitorRegistry:
         """Initialize with the baseline competitor."""
         baseline_url = self._normalize_url(self._baseline_url) if self._baseline_url else None
         baseline = CompetitorInfo(
-            id="baseline",
-            name="Janus Baseline",
-            description="Reference implementation with CLI agent support",
-            url=baseline_url or "http://localhost:8001",
+            id="baseline-cli-agent",
+            name="Baseline CLI Agent",
+            description="Reference agent-based baseline competitor",
+            url=baseline_url or "http://localhost:8081",
             enabled=True,
             is_baseline=True,
         )

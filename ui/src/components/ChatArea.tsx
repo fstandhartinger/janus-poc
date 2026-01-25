@@ -11,6 +11,7 @@ import { ChatInput } from './ChatInput';
 import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress';
 import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
+import { ModelSelector } from './ModelSelector';
 import type { ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { AttachedFile } from '@/lib/file-types';
 
@@ -34,7 +35,7 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
   const abortControllerRef = useRef<AbortController | null>(null);
   const processedCanvasMessagesRef = useRef<Set<string>>(new Set());
   const [models, setModels] = useState<Model[]>([]);
-  const [selectedModel, setSelectedModel] = useState('baseline');
+  const [selectedModel, setSelectedModel] = useState('baseline-cli-agent');
   const [researchStages, setResearchStages] = useState<ResearchStage[]>([]);
   const [researchActive, setResearchActive] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
@@ -51,7 +52,7 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
   useEffect(() => {
     let isMounted = true;
     const fallbackModels: Model[] = [
-      { id: 'baseline', object: 'model', created: 0, owned_by: 'janus' },
+      { id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' },
     ];
 
     fetchModels()
@@ -390,24 +391,11 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
         </div>
 
         <div className="chat-topbar-right">
-          <div className="chat-model-select">
-            <span className="chat-model-label">Model</span>
-            <select
-              value={selectedModel}
-              onChange={(event) => setSelectedModel(event.target.value)}
-              className="chat-model-dropdown"
-              data-testid="model-select"
-            >
-              {(models.length
-                ? models
-                : [{ id: 'baseline', object: 'model', created: 0, owned_by: 'janus' }]
-              ).map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.id}
-                </option>
-              ))}
-            </select>
-          </div>
+          <ModelSelector
+            models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
+            selectedModel={selectedModel}
+            onSelect={setSelectedModel}
+          />
         </div>
       </div>
 

@@ -8,7 +8,7 @@ def _load_baseline_url() -> str:
     get_settings.cache_clear()
     get_competitor_registry.cache_clear()
     registry = get_competitor_registry()
-    baseline = registry.get("baseline")
+    baseline = registry.get("baseline-cli-agent")
     assert baseline is not None
     return baseline.url
 

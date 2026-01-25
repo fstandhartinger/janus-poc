@@ -1937,3 +1937,329 @@ html {
 .music-player {
   background: linear-gradient(135deg, var(--card-bg) 0%, rgba(99, 210, 151, 0.05) 100%);
 }
+
+/* Audio Response */
+.audio-response {
+  border-radius: 0.75rem;
+  overflow: hidden;
+  margin: 0.5rem 0;
+  border: 1px solid var(--border-color);
+}
+
+.audio-response-speech {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(99, 210, 151, 0.08) 100%);
+  border-color: rgba(99, 210, 151, 0.2);
+}
+
+.audio-response-music {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border-color: rgba(139, 92, 246, 0.2);
+}
+
+.audio-response-sound {
+  background: linear-gradient(135deg, var(--card-bg) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border-color: rgba(59, 130, 246, 0.2);
+}
+
+.audio-response-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem 0;
+  flex-wrap: wrap;
+}
+
+.audio-response-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-secondary);
+}
+
+.audio-response-type {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
+.audio-response-title {
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.audio-response-details-btn {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--accent-moss);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.5rem;
+}
+
+.audio-response-details-btn:hover {
+  text-decoration: underline;
+}
+
+.audio-response .audio-player {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+}
+
+.audio-response-metadata {
+  padding: 0.5rem 1rem 0.75rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: 0.5rem;
+}
+
+.metadata-item {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.metadata-label {
+  color: var(--text-muted);
+}
+
+.metadata-value {
+  color: var(--text-secondary);
+}
+
+/* ─── Model Selector (Custom Dropdown) ─────────────────────────────────────── */
+
+.model-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.model-selector-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: #6B7280;
+}
+
+.model-selector-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(55, 65, 81, 0.8);
+  background: rgba(17, 23, 38, 0.9);
+  color: #F3F4F6;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.model-selector-trigger:hover {
+  border-color: rgba(99, 210, 151, 0.4);
+  background: rgba(17, 23, 38, 1);
+}
+
+.model-selector-trigger:focus {
+  outline: none;
+  border-color: #63D297;
+  box-shadow: 0 0 0 2px rgba(99, 210, 151, 0.2);
+}
+
+.model-selector-value {
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-selector-chevron {
+  width: 14px;
+  height: 14px;
+  color: #9CA3AF;
+  transition: transform 0.15s ease;
+}
+
+.model-selector-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 200px;
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  background: rgba(17, 23, 38, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.model-selector-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #D1D5DB;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.model-selector-option:hover {
+  background: rgba(99, 210, 151, 0.1);
+  color: #F3F4F6;
+}
+
+.model-selector-option-selected {
+  background: rgba(99, 210, 151, 0.15);
+  color: #63D297;
+}
+
+.model-selector-option-selected:hover {
+  background: rgba(99, 210, 151, 0.2);
+}
+
+.model-selector-option-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.model-selector-option-badge {
+  margin-left: 8px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(99, 210, 151, 0.15);
+  color: #63D297;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.model-selector-check {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  color: #63D297;
+}
+
+/* ─── Form Elements (Global Dark Mode Styling) ─────────────────────────────── */
+
+input,
+select,
+textarea {
+  color-scheme: dark;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #6B7280;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: #63D297;
+  box-shadow: 0 0 0 2px rgba(99, 210, 151, 0.2);
+}
+
+/* ─── Buttons ─────────────────────────────────────────────────────────────── */
+
+button:focus-visible {
+  outline: 2px solid #63D297;
+  outline-offset: 2px;
+}
+
+/* ─── Links ───────────────────────────────────────────────────────────────── */
+
+a:focus-visible {
+  outline: 2px solid #63D297;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ─── Tables ──────────────────────────────────────────────────────────────── */
+
+table {
+  color: #D1D5DB;
+}
+
+th {
+  color: #9CA3AF;
+}
+
+/* ─── Code Blocks ─────────────────────────────────────────────────────────── */
+
+pre,
+code {
+  background: rgba(17, 23, 38, 0.8);
+  color: #E5E7EB;
+}
+
+/* ─── Modal/Dialog Backdrops ──────────────────────────────────────────────── */
+
+.modal-backdrop,
+.dialog-backdrop {
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(4px);
+}
+
+/* ─── Toast/Notification styling ──────────────────────────────────────────── */
+
+.toast {
+  background: rgba(17, 23, 38, 0.95);
+  border: 1px solid rgba(55, 65, 81, 0.8);
+  color: #F3F4F6;
+}
+
+.toast-success {
+  border-color: rgba(99, 210, 151, 0.5);
+}
+
+.toast-error {
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* ─── Hamburger Menu Button Fix ───────────────────────────────────────────── */
+
+/* Hide on large screens where sidebar is always visible */
+@media (min-width: 1024px) {
+  .chat-menu-btn {
+    display: none;
+  }
+}
