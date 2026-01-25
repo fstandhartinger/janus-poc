@@ -17,7 +17,14 @@ from janus_baseline_agent_cli.services.vision import contains_images, count_imag
 logger = structlog.get_logger()
 
 ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
-ROUTING_MODEL = "zai-org/GLM-4.7-Flash"
+
+# Routing models in order of preference (with fallbacks)
+ROUTING_MODELS = [
+    "XiaomiMiMo/MiMo-V2-Flash",  # Fast, reliable
+    "deepseek-ai/DeepSeek-V3",    # Fallback
+    "zai-org/GLM-4.7-TEE",        # Second fallback
+]
+ROUTING_MODEL = ROUTING_MODELS[0]  # Default for settings
 ROUTING_PROMPT = """Analyze this user request and decide if it needs agent sandbox capabilities.
 
 Agent sandbox is REQUIRED for:
@@ -217,6 +224,43 @@ class ComplexityDetector:
         "shell",
         "bash",
         "command line",
+        # Git/Repository operations
+        "git clone",
+        "git pull",
+        "git push",
+        "github",
+        "gitlab",
+        "repository",
+        "repo",
+        "clone the",
+        "pull the repo",
+        "clone repo",
+        # German keywords
+        "herunterladen",
+        "lade herunter",
+        "downloaden",
+        "suche",
+        "such nach",
+        "recherchiere",
+        "finde heraus",
+        "führe aus",
+        "ausführen",
+        "starte",
+        "kompiliere",
+        "teste",
+        "debugge",
+        "speichere",
+        "schreibe",
+        "erstelle datei",
+        "lösche",
+        "öffne",
+        "besuche",
+        "navigiere",
+        "generiere",
+        "erstelle bild",
+        "erzeuge",
+        "zusammenfassung",
+        "analysiere",
     ]
 
     MULTIMODAL_KEYWORDS = [
@@ -280,10 +324,26 @@ class ComplexityDetector:
         words = len(text.split())
         return int(words * 1.3)
 
+    # German separable verb patterns: "lade ... herunter" -> "herunterladen"
+    GERMAN_SEPARABLE_VERBS = [
+        (r"lade\s+.+\s+herunter", "herunterladen"),
+        (r"such\s+.+\s+nach", "suchen nach"),
+        (r"führ\s+.+\s+aus", "ausführen"),
+        (r"gib\s+.+\s+zusammenfassung", "zusammenfassung"),
+        (r"fass\s+.+\s+zusammen", "zusammenfassung"),
+    ]
+
     def _matched_complex_keywords(self, text: str) -> list[str]:
         """Return complex keywords found in text."""
         text_lower = text.lower()
-        return [keyword for keyword in self.COMPLEX_KEYWORDS if keyword in text_lower]
+        matches = [keyword for keyword in self.COMPLEX_KEYWORDS if keyword in text_lower]
+
+        # Also check German separable verb patterns
+        for pattern, keyword in self.GERMAN_SEPARABLE_VERBS:
+            if re.search(pattern, text_lower):
+                matches.append(keyword)
+
+        return matches
 
     def _has_complex_keywords(self, text: str) -> bool:
         """Check if text contains keywords suggesting complexity."""
@@ -471,63 +531,89 @@ class ComplexityDetector:
             text_preview=text_preview,
         )
 
-    @log_function_call
-    async def _llm_routing_check(self, text: str) -> tuple[bool, str]:
-        """LLM verification for routing decision. Returns (needs_agent, reason)."""
-        if not self._settings.openai_api_key:
-            return True, "no_api_key"
-
+    async def _try_routing_model(
+        self, client: httpx.AsyncClient, model: str, text: str
+    ) -> tuple[bool, str, bool]:
+        """Try routing with a specific model. Returns (needs_agent, reason, success)."""
         try:
-            async with httpx.AsyncClient(timeout=self._routing_timeout) as client:
-                response = await client.post(
-                    ROUTING_ENDPOINT,
-                    headers={
-                        "Authorization": f"Bearer {self._settings.openai_api_key}",
-                        "Content-Type": "application/json",
+            response = await client.post(
+                ROUTING_ENDPOINT,
+                headers={
+                    "Authorization": f"Bearer {self._settings.openai_api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model,
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": ROUTING_PROMPT.format(user_message=text[:500]),
+                        }
+                    ],
+                    "tools": [USE_AGENT_TOOL],
+                    "tool_choice": {
+                        "type": "function",
+                        "function": {"name": "use_agent"},
                     },
-                    json={
-                        "model": self._routing_model,
-                        "messages": [
-                            {
-                                "role": "user",
-                                "content": ROUTING_PROMPT.format(user_message=text[:500]),
-                            }
-                        ],
-                        "tools": [USE_AGENT_TOOL],
-                        "tool_choice": {
-                            "type": "function",
-                            "function": {"name": "use_agent"},
-                        },
-                        "max_tokens": 100,
-                        "temperature": 0.0,
-                    },
-                )
-                response.raise_for_status()
-                data = response.json()
+                    "max_tokens": 100,
+                    "temperature": 0.0,
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
 
-                message = data["choices"][0]["message"]
-                tool_calls = message.get("tool_calls") if isinstance(message, dict) else None
-                if tool_calls:
-                    tool_call = tool_calls[0]
-                    arguments = tool_call.get("function", {}).get("arguments", "{}")
-                    args = robust_parse_tool_call(arguments)
-                    return bool(args.get("needs_agent", False)), str(
-                        args.get("reason", "llm_decision")
-                    )
+            message = data["choices"][0]["message"]
+            tool_calls = message.get("tool_calls") if isinstance(message, dict) else None
+            if tool_calls:
+                tool_call = tool_calls[0]
+                arguments = tool_call.get("function", {}).get("arguments", "{}")
+                args = robust_parse_tool_call(arguments)
+                return bool(args.get("needs_agent", False)), str(
+                    args.get("reason", "llm_decision")
+                ), True
 
-                return True, "no_tool_call_conservative"
+            return True, "no_tool_call_conservative", True
 
         except httpx.TimeoutException:
-            logger.warning("llm_routing_timeout", text_preview=text[:100])
-            return True, "llm_check_error: timeout"
+            logger.warning("llm_routing_timeout", model=model, text_preview=text[:100])
+            return True, f"timeout ({model})", False
 
         except Exception as exc:
             logger.warning(
                 "llm_routing_error",
+                model=model,
                 error=str(exc),
                 text_preview=text[:100],
             )
-            return True, f"llm_check_error: {exc}"
+            return True, str(exc), False
+
+    @log_function_call
+    async def _llm_routing_check(self, text: str) -> tuple[bool, str]:
+        """LLM verification for routing decision with fallback models."""
+        if not self._settings.openai_api_key:
+            return True, "no_api_key"
+
+        # Try each model in order until one succeeds
+        models_to_try = [self._routing_model] + [
+            m for m in ROUTING_MODELS if m != self._routing_model
+        ]
+
+        async with httpx.AsyncClient(timeout=self._routing_timeout) as client:
+            for model in models_to_try:
+                needs_agent, reason, success = await self._try_routing_model(
+                    client, model, text
+                )
+                if success:
+                    logger.info(
+                        "llm_routing_success",
+                        model=model,
+                        needs_agent=needs_agent,
+                        reason=reason,
+                    )
+                    return needs_agent, reason
+
+        # All models failed
+        return True, "llm_check_error: all models unavailable"
 
     @log_function_call
     async def analyze_async(self, messages: list[Message]) -> ComplexityAnalysis:

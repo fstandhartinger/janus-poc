@@ -254,7 +254,7 @@ class Settings(BaseSettings):
         description="Always route to agent sandbox, bypass complexity detection",
     )
     llm_routing_model: str = Field(
-        default="zai-org/GLM-4.7-Flash",
+        default="XiaomiMiMo/MiMo-V2-Flash",
         description="Fast model to use for routing decisions",
     )
     llm_routing_timeout: float = Field(
