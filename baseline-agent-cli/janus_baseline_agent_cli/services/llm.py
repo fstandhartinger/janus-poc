@@ -94,6 +94,8 @@ class LLMService:
             self._settings.direct_model if self._settings.use_model_router else self._settings.model
         )
         if requested_model in {
+            "janus",
+            "janus-router",
             "baseline",
             "baseline-cli-agent",
             "baseline-langchain",
@@ -101,7 +103,7 @@ class LLMService:
             "janus-baseline-langchain",
         }:
             requested_model = fallback_model
-        if requested_model == "janus-router":
+        if requested_model == "janus-router":  # Legacy check
             requested_model = fallback_model
         if self._enable_vision_routing and contains_images(request.messages):
             logger.info(
