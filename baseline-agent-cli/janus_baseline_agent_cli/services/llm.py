@@ -82,6 +82,7 @@ class LLMService:
         requested_model = request.model or self._settings.model
         if requested_model in {
             "baseline",
+            "baseline-cli-agent",
             "baseline-langchain",
             "janus-baseline-agent-cli",
             "janus-baseline-langchain",
