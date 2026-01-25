@@ -10,7 +10,7 @@ from langchain_core.messages import (
     ToolMessage,
 )
 from langchain_openai import ChatOpenAI
-from pydantic.v1 import SecretStr
+from pydantic import SecretStr
 
 from janus_baseline_langchain.config import Settings, get_settings
 from janus_baseline_langchain.models import ImageUrlContent

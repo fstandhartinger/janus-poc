@@ -7,7 +7,7 @@ from typing import Sequence
 
 from langchain_core.messages import BaseMessage, HumanMessage
 from langchain_openai import ChatOpenAI
-from pydantic.v1 import SecretStr
+from pydantic import SecretStr
 
 from janus_baseline_langchain.router.models import MODEL_REGISTRY, TaskType
 

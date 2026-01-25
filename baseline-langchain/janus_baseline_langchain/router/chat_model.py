@@ -10,7 +10,7 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage
 from langchain_core.outputs import ChatGenerationChunk, ChatResult
 from langchain_openai import ChatOpenAI
-from pydantic.v1 import SecretStr
+from pydantic import SecretStr
 
 from janus_baseline_langchain.router.classifier import TaskClassifier
 from janus_baseline_langchain.router.models import (

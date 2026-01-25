@@ -6,7 +6,7 @@ from langchain.agents import AgentExecutor, create_openai_tools_agent
 from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
-from pydantic.v1 import SecretStr
+from pydantic import SecretStr
 
 from janus_baseline_langchain.config import Settings
 from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel

@@ -12,8 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
-from pydantic import BaseModel
-from pydantic.v1 import SecretStr
+from pydantic import BaseModel, SecretStr
 
 from janus_baseline_langchain import __version__
 from janus_baseline_langchain.config import Settings, get_settings
