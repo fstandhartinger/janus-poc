@@ -1,5 +1,5 @@
 const FREE_CHAT_STORAGE_KEY = 'janus_free_chats_v1';
-const FREE_CHAT_LIMIT = 5;
+const FREE_CHAT_LIMIT = 100;
 
 interface FreeChatState {
   date: string;
