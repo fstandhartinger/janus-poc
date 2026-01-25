@@ -1,6 +1,6 @@
 export { Header } from './Header';
 export { HeroSection } from './HeroSection';
-export { HeroVideoModal } from './HeroVideoModal';
+export { HeroVideo } from './HeroVideo';
 export { FeatureCards } from './FeatureCards';
 export { HowItWorks } from './HowItWorks';
 export { FlexibilitySection } from './FlexibilitySection';
