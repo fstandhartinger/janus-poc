@@ -178,7 +178,7 @@ class SandyService:
         )
         chutes_api_url = self._settings.chutes_api_base_effective
         auth_token = self._resolve_auth_token(request)
-        return {
+        env = {
             "JANUS_WORKSPACE": "/workspace",
             "JANUS_AGENT_PACK": self._agent_pack_dest_root(),
             "JANUS_DOCS_ROOT": "/workspace/docs/models",
@@ -207,12 +207,51 @@ class SandyService:
             "JANUS_DEFAULT_SANDBOX_TTL": "600",
             "PATH": self._default_path,
         }
+        if self._memory_tool_enabled(request):
+            env.update(
+                {
+                    "JANUS_ENABLE_MEMORY_TOOL": "true",
+                    "JANUS_MEMORY_SERVICE_URL": self._settings.memory_service_url,
+                    "JANUS_MEMORY_USER_ID": request.user_id or "",
+                }
+            )
+        else:
+            env["JANUS_ENABLE_MEMORY_TOOL"] = "false"
+        return env
 
     def _resolve_auth_token(self, request: ChatCompletionRequest | None) -> str | None:
         if request is None:
             return self._settings.sandy_api_key
         auth_token = getattr(request, "_auth_token", None)
         return auth_token or self._settings.sandy_api_key
+
+    def _memory_tool_enabled(self, request: ChatCompletionRequest | None) -> bool:
+        if request is None:
+            return False
+        if not self._settings.enable_memory_feature:
+            return False
+        if not request.enable_memory or not request.user_id:
+            return False
+        for message in request.messages:
+            if self._content_has_memory_reference(message.content):
+                return True
+        return False
+
+    def _content_has_memory_reference(self, content: object) -> bool:
+        if isinstance(content, str):
+            return "<memory-references>" in content
+        if isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict):
+                    if part.get("type") == "text" and "<memory-references>" in str(
+                        part.get("text", "")
+                    ):
+                        return True
+                else:
+                    text = getattr(part, "text", None)
+                    if text and "<memory-references>" in text:
+                        return True
+        return False
 
     def _build_agent_command(
         self,
@@ -552,7 +591,7 @@ class SandyService:
         """Create a new Sandy sandbox."""
         try:
             payload: dict[str, object] = {
-                "priority": "NORMAL",
+                "priority": 1,  # Integer priority (1=normal)
                 "ttl_seconds": self._timeout,
             }
             if self._artifact_port:
@@ -564,10 +603,12 @@ class SandyService:
             )
             response.raise_for_status()
             data = response.json()
-            sandbox_id = data.get("sandbox_id") or data.get("id")
+            # Sandy returns sandboxId, not sandbox_id
+            sandbox_id = data.get("sandboxId") or data.get("sandbox_id") or data.get("id")
             if sandbox_id is None:
                 return None
-            public_url = data.get("public_url") or data.get("sandbox_url")
+            # Sandy returns url, not public_url
+            public_url = data.get("url") or data.get("public_url") or data.get("sandbox_url")
             return str(sandbox_id), str(public_url) if public_url else None
         except Exception as e:
             logger.error("sandy_create_error", error=str(e))
