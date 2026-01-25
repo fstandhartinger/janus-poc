@@ -37,6 +37,78 @@ async def test_extract_store_and_list(client, monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_update_memory(client, monkeypatch):
+    user_id = uuid4()
+
+    async def fake_extract(_conversation):
+        return [llm.ExtractedMemory(caption="User likes coffee", full_text="Prefers iced latte")]
+
+    monkeypatch.setattr(llm, "extract_memories", fake_extract)
+
+    response = await client.post(
+        "/memories/extract",
+        json={
+            "user_id": str(user_id),
+            "conversation": [
+                {"role": "user", "content": "I love iced lattes"},
+                {"role": "assistant", "content": "Noted!"},
+            ],
+        },
+    )
+    assert response.status_code == 200
+    memory_id = response.json()["memories_saved"][0]["id"]
+
+    update_response = await client.patch(
+        f"/memories/{memory_id}",
+        json={
+            "user_id": str(user_id),
+            "caption": "User likes espresso",
+            "full_text": "Prefers double-shot espresso drinks",
+        },
+    )
+    assert update_response.status_code == 200
+    payload = update_response.json()
+    assert payload["caption"] == "User likes espresso"
+    assert payload["full_text"] == "Prefers double-shot espresso drinks"
+
+    list_response = await client.get("/memories/list", params={"user_id": str(user_id)})
+    assert list_response.status_code == 200
+    memories = list_response.json()["memories"]
+    assert memories[0]["caption"] == "User likes espresso"
+
+
+@pytest.mark.asyncio
+async def test_clear_memories(client, monkeypatch):
+    user_id = uuid4()
+
+    async def fake_extract(_conversation):
+        return [llm.ExtractedMemory(caption="Memory", full_text="Details")]
+
+    monkeypatch.setattr(llm, "extract_memories", fake_extract)
+
+    for idx in range(2):
+        response = await client.post(
+            "/memories/extract",
+            json={
+                "user_id": str(user_id),
+                "conversation": [
+                    {"role": "user", "content": f"Remember {idx}"},
+                    {"role": "assistant", "content": "Got it"},
+                ],
+            },
+        )
+        assert response.status_code == 200
+
+    clear_response = await client.delete("/memories/clear", params={"user_id": str(user_id)})
+    assert clear_response.status_code == 200
+    assert clear_response.json()["deleted"] is True
+
+    list_response = await client.get("/memories/list", params={"user_id": str(user_id)})
+    assert list_response.status_code == 200
+    assert list_response.json()["memories"] == []
+
+
+@pytest.mark.asyncio
 async def test_relevant_memories_returns_matches(client, monkeypatch):
     user_id = uuid4()
 

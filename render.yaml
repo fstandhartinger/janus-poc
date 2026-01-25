@@ -30,6 +30,8 @@ services:
           envVarKey: BASELINE_LANGCHAIN_URL
       - key: CHUTES_API_KEY
         sync: false
+      - key: JANUS_MEMORY_SERVICE_URL
+        value: "https://janus-memory-service.onrender.com"
     healthCheckPath: /health
 
   # Janus Baseline Agent - Reference competitor implementation

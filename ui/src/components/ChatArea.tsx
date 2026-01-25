@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
 import { useCanvasStore } from '@/store/canvas';
 import { RateLimitError, fetchModels, streamChatCompletion, streamDeepResearch } from '@/lib/api';
-import { isMemoryEnabled } from '@/lib/memory';
+import { isMemoryEnabled, setMemoryEnabled } from '@/lib/memory';
 import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFreeChats, setFreeChatCount } from '@/lib/freeChat';
 import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
@@ -17,6 +17,7 @@ import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
 import { MemoryToggle } from './MemoryToggle';
+import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
 import { useAuth } from '@/hooks/useAuth';
@@ -60,6 +61,8 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   const [signInGateOpen, setSignInGateOpen] = useState(false);
   const [pendingMessage, setPendingMessage] = useState<string | undefined>();
   const [toast, setToast] = useState<{ message: string; action?: string; onAction?: () => void } | null>(null);
+  const [memorySheetOpen, setMemorySheetOpen] = useState(false);
+  const [memoryEnabled, setMemoryEnabledState] = useState(() => isMemoryEnabled());
 
   const session = getCurrentSession();
   const messages = session?.messages || [];
@@ -350,7 +353,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
           }));
 
         const userId = getUserId(user);
-        const memoryEnabled = isMemoryEnabled();
+        const memoryEnabledSetting = memoryEnabled;
 
         for await (const chunk of streamChatCompletion(
           {
@@ -358,7 +361,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
             messages: requestMessages,
             stream: true,
             user_id: userId,
-            enable_memory: memoryEnabled,
+            enable_memory: memoryEnabledSetting,
           },
           signal
         )) {
@@ -527,7 +530,11 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
               <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
             )}
           </div>
-          <MemoryToggle />
+          <MemoryToggle
+            enabled={memoryEnabled}
+            onOpen={() => setMemorySheetOpen(true)}
+            open={memorySheetOpen}
+          />
           <ModelSelector
             models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
             selectedModel={selectedModel}
@@ -535,6 +542,16 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
           />
         </div>
       </div>
+
+      <MemorySheet
+        open={memorySheetOpen}
+        onOpenChange={setMemorySheetOpen}
+        memoryEnabled={memoryEnabled}
+        onMemoryEnabledChange={(enabled) => {
+          setMemoryEnabledState(enabled);
+          setMemoryEnabled(enabled);
+        }}
+      />
 
       <SignInGateDialog
         open={signInGateOpen}

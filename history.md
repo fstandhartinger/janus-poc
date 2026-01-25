@@ -52,3 +52,4 @@
 - Re-verified spec 75_sign_in_with_chutes.md status formatting and refreshed NR_OF_TRIES after validation pass.
 - Completed spec 76_memory_investigation_tool.md with investigate_memory tools for baselines, conditional tool registration, sandbox env wiring, and tests.
 - Re-verified spec 03_components.md against docs/architecture.md + README testing matrix; refreshed NR_OF_TRIES after validation pass.
+- Completed spec 77_memory_management_ui.md with memory management UI, memory CRUD hooks, gateway proxy routes, and memory service update/clear endpoints/tests.

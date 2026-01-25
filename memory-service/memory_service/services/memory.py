@@ -81,6 +81,34 @@ async def delete_memory(session: AsyncSession, user_id: UUID, memory_id: str) ->
     return result.rowcount > 0
 
 
+async def update_memory(
+    session: AsyncSession,
+    user_id: UUID,
+    memory_id: str,
+    caption: str | None = None,
+    full_text: str | None = None,
+) -> Memory | None:
+    result = await session.execute(
+        select(Memory).where(Memory.user_id == user_id, Memory.id == memory_id)
+    )
+    entry = result.scalar_one_or_none()
+    if entry is None:
+        return None
+    if caption is not None:
+        entry.caption = caption
+    if full_text is not None:
+        entry.full_text = full_text
+    await session.commit()
+    await session.refresh(entry)
+    return entry
+
+
+async def clear_memories(session: AsyncSession, user_id: UUID) -> int:
+    result = await session.execute(delete(Memory).where(Memory.user_id == user_id))
+    await session.commit()
+    return int(result.rowcount or 0)
+
+
 async def save_memories(
     session: AsyncSession,
     user_id: UUID,

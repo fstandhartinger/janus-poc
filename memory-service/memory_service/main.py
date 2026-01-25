@@ -13,11 +13,13 @@ from memory_service.models import (
     DeleteMemoryResponse,
     ExtractMemoriesRequest,
     ExtractMemoriesResponse,
+    ClearMemoriesResponse,
     MemoryExtracted,
     MemoryFull,
     MemoryFullResponse,
     MemoryListResponse,
     MemorySummary,
+    MemoryUpdateRequest,
     RelevantMemoriesResponse,
 )
 from memory_service.services import llm, memory
@@ -144,6 +146,46 @@ async def get_full_memories(
     requested_ids = [value.strip() for value in ids.split(",") if value.strip()]
     memories = await memory.get_memories_by_ids(session, user_id, requested_ids)
     return MemoryFullResponse(memories=_serialize_memories(memories))
+
+
+@app.delete("/memories/clear", response_model=ClearMemoriesResponse)
+async def clear_memories(
+    user_id: UUID = Query(...),
+    session: AsyncSession = Depends(get_session),
+) -> ClearMemoriesResponse:
+    _check_rate_limit(user_id)
+
+    await memory.clear_memories(session, user_id)
+    return ClearMemoriesResponse(deleted=True)
+
+
+@app.patch("/memories/{memory_id}", response_model=MemoryFull)
+async def update_memory(
+    memory_id: str,
+    body: MemoryUpdateRequest,
+    session: AsyncSession = Depends(get_session),
+) -> MemoryFull:
+    _check_rate_limit(body.user_id)
+
+    if body.caption is None and body.full_text is None:
+        raise HTTPException(status_code=400, detail="No updates provided")
+
+    updated = await memory.update_memory(
+        session,
+        body.user_id,
+        memory_id,
+        caption=body.caption,
+        full_text=body.full_text,
+    )
+    if not updated:
+        raise HTTPException(status_code=404, detail="Memory not found")
+
+    return MemoryFull(
+        id=updated.id,
+        caption=updated.caption,
+        full_text=updated.full_text,
+        created_at=updated.created_at,
+    )
 
 
 @app.delete("/memories/{memory_id}", response_model=DeleteMemoryResponse)

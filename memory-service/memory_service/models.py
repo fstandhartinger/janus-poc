@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import List
+from typing import List, Optional
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -50,5 +50,15 @@ class MemoryListResponse(BaseModel):
     memories: List[MemoryFull] = Field(default_factory=list)
 
 
+class MemoryUpdateRequest(BaseModel):
+    user_id: UUID
+    caption: Optional[str] = None
+    full_text: Optional[str] = None
+
+
 class DeleteMemoryResponse(BaseModel):
     status: str
+
+
+class ClearMemoriesResponse(BaseModel):
+    deleted: bool

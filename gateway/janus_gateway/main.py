@@ -14,6 +14,7 @@ from janus_gateway.routers import (
     artifacts_router,
     chat_router,
     health_router,
+    memories_router,
     models_router,
     transcription_router,
     research_router,
@@ -121,6 +122,7 @@ app.include_router(artifacts_router)
 app.include_router(transcription_router)
 app.include_router(research_router)
 app.include_router(tts_router)
+app.include_router(memories_router)
 
 
 def main() -> None:
