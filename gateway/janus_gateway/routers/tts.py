@@ -1,6 +1,5 @@
 """Text-to-speech proxy routes."""
 
-from typing import Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException, Response

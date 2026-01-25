@@ -52,13 +52,43 @@ class CompetitorRegistry:
 
     @staticmethod
     def _normalize_url(url: str) -> str:
+        """Normalize a URL by ensuring it has a scheme.
+
+        Rules:
+        - If URL already has a scheme, return as-is (after stripping trailing slash)
+        - localhost and 127.0.0.1 get http://
+        - Private IP ranges (10.x, 172.16-31.x, 192.168.x) get http://
+        - URLs with ports (host:port) get http://
+        - Everything else gets https://
+        """
         trimmed = url.rstrip("/")
         if "://" in trimmed:
             return trimmed
-        if trimmed.startswith("localhost") or trimmed.startswith("127.0.0.1"):
+
+        # Extract host part (before any port)
+        host = trimmed.split(":")[0] if ":" in trimmed else trimmed
+
+        # Local addresses get http://
+        if host in ("localhost", "127.0.0.1"):
             return f"http://{trimmed}"
+
+        # Check for private IP ranges
+        if host.startswith(("10.", "192.168.")):
+            return f"http://{trimmed}"
+        if host.startswith("172."):
+            parts = host.split(".")
+            if len(parts) >= 2:
+                try:
+                    second_octet = int(parts[1])
+                    if 16 <= second_octet <= 31:
+                        return f"http://{trimmed}"
+                except ValueError:
+                    pass
+
+        # URLs with ports typically indicate development/internal services
         if ":" in trimmed:
             return f"http://{trimmed}"
+
         return f"https://{trimmed}"
 
     def register(self, competitor: CompetitorInfo, is_default: bool = False) -> None:

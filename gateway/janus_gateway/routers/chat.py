@@ -62,10 +62,14 @@ async def stream_from_competitor(
         ) as response:
             if response.status_code != 200:
                 error_body = await response.aread()
+                try:
+                    error_text = error_body.decode("utf-8", errors="replace")
+                except Exception:
+                    error_text = "<binary data>"
                 logger.error(
                     "competitor_error",
                     status_code=response.status_code,
-                    body=error_body.decode(),
+                    body=error_text,
                 )
                 # Yield error as SSE
                 error_chunk = ChatCompletionChunk(

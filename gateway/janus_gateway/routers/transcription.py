@@ -1,23 +1,17 @@
 """Transcription proxy routes."""
 
-import logging
-import os
 from typing import Any, Optional
 
 import httpx
+import structlog
 from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from janus_gateway.config import get_settings
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api", tags=["transcription"])
-
-WHISPER_ENDPOINT = os.environ.get(
-    "WHISPER_ENDPOINT",
-    "https://chutes-whisper-large-v3.chutes.ai/transcribe",
-)
 
 
 class TranscriptionRequest(BaseModel):
@@ -79,11 +73,12 @@ async def transcription_health() -> TranscriptionHealthResponse:
     """
     settings = get_settings()
     api_key = settings.chutes_api_key
+    whisper_endpoint = settings.whisper_endpoint
 
     if not api_key:
         return TranscriptionHealthResponse(
             available=False,
-            endpoint=WHISPER_ENDPOINT,
+            endpoint=whisper_endpoint,
             api_key_configured=False,
             error="CHUTES_API_KEY not configured",
         )
@@ -92,21 +87,21 @@ async def transcription_health() -> TranscriptionHealthResponse:
     try:
         async with httpx.AsyncClient(timeout=5.0) as client:
             # Just check if endpoint responds (OPTIONS or HEAD)
-            response = await client.options(WHISPER_ENDPOINT)
+            response = await client.options(whisper_endpoint)
             # Any response (even 405) means endpoint is reachable
             reachable = response.status_code < 500
     except Exception as e:
-        logger.warning(f"Transcription endpoint unreachable: {e}")
+        logger.warning("transcription_endpoint_unreachable", error=str(e))
         return TranscriptionHealthResponse(
             available=False,
-            endpoint=WHISPER_ENDPOINT,
+            endpoint=whisper_endpoint,
             api_key_configured=True,
             error=f"Endpoint unreachable: {str(e)}",
         )
 
     return TranscriptionHealthResponse(
         available=reachable,
-        endpoint=WHISPER_ENDPOINT,
+        endpoint=whisper_endpoint,
         api_key_configured=True,
     )
 
@@ -117,9 +112,10 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
 
     settings = get_settings()
     api_key = settings.chutes_api_key
+    whisper_endpoint = settings.whisper_endpoint
 
     if not api_key:
-        logger.error("Transcription failed: CHUTES_API_KEY not configured")
+        logger.error("transcription_not_configured")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail=create_error_response(
@@ -144,10 +140,10 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
-            logger.info(f"Sending transcription request to {WHISPER_ENDPOINT}")
+            logger.info("transcription_request_sent", endpoint=whisper_endpoint)
 
             response = await client.post(
-                WHISPER_ENDPOINT,
+                whisper_endpoint,
                 headers={
                     "Content-Type": "application/json",
                     "Authorization": f"Bearer {api_key}",
@@ -158,10 +154,10 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
                 },
             )
 
-            logger.info(f"Transcription response: {response.status_code}")
+            logger.info("transcription_response", status_code=response.status_code)
 
             if response.status_code == 401:
-                logger.error("Transcription failed: Invalid API key")
+                logger.error("transcription_invalid_api_key")
                 raise HTTPException(
                     status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
                     detail=create_error_response(
@@ -173,7 +169,7 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
                 )
 
             if response.status_code == 429:
-                logger.warning("Transcription rate limited")
+                logger.warning("transcription_rate_limited")
                 raise HTTPException(
                     status_code=status.HTTP_429_TOO_MANY_REQUESTS,
                     detail=create_error_response(
@@ -186,7 +182,9 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
 
             if response.status_code != 200:
                 logger.error(
-                    f"Transcription failed: {response.status_code} - {response.text}"
+                    "transcription_failed",
+                    status_code=response.status_code,
+                    response_text=response.text,
                 )
                 raise HTTPException(
                     status_code=response.status_code,
@@ -202,9 +200,9 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
             text = result.get("text", result.get("transcription", ""))
 
             if not text:
-                logger.warning("Transcription returned empty text")
+                logger.warning("transcription_empty_text")
 
-            logger.info(f"Transcription successful: {len(text)} characters")
+            logger.info("transcription_successful", char_count=len(text))
 
             return TranscriptionResponse(
                 text=text,
@@ -213,7 +211,7 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
             )
 
         except httpx.TimeoutException as exc:
-            logger.error(f"Transcription timed out: {exc}")
+            logger.error("transcription_timeout", error=str(exc))
             raise HTTPException(
                 status_code=status.HTTP_504_GATEWAY_TIMEOUT,
                 detail=create_error_response(
@@ -225,7 +223,7 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
             ) from exc
 
         except httpx.RequestError as exc:
-            logger.error(f"Transcription request error: {exc}")
+            logger.error("transcription_request_error", error=str(exc))
             raise HTTPException(
                 status_code=status.HTTP_502_BAD_GATEWAY,
                 detail=create_error_response(

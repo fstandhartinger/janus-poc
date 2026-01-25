@@ -26,19 +26,36 @@ class Settings(BaseSettings):
     request_timeout: int = Field(default=300, description="Request timeout in seconds")
     max_request_size: int = Field(default=10_485_760, description="Max request size in bytes (10MB)")
     keep_alive_interval: float = Field(default=1.5, description="SSE keep-alive interval in seconds")
+    deep_research_timeout: int = Field(
+        default=1200,
+        description="Deep research request timeout in seconds",
+    )
+
+    # Gateway URL (for generating artifact URLs, etc.)
+    gateway_url: Optional[str] = Field(
+        default=None,
+        description="Gateway public URL (for generating artifact URLs)",
+        validation_alias=AliasChoices("GATEWAY_URL", "JANUS_GATEWAY_URL"),
+    )
+    default_competitor: str = Field(
+        default="baseline-cli-agent",
+        description="Default competitor ID to use when none specified",
+        validation_alias=AliasChoices("DEFAULT_COMPETITOR", "JANUS_DEFAULT_COMPETITOR"),
+    )
 
     # Competitor routing
     baseline_url: str = Field(
         default="https://janus-baseline-agent.onrender.com",
         description="Baseline agent CLI competitor base URL",
         validation_alias=AliasChoices(
+            "COMPETITOR_URL",
             "BASELINE_AGENT_CLI_URL",
             "BASELINE_URL",
             "JANUS_BASELINE_URL",
         ),
     )
     baseline_langchain_url: str = Field(
-        default="http://localhost:8002",
+        default="http://localhost:8082",
         description="Baseline LangChain competitor base URL",
         validation_alias=AliasChoices(
             "BASELINE_LANGCHAIN_URL",
@@ -56,6 +73,16 @@ class Settings(BaseSettings):
         default=None,
         description="Chutes API key",
         validation_alias=AliasChoices("CHUTES_API_KEY", "JANUS_CHUTES_API_KEY"),
+    )
+    chutes_search_url: str = Field(
+        default="https://search.chutes.ai",
+        description="Chutes search base URL",
+        validation_alias=AliasChoices("CHUTES_SEARCH_URL", "JANUS_CHUTES_SEARCH_URL"),
+    )
+    whisper_endpoint: str = Field(
+        default="https://chutes-whisper-large-v3.chutes.ai/transcribe",
+        description="Whisper transcription endpoint URL",
+        validation_alias=AliasChoices("WHISPER_ENDPOINT", "JANUS_WHISPER_ENDPOINT"),
     )
 
     # Artifact storage
