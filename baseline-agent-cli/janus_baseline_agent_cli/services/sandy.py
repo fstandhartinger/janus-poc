@@ -892,6 +892,7 @@ class SandyService:
 
                 # Process SSE stream
                 buffer = ""
+                event_count = 0
                 async for chunk in response.aiter_text():
                     buffer += chunk
                     # Process complete events (lines ending with double newline)
@@ -905,10 +906,21 @@ class SandyService:
                                 data = line[6:]
                                 try:
                                     parsed = json.loads(data)
+                                    event_count += 1
+                                    event_type = parsed.get("type", "unknown")
+                                    # Log detailed event info for debugging
+                                    logger.info(
+                                        "agent_api_event",
+                                        event_count=event_count,
+                                        event_type=event_type,
+                                        event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
+                                        event_preview=str(parsed)[:500],
+                                    )
                                     yield parsed
                                 except json.JSONDecodeError:
                                     # Not JSON, yield as raw output
                                     if data.strip():
+                                        logger.debug("agent_api_raw_data", data_preview=data[:200])
                                         yield {"type": "output", "text": data}
 
                 # Process any remaining buffer
@@ -931,41 +943,103 @@ class SandyService:
             yield {"type": "error", "error": f"Agent execution failed: {e}"}
 
     def _select_agent_for_api(self) -> str:
-        """Select agent for Sandy's agent/run API."""
+        """Select agent for Sandy's agent/run API.
+
+        Sandy supports these agents:
+        - claude-code: Claude Code CLI (--permission-mode acceptEdits)
+        - codex: OpenAI Codex CLI (--ask-for-approval never)
+        - aider: Aider AI pair programmer (--yes --no-git --no-auto-commits)
+        - opencode: Factory OpenCode agent
+        - openhands: OpenHands devin-like agent
+        - droid: Droid agent
+        """
         requested = self._baseline_agent.strip().lower()
         if requested in {"claude", "claude-code"}:
-            return "claude-code"
-        if requested == "codex":
-            return "codex"
-        if requested == "aider":
-            return "aider"
-        if requested == "opencode":
-            return "opencode"
-        if requested == "openhands":
-            return "openhands"
-        if requested == "droid":
-            return "droid"
-        # Default to claude-code for best results
-        return "claude-code"
+            agent = "claude-code"
+        elif requested == "codex":
+            agent = "codex"
+        elif requested == "aider":
+            agent = "aider"
+        elif requested == "opencode":
+            agent = "opencode"
+        elif requested == "openhands":
+            agent = "openhands"
+        elif requested == "droid":
+            agent = "droid"
+        else:
+            # Default to claude-code for best results
+            agent = "claude-code"
+
+        logger.info(
+            "agent_selection",
+            requested=requested,
+            selected=agent,
+            config_baseline_agent=self._baseline_agent,
+        )
+        return agent
 
     def _select_model_for_api(self, request: ChatCompletionRequest) -> str:
-        """Select model for Sandy's agent/run API."""
+        """Select model for Sandy's agent/run API.
+
+        Supported models on Chutes include:
+        - deepseek-ai/DeepSeek-V3-0324-TEE (default, very capable)
+        - deepseek-ai/DeepSeek-V3.2-0324-TEE (newer version)
+        - MiniMax/MiniMax-M2.1-TEE (fast, good quality)
+        - zai-org/GLM-4.7-TEE (Chinese model, good for general tasks)
+        - Qwen/Qwen3-VL-235B-A22B-Instruct (for vision tasks)
+        - chutesai/Mistral-Small-3.2-24B-Instruct-2506 (fast, small)
+        """
         # Use the model from request, or default to a good model
         model = request.model
+
         # Sandy's agent API expects certain model formats
         # Skip generic baseline aliases
         if model in {"baseline", "janus-router", "janus-baseline"}:
             # Use a good default model for agent execution
-            return "deepseek-ai/DeepSeek-V3-0324-TEE"
+            selected = "deepseek-ai/DeepSeek-V3-0324-TEE"
+            logger.info(
+                "model_selection",
+                requested=model,
+                selected=selected,
+                reason="baseline_alias_default",
+            )
+            return selected
+
         # Pass through specific model names
         if model.startswith("gpt-") or model.startswith("o1-") or model.startswith("o3-"):
+            logger.info(
+                "model_selection",
+                requested=model,
+                selected=model,
+                reason="openai_model_passthrough",
+            )
             return model
         if "claude" in model.lower():
+            logger.info(
+                "model_selection",
+                requested=model,
+                selected=model,
+                reason="claude_model_passthrough",
+            )
             return model
         if "/" in model:  # Looks like a Chutes model path
+            logger.info(
+                "model_selection",
+                requested=model,
+                selected=model,
+                reason="chutes_model_passthrough",
+            )
             return model
+
         # Default model for general use
-        return "deepseek-ai/DeepSeek-V3-0324-TEE"
+        selected = "deepseek-ai/DeepSeek-V3-0324-TEE"
+        logger.info(
+            "model_selection",
+            requested=model,
+            selected=selected,
+            reason="default_fallback",
+        )
+        return selected
 
     def _generate_id(self) -> str:
         """Generate a completion ID."""
