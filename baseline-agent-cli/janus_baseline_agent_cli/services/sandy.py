@@ -53,12 +53,12 @@ class SandyService:
 
     _max_inline_bytes = 1_000_000
     # Include common pip --user install paths and standard paths
+    # Note: Using actual paths instead of unexpanded shell variables
     _default_path = (
         "/root/.local/bin:"  # pip --user for root
-        "/home/*/.local/bin:"  # pip --user for regular users
-        "$HOME/.local/bin:"  # dynamic home path
-        "/agent-pack/bin:"
-        "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        "/usr/local/bin:"  # system-wide pip installs
+        "/agent-pack/bin:"  # agent pack binaries
+        "/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
     )
 
     def __init__(
@@ -271,20 +271,39 @@ class SandyService:
         has_images: bool = False,
     ) -> str:
         """Build the CLI agent command."""
+        env_dict = self._build_agent_env(sandbox_id, public_url, request, has_images)
         env_parts = [
             f"{key}={shlex.quote(str(value))}"
-            for key, value in self._build_agent_env(
-                sandbox_id, public_url, request, has_images
-            ).items()
+            for key, value in env_dict.items()
         ]
         quoted_task = shlex.quote(task)
         agent_pack_root = self._agent_pack_dest_root()
         system_prompt_path = f"{agent_pack_root}/prompts/system.md"
 
+        # Log the full task being sent to the agent
+        logger.info(
+            "agent_task_prompt",
+            agent=agent,
+            task_length=len(task),
+            task_preview=task[:500] if len(task) > 500 else task,
+            system_prompt_path=system_prompt_path,
+        )
+
         if agent == "builtin":
             command = [
                 "python",
                 f"{agent_pack_root}/run_agent.py",
+                quoted_task,
+            ]
+        elif agent == "claude" or agent == "claude-code":
+            # Claude Code CLI agent
+            # Uses -p for print mode (non-interactive)
+            # --output-format stream-json for structured output
+            command = [
+                "claude",
+                "-p",  # Print mode (non-interactive)
+                "--output-format", "stream-json",
+                "--allowedTools", "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
                 quoted_task,
             ]
         elif agent == "aider":
@@ -324,18 +343,35 @@ class SandyService:
         logger.info(
             "agent_command_built",
             agent=agent,
-            command_preview=full_command[:500],
+            command_preview=full_command[:1000],
+            full_command_length=len(full_command),
         )
         return full_command
 
     def _agent_candidates(self) -> list[str]:
-        """Determine preferred agent order."""
+        """Determine preferred agent order.
+
+        Supported agents:
+        - claude / claude-code: Anthropic's Claude Code CLI
+        - aider: AI pair programmer
+        - opencode: Factory OpenCode agent
+        - openhands: OpenHands CLI
+        - builtin: Simple template-based fallback
+        """
         requested = self._baseline_agent.strip().lower()
+        logger.info(
+            "agent_candidates_config",
+            requested_agent=requested,
+            baseline_agent_setting=self._baseline_agent,
+        )
         if requested in {"builtin", "run_agent"}:
             return ["builtin"]
+        if requested in {"claude", "claude-code"}:
+            return ["claude", "aider", "builtin"]
         if requested:
-            return [requested, "openhands", "opencode", "builtin"]
-        return ["aider", "openhands", "opencode", "builtin"]
+            return [requested, "claude", "aider", "builtin"]
+        # Default order: prefer Claude Code, then aider, then others
+        return ["claude", "aider", "opencode", "openhands", "builtin"]
 
     async def _select_agent(
         self,
@@ -348,12 +384,29 @@ class SandyService:
             "agent_selection_start",
             candidates=candidates,
             baseline_agent_config=self._baseline_agent,
+            path=self._default_path,
         )
+
+        # First, log what's available in the PATH for debugging
+        path_check_cmd = f"PATH={shlex.quote(self._default_path)} ls -la /root/.local/bin/ 2>/dev/null || echo 'No /root/.local/bin'; which aider claude opencode openhands 2>/dev/null || echo 'None found in PATH'"
+        path_stdout, path_stderr, _ = await self._exec_in_sandbox(
+            client, sandbox_id, path_check_cmd
+        )
+        logger.info(
+            "agent_path_debug",
+            path_contents=path_stdout[:500] if path_stdout else "",
+            path_errors=path_stderr[:200] if path_stderr else "",
+        )
+
         for candidate in candidates:
             if candidate == "builtin":
-                logger.info("agent_selected", agent="builtin", reason="fallback")
+                logger.info("agent_selected", agent="builtin", reason="fallback_reached")
                 return "builtin"
-            check_cmd = f"PATH={shlex.quote(self._default_path)} command -v {shlex.quote(candidate)}"
+
+            # Handle claude-code alias
+            binary_name = "claude" if candidate in {"claude", "claude-code"} else candidate
+
+            check_cmd = f"PATH={shlex.quote(self._default_path)} command -v {shlex.quote(binary_name)}"
             stdout, stderr, exit_code = await self._exec_in_sandbox(
                 client,
                 sandbox_id,
@@ -362,14 +415,22 @@ class SandyService:
             logger.info(
                 "agent_check",
                 candidate=candidate,
+                binary_name=binary_name,
                 exit_code=exit_code,
-                stdout=stdout.strip() if stdout else "",
-                stderr=stderr.strip() if stderr else "",
+                found_path=stdout.strip() if stdout else "",
+                stderr=stderr.strip()[:200] if stderr else "",
             )
             if exit_code == 0 and stdout.strip():
-                logger.info("agent_selected", agent=candidate, path=stdout.strip())
+                logger.info(
+                    "agent_selected",
+                    agent=candidate,
+                    binary_name=binary_name,
+                    path=stdout.strip(),
+                    reason="found_in_path",
+                )
                 return candidate
-        logger.info("agent_selected", agent="builtin", reason="no_candidates_found")
+
+        logger.warning("agent_selected", agent="builtin", reason="no_candidates_found_in_path")
         return "builtin"
 
     async def _write_file(

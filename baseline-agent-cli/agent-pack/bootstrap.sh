@@ -1,6 +1,11 @@
 #!/bin/bash
 # Bootstrap script run when agent starts in sandbox
 
+set -e  # Exit on error
+
+echo "=== Janus Agent Pack Bootstrap ==="
+echo "Starting at: $(date)"
+
 # Create docs directory structure
 mkdir -p /workspace/docs/models
 
@@ -15,7 +20,7 @@ fi
 
 # Ensure agent binaries are executable
 if [ -d /agent-pack/bin ]; then
-  chmod +x /agent-pack/bin/*
+  chmod +x /agent-pack/bin/* 2>/dev/null || true
 fi
 
 # Start artifact server
@@ -26,37 +31,65 @@ mkdir -p "${JANUS_SCREENSHOT_DIR:-/workspace/artifacts/screenshots}"
 
 # Helper function to install pip packages with fallbacks for externally-managed-environment
 pip_install() {
+  echo "Installing: $*"
   pip install --user "$@" 2>/dev/null || \
     pip install --break-system-packages "$@" 2>/dev/null || \
     pip install "$@"
 }
 
 # Install Playwright for browser automation
+echo "=== Installing Playwright ==="
 if ! python3 - <<'PY' >/dev/null 2>&1
 import playwright  # noqa: F401
 PY
 then
   pip_install playwright
 fi
-python3 -m playwright install chromium
+python3 -m playwright install chromium 2>/dev/null || echo "Playwright chromium install skipped"
 
 # Install aider-chat for intelligent CLI agent capabilities
-echo "Installing aider-chat..."
+echo "=== Installing aider-chat ==="
 if ! command -v aider >/dev/null 2>&1; then
   pip_install aider-chat
   # Ensure ~/.local/bin is in PATH (where pip --user installs to)
-  export PATH="$HOME/.local/bin:$PATH"
+  export PATH="$HOME/.local/bin:/root/.local/bin:$PATH"
 fi
 
 # Verify aider installation
+echo "=== Verifying agent installations ==="
+echo "PATH=$PATH"
+
 if command -v aider >/dev/null 2>&1; then
-  echo "aider installed successfully: $(which aider)"
+  AIDER_PATH=$(which aider)
+  echo "aider found at: $AIDER_PATH"
+  # Verify it's the real aider, not a wrapper
+  if file "$AIDER_PATH" 2>/dev/null | grep -q "Python script"; then
+    echo "aider is a Python script (real installation)"
+  elif file "$AIDER_PATH" 2>/dev/null | grep -q "shell script"; then
+    echo "WARNING: aider appears to be a shell script wrapper"
+  fi
 else
   echo "WARNING: aider not found in PATH after installation"
-  echo "PATH=$PATH"
-  # Try to find it
-  find ~/.local -name "aider" -type f 2>/dev/null | head -5
+  echo "Searching for aider..."
+  find /root/.local -name "aider" -type f 2>/dev/null | head -5
+  find /usr/local -name "aider" -type f 2>/dev/null | head -5
 fi
+
+# Check for Claude Code
+if command -v claude >/dev/null 2>&1; then
+  echo "claude (Claude Code) found at: $(which claude)"
+else
+  echo "claude (Claude Code) not installed"
+fi
+
+# Check for other agents
+for agent in opencode openhands; do
+  if command -v "$agent" >/dev/null 2>&1; then
+    echo "$agent found at: $(which $agent)"
+  else
+    echo "$agent not installed"
+  fi
+done
 
 start_artifact_server() {
   python3 - <<'PY'
@@ -98,7 +131,7 @@ PY
 ) >/workspace/artifact_server.log 2>&1 &
 
 # Start the model router in the background
-echo "Starting Janus Model Router..."
+echo "=== Starting Janus Model Router ==="
 python3 -m janus_baseline_agent_cli.router.server >/workspace/router.log 2>&1 &
 ROUTER_PID=$!
 
@@ -124,4 +157,9 @@ export PYTHONDONTWRITEBYTECODE=1
 export NODE_NO_WARNINGS=1
 export PYTHONPATH="/workspace/lib:${PYTHONPATH:-}"
 
-echo "Agent pack initialized. Reference docs available at /workspace/docs/"
+echo "=== Bootstrap Complete ==="
+echo "Workspace: /workspace"
+echo "Agent pack: /agent-pack"
+echo "Reference docs: /workspace/docs/"
+echo "Available agents:"
+ls -la /root/.local/bin/ 2>/dev/null | head -10 || echo "  (none in /root/.local/bin)"
