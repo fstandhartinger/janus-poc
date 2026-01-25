@@ -2,6 +2,8 @@
  * Chat-related types matching OpenAI API with Janus extensions.
  */
 
+import type { GenerationFlags } from './generation';
+
 export type MessageRole = 'system' | 'user' | 'assistant' | 'tool';
 
 export interface TextContent {
@@ -98,6 +100,7 @@ export interface ChatCompletionRequest {
   user_id?: string;
   enable_memory?: boolean;
   chutes_access_token?: string;
+  generation_flags?: GenerationFlags;
 }
 
 export interface ChatCompletionChunk {

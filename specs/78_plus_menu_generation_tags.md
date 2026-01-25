@@ -1,6 +1,6 @@
 # Spec 78: Plus Menu with Generation Tags
 
-**Status:** NOT STARTED
+## Status: COMPLETE
 **Priority:** High
 **Complexity:** High
 **Prerequisites:** None
@@ -512,3 +512,5 @@ const sendMessage = async () => {
 - Flags ensure the agent path is used (never fast path)
 - Consider adding visual feedback when generation is in progress
 - Future: Add tag presets (e.g., "Creative Mode" = image + audio)
+
+NR_OF_TRIES: 1

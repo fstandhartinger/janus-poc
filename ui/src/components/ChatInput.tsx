@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { FilePreview } from './FilePreview';
 import { MicrophonePermissionBanner } from './MicrophonePermissionDialog';
 import { VoiceInputButton } from './VoiceInputButton';
@@ -40,6 +40,22 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     });
     textareaRef.current?.focus();
   }, []);
+
+  // Auto-resize textarea based on content
+  const adjustTextareaHeight = useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    // Reset height to auto to get the correct scrollHeight
+    textarea.style.height = 'auto';
+    // Set to scrollHeight (content height)
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }, []);
+
+  // Adjust height when input changes
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input, adjustTextareaHeight]);
 
   const buildGenerationFlags = useCallback((tags: GenerationTag[]): GenerationFlags | undefined => {
     if (tags.length === 0) return undefined;

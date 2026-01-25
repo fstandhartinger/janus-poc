@@ -5,14 +5,13 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
 import { useCanvasStore } from '@/store/canvas';
-import { RateLimitError, fetchModels, streamChatCompletion, streamDeepResearch } from '@/lib/api';
+import { RateLimitError, fetchModels, streamChatCompletion } from '@/lib/api';
 import { isMemoryEnabled, setMemoryEnabled } from '@/lib/memory';
 import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFreeChats, setFreeChatCount } from '@/lib/freeChat';
 import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
-import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress';
 import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
@@ -22,6 +21,7 @@ import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
 import { useAuth } from '@/hooks/useAuth';
 import type { ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
+import type { GenerationFlags } from '@/types/generation';
 import type { AttachedFile } from '@/lib/file-types';
 
 interface ChatAreaProps {
@@ -52,8 +52,6 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   const pendingSendRef = useRef<string | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('baseline-cli-agent');
-  const [researchStages, setResearchStages] = useState<ResearchStage[]>([]);
-  const [researchActive, setResearchActive] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
   const [screenshotsLive, setScreenshotsLive] = useState(false);
   const [freeChatsRemaining, setFreeChatsRemaining] = useState(FREE_CHAT_LIMIT);
@@ -132,8 +130,6 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   }, []);
 
   type MessageContentPart = Exclude<MessageContent, string>[number];
-  type SendOptions = { deepResearch?: boolean; researchMode?: 'light' | 'max' };
-  type ResearchSource = { title: string; url: string; snippet: string };
 
   const buildMessageContent = (content: string, files: AttachedFile[]): MessageContent => {
     const trimmedContent = content.trim();
@@ -162,83 +158,6 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     return trimmedContent;
   };
 
-  const normalizeStageStatus = (status?: string): ResearchStage['status'] => {
-    if (status === 'pending' || status === 'running' || status === 'complete' || status === 'error') {
-      return status;
-    }
-    return 'pending';
-  };
-
-  const updateResearchStage = (payload: { label?: string; status?: string; detail?: string }) => {
-    const label = payload.label?.trim();
-    if (!label) return;
-    const status = normalizeStageStatus(payload.status);
-    const detail = payload.detail?.trim();
-    setResearchStages((prev) => {
-      const next = [...prev];
-      const existingIndex = next.findIndex((stage) => stage.label === label);
-      if (existingIndex >= 0) {
-        next[existingIndex] = {
-          ...next[existingIndex],
-          status,
-          detail,
-        };
-      } else {
-        next.push({
-          id: label,
-          label,
-          status,
-          detail,
-        });
-      }
-      return next;
-    });
-  };
-
-  const collectResearchSources = (
-    raw: unknown,
-    sources: ResearchSource[],
-    seen: Set<string>
-  ) => {
-    const entries: Array<Record<string, unknown>> = [];
-    if (Array.isArray(raw)) {
-      for (const entry of raw) {
-        if (Array.isArray(entry)) {
-          entries.push(...(entry.filter((item) => item && typeof item === 'object') as Record<string, unknown>[]));
-        } else if (entry && typeof entry === 'object') {
-          entries.push(entry as Record<string, unknown>);
-        }
-      }
-    } else if (raw && typeof raw === 'object') {
-      entries.push(raw as Record<string, unknown>);
-    }
-
-    for (const entry of entries) {
-      const metadata =
-        entry.metadata && typeof entry.metadata === 'object'
-          ? (entry.metadata as Record<string, unknown>)
-          : {};
-      const title = String(metadata.title ?? entry.title ?? '');
-      const url = String(metadata.url ?? entry.url ?? '');
-      const snippet = String(entry.pageContent ?? entry.snippet ?? '');
-      const key = url || title;
-      if (key && seen.has(key)) continue;
-      if (key) seen.add(key);
-      sources.push({ title, url, snippet: snippet.slice(0, 200) });
-    }
-  };
-
-  const appendResearchSources = (sources: ResearchSource[]) => {
-    const lines = sources.map((source, index) => {
-      const title = source.title || source.url || `Source ${index + 1}`;
-      if (source.url) {
-        return `${index + 1}. [${title}](${source.url})`;
-      }
-      return `${index + 1}. ${title}`;
-    });
-    appendToLastMessage(`\n\n---\n\n## Sources\n\n${lines.join('\n')}`, '');
-  };
-
   const pushScreenshot = (shot: ScreenshotData) => {
     if (!shot.image_base64) return;
     setScreenshots((prev) => [...prev, shot]);
@@ -257,7 +176,11 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     };
   };
 
-  const handleSend = async (content: string, files: AttachedFile[], options?: SendOptions) => {
+  const handleSend = async (
+    content: string,
+    files: AttachedFile[],
+    generationFlags?: GenerationFlags
+  ) => {
     const trimmedContent = content.trim();
 
     if (!authLoading && !isAuthenticated && remainingFreeChats() <= 0) {
@@ -305,92 +228,59 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     setScreenshotsLive(true);
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
-    const useDeepResearch = Boolean(options?.deepResearch && trimmedContent);
-    const sources: ResearchSource[] = [];
-    const seenSources = new Set<string>();
-    let aborted = false;
-
-    if (useDeepResearch) {
-      setResearchStages([]);
-      setResearchActive(true);
-    }
+    const flagsPayload =
+      generationFlags && Object.values(generationFlags).some(Boolean)
+        ? generationFlags
+        : undefined;
 
     try {
-      if (useDeepResearch) {
-        for await (const event of streamDeepResearch(
-          {
-            query: trimmedContent,
-            mode: options?.researchMode ?? 'light',
-            optimization: 'balanced',
-          },
-          signal
-        )) {
-          if (event.type === 'progress') {
-            updateResearchStage({
-              label: event.data?.label,
-              status: event.data?.status,
-              detail: event.data?.detail,
-            });
-          } else if (event.type === 'response') {
-            appendToLastMessage(event.data || '', '');
-          } else if (event.type === 'sources') {
-            collectResearchSources(event.data, sources, seenSources);
-          } else if (event.type === 'error') {
-            const detail = event.data?.detail;
-            if (detail) {
-              appendToLastMessage(`\n\n*${detail}*`, '');
-            }
-          }
+      // Build request messages from current session
+      const currentSession = getCurrentSession();
+      const requestMessages = (currentSession?.messages || [])
+        .slice(0, -1) // Exclude the placeholder
+        .map((m) => ({
+          role: m.role,
+          content: m.content,
+        }));
+
+      const userId = getUserId(user);
+      const memoryEnabledSetting = memoryEnabled;
+
+      for await (const chunk of streamChatCompletion(
+        {
+          model: selectedModel,
+          messages: requestMessages,
+          stream: true,
+          user_id: userId,
+          enable_memory: memoryEnabledSetting,
+          generation_flags: flagsPayload,
+        },
+        signal
+      )) {
+        if ('type' in chunk && chunk.type === 'screenshot') {
+          pushScreenshot(chunk.data);
+          continue;
         }
-      } else {
-        // Build request messages from current session
-        const currentSession = getCurrentSession();
-        const requestMessages = (currentSession?.messages || [])
-          .slice(0, -1) // Exclude the placeholder
-          .map((m) => ({
-            role: m.role,
-            content: m.content,
-          }));
-
-        const userId = getUserId(user);
-        const memoryEnabledSetting = memoryEnabled;
-
-        for await (const chunk of streamChatCompletion(
-          {
-            model: selectedModel,
-            messages: requestMessages,
-            stream: true,
-            user_id: userId,
-            enable_memory: memoryEnabledSetting,
-          },
-          signal
-        )) {
-          if ('type' in chunk && chunk.type === 'screenshot') {
-            pushScreenshot(chunk.data);
-            continue;
+        const completionChunk = chunk as ChatCompletionChunk;
+        const delta = completionChunk.choices[0]?.delta;
+        if (delta?.janus?.event === 'screenshot') {
+          const payload = coerceScreenshotPayload(delta.janus.payload);
+          if (payload) {
+            pushScreenshot(payload);
           }
-          const completionChunk = chunk as ChatCompletionChunk;
-          const delta = completionChunk.choices[0]?.delta;
-          if (delta?.janus?.event === 'screenshot') {
-            const payload = coerceScreenshotPayload(delta.janus.payload);
-            if (payload) {
-              pushScreenshot(payload);
-            }
-            continue;
-          }
-          if (delta) {
-            const contentDelta = delta.content || '';
-            const reasoningDelta = delta.reasoning_content || '';
-            if (contentDelta || reasoningDelta) {
-              appendToLastMessage(contentDelta, reasoningDelta);
-            }
+          continue;
+        }
+        if (delta) {
+          const contentDelta = delta.content || '';
+          const reasoningDelta = delta.reasoning_content || '';
+          if (contentDelta || reasoningDelta) {
+            appendToLastMessage(contentDelta, reasoningDelta);
           }
         }
       }
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         // User cancelled
-        aborted = true;
       } else if (error instanceof RateLimitError) {
         const message = error.message || 'Daily limit reached. Sign in to continue.';
         console.error('Rate limit error:', error);
@@ -413,12 +303,6 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
         appendToLastMessage('\n\n*Error: Failed to get response*', '');
       }
     } finally {
-      if (useDeepResearch && !aborted && sources.length > 0) {
-        appendResearchSources(sources);
-      }
-      if (useDeepResearch) {
-        setResearchActive(false);
-      }
       setScreenshotsLive(false);
       setStreaming(false);
       abortControllerRef.current = null;
@@ -599,7 +483,6 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
         <>
           <div ref={messagesContainerRef} className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
             <div className="max-w-4xl mx-auto">
-              <DeepResearchProgress stages={researchStages} isActive={researchActive} />
               <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
               {messages.map((message) => (
                 <MessageBubble
@@ -612,7 +495,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
               {isStreaming && (
                 <div className="chat-streaming" role="status" aria-live="polite">
                   <span className="chat-streaming-dot" />
-                  <span>{researchActive ? 'Running deep research' : 'Generating response'}</span>
+                  <span>Generating response</span>
                   <button onClick={handleCancel} className="chat-cancel">
                     Stop
                   </button>

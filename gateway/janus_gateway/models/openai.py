@@ -111,6 +111,16 @@ class StreamOptions(BaseModel):
     include_usage: Optional[bool] = None
 
 
+class GenerationFlags(BaseModel):
+    """Optional generation flags for agent routing."""
+
+    generate_image: bool = False
+    generate_video: bool = False
+    generate_audio: bool = False
+    deep_research: bool = False
+    web_search: bool = False
+
+
 class ChatCompletionRequest(BaseModel):
     """OpenAI-compatible chat completion request."""
 
@@ -129,6 +139,7 @@ class ChatCompletionRequest(BaseModel):
     user_id: Optional[str] = None
     enable_memory: bool = False
     chutes_access_token: Optional[str] = None
+    generation_flags: Optional[GenerationFlags] = None
 
     # Janus extension: select competitor
     competitor_id: Optional[str] = None
