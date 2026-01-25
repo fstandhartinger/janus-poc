@@ -25,11 +25,15 @@ mkdir -p "$JANUS_ARTIFACTS_DIR"
 mkdir -p "${JANUS_SCREENSHOT_DIR:-/workspace/artifacts/screenshots}"
 
 # Install Playwright for browser automation
+# Use --user or --break-system-packages to handle externally-managed-environment
 if ! python3 - <<'PY' >/dev/null 2>&1
 import playwright  # noqa: F401
 PY
 then
-  pip install playwright
+  # Try --user first (preferred), fall back to --break-system-packages if needed
+  pip install --user playwright 2>/dev/null || \
+    pip install --break-system-packages playwright 2>/dev/null || \
+    pip install playwright
 fi
 python3 -m playwright install chromium
 
