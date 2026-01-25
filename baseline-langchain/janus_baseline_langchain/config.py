@@ -43,8 +43,18 @@ class Settings(BaseSettings):
         ),
     )
 
+    # Model Router settings
+    use_model_router: bool = Field(
+        default=True,
+        description="Enable composite model routing",
+        validation_alias=AliasChoices(
+            "USE_MODEL_ROUTER",
+            "BASELINE_LANGCHAIN_USE_MODEL_ROUTER",
+        ),
+    )
+
     # LLM settings
-    model: str = Field(default="gpt-4o-mini", description="Default model")
+    model: str = Field(default="zai-org/GLM-4.7-TEE", description="Default model")
     openai_api_key: Optional[str] = Field(
         default=None,
         description="OpenAI API key",

@@ -1,13 +1,15 @@
 """LangChain agent setup for the baseline implementation."""
 
-from typing import Any, cast
+from typing import Any, Union, cast
 
 from langchain.agents import AgentExecutor, create_openai_tools_agent
+from langchain_core.language_models import BaseChatModel
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_openai import ChatOpenAI
 from pydantic.v1 import SecretStr
 
 from janus_baseline_langchain.config import Settings
+from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel
 from janus_baseline_langchain.tools import (
     code_execution_tool,
     image_generation_tool,
@@ -33,22 +35,31 @@ For calculations or data processing, use code_execution.
 """
 
 
-def create_agent(settings: Settings) -> AgentExecutor:
-    """Create a LangChain agent executor configured for Janus."""
-    api_key = (
-        SecretStr(settings.openai_api_key)
-        if settings.openai_api_key
-        else SecretStr("dummy-key")
-    )
-    llm = ChatOpenAI(
+def create_llm(settings: Settings) -> Union[CompositeRoutingChatModel, ChatOpenAI]:
+    """Create the LLM instance based on settings."""
+    api_key = settings.chutes_api_key or settings.openai_api_key or "dummy-key"
+
+    if settings.use_model_router:
+        return CompositeRoutingChatModel(
+            api_key=api_key,
+            base_url=settings.openai_base_url,
+            default_temperature=settings.temperature,
+        )
+
+    return ChatOpenAI(
         model=settings.model,
-        api_key=api_key,
+        api_key=SecretStr(api_key),
         base_url=settings.openai_base_url,
         temperature=settings.temperature,
         streaming=True,
         max_retries=settings.max_retries,
         timeout=settings.request_timeout,
     )
+
+
+def create_agent(settings: Settings) -> AgentExecutor:
+    """Create a LangChain agent executor configured for Janus."""
+    llm = create_llm(settings)
 
     tools = [
         image_generation_tool,
@@ -67,7 +78,7 @@ def create_agent(settings: Settings) -> AgentExecutor:
         ]
     )
 
-    agent = create_openai_tools_agent(llm, tools, prompt)
+    agent = create_openai_tools_agent(cast(BaseChatModel, llm), tools, prompt)
 
     return AgentExecutor(
         agent=cast(Any, agent),
