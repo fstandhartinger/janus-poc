@@ -69,9 +69,9 @@ export default function ChatPage() {
   const handleNewChat = useCallback(() => createSession(), [createSession]);
 
   return (
-    <div className="min-h-screen chat-aurora-bg flex flex-col">
+    <div className="h-screen max-h-screen overflow-hidden chat-aurora-bg flex flex-col">
       <Header />
-      <main className={`chat-shell flex-1 ${isCanvasOpen ? 'canvas-open' : ''}`} aria-label="Chat">
+      <main className={`chat-shell ${isCanvasOpen ? 'canvas-open' : ''}`} aria-label="Chat">
         <h1 className="sr-only">Janus Chat</h1>
         {sidebarOpen && (
           <div
