@@ -1201,6 +1201,25 @@ html {
   letter-spacing: 0.2em;
 }
 
+.chat-new-chat-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid rgba(99, 210, 151, 0.5);
+  background: rgba(99, 210, 151, 0.15);
+  color: #63D297;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.chat-new-chat-btn:hover {
+  background: rgba(99, 210, 151, 0.25);
+  border-color: rgba(99, 210, 151, 0.7);
+  transform: scale(1.05);
+}
+
 .chat-message {
   border-radius: 18px;
   padding: 14px 16px;
@@ -1364,6 +1383,25 @@ html {
   padding: 120px 0;
 }
 
+/* Empty state container - centered vertically */
+.chat-empty-container {
+  min-height: 0;
+}
+
+/* Messages container with proper scrolling */
+.chat-messages-container {
+  overscroll-behavior: contain;
+}
+
+/* Bottom-fixed input area */
+.chat-input-bottom {
+  background: linear-gradient(to top, rgba(11, 15, 20, 0.95) 0%, rgba(11, 15, 20, 0.8) 50%, transparent 100%);
+  padding-top: 1.5rem;
+  /* Ensure input stays above mobile keyboard */
+  position: sticky;
+  bottom: 0;
+}
+
 .chat-empty-title {
   font-size: 2rem;
   color: #E5E7EB;
@@ -1475,6 +1513,39 @@ html {
 
   .chat-model-select {
     display: none;
+  }
+
+  /* Mobile keyboard handling - ensure input stays visible */
+  .chat-area {
+    /* Use dvh for dynamic viewport height that accounts for mobile keyboard */
+    height: 100%;
+    max-height: 100%;
+  }
+
+  .chat-empty-container {
+    /* On mobile with keyboard, maintain flex centering */
+    min-height: calc(100dvh - 64px - env(safe-area-inset-bottom, 0px));
+  }
+
+  .chat-input-bottom {
+    /* Add safe area padding for iOS notch devices */
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
+    /* Ensure it stays at the bottom even when keyboard appears */
+    flex-shrink: 0;
+  }
+
+  /* When input is focused, ensure visibility above keyboard */
+  .chat-input:focus {
+    /* This helps on some Android devices */
+    scroll-margin-bottom: 20px;
+  }
+
+  /* Ensure messages container shrinks properly when keyboard appears */
+  .chat-messages-container {
+    flex: 1;
+    min-height: 0;
+    /* Prevent bounce on iOS */
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -2255,14 +2326,9 @@ code {
   border-color: rgba(239, 68, 68, 0.5);
 }
 
-/* ─── Hamburger Menu Button Fix ───────────────────────────────────────────── */
-
-/* Hide on large screens where sidebar is always visible */
-@media (min-width: 1024px) {
-  .chat-menu-btn {
-    display: none;
-  }
-}
+/* ─── Hamburger Menu Button ───────────────────────────────────────────────── */
+/* Menu button visibility is controlled dynamically via Tailwind classes
+   based on sidebar collapsed state. No global media query needed. */
 
 /* ─── Mermaid Diagram Styling ──────────────────────────────────────────────── */
 

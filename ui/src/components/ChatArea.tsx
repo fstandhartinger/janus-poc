@@ -17,9 +17,11 @@ import type { AttachedFile } from '@/lib/file-types';
 
 interface ChatAreaProps {
   onMenuClick?: () => void;
+  isSidebarCollapsed?: boolean;
+  onNewChat?: () => void;
 }
 
-export function ChatArea({ onMenuClick }: ChatAreaProps) {
+export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAreaProps) {
   const {
     currentSessionId,
     isStreaming,
@@ -371,16 +373,31 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
       <CanvasPanel onAIEdit={handleAIEdit} disabled={isStreaming} />
       <div className="chat-topbar shrink-0">
         <div className="chat-topbar-left">
+          {/* Menu button - visible on mobile OR on desktop when sidebar is collapsed */}
           <button
             type="button"
             onClick={onMenuClick}
-            className="chat-menu-btn lg:hidden"
+            className={`chat-menu-btn ${isSidebarCollapsed ? 'lg:flex' : 'lg:hidden'}`}
             aria-label="Open sidebar"
           >
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.6">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
+          {/* New chat button - visible on desktop when sidebar is collapsed */}
+          {isSidebarCollapsed && onNewChat && (
+            <button
+              type="button"
+              onClick={onNewChat}
+              className="chat-new-chat-btn hidden lg:flex"
+              aria-label="New chat"
+              title="New chat"
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+              </svg>
+            </button>
+          )}
           <Link href="/" className="chat-home-btn" title="Go to home" aria-label="Go to home">
             <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
@@ -399,21 +416,26 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto min-h-0 px-6 py-6">
-        <div className="max-w-4xl mx-auto">
-          <DeepResearchProgress stages={researchStages} isActive={researchActive} />
-          <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
-          {messages.length === 0 ? (
-            <div className="chat-empty">
-              <div>
-                <p className="chat-empty-title">Where should we begin?</p>
-                <p className="chat-empty-subtitle">
-                  Powered by Chutes. The world's open-source decentralized AI compute platform.
-                </p>
-              </div>
+      {messages.length === 0 ? (
+        /* Empty state: center everything vertically */
+        <div className="chat-empty-container flex-1 flex flex-col items-center justify-center px-6 py-6">
+          <div className="w-full max-w-2xl">
+            <div className="text-center mb-8">
+              <p className="chat-empty-title">Where should we begin?</p>
+              <p className="chat-empty-subtitle">
+                Powered by Chutes. The world&apos;s open-source decentralized AI compute platform.
+              </p>
             </div>
-          ) : (
-            <>
+            <ChatInput onSend={handleSend} disabled={isStreaming} />
+          </div>
+        </div>
+      ) : (
+        /* Chat mode: messages scroll, input fixed at bottom */
+        <>
+          <div className="chat-messages-container flex-1 overflow-y-auto min-h-0 px-6 py-6" aria-busy={isStreaming}>
+            <div className="max-w-4xl mx-auto">
+              <DeepResearchProgress stages={researchStages} isActive={researchActive} />
+              <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
               {messages.map((message) => (
                 <MessageBubble
                   key={message.id}
@@ -422,24 +444,26 @@ export function ChatArea({ onMenuClick }: ChatAreaProps) {
                 />
               ))}
               <div ref={messagesEndRef} />
-            </>
-          )}
 
-          {isStreaming && (
-            <div className="chat-streaming">
-              <span className="chat-streaming-dot" />
-              <span>{researchActive ? 'Running deep research' : 'Generating response'}</span>
-              <button onClick={handleCancel} className="chat-cancel">
-                Stop
-              </button>
+              {isStreaming && (
+                <div className="chat-streaming" role="status" aria-live="polite">
+                  <span className="chat-streaming-dot" />
+                  <span>{researchActive ? 'Running deep research' : 'Generating response'}</span>
+                  <button onClick={handleCancel} className="chat-cancel">
+                    Stop
+                  </button>
+                </div>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
 
-      <div className="shrink-0 px-6 pb-6 pt-2">
-        <ChatInput onSend={handleSend} disabled={isStreaming} />
-      </div>
+          <div className="chat-input-bottom shrink-0 px-6 pb-6 pt-2">
+            <div className="max-w-4xl mx-auto">
+              <ChatInput onSend={handleSend} disabled={isStreaming} />
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

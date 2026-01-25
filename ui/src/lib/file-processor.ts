@@ -67,7 +67,11 @@ async function processPDF(file: File, id: string): Promise<AttachedFile> {
   for (let i = 1; i <= pdf.numPages; i += 1) {
     const page = await pdf.getPage(i);
     const textContent = await page.getTextContent();
-    const pageText = textContent.items.map((item: any) => item.str).join(' ');
+    const pageText = textContent.items
+      .map((item: unknown) =>
+        typeof item === 'object' && item && 'str' in item ? String((item as { str: string }).str) : ''
+      )
+      .join(' ');
     fullText += `\n--- Page ${i} ---\n${pageText}`;
   }
 
