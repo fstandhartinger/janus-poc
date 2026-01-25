@@ -170,7 +170,12 @@ class SandyService:
         """Build environment variables for the CLI agent."""
         sandbox_url = self._sandbox_url(sandbox_id, public_url)
         artifact_base = self._artifact_url_base(sandbox_id, public_url)
-        chutes_api_key = self._settings.chutes_api_key or self._settings.openai_api_key or ""
+        chutes_api_key = (
+            (request.chutes_access_token if request else None)
+            or self._settings.chutes_api_key
+            or self._settings.openai_api_key
+            or ""
+        )
         chutes_api_url = self._settings.chutes_api_base_effective
         auth_token = self._resolve_auth_token(request)
         return {

@@ -1,10 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
 import { useCanvasStore } from '@/store/canvas';
-import { fetchModels, streamChatCompletion, streamDeepResearch } from '@/lib/api';
+import { RateLimitError, fetchModels, streamChatCompletion, streamDeepResearch } from '@/lib/api';
+import { isMemoryEnabled } from '@/lib/memory';
+import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFreeChats, setFreeChatCount } from '@/lib/freeChat';
+import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
@@ -12,6 +16,10 @@ import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress
 import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
+import { MemoryToggle } from './MemoryToggle';
+import { SignInGateDialog } from './auth/SignInGateDialog';
+import { UserMenu } from './auth/UserMenu';
+import { useAuth } from '@/hooks/useAuth';
 import type { ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { AttachedFile } from '@/lib/file-types';
 
@@ -28,23 +36,64 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     showReasoning,
     addMessage,
     appendToLastMessage,
+    updateLastMessage,
     setStreaming,
     createSession,
     getCurrentSession,
   } = useChatStore();
 
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const { user, isAuthenticated, isLoading: authLoading, signIn, signOut } = useAuth();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const processedCanvasMessagesRef = useRef<Set<string>>(new Set());
+  const pendingSendRef = useRef<string | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('baseline-cli-agent');
   const [researchStages, setResearchStages] = useState<ResearchStage[]>([]);
   const [researchActive, setResearchActive] = useState(false);
   const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
   const [screenshotsLive, setScreenshotsLive] = useState(false);
+  const [freeChatsRemaining, setFreeChatsRemaining] = useState(FREE_CHAT_LIMIT);
+  const [freeChatsUsed, setFreeChatsUsed] = useState(0);
+  const [signInGateOpen, setSignInGateOpen] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState<string | undefined>();
+  const [toast, setToast] = useState<{ message: string; action?: string; onAction?: () => void } | null>(null);
 
   const session = getCurrentSession();
   const messages = session?.messages || [];
+  const pendingQuery = searchParams.get('q')?.trim();
+
+  const syncFreeChatState = () => {
+    const state = readFreeChatState();
+    setFreeChatsUsed(state.count);
+    setFreeChatsRemaining(Math.max(0, FREE_CHAT_LIMIT - state.count));
+  };
+
+  useEffect(() => {
+    getUserId(user);
+  }, [user]);
+
+  useEffect(() => {
+    syncFreeChatState();
+  }, []);
+
+  useEffect(() => {
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === 'janus_free_chats_v1') {
+        syncFreeChatState();
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
+  }, []);
+
+  useEffect(() => {
+    if (!toast) return;
+    const timeout = window.setTimeout(() => setToast(null), 6000);
+    return () => window.clearTimeout(timeout);
+  }, [toast]);
 
   // Auto-scroll to bottom - use scrollTop on container to avoid propagating to parent
   useEffect(() => {
@@ -206,15 +255,33 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   };
 
   const handleSend = async (content: string, files: AttachedFile[], options?: SendOptions) => {
+    const trimmedContent = content.trim();
+
+    if (!authLoading && !isAuthenticated && remainingFreeChats() <= 0) {
+      setPendingMessage(trimmedContent || undefined);
+      setSignInGateOpen(true);
+      setToast({
+        message: 'Daily limit reached. Sign in to continue.',
+        action: 'Sign in',
+        onAction: () => signIn(trimmedContent || undefined),
+      });
+      return;
+    }
+
     // Ensure we have a session
     let sessionId = currentSessionId;
     if (!sessionId) {
       sessionId = createSession();
     }
 
+    if (!isAuthenticated) {
+      const state = incrementFreeChatCount();
+      setFreeChatsUsed(state.count);
+      setFreeChatsRemaining(Math.max(0, FREE_CHAT_LIMIT - state.count));
+    }
+
     // Build message content
     const messageContent = buildMessageContent(content, files);
-    const trimmedContent = content.trim();
 
     // Add user message
     addMessage({
@@ -282,11 +349,16 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
             content: m.content,
           }));
 
+        const userId = getUserId(user);
+        const memoryEnabled = isMemoryEnabled();
+
         for await (const chunk of streamChatCompletion(
           {
             model: selectedModel,
             messages: requestMessages,
             stream: true,
+            user_id: userId,
+            enable_memory: memoryEnabled,
           },
           signal
         )) {
@@ -316,6 +388,23 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
       if (error instanceof Error && error.name === 'AbortError') {
         // User cancelled
         aborted = true;
+      } else if (error instanceof RateLimitError) {
+        const message = error.message || 'Daily limit reached. Sign in to continue.';
+        console.error('Rate limit error:', error);
+        updateLastMessage({
+          content: message,
+          reasoning_content: '',
+        });
+        setPendingMessage(trimmedContent || undefined);
+        setSignInGateOpen(true);
+        setToast({
+          message,
+          action: 'Sign in',
+          onAction: () => signIn(trimmedContent || undefined),
+        });
+        setFreeChatCount(FREE_CHAT_LIMIT);
+        setFreeChatsUsed(FREE_CHAT_LIMIT);
+        setFreeChatsRemaining(0);
       } else {
         console.error('Streaming error:', error);
         appendToLastMessage('\n\n*Error: Failed to get response*', '');
@@ -336,6 +425,18 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   const handleCancel = () => {
     abortControllerRef.current?.abort();
   };
+
+  useEffect(() => {
+    if (!pendingQuery || !isAuthenticated || isStreaming) return;
+    if (pendingSendRef.current === pendingQuery) return;
+    pendingSendRef.current = pendingQuery;
+    handleSend(pendingQuery, []);
+    setPendingMessage(undefined);
+    setSignInGateOpen(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('q');
+    router.replace(`${url.pathname}${url.search}`);
+  }, [handleSend, isAuthenticated, isStreaming, pendingQuery, router]);
 
   const getMessageText = (content: MessageContent) => {
     if (typeof content === 'string') {
@@ -411,6 +512,22 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
         </div>
 
         <div className="chat-topbar-right">
+          <div className="chat-auth">
+            {!authLoading && !isAuthenticated && (
+              <>
+                <button type="button" className="chat-signin-btn" onClick={() => signIn()}>
+                  Sign in
+                </button>
+                <div className="chat-free-count">
+                  {freeChatsRemaining}/{FREE_CHAT_LIMIT} free chats remaining
+                </div>
+              </>
+            )}
+            {isAuthenticated && user && (
+              <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
+            )}
+          </div>
+          <MemoryToggle />
           <ModelSelector
             models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
             selectedModel={selectedModel}
@@ -418,6 +535,34 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
           />
         </div>
       </div>
+
+      <SignInGateDialog
+        open={signInGateOpen}
+        onOpenChange={setSignInGateOpen}
+        usedCount={freeChatsUsed}
+        limit={FREE_CHAT_LIMIT}
+        pendingMessage={pendingMessage}
+      />
+
+      {toast && (
+        <div className="chat-toast" role="status" aria-live="polite">
+          <div className="toast toast-error">
+            <span>{toast.message}</span>
+            {toast.action && toast.onAction && (
+              <button
+                type="button"
+                onClick={() => {
+                  toast.onAction?.();
+                  setToast(null);
+                }}
+                className="chat-toast-action"
+              >
+                {toast.action}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {messages.length === 0 ? (
         /* Empty state: center everything vertically */

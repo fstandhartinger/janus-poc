@@ -1,6 +1,6 @@
 # Spec 75: Sign in with Chutes
 
-**Status:** NOT STARTED
+**Status:** COMPLETE
 **Priority:** High
 **Complexity:** High
 **Prerequisites:** Spec 74 (Memory Feature UI)
@@ -569,3 +569,5 @@ When IP rate limit is hit:
 - The `chutes:invoke` scope is optional - app works without it
 - IP rate limiting is a backup; client-side limit is primary UX
 - Sessions last 30 days; access tokens are refreshed as needed
+
+NR_OF_TRIES: 1

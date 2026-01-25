@@ -27,11 +27,32 @@ export function normalizeGatewayUrl(rawUrl: string): string {
 export const GATEWAY_URL = normalizeGatewayUrl(
   process.env.NEXT_PUBLIC_GATEWAY_URL || 'http://localhost:8000'
 );
+const CHAT_PROXY_URL = '/api/chat';
+
+export type RateLimitDetails = {
+  used?: number;
+  remaining?: number;
+  limit?: number;
+  requiresLogin?: boolean;
+};
+
+export class RateLimitError extends Error {
+  readonly details?: RateLimitDetails;
+  readonly status: number;
+
+  constructor(message: string, status: number, details?: RateLimitDetails) {
+    super(message);
+    this.name = 'RateLimitError';
+    this.details = details;
+    this.status = status;
+  }
+}
 
 type FetchRetryOptions = {
   retries?: number;
   timeoutMs?: number;
   retryDelayMs?: number;
+  retryableStatus?: Set<number> | number[];
 };
 
 function isAbortError(error: unknown): boolean {
@@ -41,8 +62,12 @@ function isAbortError(error: unknown): boolean {
   return Boolean((error as { name?: string })?.name === 'AbortError');
 }
 
-function shouldRetryResponse(response: Response): boolean {
-  return RETRYABLE_STATUS.has(response.status);
+function shouldRetryResponse(response: Response, retryableStatus?: Set<number> | number[]): boolean {
+  if (!retryableStatus) {
+    return RETRYABLE_STATUS.has(response.status);
+  }
+  const statusSet = Array.isArray(retryableStatus) ? new Set(retryableStatus) : retryableStatus;
+  return statusSet.has(response.status);
 }
 
 function getRetryDelayMs(response: Response | null, baseDelayMs: number, attempt: number): number {
@@ -106,6 +131,7 @@ export async function fetchWithRetry(
     retries = DEFAULT_RETRIES,
     timeoutMs = DEFAULT_TIMEOUT_MS,
     retryDelayMs = DEFAULT_RETRY_DELAY_MS,
+    retryableStatus,
   } = options;
 
   let attempt = 0;
@@ -117,7 +143,7 @@ export async function fetchWithRetry(
       const response = await fetch(url, { ...init, signal });
       cleanup();
 
-      if (!response.ok && shouldRetryResponse(response) && attempt < retries) {
+      if (!response.ok && shouldRetryResponse(response, retryableStatus) && attempt < retries) {
         const cancelPromise = response.body?.cancel();
         if (cancelPromise) {
           cancelPromise.catch(() => undefined);
@@ -177,7 +203,7 @@ export async function* streamChatCompletion(
   signal?: AbortSignal
 ): AsyncGenerator<ChatStreamEvent> {
   const response = await fetchWithRetry(
-    `${GATEWAY_URL}/v1/chat/completions`,
+    CHAT_PROXY_URL,
     {
       method: 'POST',
       headers: {
@@ -189,11 +215,35 @@ export async function* streamChatCompletion(
         stream: true,
       }),
       signal,
+      credentials: 'include',
+      cache: 'no-store',
     },
-    { timeoutMs: DEFAULT_STREAM_TIMEOUT_MS }
+    {
+      timeoutMs: DEFAULT_STREAM_TIMEOUT_MS,
+      retryableStatus: [408, 425, 500, 502, 503, 504],
+    }
   );
 
   if (!response.ok) {
+    if (response.status === 429) {
+      try {
+        const data = (await response.json()) as { message?: string; details?: RateLimitDetails };
+        throw new RateLimitError(
+          data.message || 'Daily limit reached. Sign in to continue.',
+          response.status,
+          data.details
+        );
+      } catch (error) {
+        if (error instanceof RateLimitError) {
+          throw error;
+        }
+        const errorText = await response.text();
+        throw new RateLimitError(
+          errorText || 'Daily limit reached. Sign in to continue.',
+          response.status
+        );
+      }
+    }
     const errorText = await response.text();
     throw new Error(errorText || `Chat completion failed: ${response.statusText}`);
   }

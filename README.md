@@ -168,6 +168,10 @@ See individual component READMEs for full configuration:
 | `BASELINE_LANGCHAIN_PORT` | Baseline LangChain port (default: 8080) |
 | `NEXT_PUBLIC_GATEWAY_URL` | Gateway URL for UI |
 | `NEXT_PUBLIC_ENABLE_VOICE_INPUT` | Toggle voice input in the UI |
+| `CHUTES_OAUTH_CLIENT_ID` | Chutes OAuth client ID for UI sign-in |
+| `CHUTES_OAUTH_CLIENT_SECRET` | Chutes OAuth client secret for UI sign-in |
+| `CHUTES_OAUTH_REDIRECT_URI` | OAuth redirect URI for UI sign-in |
+| `CHUTES_OAUTH_COOKIE_SECRET` | Optional secret for encrypting OAuth cookies |
 | `CHUTES_API_KEY` | Chutes Whisper API key for transcription |
 | `SANDY_BASE_URL` | Sandy sandbox service URL |
 | `SANDY_API_KEY` | Sandy API key |

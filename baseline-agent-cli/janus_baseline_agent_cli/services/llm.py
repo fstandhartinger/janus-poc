@@ -53,22 +53,30 @@ class LLMService:
         self._vision_timeout = settings.vision_model_timeout
         self._enable_vision_routing = settings.enable_vision_routing
 
-    def _get_client(self) -> AsyncOpenAI:
+    def _get_client(
+        self, api_key: Optional[str] = None, api_base: Optional[str] = None
+    ) -> AsyncOpenAI:
         """Get or create OpenAI client."""
+        resolved_key = api_key or self._settings.effective_api_key or "dummy-key"
+        resolved_base = api_base or self._settings.effective_api_base
+        if api_key or api_base:
+            return AsyncOpenAI(api_key=resolved_key, base_url=resolved_base)
         if self._client is None:
-            api_key = self._settings.effective_api_key or "dummy-key"
-            self._client = AsyncOpenAI(
-                api_key=api_key,
-                base_url=self._settings.effective_api_base,
-            )
+            self._client = AsyncOpenAI(api_key=resolved_key, base_url=resolved_base)
         return self._client
 
     def _generate_id(self) -> str:
         """Generate a completion ID."""
         return f"chatcmpl-baseline-{uuid.uuid4().hex[:12]}"
 
-    def _should_mock(self) -> bool:
-        return self._settings.effective_api_key is None
+    def _should_mock(self, api_key: Optional[str]) -> bool:
+        return api_key is None
+
+    def _resolve_auth(self, request: ChatCompletionRequest) -> tuple[Optional[str], str]:
+        token = request.chutes_access_token or getattr(request, "_auth_token", None)
+        if token:
+            return token, self._settings.chutes_api_base_effective
+        return self._settings.effective_api_key, self._settings.effective_api_base
 
     def _mock_text(self) -> str:
         return (
@@ -78,9 +86,13 @@ class LLMService:
 
     def select_model(self, request: ChatCompletionRequest) -> str:
         """Select the appropriate model based on message content."""
-        if self._settings.use_model_router:
+        use_router = self._settings.use_model_router and not request.chutes_access_token
+        if use_router:
             return self._settings.effective_model
         requested_model = request.model or self._settings.model
+        fallback_model = (
+            self._settings.direct_model if self._settings.use_model_router else self._settings.model
+        )
         if requested_model in {
             "baseline",
             "baseline-cli-agent",
@@ -88,9 +100,9 @@ class LLMService:
             "janus-baseline-agent-cli",
             "janus-baseline-langchain",
         }:
-            requested_model = self._settings.model
+            requested_model = fallback_model
         if requested_model == "janus-router":
-            requested_model = self._settings.direct_model
+            requested_model = fallback_model
         if self._enable_vision_routing and contains_images(request.messages):
             logger.info(
                 "vision_routing_enabled",
@@ -219,8 +231,9 @@ class LLMService:
     ) -> ChatCompletionResponse:
         """Make a non-streaming completion request."""
         request_id = self._generate_id()
+        api_key, api_base = self._resolve_auth(request)
 
-        if self._should_mock():
+        if self._should_mock(api_key):
             logger.info("llm_mock_response", mode="non_streaming")
             return ChatCompletionResponse(
                 id=request_id,
@@ -237,7 +250,7 @@ class LLMService:
                 usage=Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
             )
 
-        client = self._get_client()
+        client = self._get_client(api_key=api_key, api_base=api_base)
         model = self.select_model(request)
         is_vision = self._is_vision_model(model)
         timeout = self._vision_timeout if is_vision else 30.0
@@ -348,11 +361,12 @@ class LLMService:
     ) -> AsyncGenerator[ChatCompletionChunk, None]:
         """Make a streaming completion request."""
         request_id = self._generate_id()
+        api_key, api_base = self._resolve_auth(request)
         model = self.select_model(request)
         is_vision = self._is_vision_model(model)
         timeout = self._vision_timeout if is_vision else 30.0
 
-        if self._should_mock():
+        if self._should_mock(api_key):
             logger.info("llm_mock_response", mode="streaming")
             yield ChatCompletionChunk(
                 id=request_id,
@@ -377,7 +391,7 @@ class LLMService:
             )
             return
 
-        client = self._get_client()
+        client = self._get_client(api_key=api_key, api_base=api_base)
         openai_messages = self._format_messages(request)
 
         try:

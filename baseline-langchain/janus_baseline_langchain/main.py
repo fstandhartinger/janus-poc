@@ -262,8 +262,17 @@ def _tool_event_message(event: dict[str, Any]) -> str:
     return tool_name
 
 
-def _get_router(settings: Settings) -> CompositeRoutingChatModel:
+def _get_router(
+    settings: Settings,
+    api_key_override: str | None = None,
+) -> CompositeRoutingChatModel:
     """Get or create the global router instance."""
+    if api_key_override:
+        return CompositeRoutingChatModel(
+            api_key=api_key_override,
+            base_url=settings.openai_base_url,
+            default_temperature=settings.temperature,
+        )
     global _router_instance
     if _router_instance is None:
         api_key = settings.chutes_api_key or settings.openai_api_key or "dummy-key"
@@ -275,16 +284,18 @@ def _get_router(settings: Settings) -> CompositeRoutingChatModel:
     return _router_instance
 
 
-def _create_text_chain(settings: Settings, model: str) -> ChatOpenAI:
-    api_key = (
-        SecretStr(settings.openai_api_key)
-        if settings.openai_api_key
-        else SecretStr("dummy-key")
-    )
+def _create_text_chain(
+    settings: Settings,
+    model: str,
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
+) -> ChatOpenAI:
+    api_key_value = api_key_override or settings.openai_api_key or "dummy-key"
+    api_key = SecretStr(api_key_value)
     return ChatOpenAI(
         model=model,
         api_key=api_key,
-        base_url=settings.openai_base_url,
+        base_url=base_url_override or settings.openai_base_url,
         temperature=settings.temperature,
         streaming=True,
         max_retries=settings.max_retries,
@@ -297,6 +308,15 @@ def _latest_user_text(messages: list[Message]) -> str:
         if message.role == MessageRole.USER:
             return _extract_text(message.content)
     return ""
+
+
+def _resolve_request_auth(
+    request: ChatCompletionRequest,
+    settings: Settings,
+) -> tuple[str | None, str]:
+    if request.chutes_access_token:
+        return request.chutes_access_token, settings.openai_base_url
+    return settings.openai_api_key, settings.openai_base_url
 
 
 def _extract_first_match(pattern: str, text: str) -> str | None:
@@ -423,12 +443,19 @@ async def _stream_basic_response(
     messages: list[object],
     include_usage: bool,
     response_collector: list[str] | None = None,
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
 ) -> AsyncGenerator[str, None]:
     if settings.use_model_router:
-        llm = _get_router(settings)
+        llm = _get_router(settings, api_key_override=api_key_override)
         model_name = "composite-routing"
     else:
-        llm = _create_text_chain(settings, settings.model)
+        llm = _create_text_chain(
+            settings,
+            settings.model,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
+        )
         model_name = settings.model
 
     started = False
@@ -481,13 +508,20 @@ async def _stream_basic_response(
 async def _run_basic_completion(
     settings: Settings,
     messages: list[object],
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
 ) -> tuple[str, str]:
     if settings.use_model_router:
-        llm = _get_router(settings)
+        llm = _get_router(settings, api_key_override=api_key_override)
         result = await llm.ainvoke(messages)
         return "composite-routing", str(getattr(result, "content", result))
 
-    llm = _create_text_chain(settings, settings.model)
+    llm = _create_text_chain(
+        settings,
+        settings.model,
+        api_key_override=api_key_override,
+        base_url_override=base_url_override,
+    )
     result = await llm.ainvoke(messages)
     return settings.model, str(getattr(result, "content", result))
 
@@ -601,6 +635,8 @@ async def _stream_vision_response(
     messages: list[object],
     include_usage: bool,
     response_collector: list[str] | None = None,
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
 ) -> AsyncGenerator[str, None]:
     async def raw_stream() -> AsyncGenerator[str, None]:
         primary = settings.vision_model_primary
@@ -608,7 +644,12 @@ async def _stream_vision_response(
 
         for attempt_model in (primary, fallback):
             try:
-                llm = create_vision_chain(settings, attempt_model)
+                llm = create_vision_chain(
+                    settings,
+                    attempt_model,
+                    api_key_override=api_key_override,
+                    base_url_override=base_url_override,
+                )
                 started = False
 
                 async for chunk in llm.astream(messages):
@@ -685,17 +726,29 @@ async def _stream_vision_response(
 async def _run_vision_completion(
     settings: Settings,
     messages: list[object],
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
 ) -> tuple[str, str]:
     primary = settings.vision_model_primary
     fallback = settings.vision_model_fallback
 
     try:
-        llm = create_vision_chain(settings, primary)
+        llm = create_vision_chain(
+            settings,
+            primary,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
+        )
         result = await llm.ainvoke(messages)
         return primary, str(getattr(result, "content", result))
     except Exception as exc:
         logger.warning("vision_primary_failed", error=str(exc), fallback=fallback)
-        llm = create_vision_chain(settings, fallback)
+        llm = create_vision_chain(
+            settings,
+            fallback,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
+        )
         result = await llm.ainvoke(messages)
         return fallback, str(getattr(result, "content", result))
 
@@ -708,6 +761,7 @@ async def chat_completions(
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
     request_id = _generate_request_id()
+    api_key_override, base_url_override = _resolve_request_auth(request, settings)
 
     memory_enabled = bool(
         settings.enable_memory_feature and request.enable_memory and request.user_id
@@ -779,6 +833,8 @@ async def chat_completions(
                 vision_messages,
                 include_usage,
                 response_collector=full_response_parts,
+                api_key_override=api_key_override,
+                base_url_override=base_url_override,
             )
             wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
@@ -796,6 +852,8 @@ async def chat_completions(
             base_messages,
             include_usage,
             response_collector=full_response_parts,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
         )
         wrapped_stream = stream_with_memory(optimized_stream_response(stream))
         return StreamingResponse(
@@ -824,7 +882,12 @@ async def chat_completions(
     if use_vision:
         vision_messages = convert_to_langchain_messages(request.messages)
         try:
-            model_name, output = await _run_vision_completion(settings, vision_messages)
+            model_name, output = await _run_vision_completion(
+                settings,
+                vision_messages,
+                api_key_override=api_key_override,
+                base_url_override=base_url_override,
+            )
         except Exception as exc:
             logger.error("vision_completion_error", error=str(exc))
             output = "Error: failed to generate vision response."
@@ -844,7 +907,12 @@ async def chat_completions(
 
     try:
         base_messages = convert_to_langchain_messages(request.messages)
-        model_name, output = await _run_basic_completion(settings, base_messages)
+        model_name, output = await _run_basic_completion(
+            settings,
+            base_messages,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
+        )
     except Exception as exc:
         logger.error("agent_invoke_error", error=str(exc))
         output = "Error: failed to generate response."

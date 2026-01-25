@@ -126,6 +126,9 @@ class ChatCompletionRequest(BaseModel):
     response_format: Optional[ResponseFormat] = None
     user: Optional[str] = None
     metadata: Optional[dict[str, Any]] = None
+    user_id: Optional[str] = None
+    enable_memory: bool = False
+    chutes_access_token: Optional[str] = None
 
     # Janus extension: select competitor
     competitor_id: Optional[str] = None

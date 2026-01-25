@@ -111,6 +111,7 @@ class ChatCompletionRequest(BaseModel):
     metadata: Optional[dict[str, Any]] = None
     user_id: Optional[str] = None
     enable_memory: bool = False
+    chutes_access_token: Optional[str] = None
 
 
 class FinishReason(str, Enum):

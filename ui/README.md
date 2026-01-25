@@ -71,6 +71,10 @@ ui/
 |----------|---------|-------------|
 | `NEXT_PUBLIC_GATEWAY_URL` | `http://localhost:8000` | Janus gateway URL |
 | `NEXT_PUBLIC_ENABLE_VOICE_INPUT` | `false` | Toggle voice input UI |
+| `CHUTES_OAUTH_CLIENT_ID` | - | Chutes OAuth client ID |
+| `CHUTES_OAUTH_CLIENT_SECRET` | - | Chutes OAuth client secret |
+| `CHUTES_OAUTH_REDIRECT_URI` | `http://localhost:3000/api/auth/callback` | OAuth callback URL |
+| `CHUTES_OAUTH_COOKIE_SECRET` | - | Optional secret for OAuth cookie encryption |
 
 ## API Integration
 

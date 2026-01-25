@@ -95,6 +95,9 @@ export interface ChatCompletionRequest {
   };
   temperature?: number;
   max_tokens?: number;
+  user_id?: string;
+  enable_memory?: boolean;
+  chutes_access_token?: string;
 }
 
 export interface ChatCompletionChunk {

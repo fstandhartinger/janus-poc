@@ -19,18 +19,17 @@ from janus_baseline_langchain.models import ImageUrlContent
 def create_vision_chain(
     settings: Settings | None = None,
     model: str | None = None,
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
 ) -> ChatOpenAI:
     """Create a LangChain model configured for vision requests."""
     settings = settings or get_settings()
-    api_key = (
-        SecretStr(settings.openai_api_key)
-        if settings.openai_api_key
-        else SecretStr("dummy-key")
-    )
+    api_key_value = api_key_override or settings.openai_api_key or "dummy-key"
+    api_key = SecretStr(api_key_value)
     return ChatOpenAI(
         model=model or settings.vision_model_primary,
         api_key=api_key,
-        base_url=settings.openai_base_url,
+        base_url=base_url_override or settings.openai_base_url,
         temperature=settings.temperature,
         streaming=True,
         max_retries=settings.max_retries,

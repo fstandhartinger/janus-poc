@@ -46,3 +46,6 @@
 - Completed spec 71_competition_page_improvements.md with clickable Mermaid modals, updated leaderboard/prize pool data, collapsible sections, accessible contributor copy, and FAQ accordions.
 - Completed spec 72_memory_service_backend.md with the FastAPI memory service, LLM extraction/relevance flow, Postgres-backed storage, tests, and Render deployment setup.
 - Completed spec 73_memory_integration_baselines.md with memory-aware request fields, prompt injection, background extraction, and baseline test coverage.
+- Completed spec 74_memory_feature_ui.md with client-side user ID storage, memory toggle UI, chat request flags, and unit coverage.
+- Re-verified spec 74_memory_feature_ui.md status formatting and refreshed NR_OF_TRIES after validation pass.
+- Completed spec 75_sign_in_with_chutes.md with OAuth sign-in, free chat gating, IP rate limiting proxy, auth-aware chat requests, baseline token support, and updated UI/docs.

@@ -126,4 +126,12 @@ services:
           envVarKey: NEXT_PUBLIC_GATEWAY_URL
       - key: NEXT_PUBLIC_ENABLE_VOICE_INPUT
         value: "true"
+      - key: CHUTES_OAUTH_CLIENT_ID
+        sync: false
+      - key: CHUTES_OAUTH_CLIENT_SECRET
+        sync: false
+      - key: CHUTES_OAUTH_REDIRECT_URI
+        sync: false
+      - key: CHUTES_OAUTH_COOKIE_SECRET
+        sync: false
     healthCheckPath: /
