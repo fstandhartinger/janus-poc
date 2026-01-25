@@ -1,4 +1,5 @@
 'use client';
+import { useState, useEffect } from 'react';
 import type { Message } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { parseAudioContent } from '@/lib/audio-parser';
@@ -10,6 +11,20 @@ import { RichContent } from './viz/RichContent';
 interface MessageBubbleProps {
   message: Message;
   showReasoning: boolean;
+}
+
+/**
+ * Strip ANSI escape codes from text.
+ * Handles sequences like [1;31m, [0m, etc.
+ */
+function stripAnsiCodes(text: string): string {
+  if (!text) return text;
+  // Match ANSI escape sequences: ESC[ followed by params and command letter
+  // Also handle the literal bracket notation [1;31m that appears in some outputs
+  return text
+    .replace(/\x1b\[[0-9;]*m/g, '') // Standard ANSI: ESC[...m (hex)
+    .replace(/\u001b\[[0-9;]*m/g, '') // Unicode ESC
+    .replace(/\[([0-9;]*)m/g, ''); // Literal bracket notation [1;31m
 }
 
 const AUDIO_BLOCK_REGEX = /:::audio\[([^\]]*)\]\s*\r?\n(data:audio\/[^;]+;base64,[A-Za-z0-9+/=]+)\s*\r?\n:::/g;
@@ -92,6 +107,20 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
   const cleanedText = stripAudioContent(textContent);
   const hasText = Boolean(cleanedText);
 
+  // Strip ANSI codes from reasoning content
+  const cleanedReasoning = stripAnsiCodes(message.reasoning_content || '');
+
+  // Auto-collapse thinking when actual content starts streaming
+  // Start expanded (true), then collapse when content arrives
+  const [isThinkingExpanded, setIsThinkingExpanded] = useState(!hasText);
+
+  // Auto-collapse when content starts appearing
+  useEffect(() => {
+    if (hasText && isThinkingExpanded) {
+      setIsThinkingExpanded(false);
+    }
+  }, [hasText]);
+
   return (
     <div
       className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}
@@ -104,15 +133,33 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
       >
         <MediaRenderer content={message.content} />
 
-        {/* Show reasoning panel if available */}
-        {showReasoning && message.reasoning_content && (
-          <div className="mb-3 p-3 rounded-lg text-sm border border-[#1F2937] bg-[#111726]/70">
-            <div className="text-[11px] uppercase tracking-[0.2em] text-[#F59E0B] font-semibold mb-2">
-              Thinking
-            </div>
-            <div className="text-[#D1D5DB] whitespace-pre-wrap">
-              {message.reasoning_content}
-            </div>
+        {/* Show reasoning panel if available - collapsible with max-height */}
+        {showReasoning && cleanedReasoning && (
+          <div className="mb-3 rounded-lg text-sm border border-[#1F2937] bg-[#111726]/70 overflow-hidden">
+            <button
+              type="button"
+              onClick={() => setIsThinkingExpanded(!isThinkingExpanded)}
+              className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors cursor-pointer"
+            >
+              <div className="text-[11px] uppercase tracking-[0.2em] text-[#F59E0B] font-semibold">
+                Thinking
+              </div>
+              <svg
+                className={`w-4 h-4 text-[#F59E0B] transition-transform duration-200 ${isThinkingExpanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {isThinkingExpanded && (
+              <div className="px-3 pb-3 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-[#374151] scrollbar-track-transparent">
+                <div className="text-[#D1D5DB] whitespace-pre-wrap text-xs leading-relaxed">
+                  {cleanedReasoning}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
