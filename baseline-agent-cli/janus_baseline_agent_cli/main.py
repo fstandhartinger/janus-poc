@@ -1,11 +1,12 @@
 """Janus Baseline Competitor - FastAPI application entry point."""
 
 import asyncio
+import uuid
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Union
 
 import structlog
-from fastapi import Depends, FastAPI, Header
+from fastapi import Depends, FastAPI, Header, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -24,6 +25,7 @@ from janus_baseline_agent_cli.models import (
     ToolDefinition,
     extract_text_content,
 )
+from janus_baseline_agent_cli.models.debug import DebugEventType
 from janus_baseline_agent_cli.services import (
     ComplexityDetector,
     LLMService,
@@ -34,8 +36,11 @@ from janus_baseline_agent_cli.services import (
     get_memory_service,
     get_sandy_service,
 )
+from janus_baseline_agent_cli.services.debug import DebugEmitter
 from janus_baseline_agent_cli.streaming import optimized_stream_response
 from janus_baseline_agent_cli.tools.memory import INVESTIGATE_MEMORY_TOOL
+from janus_baseline_agent_cli.router.debug import router as debug_router
+from janus_baseline_agent_cli.router.server import app as router_app
 
 settings = get_settings()
 
@@ -176,6 +181,14 @@ def _generation_flags_payload(flags: GenerationFlags | None) -> dict[str, bool] 
     return None
 
 
+def _resolve_debug_request_id(header_value: str | None, enabled: bool) -> str | None:
+    if not enabled:
+        return None
+    if header_value:
+        return header_value
+    return f"debug-{uuid.uuid4().hex[:16]}"
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
@@ -206,6 +219,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(debug_router)
+
+# Mount the model router at /router for agent path access
+# Sandy agents can use https://<host>/router/v1/chat/completions
+app.mount("/router", router_app)
+
 
 class HealthResponse(BaseModel):
     """Health check response."""
@@ -228,8 +247,15 @@ async def stream_response(
     memory_service: MemoryService | None = None,
     memory_user_id: str | None = None,
     conversation_base: list[dict[str, str]] | None = None,
+    debug_emitter: DebugEmitter | None = None,
 ) -> AsyncGenerator[str, None]:
     """Generate streaming response based on complexity."""
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.COMPLEXITY_CHECK_START,
+            "DETECT",
+            "Starting complexity analysis",
+        )
     analysis = await complexity_detector.analyze_async(
         request.messages,
         request.generation_flags,
@@ -247,6 +273,34 @@ async def stream_response(
         if flags_payload
         else None
     )
+
+    if debug_emitter:
+        if analysis.keywords_matched:
+            await debug_emitter.emit(
+                DebugEventType.COMPLEXITY_CHECK_KEYWORD,
+                "KEYWORDS",
+                f"Keyword match: {', '.join(analysis.keywords_matched)}",
+                data={"keywords": analysis.keywords_matched},
+            )
+        if analysis.reason.startswith("llm_verification"):
+            await debug_emitter.emit(
+                DebugEventType.COMPLEXITY_CHECK_LLM,
+                "LLM_VERIFY",
+                f"LLM verification: {analysis.reason}",
+                data={"reason": analysis.reason},
+            )
+        await debug_emitter.emit(
+            DebugEventType.COMPLEXITY_CHECK_COMPLETE,
+            "DETECT",
+            f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
+            data={"is_complex": analysis.is_complex, "reason": analysis.reason},
+        )
+        await debug_emitter.emit(
+            DebugEventType.AGENT_PATH_START if using_agent else DebugEventType.FAST_PATH_START,
+            "SANDY" if using_agent else "FAST_LLM",
+            "Routing to agent path" if using_agent else "Routing to fast path",
+            data={"using_agent": using_agent, "reason": analysis.reason},
+        )
 
     logger.info(
         "complexity_check",
@@ -274,11 +328,15 @@ async def stream_response(
 
     async def raw_stream() -> AsyncGenerator[str, None]:
         first_chunk = True
+        fast_path_emitted = False
         try:
             if using_agent:
                 # Use Sandy's agent/run API if enabled (faster, better configured)
                 if settings.use_sandy_agent_api:
-                    async for chunk in sandy_service.execute_via_agent_api(request):
+                    async for chunk in sandy_service.execute_via_agent_api(
+                        request,
+                        debug_emitter=debug_emitter,
+                    ):
                         chunk_text = _extract_chunk_content(chunk)
                         if chunk_text:
                             full_response_parts.append(chunk_text)
@@ -288,7 +346,10 @@ async def stream_response(
                         yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
                 else:
                     # Fallback to manual exec approach
-                    async for chunk in sandy_service.execute_complex(request):
+                    async for chunk in sandy_service.execute_complex(
+                        request,
+                        debug_emitter=debug_emitter,
+                    ):
                         chunk_text = _extract_chunk_content(chunk)
                         if chunk_text:
                             full_response_parts.append(chunk_text)
@@ -298,6 +359,13 @@ async def stream_response(
                         yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
             else:
                 async for chunk in llm_service.stream(request):
+                    if debug_emitter and not fast_path_emitted:
+                        await debug_emitter.emit(
+                            DebugEventType.FAST_PATH_STREAM,
+                            "FAST_LLM",
+                            "Streaming fast-path response",
+                        )
+                        fast_path_emitted = True
                     chunk_text = _extract_chunk_content(chunk)
                     if chunk_text:
                         full_response_parts.append(chunk_text)
@@ -305,6 +373,12 @@ async def stream_response(
                         chunk = chunk.model_copy(update={"metadata": metadata_payload})
                     first_chunk = False
                     yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.RESPONSE_COMPLETE,
+                    "SSE",
+                    "Response complete",
+                )
             yield "data: [DONE]\n\n"
         finally:
             if memory_service and memory_user_id and conversation_base is not None:
@@ -326,17 +400,38 @@ async def stream_response(
 @app.post("/v1/chat/completions", response_model=None)
 async def chat_completions(
     request: ChatCompletionRequest,
+    response: Response,
     complexity_detector: ComplexityDetector = Depends(get_complexity_detector),
     llm_service: LLMService = Depends(get_llm_service),
     sandy_service: SandyService = Depends(get_sandy_service),
     memory_service: MemoryService = Depends(get_memory_service),
     authorization: str | None = Header(default=None, alias="Authorization"),
+    debug_request_id_header: str | None = Header(default=None, alias="X-Debug-Request-Id"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
 
     auth_token = _extract_auth_token(authorization)
     if auth_token:
         request._auth_token = auth_token
+
+    debug_enabled = bool(request.debug)
+    debug_request_id = _resolve_debug_request_id(debug_request_id_header, debug_enabled)
+    debug_emitter = DebugEmitter(debug_request_id, debug_enabled)
+
+    if debug_request_id and not request.stream:
+        response.headers["X-Debug-Request-Id"] = debug_request_id
+
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.REQUEST_RECEIVED,
+            "REQ",
+            "Request received",
+            data={
+                "model": request.model,
+                "message_count": len(request.messages),
+                "debug": debug_enabled,
+            },
+        )
 
     memory_enabled = bool(
         settings.enable_memory_feature and request.enable_memory and request.user_id
@@ -357,6 +452,12 @@ async def chat_completions(
     _apply_memory_tool(request, enable=bool(memory_enabled and has_memory_context))
 
     if request.stream:
+        headers = {
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+        if debug_request_id:
+            headers["X-Debug-Request-Id"] = debug_request_id
         return StreamingResponse(
             stream_response(
                 request,
@@ -366,15 +467,19 @@ async def chat_completions(
                 memory_service if memory_enabled else None,
                 request.user_id if memory_enabled else None,
                 conversation_base if memory_enabled else None,
+                debug_emitter,
             ),
             media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-            },
+            headers=headers,
         )
     else:
         # Non-streaming - route based on complexity
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.COMPLEXITY_CHECK_START,
+                "DETECT",
+                "Starting complexity analysis",
+            )
         analysis = complexity_detector.analyze(
             request.messages,
             request.generation_flags,
@@ -400,6 +505,33 @@ async def chat_completions(
             is_complex=is_complex,
             complexity_reason=reason,
         )
+        if debug_emitter:
+            if analysis.keywords_matched:
+                await debug_emitter.emit(
+                    DebugEventType.COMPLEXITY_CHECK_KEYWORD,
+                    "KEYWORDS",
+                    f"Keyword match: {', '.join(analysis.keywords_matched)}",
+                    data={"keywords": analysis.keywords_matched},
+                )
+            if analysis.reason.startswith("llm_verification"):
+                await debug_emitter.emit(
+                    DebugEventType.COMPLEXITY_CHECK_LLM,
+                    "LLM_VERIFY",
+                    f"LLM verification: {analysis.reason}",
+                    data={"reason": analysis.reason},
+                )
+            await debug_emitter.emit(
+                DebugEventType.COMPLEXITY_CHECK_COMPLETE,
+                "DETECT",
+                f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
+                data={"is_complex": analysis.is_complex, "reason": analysis.reason},
+            )
+            await debug_emitter.emit(
+                DebugEventType.AGENT_PATH_START if is_complex else DebugEventType.FAST_PATH_START,
+                "SANDY" if is_complex else "FAST_LLM",
+                "Routing to agent path" if is_complex else "Routing to fast path",
+                data={"using_agent": is_complex, "reason": analysis.reason},
+            )
         if settings.always_use_agent or (is_complex and sandy_service.is_available):
             # Use Sandy's agent/run API if enabled (faster, better configured)
             if settings.use_sandy_agent_api:
@@ -419,6 +551,13 @@ async def chat_completions(
                     user_id=request.user_id,
                     conversation=conversation,
                 )
+            )
+
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.RESPONSE_COMPLETE,
+                "SSE",
+                "Response complete",
             )
 
         return response

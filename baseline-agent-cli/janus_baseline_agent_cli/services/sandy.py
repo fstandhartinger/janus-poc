@@ -856,13 +856,18 @@ class SandyService:
         - error: Error events
         """
         url = f"{self._base_url}/api/sandboxes/{sandbox_id}/agent/run"
-        payload = {
+        payload: dict[str, Any] = {
             "agent": agent,
             "model": model,
             "prompt": prompt,
             "maxDuration": max_duration,
             "rawPrompt": True,  # Skip web dev context wrapping (camelCase for Sandy API)
         }
+
+        # Pass the public router URL if configured - enables smart model switching,
+        # 429 fallbacks, and multimodal routing for Sandy agents
+        if self._settings.public_router_url:
+            payload["apiBaseUrl"] = self._settings.public_router_url
 
         logger.info(
             "agent_api_request",
@@ -871,6 +876,7 @@ class SandyService:
             model=model,
             prompt_length=len(prompt),
             max_duration=max_duration,
+            router_url=self._settings.public_router_url,
         )
 
         try:

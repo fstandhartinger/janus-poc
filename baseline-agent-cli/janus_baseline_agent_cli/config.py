@@ -154,6 +154,16 @@ class Settings(BaseSettings):
             "BASELINE_ROUTER_PORT",
         ),
     )
+    public_router_url: Optional[str] = Field(
+        default=None,
+        description="Public URL for the model router (for Sandy agent access). "
+        "If set, Sandy agents will route LLM calls through this URL for smart model selection.",
+        validation_alias=AliasChoices(
+            "PUBLIC_ROUTER_URL",
+            "BASELINE_AGENT_CLI_PUBLIC_ROUTER_URL",
+            "BASELINE_PUBLIC_ROUTER_URL",
+        ),
+    )
 
     # Vision settings
     vision_model_primary: str = Field(
