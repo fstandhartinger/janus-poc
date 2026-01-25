@@ -1,6 +1,6 @@
 # Spec 69: Hero Video Redesign - In-Place Playback with Scroll Control
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -785,3 +785,5 @@ tests/
 - chutes-frontend HeroVideo implementation: `/home/flori/Dev/chutes/chutes-frontend/src/components/sections/HeroVideo.tsx`
 - Scroll-controlled video frame scrubbing pattern
 - Canvas-based frame rendering for smooth performance
+
+NR_OF_TRIES: 1

@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from janus_baseline_langchain.tools import (
+    InvestigateMemoryTool,
     code_execution_tool,
     image_generation_tool,
     text_to_speech_tool,
@@ -36,6 +37,10 @@ def test_tool_schemas_present() -> None:
         image_generation_tool,
         text_to_speech_tool,
         code_execution_tool,
+        InvestigateMemoryTool(
+            user_id="user-1",
+            memory_service_url="https://memory.test",
+        ),
     ]
 
     for tool in tools:

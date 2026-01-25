@@ -46,102 +46,102 @@ type SortDirection = 'asc' | 'desc';
 const leaderboardData: CompetitorRow[] = [
   {
     rank: 1,
-    competitor: 'baseline-v1',
-    miner: '5F4c...1B7',
-    score: 78.4,
-    quality: 82.1,
-    speed: 71.2,
-    cost: 85.0,
-    streaming: 76.3,
-    modality: 70.8,
-    submitted: '2025-01-12',
-    daysAtTop: 14,
+    competitor: 'your-janus-implementation',
+    miner: '5Your...Key',
+    score: 82.7,
+    quality: 86.3,
+    speed: 78.4,
+    cost: 84.2,
+    streaming: 80.1,
+    modality: 78.5,
+    submitted: '2025-01-20',
+    daysAtTop: 4,
     details: {
       suite: 'public/dev',
-      ttft: '0.92s',
-      p95: '4.2s',
-      tokens: '1.2k avg',
-      notes: 'Balanced across coding, research, and dialogue tasks.',
+      ttft: '0.78s',
+      p95: '3.8s',
+      tokens: '1.1k avg',
+      notes: 'Could this be your implementation taking the crown? Submit and find out.',
     },
   },
   {
     rank: 2,
-    competitor: 'rodeo-alpha',
+    competitor: 'quantum-rider',
     miner: '5G9a...C21',
-    score: 75.2,
-    quality: 79.4,
-    speed: 69.8,
-    cost: 80.5,
-    streaming: 72.0,
-    modality: 74.1,
-    submitted: '2025-01-10',
+    score: 79.4,
+    quality: 82.8,
+    speed: 74.2,
+    cost: 81.5,
+    streaming: 76.8,
+    modality: 77.3,
+    submitted: '2025-01-18',
+    daysAtTop: null,
+    details: {
+      suite: 'public/dev',
+      ttft: '0.88s',
+      p95: '4.2s',
+      tokens: '1.0k avg',
+      notes: 'Strong multimodal handling with efficient tool orchestration.',
+    },
+  },
+  {
+    rank: 3,
+    competitor: 'baseline-n8n',
+    miner: '5H2d...E9F',
+    score: 76.2,
+    quality: 79.5,
+    speed: 71.8,
+    cost: 78.9,
+    streaming: 73.6,
+    modality: 74.2,
+    submitted: '2025-01-15',
+    daysAtTop: null,
+    details: {
+      suite: 'public/dev',
+      ttft: '0.98s',
+      p95: '4.6s',
+      tokens: '1.2k avg',
+      notes: 'Workflow-based baseline using n8n orchestration.',
+    },
+  },
+  {
+    rank: 4,
+    competitor: 'baseline-cli-agent',
+    miner: '5J7b...A10',
+    score: 74.8,
+    quality: 77.6,
+    speed: 70.2,
+    cost: 76.5,
+    streaming: 72.1,
+    modality: 71.8,
+    submitted: '2025-01-12',
     daysAtTop: null,
     details: {
       suite: 'public/dev',
       ttft: '1.04s',
       p95: '4.9s',
-      tokens: '1.0k avg',
-      notes: 'Strong multimodal handling with fast reroutes to tools.',
-    },
-  },
-  {
-    rank: 3,
-    competitor: 'engine-x',
-    miner: '5H2d...E9F',
-    score: 72.8,
-    quality: 76.3,
-    speed: 68.9,
-    cost: 78.4,
-    streaming: 69.5,
-    modality: 71.2,
-    submitted: '2025-01-08',
-    daysAtTop: null,
-    details: {
-      suite: 'public/dev',
-      ttft: '1.21s',
-      p95: '5.3s',
-      tokens: '1.4k avg',
-      notes: 'Great reasoning density with consistent streaming cadence.',
-    },
-  },
-  {
-    rank: 4,
-    competitor: 'coyote-r1',
-    miner: '5J7b...A10',
-    score: 70.6,
-    quality: 73.9,
-    speed: 66.8,
-    cost: 75.2,
-    streaming: 68.1,
-    modality: 67.4,
-    submitted: '2025-01-06',
-    daysAtTop: null,
-    details: {
-      suite: 'public/dev',
-      ttft: '1.34s',
-      p95: '5.8s',
-      tokens: '1.6k avg',
-      notes: 'Excellent on long-form tasks, needs latency tuning.',
+      tokens: '1.3k avg',
+      notes: 'Reference CLI agent baseline with Aider integration.',
     },
   },
   {
     rank: 5,
     competitor: 'trailblazer',
     miner: '5K3e...D44',
-    score: 68.9,
-    quality: 71.5,
-    speed: 64.7,
-    cost: 74.0,
-    streaming: 66.2,
-    modality: 65.8,
-    submitted: '2025-01-04',
+    score: 72.5,
+    quality: 75.2,
+    speed: 68.4,
+    cost: 74.8,
+    streaming: 70.3,
+    modality: 69.6,
+    submitted: '2025-01-10',
     daysAtTop: null,
     details: {
       suite: 'public/dev',
-      ttft: '1.41s',
-      p95: '6.2s',
-      tokens: '1.3k avg',
-      notes: 'Consistent cost profile with stable throughput.',
+      ttft: '1.12s',
+      p95: '5.1s',
+      tokens: '1.4k avg',
+      notes: 'Consistent performance across all benchmark categories.',
     },
   },
 ];
@@ -181,6 +181,7 @@ export function Leaderboard() {
   const [sortKey, setSortKey] = useState<SortKey>('rank');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [expanded, setExpanded] = useState<string[]>([]);
+  const [columnsExpanded, setColumnsExpanded] = useState(false);
 
   const sortedData = useMemo(() => {
     const data = [...leaderboardData];
@@ -401,18 +402,43 @@ export function Leaderboard() {
           </div>
         </div>
 
-        <div className="glass-card p-6 mt-6">
-          <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
-            Leaderboard columns
-          </p>
-          <div className="mt-4 grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-            {columnDefinitions.map((column) => (
-              <div key={column.label} className="space-y-1">
-                <p className="text-[#F3F4F6] font-semibold">{column.label}</p>
-                <p className="text-[#9CA3AF]">{column.description}</p>
+        <div className="glass-card mt-6 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setColumnsExpanded(!columnsExpanded)}
+            className="w-full p-6 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+            aria-expanded={columnsExpanded}
+            aria-controls="leaderboard-columns"
+          >
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+                Leaderboard columns
+              </p>
+              <p className="text-sm text-[#6B7280] mt-1">
+                {columnsExpanded ? 'Click to collapse' : 'Click to see column definitions'}
+              </p>
+            </div>
+            <svg
+              className={`w-5 h-5 text-[#9CA3AF] transition-transform ${columnsExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {columnsExpanded && (
+            <div id="leaderboard-columns" className="px-6 pb-6">
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                {columnDefinitions.map((column) => (
+                  <div key={column.label} className="space-y-1">
+                    <p className="text-[#F3F4F6] font-semibold">{column.label}</p>
+                    <p className="text-[#9CA3AF]">{column.description}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </section>

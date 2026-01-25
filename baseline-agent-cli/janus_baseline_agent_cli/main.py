@@ -20,6 +20,7 @@ from janus_baseline_agent_cli.models import (
     Message,
     MessageRole,
     TextContent,
+    ToolDefinition,
     extract_text_content,
 )
 from janus_baseline_agent_cli.services import (
@@ -33,6 +34,7 @@ from janus_baseline_agent_cli.services import (
     get_sandy_service,
 )
 from janus_baseline_agent_cli.streaming import optimized_stream_response
+from janus_baseline_agent_cli.tools.memory import INVESTIGATE_MEMORY_TOOL
 
 settings = get_settings()
 
@@ -100,6 +102,36 @@ def _extract_response_content(response: ChatCompletionResponse) -> str:
     message = response.choices[0].message
     content = getattr(message, "content", None)
     return content or ""
+
+
+def _tool_name(tool: object) -> str | None:
+    if isinstance(tool, dict):
+        function = tool.get("function")
+        if isinstance(function, dict):
+            return function.get("name")
+        return None
+    function = getattr(tool, "function", None)
+    if function is None:
+        return None
+    if isinstance(function, dict):
+        return function.get("name")
+    return getattr(function, "name", None)
+
+
+def _apply_memory_tool(request: ChatCompletionRequest, enable: bool) -> None:
+    if not request.tools and not enable:
+        request.tools = None
+        return
+
+    filtered: list[object] = []
+    for tool in request.tools or []:
+        if _tool_name(tool) != "investigate_memory":
+            filtered.append(tool)
+
+    if enable:
+        filtered.append(ToolDefinition(**INVESTIGATE_MEMORY_TOOL))
+
+    request.tools = filtered or None
 
 
 def _inject_memory_context(messages: list[Message], memory_context: str) -> None:
@@ -267,15 +299,19 @@ async def chat_completions(
         settings.enable_memory_feature and request.enable_memory and request.user_id
     )
     conversation_base = _build_conversation_base(request.messages)
+    has_memory_context = False
     if memory_enabled and request.user_id:
         prompt = _extract_last_user_prompt(request.messages)
         memory_context = await memory_service.get_memory_context(request.user_id, prompt)
         if memory_context:
+            has_memory_context = True
             messages_for_processing = [
                 message.model_copy(deep=True) for message in request.messages
             ]
             _inject_memory_context(messages_for_processing, memory_context)
             request.messages = messages_for_processing
+
+    _apply_memory_tool(request, enable=bool(memory_enabled and has_memory_context))
 
     if request.stream:
         return StreamingResponse(

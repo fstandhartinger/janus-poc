@@ -26,3 +26,13 @@ def test_disable_tools() -> None:
     settings = Settings(enable_web_search=False)
     tools = get_registered_tools(settings)
     assert "web_search" not in tools
+
+
+def test_memory_tool_excluded_by_default() -> None:
+    tools = get_registered_tools()
+    assert "investigate_memory" not in tools
+
+
+def test_memory_tool_included_when_enabled() -> None:
+    tools = get_registered_tools(include_memory_tool=True)
+    assert "investigate_memory" in tools

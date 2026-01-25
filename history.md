@@ -49,3 +49,5 @@
 - Completed spec 74_memory_feature_ui.md with client-side user ID storage, memory toggle UI, chat request flags, and unit coverage.
 - Re-verified spec 74_memory_feature_ui.md status formatting and refreshed NR_OF_TRIES after validation pass.
 - Completed spec 75_sign_in_with_chutes.md with OAuth sign-in, free chat gating, IP rate limiting proxy, auth-aware chat requests, baseline token support, and updated UI/docs.
+- Re-verified spec 75_sign_in_with_chutes.md status formatting and refreshed NR_OF_TRIES after validation pass.
+- Completed spec 76_memory_investigation_tool.md with investigate_memory tools for baselines, conditional tool registration, sandbox env wiring, and tests.

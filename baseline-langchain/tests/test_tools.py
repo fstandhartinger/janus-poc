@@ -7,6 +7,7 @@ import pytest
 from tavily import TavilyClient
 
 from janus_baseline_langchain.tools import (
+    InvestigateMemoryTool,
     code_execution_tool,
     image_generation_tool,
     music_generation_tool,
@@ -104,3 +105,53 @@ async def test_web_search_tool(monkeypatch: pytest.MonkeyPatch) -> None:
 async def test_code_execution_tool() -> None:
     result = await code_execution_tool.ainvoke("print(2 + 2)")
     assert "4" in result
+
+
+@pytest.mark.asyncio
+async def test_investigate_memory_tool(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeResponse:
+        def __init__(self, payload: dict) -> None:
+            self._payload = payload
+
+        def json(self) -> dict:
+            return self._payload
+
+        def raise_for_status(self) -> None:
+            return None
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self) -> "FakeClient":
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        async def get(self, *args, **kwargs) -> FakeResponse:
+            return FakeResponse(
+                {
+                    "memories": [
+                        {
+                            "id": "mem_1",
+                            "caption": "User likes pizza",
+                            "created_at": "2025-01-01T00:00:00Z",
+                            "full_text": "User mentioned loving pizza during onboarding.",
+                        }
+                    ]
+                }
+            )
+
+    monkeypatch.setattr(
+        "janus_baseline_langchain.tools.memory.httpx.AsyncClient",
+        FakeClient,
+    )
+
+    tool = InvestigateMemoryTool(
+        user_id="user-1",
+        memory_service_url="https://memory.test",
+    )
+    result = await tool.ainvoke({"memory_ids": ["mem_1"], "query": "pizza"})
+    assert "## Retrieved Memories" in result
+    assert "[mem_1] User likes pizza" in result

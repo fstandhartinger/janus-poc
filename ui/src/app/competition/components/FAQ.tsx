@@ -1,4 +1,6 @@
-import type { ReactNode } from 'react';
+'use client';
+
+import { useState, type ReactNode } from 'react';
 
 const faqSections: { title: string; items: { question: string; answer: ReactNode }[] }[] = [
   {
@@ -127,7 +129,9 @@ const faqSections: { title: string; items: { question: string; answer: ReactNode
               Your hotkey (hot key) is an SS58 address that starts with &quot;5&quot;.
               Include it in the submission form.
             </p>
-            <p>It is used for attribution on the leaderboard, prize pool payouts, and future Subnet 64 integration.</p>
+            <p>
+              It is used for attribution on the leaderboard, prize pool payouts, and future Subnet 64 integration.
+            </p>
           </>
         ),
       },
@@ -404,6 +408,86 @@ const helpfulLinks = [
   { label: 'Marketplace Waitlist', description: 'Early access to components', href: '#marketplace-waitlist' },
 ];
 
+interface FAQItemProps {
+  question: string;
+  answer: ReactNode;
+  defaultOpen?: boolean;
+}
+
+function FAQItem({ question, answer, defaultOpen = false }: FAQItemProps) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="glass-card overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full p-6 flex items-start justify-between text-left hover:bg-white/5 transition-colors"
+        aria-expanded={isOpen}
+      >
+        <h4 className="text-lg font-semibold text-[#F3F4F6] pr-4">{question}</h4>
+        <svg
+          className={`w-5 h-5 text-[#9CA3AF] flex-shrink-0 transition-transform mt-1 ${
+            isOpen ? 'rotate-180' : ''
+          }`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {isOpen && (
+        <div className="px-6 pb-6">
+          <div className="text-sm text-[#9CA3AF] leading-relaxed space-y-3">{answer}</div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface FAQSectionProps {
+  title: string;
+  items: { question: string; answer: ReactNode }[];
+}
+
+function FAQSection({ title, items }: FAQSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="space-y-4">
+      <button
+        type="button"
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center justify-between text-left group"
+        aria-expanded={isExpanded}
+      >
+        <h3 className="text-2xl font-semibold text-[#F3F4F6] group-hover:text-[#63D297] transition-colors">
+          {title}
+        </h3>
+        <div className="flex items-center gap-2 text-sm text-[#9CA3AF]">
+          <span>{items.length} questions</span>
+          <svg
+            className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+      {isExpanded && (
+        <div className="space-y-3">
+          {items.map((item) => (
+            <FAQItem key={item.question} question={item.question} answer={item.answer} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function FAQ() {
   return (
     <section id="faq" className="py-16 lg:py-24 bg-[#0B111A]">
@@ -414,27 +498,15 @@ export function FAQ() {
             Frequently Asked Questions
           </h2>
           <p className="text-[#9CA3AF] mt-4">
-            Need a quick answer before you ship? Start here.
+            Need a quick answer before you ship? Click a category to explore.
           </p>
         </div>
 
-        {faqSections.map((section) => (
-          <div key={section.title} className="space-y-6">
-            <h3 className="text-2xl font-semibold text-[#F3F4F6]">{section.title}</h3>
-            <div className="space-y-4">
-              {section.items.map((item) => (
-                <div key={item.question} className="glass-card p-6">
-                  <h4 className="text-lg font-semibold text-[#F3F4F6]">
-                    {item.question}
-                  </h4>
-                  <div className="mt-3 text-sm text-[#9CA3AF] leading-relaxed space-y-3">
-                    {item.answer}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+        <div className="space-y-8">
+          {faqSections.map((section) => (
+            <FAQSection key={section.title} title={section.title} items={section.items} />
+          ))}
+        </div>
 
         <div className="glass-card p-6 space-y-4">
           <h3 className="text-2xl font-semibold text-[#F3F4F6]">Helpful Links</h3>

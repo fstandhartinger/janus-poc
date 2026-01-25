@@ -62,7 +62,7 @@ const serviceSequenceDiagram = `sequenceDiagram
     Search-->>Impl: Top 10 results
     Impl->>Proxy: Fetch https://physics.org/quantum
     Proxy-->>Impl: Page content
-    Impl->>Inference: Call gpt-4o-mini for synthesis
+    Impl->>Inference: Call DeepSeek-V3.2 for synthesis
     Inference-->>Impl: Synthesized explanation
     Impl->>Sandbox: Execute Python visualization
     Sandbox-->>Impl: Generated image`;

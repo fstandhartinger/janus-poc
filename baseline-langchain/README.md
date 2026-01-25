@@ -11,6 +11,7 @@ An alternative Janus baseline implementation built on LangChain. This service ru
   - `text_to_speech`: Chutes Kokoro TTS API
   - `web_search`: Tavily search API
   - `code_execution`: LangChain Python REPL tool
+  - `investigate_memory`: Retrieve full memory content when memory references are present
 
 ## Environment Variables
 

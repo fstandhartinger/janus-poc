@@ -7,3 +7,4 @@ export { VNCViewer } from './VNCViewer';
 export { ModelSelector } from './ModelSelector';
 export { MermaidDiagram } from './MermaidDiagram';
 export { MermaidDiagramGlow } from './MermaidDiagramGlow';
+export { MermaidDiagramModal } from './MermaidDiagramModal';

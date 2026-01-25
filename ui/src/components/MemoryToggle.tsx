@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react';
 import { isMemoryEnabled, setMemoryEnabled } from '@/lib/memory';
 
-type BrainIconProps = {
+type MemoryIconProps = {
   className?: string;
   slashed?: boolean;
 };
 
-const BrainIcon = ({ className, slashed }: BrainIconProps) => (
+const MemoryIcon = ({ className, slashed }: MemoryIconProps) => (
   <svg
     viewBox="0 0 24 24"
     className={className}
@@ -19,15 +19,15 @@ const BrainIcon = ({ className, slashed }: BrainIconProps) => (
     strokeLinejoin="round"
     aria-hidden="true"
   >
-    <path d="M12 18V5" />
-    <path d="M15 13a4.17 4.17 0 0 1-3-4 4.17 4.17 0 0 1-3 4" />
-    <path d="M17.598 6.5A3 3 0 1 0 12 5a3 3 0 1 0-5.598 1.5" />
-    <path d="M17.997 5.125a4 4 0 0 1 2.526 5.77" />
-    <path d="M18 18a4 4 0 0 0 2-7.464" />
-    <path d="M19.967 17.483A4 4 0 1 1 12 18a4 4 0 1 1-7.967-.517" />
-    <path d="M6 18a4 4 0 0 1-2-7.464" />
-    <path d="M6.003 5.125a4 4 0 0 0-2.526 5.77" />
-    {slashed ? <line x1="4" y1="4" x2="20" y2="20" /> : null}
+    {/* Notebook with bookmark */}
+    <path d="M4 4h12a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4V4z" />
+    <path d="M4 4v18" strokeWidth="2" />
+    <path d="M8 8h6" />
+    <path d="M8 12h6" />
+    <path d="M8 16h4" />
+    {/* Bookmark tab */}
+    <path d="M18 4h2v6l-1-1-1 1V4z" fill="currentColor" strokeWidth="0" />
+    {slashed ? <line x1="3" y1="3" x2="21" y2="21" strokeWidth="2" /> : null}
   </svg>
 );
 
@@ -57,7 +57,7 @@ export function MemoryToggle() {
       aria-label={title}
       aria-pressed={enabled}
     >
-      <BrainIcon slashed={!enabled} className="w-5 h-5" />
+      <MemoryIcon slashed={!enabled} className="w-5 h-5" />
     </button>
   );
 }

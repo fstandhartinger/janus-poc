@@ -10,7 +10,7 @@ const shortCurrencyFormatter = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 });
 
-const poolAmountUsd = 4250;
+const poolAmountUsd = 47250;
 
 export const prizePoolSnapshot = {
   amountUsd: poolAmountUsd,
@@ -18,6 +18,6 @@ export const prizePoolSnapshot = {
   amountShort: shortCurrencyFormatter.format(poolAmountUsd),
   accumulatingSince: 'Jan 15, 2026',
   daysAtTop: 8,
-  champion: 'baseline-v3',
-  miner: '5F3sa...7Kx2',
+  champion: 'your-janus-implementation',
+  miner: '5Your...Key',
 };

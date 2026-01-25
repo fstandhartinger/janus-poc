@@ -189,37 +189,78 @@ export function SubmissionGuide() {
 
             <div className="glass-card p-6 space-y-4">
               <h3 className="text-xl font-semibold text-[#F3F4F6]">
-                Bittensor Hotkey Requirement
+                How Contributors Earn
               </h3>
               <p className="text-sm text-[#9CA3AF]">
-                Every submission must include the miner&apos;s Bittensor hotkey (SS58
-                address) for attribution and payouts.
+                Janus runs on Bittensor, a decentralized network where contributors
+                (called &quot;miners&quot;) compete to provide the best AI services. Think of it
+                like an open marketplace for intelligence - anyone can participate, and
+                the best implementations earn rewards.
               </p>
-              <div>
-                <p className="text-sm text-[#F3F4F6] font-semibold">Why hotkey?</p>
-                <ul className="mt-2 space-y-2 text-sm text-[#D1D5DB] list-disc list-inside">
-                  <li>Attribution on the leaderboard.</li>
-                  <li>Prize pool payouts to the linked coldkey.</li>
-                  <li>Reputation history across submissions.</li>
-                  <li>Future Subnet 64 integration.</li>
-                </ul>
-              </div>
-              <div>
-                <p className="text-sm text-[#F3F4F6] font-semibold">Hotkey format</p>
-                <p className="mt-2 text-sm text-[#D1D5DB]">
-                  SS58 address format (starts with 5). Example:
-                </p>
-                <p className="mt-2 text-xs font-mono text-[#63D297]">
-                  5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-[#F3F4F6] font-semibold">Validation</p>
-                <ul className="mt-2 space-y-2 text-sm text-[#D1D5DB] list-disc list-inside">
-                  <li>Hotkey format is validated on submission.</li>
-                  <li>Hotkey must be registered on Bittensor (phase dependent).</li>
-                  <li>One hotkey can submit multiple versions.</li>
-                </ul>
+
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm text-[#F3F4F6] font-semibold">
+                    The Competition Model
+                  </p>
+                  <ul className="mt-2 space-y-2 text-sm text-[#D1D5DB] list-disc list-inside">
+                    <li>Submit your AI implementation to the Janus competition</li>
+                    <li>Your code runs benchmarks against other submissions</li>
+                    <li>Top performers earn from the prize pool</li>
+                    <li>All submissions are open source, fostering community learning</li>
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-sm text-[#F3F4F6] font-semibold">
+                    Why Decentralized?
+                  </p>
+                  <ul className="mt-2 space-y-2 text-sm text-[#D1D5DB] list-disc list-inside">
+                    <li>
+                      <span className="text-[#63D297]">Open access:</span> Anyone can
+                      compete - no gatekeepers or approval processes
+                    </li>
+                    <li>
+                      <span className="text-[#63D297]">Transparent scoring:</span> All
+                      benchmarks and results are public
+                    </li>
+                    <li>
+                      <span className="text-[#63D297]">Fair rewards:</span> Earnings
+                      distributed automatically based on performance
+                    </li>
+                    <li>
+                      <span className="text-[#63D297]">Community-driven:</span> The best
+                      ideas rise to the top through open competition
+                    </li>
+                  </ul>
+                </div>
+
+                <div>
+                  <p className="text-sm text-[#F3F4F6] font-semibold">
+                    Getting Started
+                  </p>
+                  <p className="mt-2 text-sm text-[#D1D5DB]">
+                    To participate, you&apos;ll need a Bittensor wallet address (similar to a
+                    crypto wallet). This is used for:
+                  </p>
+                  <ul className="mt-2 space-y-2 text-sm text-[#D1D5DB] list-disc list-inside">
+                    <li>Attribution on the leaderboard</li>
+                    <li>Receiving prize pool payouts</li>
+                    <li>Building your reputation across submissions</li>
+                  </ul>
+                  <p className="mt-3 text-sm text-[#9CA3AF]">
+                    Don&apos;t have a wallet yet?{' '}
+                    <a
+                      href="https://docs.bittensor.com/getting-started/installation"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-[#63D297] hover:underline"
+                    >
+                      Get started with Bittensor
+                    </a>{' '}
+                    - it takes just a few minutes.
+                  </p>
+                </div>
               </div>
             </div>
           </div>

@@ -52,6 +52,7 @@ export function PrizePool() {
     }
     return !('IntersectionObserver' in window);
   });
+  const [scenarioExpanded, setScenarioExpanded] = useState(false);
 
   useEffect(() => {
     if (isVisible) {
@@ -200,30 +201,53 @@ export function PrizePool() {
           </div>
         </div>
 
-        <div className="glass-card p-6 overflow-x-auto">
-          <div className="mb-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
-              Example scenario
-            </p>
-          </div>
-          <table className="w-full text-left border-separate border-spacing-y-2">
-            <thead>
-              <tr className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
-                <th className="pb-2">Day</th>
-                <th className="pb-2">Event</th>
-                <th className="pb-2">Pool balance</th>
-              </tr>
-            </thead>
-            <tbody>
-              {exampleScenario.map((row) => (
-                <tr key={row.day} className="bg-[#0F172A]/40 rounded-lg">
-                  <td className="py-3 px-3 font-semibold text-[#F3F4F6]">{row.day}</td>
-                  <td className="py-3 px-3 text-[#D1D5DB]">{row.event}</td>
-                  <td className="py-3 px-3 text-[#9CA3AF]">{row.balance}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="glass-card overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setScenarioExpanded(!scenarioExpanded)}
+            className="w-full p-6 flex items-center justify-between text-left hover:bg-white/5 transition-colors"
+            aria-expanded={scenarioExpanded}
+            aria-controls="example-scenario"
+          >
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+                Example scenario
+              </p>
+              <p className="text-sm text-[#6B7280] mt-1">
+                {scenarioExpanded ? 'Click to collapse' : 'See how the prize pool grows and resets'}
+              </p>
+            </div>
+            <svg
+              className={`w-5 h-5 text-[#9CA3AF] transition-transform ${scenarioExpanded ? 'rotate-180' : ''}`}
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+          {scenarioExpanded && (
+            <div id="example-scenario" className="px-6 pb-6 overflow-x-auto">
+              <table className="w-full text-left border-separate border-spacing-y-2">
+                <thead>
+                  <tr className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
+                    <th className="pb-2">Day</th>
+                    <th className="pb-2">Event</th>
+                    <th className="pb-2">Pool balance</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {exampleScenario.map((row) => (
+                    <tr key={row.day} className="bg-[#0F172A]/40 rounded-lg">
+                      <td className="py-3 px-3 font-semibold text-[#F3F4F6]">{row.day}</td>
+                      <td className="py-3 px-3 text-[#D1D5DB]">{row.event}</td>
+                      <td className="py-3 px-3 text-[#9CA3AF]">{row.balance}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
         <div className="grid lg:grid-cols-2 gap-6">

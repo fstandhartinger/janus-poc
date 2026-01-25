@@ -1,6 +1,6 @@
 # Spec 85: PWA Mobile Installation with Share Target
 
-## Status: DRAFT
+## Status: NOT STARTED
 
 ## Context / Why
 

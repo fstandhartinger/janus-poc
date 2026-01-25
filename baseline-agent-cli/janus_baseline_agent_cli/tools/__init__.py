@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.tools.memory import INVESTIGATE_MEMORY_TOOL
 from janus_baseline_agent_cli.tools.music import MUSIC_TOOL
 from janus_baseline_agent_cli.tools.tts import TTS_TOOL
 
@@ -204,10 +205,15 @@ _BASE_TOOL_DEFINITIONS = {
     },
     "generate_music": MUSIC_TOOL["function"],
     "text_to_speech": TTS_TOOL["function"],
+    "investigate_memory": INVESTIGATE_MEMORY_TOOL["function"],
 }
 
 
-def get_registered_tools(settings: Settings | None = None) -> dict[str, dict]:
+def get_registered_tools(
+    settings: Settings | None = None,
+    *,
+    include_memory_tool: bool = False,
+) -> dict[str, dict]:
     """Return tool definitions filtered by settings."""
     settings = settings or get_settings()
     tools: dict[str, dict] = {}
@@ -227,6 +233,8 @@ def get_registered_tools(settings: Settings | None = None) -> dict[str, dict]:
         tools["file_write"] = _BASE_TOOL_DEFINITIONS["file_write"]
     tools["generate_music"] = _BASE_TOOL_DEFINITIONS["generate_music"]
     tools["text_to_speech"] = _BASE_TOOL_DEFINITIONS["text_to_speech"]
+    if include_memory_tool:
+        tools["investigate_memory"] = _BASE_TOOL_DEFINITIONS["investigate_memory"]
 
     return tools
 

@@ -1,6 +1,6 @@
 # Spec 75: Sign in with Chutes
 
-**Status:** COMPLETE
+## Status: COMPLETE
 **Priority:** High
 **Complexity:** High
 **Prerequisites:** Spec 74 (Memory Feature UI)
@@ -570,4 +570,4 @@ When IP rate limit is hit:
 - IP rate limiting is a backup; client-side limit is primary UX
 - Sessions last 30 days; access tokens are refreshed as needed
 
-NR_OF_TRIES: 1
+NR_OF_TRIES: 2

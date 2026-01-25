@@ -13,6 +13,7 @@ from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel
 from janus_baseline_langchain.tools import (
     code_execution_tool,
     image_generation_tool,
+    InvestigateMemoryTool,
     music_generation_tool,
     text_to_speech_tool,
     web_search_tool,
@@ -57,7 +58,13 @@ def create_llm(settings: Settings) -> Union[CompositeRoutingChatModel, ChatOpenA
     )
 
 
-def create_agent(settings: Settings) -> AgentExecutor:
+def create_agent(
+    settings: Settings,
+    *,
+    user_id: str | None = None,
+    enable_memory: bool = False,
+    has_memory_context: bool = False,
+) -> AgentExecutor:
     """Create a LangChain agent executor configured for Janus."""
     llm = create_llm(settings)
 
@@ -68,6 +75,14 @@ def create_agent(settings: Settings) -> AgentExecutor:
         web_search_tool,
         code_execution_tool,
     ]
+    if settings.enable_memory_feature and enable_memory and user_id and has_memory_context:
+        tools.append(
+            InvestigateMemoryTool(
+                user_id=user_id,
+                memory_service_url=settings.memory_service_url,
+                timeout_seconds=settings.memory_timeout_seconds,
+            )
+        )
 
     prompt = ChatPromptTemplate.from_messages(
         [

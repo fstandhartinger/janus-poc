@@ -4,6 +4,7 @@ import asyncio
 import pytest
 
 from janus_baseline_agent_cli.main import (
+    _apply_memory_tool,
     _build_conversation_base,
     _inject_memory_context,
     stream_response,
@@ -18,6 +19,7 @@ from janus_baseline_agent_cli.models import (
     Message,
     MessageRole,
     TextContent,
+    ToolDefinition,
 )
 
 
@@ -54,6 +56,25 @@ def test_inject_memory_context_preserves_images() -> None:
     assert isinstance(content[0], TextContent)
     assert content[0].text == "MEMORY"
     assert any(isinstance(part, ImageUrlContent) for part in content)
+
+
+def test_apply_memory_tool_controls_availability() -> None:
+    request = ChatCompletionRequest(
+        model="test",
+        messages=[Message(role=MessageRole.USER, content="Hi")],
+        tools=[],
+    )
+
+    _apply_memory_tool(request, enable=False)
+    assert request.tools is None
+
+    _apply_memory_tool(request, enable=True)
+    assert request.tools is not None
+    tool = request.tools[0]
+    if isinstance(tool, ToolDefinition):
+        assert tool.function.name == "investigate_memory"
+    else:
+        assert tool["function"]["name"] == "investigate_memory"
 
 
 @pytest.mark.asyncio

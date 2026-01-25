@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useState } from 'react';
 import mermaid from 'mermaid';
+import { MermaidDiagramModal } from './MermaidDiagramModal';
 
 let mermaidInitialized = false;
 
@@ -42,12 +43,19 @@ interface MermaidDiagramProps {
   chart: string;
   className?: string;
   ariaLabel?: string;
+  clickable?: boolean;
 }
 
-export function MermaidDiagram({ chart, className, ariaLabel }: MermaidDiagramProps) {
+export function MermaidDiagram({
+  chart,
+  className,
+  ariaLabel,
+  clickable = true,
+}: MermaidDiagramProps) {
   const id = useId();
   const [svg, setSvg] = useState('');
   const [hasError, setHasError] = useState(false);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (!mermaidInitialized) {
@@ -226,12 +234,35 @@ export function MermaidDiagram({ chart, className, ariaLabel }: MermaidDiagramPr
     );
   }
 
+  const handleClick = () => {
+    if (clickable) {
+      setShowModal(true);
+    }
+  };
+
   return (
-    <div
-      className={`mermaid-container ${className || ''}`}
-      role="img"
-      aria-label={ariaLabel ?? 'Mermaid diagram'}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
+    <>
+      <div
+        className={`mermaid-container ${clickable ? 'mermaid-clickable' : ''} ${className || ''}`}
+        role="img"
+        aria-label={ariaLabel ?? 'Mermaid diagram'}
+        onClick={handleClick}
+        onKeyDown={(e) => {
+          if (clickable && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            setShowModal(true);
+          }
+        }}
+        tabIndex={clickable ? 0 : undefined}
+        dangerouslySetInnerHTML={{ __html: svg }}
+      />
+      {showModal && (
+        <MermaidDiagramModal
+          svg={svg}
+          ariaLabel={ariaLabel}
+          onClose={() => setShowModal(false)}
+        />
+      )}
+    </>
   );
 }
