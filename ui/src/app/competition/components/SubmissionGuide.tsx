@@ -119,7 +119,7 @@ export function SubmissionGuide() {
               </div>
             </div>
             <div className="bg-[#0B0F14] border border-[#1F2937] rounded-2xl p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280] mb-3">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF] mb-3">
                 Improvement cycle
               </p>
               <MermaidDiagram chart={improvementChart} ariaLabel="Incremental improvement cycle" />

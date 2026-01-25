@@ -18,7 +18,7 @@ export function SubmissionForm() {
               </p>
 
               <div className="mt-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280] mb-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF] mb-3">
                   Submission fields
                 </p>
                 <div className="overflow-hidden border border-[#1F2937] rounded-xl">
@@ -93,7 +93,7 @@ export function SubmissionForm() {
               </div>
 
               <div className="mt-6">
-                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280] mb-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF] mb-3">
                   Example submission
                 </p>
                 <pre className="bg-[#0B111A] border border-[#1F2937] rounded-xl p-4 text-xs text-[#D1D5DB] whitespace-pre-wrap">

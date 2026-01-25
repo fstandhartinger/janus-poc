@@ -51,7 +51,7 @@ export function TechRequirements() {
             </p>
             <table className="w-full text-left text-sm mt-4">
               <thead>
-                <tr className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                <tr className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
                   <th className="pb-2">Endpoint</th>
                   <th className="pb-2">Method</th>
                   <th className="pb-2">Required</th>
@@ -88,7 +88,7 @@ export function TechRequirements() {
             </p>
             <table className="w-full text-left text-sm mt-4">
               <thead>
-                <tr className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                <tr className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
                   <th className="pb-2">Resource</th>
                   <th className="pb-2">Limit</th>
                 </tr>

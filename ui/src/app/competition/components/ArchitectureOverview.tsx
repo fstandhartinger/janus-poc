@@ -474,7 +474,7 @@ export function ArchitectureOverview() {
 
             <div className="glass p-4 rounded-2xl space-y-4 overflow-x-auto">
               <div className="space-y-2">
-                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
                   Network egress control
                 </p>
                 <MermaidDiagram

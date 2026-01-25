@@ -41,7 +41,7 @@ export function Sidebar({
     <aside className={sidebarClasses}>
       <button
         type="button"
-        onClick={() => onToggleCollapse?.()}
+        onClick={onToggleCollapse}
         className="chat-sidebar-toggle hidden lg:flex"
         aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
@@ -79,6 +79,7 @@ export function Sidebar({
         </Link>
 
         <button
+          type="button"
           onClick={() => {
             createSession();
             onClose?.();
@@ -131,6 +132,7 @@ export function Sidebar({
                   <span className="truncate">{session.title}</span>
                 </button>
                 <button
+                  type="button"
                   onClick={() => deleteSession(session.id)}
                   className="absolute right-2 top-2.5 text-xs text-[#6B7280] opacity-0 group-hover:opacity-100 hover:text-[#FA5D19]"
                   title="Delete"

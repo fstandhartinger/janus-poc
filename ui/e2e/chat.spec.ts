@@ -95,7 +95,7 @@ test.describe('Chat UI', () => {
 
     // Verify the message bubble component is set up to render artifacts
     // We can test this by checking the component exists and can render
-    const chatArea = page.locator('.flex-1.flex.flex-col');
+    const chatArea = page.locator('.chat-area');
     await expect(chatArea).toBeVisible();
 
     // The artifact links are rendered with the following structure:

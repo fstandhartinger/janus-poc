@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { ScreenshotData } from '@/types/chat';
 
 interface ScreenshotStreamProps {
@@ -10,6 +10,17 @@ interface ScreenshotStreamProps {
 
 export function ScreenshotStream({ screenshots, isLive }: ScreenshotStreamProps) {
   const [expanded, setExpanded] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (expanded === null) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setExpanded(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [expanded]);
 
   if (screenshots.length === 0) return null;
 
@@ -76,8 +87,22 @@ export function ScreenshotStream({ screenshots, isLive }: ScreenshotStreamProps)
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
           onClick={() => setExpanded(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Screenshot preview"
         >
-          <div className="max-w-[90vw] max-h-[90vh]">
+          <div
+            className="max-w-[90vw] max-h-[90vh] relative"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setExpanded(null)}
+              className="absolute -top-10 right-0 rounded-full border border-white/20 px-3 py-1 text-xs uppercase tracking-[0.2em] text-white"
+              aria-label="Close screenshot preview"
+            >
+              Close
+            </button>
             <img
               src={`data:image/png;base64,${screenshots[expanded].image_base64}`}
               alt={screenshots[expanded].title || 'Browser screenshot'}

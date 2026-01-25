@@ -87,7 +87,7 @@ export function BenchRunner() {
           </div>
 
           <div className="glass p-5 rounded-2xl">
-            <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280] mb-3">
+            <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF] mb-3">
               Quick start
             </p>
             <pre className="font-mono text-sm text-[#D1D5DB] whitespace-pre-wrap">
@@ -133,7 +133,7 @@ janus-bench run --target http://localhost:8000 --suite coding`}
               ))}
             </ul>
             <div className="glass p-4 rounded-2xl">
-              <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280] mb-3">
+              <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF] mb-3">
                 Benchmark transparency
               </p>
               <ul className="list-disc list-inside space-y-2 text-sm text-[#D1D5DB]">

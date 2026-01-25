@@ -173,7 +173,7 @@ export function ComponentMarketplace() {
               </p>
               <div className="grid sm:grid-cols-2 gap-4 text-sm">
                 <div className="glass p-4 rounded-2xl">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
                     Miner reward
                   </p>
                   <p className="text-2xl font-semibold text-[#F3F4F6] mt-2">80%</p>
@@ -182,7 +182,7 @@ export function ComponentMarketplace() {
                   </p>
                 </div>
                 <div className="glass p-4 rounded-2xl">
-                  <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                  <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
                     Component rewards
                   </p>
                   <p className="text-2xl font-semibold text-[#F3F4F6] mt-2">20%</p>

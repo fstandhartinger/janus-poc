@@ -22,6 +22,7 @@ export function Footer() {
   return (
     <footer className="py-12 lg:py-16 border-t border-[#1F2937]/50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <h3 className="sr-only">Footer</h3>
         <div className="grid md:grid-cols-4 gap-8 lg:gap-12 mb-12">
           {/* Brand */}
           <div>
@@ -40,9 +41,9 @@ export function Footer() {
           {/* Links */}
           {Object.entries(footerLinks).map(([category, links]) => (
             <div key={category}>
-              <h4 className="text-sm font-semibold text-[#F3F4F6] uppercase tracking-wider mb-4">
+              <h3 className="text-sm font-semibold text-[#F3F4F6] uppercase tracking-wider mb-4">
                 {category}
-              </h4>
+              </h3>
               <ul className="space-y-3">
                 {links.map((link) => (
                   <li key={link.label}>

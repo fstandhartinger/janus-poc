@@ -71,7 +71,8 @@ export default function ChatPage() {
   return (
     <div className="min-h-screen chat-aurora-bg flex flex-col">
       <Header />
-      <div className={`chat-shell flex-1 ${isCanvasOpen ? 'canvas-open' : ''}`}>
+      <main className={`chat-shell flex-1 ${isCanvasOpen ? 'canvas-open' : ''}`} aria-label="Chat">
+        <h1 className="sr-only">Janus Chat</h1>
         {sidebarOpen && (
           <div
             className="fixed inset-0 bg-black/50 z-30 lg:hidden"
@@ -90,7 +91,7 @@ export default function ChatPage() {
           isSidebarCollapsed={sidebarCollapsed}
           onNewChat={handleNewChat}
         />
-      </div>
+      </main>
     </div>
   );
 }

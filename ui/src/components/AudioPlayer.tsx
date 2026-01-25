@@ -38,20 +38,17 @@ export function AudioPlayer({
   }, [downloadName, src]);
 
   useEffect(() => {
-    setIsPlaying(false);
-    setProgress(0);
-    setDuration(0);
-    setCurrentTime(0);
-    setIsLoading(true);
-    setError(null);
-    if (audioRef.current) {
-      audioRef.current.load();
-    }
-  }, [src]);
-
-  useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
+
+    const handleLoadStart = () => {
+      setIsPlaying(false);
+      setProgress(0);
+      setDuration(0);
+      setCurrentTime(0);
+      setIsLoading(true);
+      setError(null);
+    };
 
     const handleTimeUpdate = () => {
       const nextDuration = audio.duration || 0;
@@ -89,6 +86,7 @@ export function AudioPlayer({
       setError('Audio failed to load.');
     };
 
+    audio.addEventListener('loadstart', handleLoadStart);
     audio.addEventListener('timeupdate', handleTimeUpdate);
     audio.addEventListener('loadedmetadata', handleLoadedMetadata);
     audio.addEventListener('canplay', handleCanPlay);
@@ -97,6 +95,7 @@ export function AudioPlayer({
     audio.addEventListener('error', handleError);
 
     return () => {
+      audio.removeEventListener('loadstart', handleLoadStart);
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
       audio.removeEventListener('canplay', handleCanPlay);

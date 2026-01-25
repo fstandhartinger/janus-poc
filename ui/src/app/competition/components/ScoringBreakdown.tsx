@@ -140,7 +140,7 @@ export function ScoringBreakdown() {
               </p>
               <table className="w-full text-left mt-4 text-sm">
                 <thead>
-                  <tr className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">
+                  <tr className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">
                     <th className="pb-2">Category</th>
                     <th className="pb-2">Weight</th>
                   </tr>

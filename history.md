@@ -39,3 +39,4 @@
 - Began spec 58_baseline_performance_optimization.md with benchmark analysis tooling, robust streaming SSE output, and smoke-test coverage updates for the baselines.
 - Ran full Janus intelligence suite for both baselines using Hermes-4-14B + Qwen2.5-VL-32B and captured metrics; tool-use benchmarks still lag while research/streaming/multimodal improved.
 - Completed spec 59_composite_model_router.md with the local router service, LLM-based classification, fallback routing, metrics endpoint, and updated baseline packaging/tests.
+- Completed spec 67_code_review_ui.md with UI a11y fixes (main landmarks, heading hierarchy, contrast), API client retries/timeouts, and updated tests.

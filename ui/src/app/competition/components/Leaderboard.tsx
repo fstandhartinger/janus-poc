@@ -323,19 +323,19 @@ export function Leaderboard() {
                           <td colSpan={11} className="px-4 pb-4">
                             <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-sm text-[#D1D5DB]">
                               <div>
-                                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">Suite</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">Suite</p>
                                 <p className="font-semibold text-[#F3F4F6]">{row.details.suite}</p>
                               </div>
                               <div>
-                                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">TTFT</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">TTFT</p>
                                 <p className="font-semibold text-[#F3F4F6]">{row.details.ttft}</p>
                               </div>
                               <div>
-                                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">P95 latency</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">P95 latency</p>
                                 <p className="font-semibold text-[#F3F4F6]">{row.details.p95}</p>
                               </div>
                               <div>
-                                <p className="text-xs uppercase tracking-[0.2em] text-[#6B7280]">Tokens</p>
+                                <p className="text-xs uppercase tracking-[0.2em] text-[#9CA3AF]">Tokens</p>
                                 <p className="font-semibold text-[#F3F4F6]">{row.details.tokens}</p>
                               </div>
                             </div>
@@ -357,7 +357,7 @@ export function Leaderboard() {
                 <div key={row.competitor} className="glass p-4 rounded-xl">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm uppercase tracking-[0.2em] text-[#6B7280]">Rank</p>
+                      <p className="text-sm uppercase tracking-[0.2em] text-[#9CA3AF]">Rank</p>
                       <p className="text-xl font-semibold text-[#F3F4F6]">#{row.rank}</p>
                     </div>
                     <div className="text-right">

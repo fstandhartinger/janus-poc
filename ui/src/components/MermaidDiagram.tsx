@@ -190,6 +190,11 @@ export function MermaidDiagram({ chart, className, ariaLabel }: MermaidDiagramPr
   useEffect(() => {
     let cancelled = false;
     const render = async () => {
+      setHasError(false);
+      if (!chart.trim()) {
+        setSvg('');
+        return;
+      }
       try {
         const renderId = `mermaid-${id.replace(/:/g, '')}`;
         const { svg: svgMarkup } = await mermaid.render(renderId, chart);
