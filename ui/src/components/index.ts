@@ -5,3 +5,5 @@ export { MessageBubble } from './MessageBubble';
 export { DeepResearchProgress } from './DeepResearchProgress';
 export { VNCViewer } from './VNCViewer';
 export { ModelSelector } from './ModelSelector';
+export { MermaidDiagram } from './MermaidDiagram';
+export { MermaidDiagramGlow } from './MermaidDiagramGlow';

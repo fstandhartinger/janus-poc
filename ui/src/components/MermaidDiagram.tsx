@@ -5,6 +5,39 @@ import mermaid from 'mermaid';
 
 let mermaidInitialized = false;
 
+// Chutes Design System Colors
+const CHUTES_COLORS = {
+  // Base colors
+  background: '#0B0F14',
+  cardBackground: '#111726',
+  surfaceBackground: '#142030',
+
+  // Text colors
+  primaryText: '#F3F4F6',
+  secondaryText: '#9CA3AF',
+  mutedText: '#6B7280',
+
+  // Accent colors
+  mossGreen: '#63D297',
+  mossGreenDark: '#4BA87A',
+  mossGreenLight: '#7FDAA8',
+
+  // Aurora gradient stops
+  auroraStart: '#63D297',
+  auroraMid: '#4ECDC4',
+  auroraEnd: '#45B7D1',
+
+  // Semantic colors
+  success: '#63D297',
+  warning: '#F59E0B',
+  error: '#EF4444',
+  info: '#3B82F6',
+
+  // Border colors
+  border: 'rgba(55, 65, 81, 0.6)',
+  borderLight: 'rgba(99, 210, 151, 0.3)',
+};
+
 interface MermaidDiagramProps {
   chart: string;
   className?: string;
@@ -20,16 +53,134 @@ export function MermaidDiagram({ chart, className, ariaLabel }: MermaidDiagramPr
     if (!mermaidInitialized) {
       mermaid.initialize({
         startOnLoad: false,
-        theme: 'dark',
+        theme: 'base',
         securityLevel: 'strict',
-        flowchart: { curve: 'basis' },
+
+        // General settings
+        fontFamily: 'Tomato Grotesk, Inter, system-ui, sans-serif',
+        fontSize: 14,
+
+        // Flowchart specific
+        flowchart: {
+          curve: 'basis',
+          padding: 20,
+          nodeSpacing: 50,
+          rankSpacing: 60,
+          htmlLabels: true,
+          useMaxWidth: true,
+        },
+
+        // Sequence diagram specific
+        sequence: {
+          actorMargin: 50,
+          boxMargin: 10,
+          boxTextMargin: 5,
+          noteMargin: 10,
+          messageMargin: 35,
+          mirrorActors: true,
+          useMaxWidth: true,
+        },
+
+        // Theme variables aligned with Chutes design system
         themeVariables: {
+          // Background colors
+          background: CHUTES_COLORS.background,
+          primaryColor: CHUTES_COLORS.cardBackground,
+          secondaryColor: CHUTES_COLORS.surfaceBackground,
+          tertiaryColor: CHUTES_COLORS.surfaceBackground,
+
+          // Text colors
+          primaryTextColor: CHUTES_COLORS.primaryText,
+          secondaryTextColor: CHUTES_COLORS.secondaryText,
+          tertiaryTextColor: CHUTES_COLORS.mutedText,
+
+          // Line and border colors
+          lineColor: CHUTES_COLORS.mossGreen,
+          primaryBorderColor: CHUTES_COLORS.borderLight,
+          secondaryBorderColor: CHUTES_COLORS.border,
+
+          // Node styling
+          nodeBkg: CHUTES_COLORS.cardBackground,
+          nodeTextColor: CHUTES_COLORS.primaryText,
+          nodeBorder: CHUTES_COLORS.mossGreen,
+
+          // Main node (root/primary)
+          mainBkg: CHUTES_COLORS.surfaceBackground,
+
+          // Cluster/subgraph styling
+          clusterBkg: 'rgba(17, 23, 38, 0.7)',
+          clusterBorder: CHUTES_COLORS.borderLight,
+          titleColor: CHUTES_COLORS.primaryText,
+
+          // Edge labels
+          edgeLabelBackground: CHUTES_COLORS.background,
+
+          // Font settings
           fontFamily: 'Tomato Grotesk, Inter, system-ui, sans-serif',
-          primaryColor: '#111726',
-          primaryTextColor: '#F3F4F6',
-          lineColor: '#63D297',
-          edgeLabelBackground: '#0B0F14',
-          tertiaryColor: '#142030',
+
+          // Sequence diagram specific
+          actorBkg: CHUTES_COLORS.cardBackground,
+          actorBorder: CHUTES_COLORS.mossGreen,
+          actorTextColor: CHUTES_COLORS.primaryText,
+          actorLineColor: CHUTES_COLORS.mossGreen,
+          signalColor: CHUTES_COLORS.mossGreen,
+          signalTextColor: CHUTES_COLORS.primaryText,
+          labelBoxBkgColor: CHUTES_COLORS.cardBackground,
+          labelBoxBorderColor: CHUTES_COLORS.borderLight,
+          labelTextColor: CHUTES_COLORS.primaryText,
+          loopTextColor: CHUTES_COLORS.secondaryText,
+          noteBkgColor: CHUTES_COLORS.surfaceBackground,
+          noteBorderColor: CHUTES_COLORS.borderLight,
+          noteTextColor: CHUTES_COLORS.primaryText,
+          activationBkgColor: 'rgba(99, 210, 151, 0.15)',
+          activationBorderColor: CHUTES_COLORS.mossGreen,
+
+          // Pie chart
+          pie1: CHUTES_COLORS.mossGreen,
+          pie2: '#4ECDC4',
+          pie3: '#45B7D1',
+          pie4: '#5B8DEE',
+          pie5: '#8B7DD8',
+          pieStrokeColor: CHUTES_COLORS.border,
+          pieStrokeWidth: '1px',
+          pieTitleTextColor: CHUTES_COLORS.primaryText,
+          pieSectionTextColor: CHUTES_COLORS.primaryText,
+          pieLegendTextColor: CHUTES_COLORS.secondaryText,
+
+          // Gantt chart
+          sectionBkgColor: CHUTES_COLORS.cardBackground,
+          altSectionBkgColor: CHUTES_COLORS.surfaceBackground,
+          gridColor: CHUTES_COLORS.border,
+          taskBkgColor: CHUTES_COLORS.mossGreen,
+          taskTextColor: CHUTES_COLORS.background,
+          taskTextOutsideColor: CHUTES_COLORS.primaryText,
+          activeTaskBkgColor: CHUTES_COLORS.mossGreenLight,
+          activeTaskBorderColor: CHUTES_COLORS.mossGreen,
+          doneTaskBkgColor: CHUTES_COLORS.mossGreenDark,
+          doneTaskBorderColor: CHUTES_COLORS.mossGreen,
+          critBkgColor: CHUTES_COLORS.error,
+          critBorderColor: '#DC2626',
+          todayLineColor: CHUTES_COLORS.warning,
+
+          // State diagram
+          labelColor: CHUTES_COLORS.primaryText,
+          altBackground: CHUTES_COLORS.surfaceBackground,
+
+          // Class diagram
+          classText: CHUTES_COLORS.primaryText,
+
+          // Git graph
+          git0: CHUTES_COLORS.mossGreen,
+          git1: '#4ECDC4',
+          git2: '#45B7D1',
+          git3: '#5B8DEE',
+          git4: '#8B7DD8',
+          git5: '#C084FC',
+          git6: '#F472B6',
+          git7: '#FB7185',
+          gitBranchLabel0: CHUTES_COLORS.primaryText,
+          commitLabelColor: CHUTES_COLORS.primaryText,
+          commitLabelBackground: CHUTES_COLORS.cardBackground,
         },
       });
       mermaidInitialized = true;
@@ -61,15 +212,18 @@ export function MermaidDiagram({ chart, className, ariaLabel }: MermaidDiagramPr
 
   if (hasError) {
     return (
-      <div className="text-sm text-[#9CA3AF]">
-        Diagram failed to load. Please refresh the page.
+      <div className="mermaid-error">
+        <svg className="w-5 h-5 text-[#EF4444]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+        <span>Diagram failed to render. Please refresh the page.</span>
       </div>
     );
   }
 
   return (
     <div
-      className={className}
+      className={`mermaid-container ${className || ''}`}
       role="img"
       aria-label={ariaLabel ?? 'Mermaid diagram'}
       dangerouslySetInnerHTML={{ __html: svg }}
