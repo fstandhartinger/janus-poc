@@ -33,7 +33,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     getCurrentSession,
   } = useChatStore();
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const processedCanvasMessagesRef = useRef<Set<string>>(new Set());
   const [models, setModels] = useState<Model[]>([]);
@@ -46,9 +46,12 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   const session = getCurrentSession();
   const messages = session?.messages || [];
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom - use scrollTop on container to avoid propagating to parent
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      container.scrollTop = container.scrollHeight;
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -432,7 +435,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
       ) : (
         /* Chat mode: messages scroll, input fixed at bottom */
         <>
-          <div className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
+          <div ref={messagesContainerRef} className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
             <div className="max-w-4xl mx-auto">
               <DeepResearchProgress stages={researchStages} isActive={researchActive} />
               <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
@@ -443,7 +446,6 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
                   showReasoning={showReasoning}
                 />
               ))}
-              <div ref={messagesEndRef} />
 
               {isStreaming && (
                 <div className="chat-streaming" role="status" aria-live="polite">
