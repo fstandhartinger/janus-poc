@@ -51,3 +51,4 @@
 - Completed spec 75_sign_in_with_chutes.md with OAuth sign-in, free chat gating, IP rate limiting proxy, auth-aware chat requests, baseline token support, and updated UI/docs.
 - Re-verified spec 75_sign_in_with_chutes.md status formatting and refreshed NR_OF_TRIES after validation pass.
 - Completed spec 76_memory_investigation_tool.md with investigate_memory tools for baselines, conditional tool registration, sandbox env wiring, and tests.
+- Re-verified spec 03_components.md against docs/architecture.md + README testing matrix; refreshed NR_OF_TRIES after validation pass.

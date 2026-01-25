@@ -73,3 +73,5 @@ flowchart TD
 
 ## Open questions / risks
 - What minimum set of platform services must be available for the baseline to be competitive?
+
+NR_OF_TRIES: 1
