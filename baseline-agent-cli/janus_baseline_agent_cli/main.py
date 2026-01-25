@@ -535,9 +535,15 @@ async def chat_completions(
         if settings.always_use_agent or (is_complex and sandy_service.is_available):
             # Use Sandy's agent/run API if enabled (faster, better configured)
             if settings.use_sandy_agent_api:
-                response = await sandy_service.complete_via_agent_api(request)
+                response = await sandy_service.complete_via_agent_api(
+                    request,
+                    debug_emitter=debug_emitter,
+                )
             else:
-                response = await sandy_service.complete(request)
+                response = await sandy_service.complete(
+                    request,
+                    debug_emitter=debug_emitter,
+                )
         else:
             response = await llm_service.complete(request)
 

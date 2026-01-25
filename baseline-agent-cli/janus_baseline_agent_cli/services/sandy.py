@@ -1144,7 +1144,11 @@ class SandyService:
         return "No task specified"
 
     @log_function_call
-    async def complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
+    async def complete(
+        self,
+        request: ChatCompletionRequest,
+        debug_emitter: DebugEmitter | None = None,
+    ) -> ChatCompletionResponse:
         """Execute a complex task and return a non-streaming response."""
         request_id = self._generate_id()
         model = request.model
@@ -1652,7 +1656,9 @@ class SandyService:
 
     @log_function_call
     async def complete_via_agent_api(
-        self, request: ChatCompletionRequest
+        self,
+        request: ChatCompletionRequest,
+        debug_emitter: DebugEmitter | None = None,
     ) -> ChatCompletionResponse:
         """
         Execute a task using Sandy's agent/run API and return a non-streaming response.
@@ -1662,8 +1668,23 @@ class SandyService:
         request_id = self._generate_id()
         model = request.model
         task = self._extract_task(request)
+        has_images = contains_images(request.messages)
+
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.SANDBOX_INIT,
+                "SANDY",
+                "Starting sandbox execution",
+                data={"has_images": has_images},
+            )
 
         if not self.is_available:
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.ERROR,
+                    "SANDY",
+                    "Sandy is not configured",
+                )
             content = (
                 "I would execute this task in a Sandy sandbox:\n\n"
                 f"**Task:** {task}\n\nSandy is not currently configured. "
@@ -1685,12 +1706,25 @@ class SandyService:
 
         agent = self._select_agent_for_api()
         api_model = self._select_model_for_api(request)
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.AGENT_THINKING,
+                "AGENT",
+                f"Starting {agent} agent with model {api_model}",
+                data={"agent": agent, "model": api_model},
+            )
         sandbox_start = time.perf_counter()
         output_parts: list[str] = []
 
         async with self._client_factory() as client:
             sandbox_info = await self._create_sandbox(client)
             if not sandbox_info:
+                if debug_emitter:
+                    await debug_emitter.emit(
+                        DebugEventType.ERROR,
+                        "SANDY",
+                        "Failed to create sandbox",
+                    )
                 return ChatCompletionResponse(
                     id=request_id,
                     model=model,
@@ -1751,7 +1785,7 @@ class SandyService:
                     links = self._format_artifact_links(artifacts)
                     result = f"{result}\n\nArtifacts available:\n{links}"
 
-                return ChatCompletionResponse(
+                response_payload = ChatCompletionResponse(
                     id=request_id,
                     model=model,
                     choices=[
@@ -1771,6 +1805,15 @@ class SandyService:
                         sandbox_seconds=time.perf_counter() - sandbox_start,
                     ),
                 )
+
+                if debug_emitter:
+                    await debug_emitter.emit(
+                        DebugEventType.RESPONSE_COMPLETE,
+                        "SSE",
+                        "Response complete",
+                    )
+
+                return response_payload
 
             finally:
                 await self._terminate_sandbox(client, sandbox_id)

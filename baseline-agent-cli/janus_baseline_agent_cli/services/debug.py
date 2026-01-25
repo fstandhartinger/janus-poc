@@ -37,6 +37,9 @@ class DebugEmitter:
         self._request_id = request_id
         self._enabled = enabled
 
+    def __bool__(self) -> bool:
+        return self.enabled
+
     @property
     def enabled(self) -> bool:
         return self._enabled and bool(self._request_id)
