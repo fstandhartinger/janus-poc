@@ -5,6 +5,7 @@ import pytest
 
 from janus_baseline_agent_cli.config import Settings
 from janus_baseline_agent_cli.models import (
+    GenerationFlags,
     ImageUrl,
     ImageUrlContent,
     Message,
@@ -115,6 +116,16 @@ def test_image_with_tool_trigger(detector: ComplexityDetector) -> None:
     analysis = detector.analyze(messages)
     assert analysis.is_complex is True
     assert analysis.reason == "image_with_tools"
+
+
+def test_generation_flags_force_complex(detector: ComplexityDetector) -> None:
+    """Generation flags should force agent routing."""
+    messages = [Message(role=MessageRole.USER, content="Hello there")]
+    flags = GenerationFlags(generate_image=True, web_search=True)
+    analysis = detector.analyze(messages, flags)
+    assert analysis.is_complex is True
+    assert analysis.reason.startswith("generation_flags:")
+    assert "image generation requested" in analysis.reason
 
 
 def test_empty_messages(detector: ComplexityDetector) -> None:

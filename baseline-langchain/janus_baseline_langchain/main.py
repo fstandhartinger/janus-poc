@@ -15,6 +15,7 @@ from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, SecretStr
 
 from janus_baseline_langchain import __version__
+from janus_baseline_langchain.agent import create_agent
 from janus_baseline_langchain.config import Settings, get_settings
 from janus_baseline_langchain.models import (
     ChatCompletionChunk,
@@ -25,6 +26,7 @@ from janus_baseline_langchain.models import (
     Delta,
     FinishReason,
     FunctionCall,
+    GenerationFlags,
     ImageUrlContent,
     Message,
     MessageContent,
@@ -246,12 +248,14 @@ def _chunk_payload(
     delta: Delta,
     finish_reason: FinishReason | None = None,
     usage: Usage | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> str:
     chunk = ChatCompletionChunk(
         id=request_id,
         model=model,
         choices=[ChunkChoice(delta=delta, finish_reason=finish_reason)],
         usage=usage,
+        metadata=metadata,
     )
     return f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
 
@@ -316,6 +320,88 @@ def _resolve_request_auth(
     if request.chutes_access_token:
         return request.chutes_access_token, settings.openai_base_url
     return settings.openai_api_key, settings.openai_base_url
+
+
+def _generation_flags_payload(flags: GenerationFlags | None) -> dict[str, bool] | None:
+    if not flags:
+        return None
+    payload = flags.model_dump()
+    if any(payload.values()):
+        return payload
+    return None
+
+
+def _generation_flag_reasons(flags: GenerationFlags) -> list[str]:
+    reasons: list[str] = []
+    if flags.generate_image:
+        reasons.append("image generation requested")
+    if flags.generate_video:
+        reasons.append("video generation requested")
+    if flags.generate_audio:
+        reasons.append("audio generation requested")
+    if flags.deep_research:
+        reasons.append("deep research requested")
+    if flags.web_search:
+        reasons.append("web search requested")
+    return reasons
+
+
+def _build_agent_prompt(user_message: str, flags: GenerationFlags | None) -> str:
+    instructions: list[str] = []
+
+    if flags:
+        if flags.generate_image:
+            instructions.append(
+                "The user has explicitly requested IMAGE GENERATION. "
+                "You MUST generate one or more images as part of your response using the Chutes image API."
+            )
+        if flags.generate_video:
+            instructions.append(
+                "The user has explicitly requested VIDEO GENERATION. "
+                "You MUST generate a video as part of your response using the Chutes video API."
+            )
+        if flags.generate_audio:
+            instructions.append(
+                "The user has explicitly requested AUDIO GENERATION. "
+                "You MUST generate audio (speech/music) as part of your response using the Chutes TTS/audio API."
+            )
+        if flags.deep_research:
+            instructions.append(
+                "The user has explicitly requested DEEP RESEARCH. "
+                "You MUST perform comprehensive research with citations using chutes-search max mode."
+            )
+        if flags.web_search:
+            instructions.append(
+                "The user has explicitly requested WEB SEARCH. "
+                "You MUST search the internet for current information to answer this query."
+            )
+
+    if not instructions:
+        return user_message
+
+    instruction_block = "\n".join(f"- {instruction}" for instruction in instructions)
+
+    return (
+        "______ Generation Instructions ______\n"
+        "The user has enabled the following generation modes:\n"
+        f"{instruction_block}\n\n"
+        "Please ensure your response includes the requested generated content.\n"
+        "_____________________________________\n\n"
+        f"{user_message}"
+    )
+
+
+def _build_agent_context(messages: list[Message]) -> tuple[str, list[object]]:
+    last_index = _latest_user_message_index(messages)
+    user_input = _latest_user_text(messages)
+    history: list[object] = []
+    if last_index is None:
+        return user_input, history
+    for message in messages[:last_index]:
+        converted = _to_langchain_message(message)
+        if converted:
+            history.append(converted)
+    return user_input, history
 
 
 def _extract_first_match(pattern: str, text: str) -> str | None:
@@ -408,11 +494,13 @@ async def _stream_tool_call_response(
     model: str,
     tool_call: ToolCall,
     include_usage: bool,
+    metadata: dict[str, Any] | None = None,
 ) -> AsyncGenerator[str, None]:
     yield _chunk_payload(
         request_id,
         model,
         Delta(role=MessageRole.ASSISTANT),
+        metadata=metadata,
     )
     yield _chunk_payload(
         request_id,
@@ -444,6 +532,7 @@ async def _stream_basic_response(
     response_collector: list[str] | None = None,
     api_key_override: str | None = None,
     base_url_override: str | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> AsyncGenerator[str, None]:
     if settings.use_model_router:
         llm = _get_router(settings, api_key_override=api_key_override)
@@ -458,6 +547,7 @@ async def _stream_basic_response(
         model_name = settings.model
 
     started = False
+    metadata_sent = False
 
     async for chunk in llm.astream(messages):
         content = getattr(chunk, "content", None)
@@ -469,8 +559,10 @@ async def _stream_basic_response(
                 request_id,
                 model_name,
                 Delta(role=MessageRole.ASSISTANT),
+                metadata=metadata if not metadata_sent else None,
             )
             started = True
+            metadata_sent = True
         for part in content_parts:
             if response_collector is not None:
                 response_collector.append(part)
@@ -485,7 +577,9 @@ async def _stream_basic_response(
             request_id,
             model_name,
             Delta(role=MessageRole.ASSISTANT),
+            metadata=metadata if not metadata_sent else None,
         )
+        metadata_sent = True
 
     if include_usage:
         yield _chunk_payload(
@@ -533,6 +627,7 @@ async def stream_agent_response(
     history: Iterable[object],
     include_usage: bool,
     response_collector: list[str] | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> AsyncGenerator[str, None]:
     async def raw_stream() -> AsyncGenerator[str, None]:
         tool_index = 0
@@ -540,6 +635,7 @@ async def stream_agent_response(
             request_id,
             model,
             Delta(role=MessageRole.ASSISTANT),
+            metadata=metadata,
         )
 
         try:
@@ -636,6 +732,7 @@ async def _stream_vision_response(
     response_collector: list[str] | None = None,
     api_key_override: str | None = None,
     base_url_override: str | None = None,
+    metadata: dict[str, Any] | None = None,
 ) -> AsyncGenerator[str, None]:
     async def raw_stream() -> AsyncGenerator[str, None]:
         primary = settings.vision_model_primary
@@ -650,6 +747,7 @@ async def _stream_vision_response(
                     base_url_override=base_url_override,
                 )
                 started = False
+                metadata_sent = False
 
                 async for chunk in llm.astream(messages):
                     content = getattr(chunk, "content", None)
@@ -661,6 +759,7 @@ async def _stream_vision_response(
                             request_id,
                             attempt_model,
                             Delta(role=MessageRole.ASSISTANT),
+                            metadata=metadata if not metadata_sent else None,
                         )
                         yield _chunk_payload(
                             request_id,
@@ -668,6 +767,7 @@ async def _stream_vision_response(
                             Delta(reasoning_content="Processing request..."),
                         )
                         started = True
+                        metadata_sent = True
                     for part in content_parts:
                         if response_collector is not None:
                             response_collector.append(part)
@@ -682,7 +782,9 @@ async def _stream_vision_response(
                         request_id,
                         attempt_model,
                         Delta(role=MessageRole.ASSISTANT),
+                        metadata=metadata if not metadata_sent else None,
                     )
+                    metadata_sent = True
 
                 if include_usage:
                     yield _chunk_payload(
@@ -766,15 +868,36 @@ async def chat_completions(
         settings.enable_memory_feature and request.enable_memory and request.user_id
     )
     conversation_base = _build_conversation_base(request.messages)
+    has_memory_context = False
     if memory_enabled and request.user_id:
         prompt = _latest_user_text(request.messages)
         memory_context = await memory_service.get_memory_context(request.user_id, prompt)
         if memory_context:
+            has_memory_context = True
             messages_for_processing = [
                 message.model_copy(deep=True) for message in request.messages
             ]
             _inject_memory_context(messages_for_processing, memory_context)
             request.messages = messages_for_processing
+
+    flags_payload = _generation_flags_payload(request.generation_flags)
+    use_generation_agent = bool(flags_payload)
+    flag_reasons = (
+        _generation_flag_reasons(request.generation_flags)
+        if request.generation_flags and flags_payload
+        else []
+    )
+    metadata_payload = (
+        {
+            "generation_flags": flags_payload,
+            "using_agent": use_generation_agent,
+            "complexity_reason": (
+                f"generation_flags: {', '.join(flag_reasons)}" if flag_reasons else "generation_flags"
+            ),
+        }
+        if flags_payload
+        else None
+    )
 
     use_vision = settings.enable_vision_routing and contains_images(request.messages)
     model = settings.vision_model_primary if use_vision else (request.model or settings.model)
@@ -788,7 +911,7 @@ async def chat_completions(
         vision_routing=use_vision,
     )
 
-    tool_call = _infer_tool_call(request)
+    tool_call = None if use_generation_agent else _infer_tool_call(request)
 
     if request.stream:
         full_response_parts: list[str] = []
@@ -813,8 +936,42 @@ async def chat_completions(
                     )
 
         include_usage = bool(request.stream_options and request.stream_options.include_usage)
+        if use_generation_agent:
+            user_input, history = _build_agent_context(request.messages)
+            agent_prompt = _build_agent_prompt(user_input, request.generation_flags)
+            agent = create_agent(
+                settings,
+                user_id=request.user_id,
+                enable_memory=memory_enabled,
+                has_memory_context=has_memory_context,
+            )
+            stream = stream_agent_response(
+                agent,
+                request_id,
+                request.model or settings.model,
+                agent_prompt,
+                history,
+                include_usage,
+                response_collector=full_response_parts,
+                metadata=metadata_payload,
+            )
+            wrapped_stream = stream_with_memory(optimized_stream_response(stream))
+            return StreamingResponse(
+                wrapped_stream,
+                media_type="text/event-stream",
+                headers={
+                    "Cache-Control": "no-cache",
+                    "Connection": "keep-alive",
+                },
+            )
         if tool_call and not use_vision:
-            stream = _stream_tool_call_response(request_id, model, tool_call, include_usage)
+            stream = _stream_tool_call_response(
+                request_id,
+                model,
+                tool_call,
+                include_usage,
+                metadata=metadata_payload,
+            )
             wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
                 wrapped_stream,
@@ -834,6 +991,7 @@ async def chat_completions(
                 response_collector=full_response_parts,
                 api_key_override=api_key_override,
                 base_url_override=base_url_override,
+                metadata=metadata_payload,
             )
             wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
@@ -853,6 +1011,7 @@ async def chat_completions(
             response_collector=full_response_parts,
             api_key_override=api_key_override,
             base_url_override=base_url_override,
+            metadata=metadata_payload,
         )
         wrapped_stream = stream_with_memory(optimized_stream_response(stream))
         return StreamingResponse(
@@ -863,6 +1022,39 @@ async def chat_completions(
                 "Connection": "keep-alive",
                 },
             )
+
+    if use_generation_agent:
+        user_input, history = _build_agent_context(request.messages)
+        agent_prompt = _build_agent_prompt(user_input, request.generation_flags)
+        agent = create_agent(
+            settings,
+            user_id=request.user_id,
+            enable_memory=memory_enabled,
+            has_memory_context=has_memory_context,
+        )
+        try:
+            result = await agent.ainvoke(
+                {"input": agent_prompt, "chat_history": list(history)}
+            )
+            if isinstance(result, dict):
+                output = str(result.get("output") or result)
+            else:
+                output = str(result)
+        except Exception as exc:
+            logger.error("agent_invoke_error", error=str(exc))
+            output = "Error: failed to generate response."
+        response = _format_response(request_id, request.model or settings.model, output)
+        if memory_enabled and request.user_id:
+            conversation = conversation_base + [
+                {"role": "assistant", "content": output}
+            ]
+            asyncio.create_task(
+                memory_service.extract_memories(
+                    user_id=request.user_id,
+                    conversation=conversation,
+                )
+            )
+        return response
 
     if tool_call and not use_vision:
         response = _format_tool_call_response(request_id, model, tool_call)

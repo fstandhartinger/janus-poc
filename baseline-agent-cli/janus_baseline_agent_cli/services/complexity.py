@@ -10,7 +10,7 @@ import structlog
 
 from janus_baseline_agent_cli.config import Settings, get_settings
 from janus_baseline_agent_cli.logging import log_function_call
-from janus_baseline_agent_cli.models import Message, MessageContent
+from janus_baseline_agent_cli.models import GenerationFlags, Message, MessageContent
 from janus_baseline_agent_cli.tools.parser import robust_parse_tool_call
 from janus_baseline_agent_cli.services.vision import contains_images, count_images
 
@@ -414,7 +414,25 @@ class ComplexityDetector:
         text_lower = text.lower()
         return any(hint in text_lower for hint in interaction_hints)
 
-    def analyze(self, messages: list[Message]) -> ComplexityAnalysis:
+    def _flag_reasons(self, flags: GenerationFlags) -> list[str]:
+        reasons: list[str] = []
+        if flags.generate_image:
+            reasons.append("image generation requested")
+        if flags.generate_video:
+            reasons.append("video generation requested")
+        if flags.generate_audio:
+            reasons.append("audio generation requested")
+        if flags.deep_research:
+            reasons.append("deep research requested")
+        if flags.web_search:
+            reasons.append("web search requested")
+        return reasons
+
+    def analyze(
+        self,
+        messages: list[Message],
+        flags: GenerationFlags | None = None,
+    ) -> ComplexityAnalysis:
         """Analyze the request for complexity routing."""
         if not messages:
             return ComplexityAnalysis(
@@ -448,6 +466,19 @@ class ComplexityDetector:
         keywords_matched = self._matched_complex_keywords(text)
         multimodal_detected = self._is_multimodal_request(text)
         text_preview = text[:100]
+
+        if flags:
+            flag_reasons = self._flag_reasons(flags)
+            if flag_reasons:
+                return ComplexityAnalysis(
+                    is_complex=True,
+                    reason=f"generation_flags: {', '.join(flag_reasons)}",
+                    keywords_matched=flag_reasons,
+                    multimodal_detected=False,
+                    has_images=has_images,
+                    image_count=image_count,
+                    text_preview=text_preview,
+                )
 
         # Check for multimodal request
         if multimodal_detected:
@@ -616,9 +647,13 @@ class ComplexityDetector:
         return True, "llm_check_error: all models unavailable"
 
     @log_function_call
-    async def analyze_async(self, messages: list[Message]) -> ComplexityAnalysis:
+    async def analyze_async(
+        self,
+        messages: list[Message],
+        flags: GenerationFlags | None = None,
+    ) -> ComplexityAnalysis:
         """Async analysis with mandatory LLM verification for fast path."""
-        first_pass = self.analyze(messages)
+        first_pass = self.analyze(messages, flags)
 
         if first_pass.is_complex:
             logger.info(
@@ -671,14 +706,18 @@ class ComplexityDetector:
 
         return first_pass
 
-    def is_complex(self, messages: list[Message]) -> tuple[bool, str]:
+    def is_complex(
+        self,
+        messages: list[Message],
+        flags: GenerationFlags | None = None,
+    ) -> tuple[bool, str]:
         """
         Determine if the request is complex and needs sandbox execution.
 
         Returns:
             Tuple of (is_complex, reason)
         """
-        analysis = self.analyze(messages)
+        analysis = self.analyze(messages, flags)
         return analysis.is_complex, analysis.reason
 
 

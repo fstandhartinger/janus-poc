@@ -16,6 +16,7 @@ from janus_baseline_agent_cli.models import (
     ChatCompletionRequest,
     ChatCompletionChunk,
     ChatCompletionResponse,
+    GenerationFlags,
     ImageUrlContent,
     Message,
     MessageRole,
@@ -166,6 +167,15 @@ def _extract_auth_token(authorization: str | None) -> str | None:
     return token
 
 
+def _generation_flags_payload(flags: GenerationFlags | None) -> dict[str, bool] | None:
+    if not flags:
+        return None
+    payload = flags.model_dump()
+    if any(payload.values()):
+        return payload
+    return None
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
@@ -220,9 +230,23 @@ async def stream_response(
     conversation_base: list[dict[str, str]] | None = None,
 ) -> AsyncGenerator[str, None]:
     """Generate streaming response based on complexity."""
-    analysis = await complexity_detector.analyze_async(request.messages)
+    analysis = await complexity_detector.analyze_async(
+        request.messages,
+        request.generation_flags,
+    )
     is_complex = analysis.is_complex
     reason = analysis.reason
+    using_agent = settings.always_use_agent or (is_complex and sandy_service.is_available)
+    flags_payload = _generation_flags_payload(request.generation_flags)
+    metadata_payload = (
+        {
+            "generation_flags": flags_payload,
+            "using_agent": using_agent,
+            "complexity_reason": reason,
+        }
+        if flags_payload
+        else None
+    )
 
     logger.info(
         "complexity_check",
@@ -249,18 +273,25 @@ async def stream_response(
     full_response_parts: list[str] = []
 
     async def raw_stream() -> AsyncGenerator[str, None]:
+        first_chunk = True
         try:
-            if settings.always_use_agent or (is_complex and sandy_service.is_available):
+            if using_agent:
                 async for chunk in sandy_service.execute_complex(request):
                     chunk_text = _extract_chunk_content(chunk)
                     if chunk_text:
                         full_response_parts.append(chunk_text)
+                    if first_chunk and metadata_payload:
+                        chunk = chunk.model_copy(update={"metadata": metadata_payload})
+                    first_chunk = False
                     yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
             else:
                 async for chunk in llm_service.stream(request):
                     chunk_text = _extract_chunk_content(chunk)
                     if chunk_text:
                         full_response_parts.append(chunk_text)
+                    if first_chunk and metadata_payload:
+                        chunk = chunk.model_copy(update={"metadata": metadata_payload})
+                    first_chunk = False
                     yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
             yield "data: [DONE]\n\n"
         finally:
@@ -332,7 +363,10 @@ async def chat_completions(
         )
     else:
         # Non-streaming - route based on complexity
-        analysis = complexity_detector.analyze(request.messages)
+        analysis = complexity_detector.analyze(
+            request.messages,
+            request.generation_flags,
+        )
         is_complex = analysis.is_complex
         reason = analysis.reason
         logger.info(
