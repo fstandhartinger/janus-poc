@@ -284,7 +284,7 @@ class LLMService:
                             Choice(
                                 message=Message(
                                     role=MessageRole.ASSISTANT,
-                                    content=f"Error: {fallback_exc}",
+                                    content="I'm sorry, I encountered an error processing your request. Please try again.",
                                 ),
                                 finish_reason=FinishReason.STOP,
                             )
@@ -299,7 +299,7 @@ class LLMService:
                         Choice(
                             message=Message(
                                 role=MessageRole.ASSISTANT,
-                                content=f"Error: {e}",
+                                content="I'm sorry, I encountered an error processing your request. Please try again.",
                             ),
                             finish_reason=FinishReason.STOP,
                         )
@@ -500,7 +500,7 @@ class LLMService:
                 model=model,
                 choices=[
                     ChunkChoice(
-                        delta=Delta(content=f"\n\nError: {e}"),
+                        delta=Delta(content="\n\nI'm sorry, I encountered an error. Please try again."),
                         finish_reason=FinishReason.STOP,
                     )
                 ],

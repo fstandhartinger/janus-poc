@@ -6,6 +6,7 @@ import hashlib
 import json
 import mimetypes
 import shlex
+import time
 import uuid
 from dataclasses import dataclass
 from functools import lru_cache
@@ -27,7 +28,6 @@ from janus_baseline_agent_cli.models import (
     ChunkChoice,
     Delta,
     FinishReason,
-    Message,
     MessageRole,
     Usage,
 )
@@ -660,7 +660,7 @@ class SandyService:
                 ],
             )
 
-        sandbox_start = asyncio.get_event_loop().time()
+        sandbox_start = time.perf_counter()
 
         async with self._client_factory() as client:
             sandbox_info = await self._create_sandbox(client)
@@ -763,7 +763,7 @@ class SandyService:
                         prompt_tokens=0,
                         completion_tokens=0,
                         total_tokens=0,
-                        sandbox_seconds=asyncio.get_event_loop().time() - sandbox_start,
+                        sandbox_seconds=time.perf_counter() - sandbox_start,
                     ),
                 )
 
@@ -848,7 +848,7 @@ class SandyService:
             ],
         )
 
-        sandbox_start = asyncio.get_event_loop().time()
+        sandbox_start = time.perf_counter()
 
         async with self._client_factory() as client:
             sandbox_info = await self._create_sandbox(client)
@@ -1085,7 +1085,7 @@ class SandyService:
                 )
                 await self._terminate_sandbox(client, sandbox_id)
 
-                sandbox_seconds = asyncio.get_event_loop().time() - sandbox_start
+                sandbox_seconds = time.perf_counter() - sandbox_start
 
                 yield ChatCompletionChunk(
                     id=request_id,

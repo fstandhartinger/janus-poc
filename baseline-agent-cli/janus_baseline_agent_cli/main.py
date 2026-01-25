@@ -10,7 +10,7 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from janus_baseline_agent_cli import __version__
-from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.config import get_settings
 from janus_baseline_agent_cli.models import (
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -23,6 +23,7 @@ from janus_baseline_agent_cli.services import (
     get_llm_service,
     get_sandy_service,
 )
+from janus_baseline_agent_cli.streaming import optimized_stream_response
 
 settings = get_settings()
 
@@ -85,7 +86,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,  # Cannot use credentials with wildcard origin per CORS spec
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -137,16 +138,17 @@ async def stream_response(
         message_count=len(request.messages),
     )
 
-    if settings.always_use_agent or (is_complex and sandy_service.is_available):
-        # Complex path with Sandy
-        async for chunk in sandy_service.execute_complex(request):
-            yield f"data: {chunk.model_dump_json()}\n\n"
-    else:
-        # Fast path with direct LLM
-        async for chunk in llm_service.stream(request):
-            yield f"data: {chunk.model_dump_json()}\n\n"
+    async def raw_stream() -> AsyncGenerator[str, None]:
+        if settings.always_use_agent or (is_complex and sandy_service.is_available):
+            async for chunk in sandy_service.execute_complex(request):
+                yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+        else:
+            async for chunk in llm_service.stream(request):
+                yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+        yield "data: [DONE]\n\n"
 
-    yield "data: [DONE]\n\n"
+    async for payload in optimized_stream_response(raw_stream()):
+        yield payload
 
 
 @app.post("/v1/chat/completions", response_model=None)
