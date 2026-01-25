@@ -92,7 +92,7 @@ async def test_memory_extraction_fires_after_stream() -> None:
         text_preview = ""
 
     class DummyDetector:
-        async def analyze_async(self, messages):
+        async def analyze_async(self, messages, generation_flags=None):
             return DummyAnalysis()
 
     class DummyLLM:

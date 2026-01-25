@@ -29,6 +29,7 @@ from janus_baseline_agent_cli.models import (
     ChunkChoice,
     Delta,
     FinishReason,
+    GenerationFlags,
     MessageRole,
     Usage,
 )
@@ -51,7 +52,14 @@ class SandyService:
     """Service for executing tasks in Sandy sandboxes."""
 
     _max_inline_bytes = 1_000_000
-    _default_path = "/agent-pack/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    # Include common pip --user install paths and standard paths
+    _default_path = (
+        "/root/.local/bin:"  # pip --user for root
+        "/home/*/.local/bin:"  # pip --user for regular users
+        "$HOME/.local/bin:"  # dynamic home path
+        "/agent-pack/bin:"
+        "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+    )
 
     def __init__(
         self,
@@ -270,15 +278,55 @@ class SandyService:
             ).items()
         ]
         quoted_task = shlex.quote(task)
+        agent_pack_root = self._agent_pack_dest_root()
+        system_prompt_path = f"{agent_pack_root}/prompts/system.md"
+
         if agent == "builtin":
             command = [
                 "python",
-                f"{self._agent_pack_dest_root()}/run_agent.py",
+                f"{agent_pack_root}/run_agent.py",
+                quoted_task,
+            ]
+        elif agent == "aider":
+            # Aider needs specific flags for non-interactive mode
+            # --yes-always: auto-confirm all changes
+            # --no-git: don't require git repo
+            # --message: the task to execute
+            # --read: include system prompt as context
+            command = [
+                "aider",
+                "--yes-always",
+                "--no-git",
+                "--read", system_prompt_path,
+                "--message", quoted_task,
+            ]
+        elif agent == "opencode":
+            # OpenCode CLI agent
+            command = [
+                "opencode",
+                "--non-interactive",
+                "--context", system_prompt_path,
+                quoted_task,
+            ]
+        elif agent == "openhands":
+            # OpenHands CLI
+            command = [
+                "openhands",
+                "--non-interactive",
+                "--instructions", system_prompt_path,
                 quoted_task,
             ]
         else:
+            # Generic fallback - just pass the task
             command = [agent, quoted_task]
-        return " ".join(["env", *env_parts, *command])
+
+        full_command = " ".join(["env", *env_parts, *command])
+        logger.info(
+            "agent_command_built",
+            agent=agent,
+            command_preview=full_command[:500],
+        )
+        return full_command
 
     def _agent_candidates(self) -> list[str]:
         """Determine preferred agent order."""
@@ -295,16 +343,33 @@ class SandyService:
         sandbox_id: str,
     ) -> str:
         """Pick an available CLI agent inside the sandbox."""
-        for candidate in self._agent_candidates():
+        candidates = self._agent_candidates()
+        logger.info(
+            "agent_selection_start",
+            candidates=candidates,
+            baseline_agent_config=self._baseline_agent,
+        )
+        for candidate in candidates:
             if candidate == "builtin":
+                logger.info("agent_selected", agent="builtin", reason="fallback")
                 return "builtin"
-            stdout, _, exit_code = await self._exec_in_sandbox(
+            check_cmd = f"PATH={shlex.quote(self._default_path)} command -v {shlex.quote(candidate)}"
+            stdout, stderr, exit_code = await self._exec_in_sandbox(
                 client,
                 sandbox_id,
-                f"PATH={shlex.quote(self._default_path)} command -v {shlex.quote(candidate)}",
+                check_cmd,
+            )
+            logger.info(
+                "agent_check",
+                candidate=candidate,
+                exit_code=exit_code,
+                stdout=stdout.strip() if stdout else "",
+                stderr=stderr.strip() if stderr else "",
             )
             if exit_code == 0 and stdout.strip():
+                logger.info("agent_selected", agent=candidate, path=stdout.strip())
                 return candidate
+        logger.info("agent_selected", agent="builtin", reason="no_candidates_found")
         return "builtin"
 
     async def _write_file(
@@ -655,6 +720,54 @@ class SandyService:
         """Generate a completion ID."""
         return f"chatcmpl-baseline-sandy-{uuid.uuid4().hex[:12]}"
 
+    def _build_agent_prompt(
+        self,
+        user_message: str,
+        flags: GenerationFlags | None,
+    ) -> str:
+        instructions: list[str] = []
+
+        if flags:
+            if flags.generate_image:
+                instructions.append(
+                    "The user has explicitly requested IMAGE GENERATION. "
+                    "You MUST generate one or more images as part of your response using the Chutes image API."
+                )
+            if flags.generate_video:
+                instructions.append(
+                    "The user has explicitly requested VIDEO GENERATION. "
+                    "You MUST generate a video as part of your response using the Chutes video API."
+                )
+            if flags.generate_audio:
+                instructions.append(
+                    "The user has explicitly requested AUDIO GENERATION. "
+                    "You MUST generate audio (speech/music) as part of your response using the Chutes TTS/audio API."
+                )
+            if flags.deep_research:
+                instructions.append(
+                    "The user has explicitly requested DEEP RESEARCH. "
+                    "You MUST perform comprehensive research with citations using chutes-search max mode."
+                )
+            if flags.web_search:
+                instructions.append(
+                    "The user has explicitly requested WEB SEARCH. "
+                    "You MUST search the internet for current information to answer this query."
+                )
+
+        if not instructions:
+            return user_message
+
+        instruction_block = "\n".join(f"- {instruction}" for instruction in instructions)
+
+        return (
+            "______ Generation Instructions ______\n"
+            "The user has enabled the following generation modes:\n"
+            f"{instruction_block}\n\n"
+            "Please ensure your response includes the requested generated content.\n"
+            "_____________________________________\n\n"
+            f"{user_message}"
+        )
+
     def _extract_task(self, request: ChatCompletionRequest) -> str:
         """Extract the task description from the request."""
         for msg in reversed(request.messages):
@@ -681,7 +794,7 @@ class SandyService:
                         "use vision capabilities to analyze]"
                     )
 
-                return task_text
+                return self._build_agent_prompt(task_text, request.generation_flags)
         return "No task specified"
 
     @log_function_call

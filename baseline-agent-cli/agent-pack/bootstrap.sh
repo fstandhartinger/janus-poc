@@ -24,18 +24,39 @@ export JANUS_ARTIFACT_PORT="${JANUS_ARTIFACT_PORT:-8787}"
 mkdir -p "$JANUS_ARTIFACTS_DIR"
 mkdir -p "${JANUS_SCREENSHOT_DIR:-/workspace/artifacts/screenshots}"
 
+# Helper function to install pip packages with fallbacks for externally-managed-environment
+pip_install() {
+  pip install --user "$@" 2>/dev/null || \
+    pip install --break-system-packages "$@" 2>/dev/null || \
+    pip install "$@"
+}
+
 # Install Playwright for browser automation
-# Use --user or --break-system-packages to handle externally-managed-environment
 if ! python3 - <<'PY' >/dev/null 2>&1
 import playwright  # noqa: F401
 PY
 then
-  # Try --user first (preferred), fall back to --break-system-packages if needed
-  pip install --user playwright 2>/dev/null || \
-    pip install --break-system-packages playwright 2>/dev/null || \
-    pip install playwright
+  pip_install playwright
 fi
 python3 -m playwright install chromium
+
+# Install aider-chat for intelligent CLI agent capabilities
+echo "Installing aider-chat..."
+if ! command -v aider >/dev/null 2>&1; then
+  pip_install aider-chat
+  # Ensure ~/.local/bin is in PATH (where pip --user installs to)
+  export PATH="$HOME/.local/bin:$PATH"
+fi
+
+# Verify aider installation
+if command -v aider >/dev/null 2>&1; then
+  echo "aider installed successfully: $(which aider)"
+else
+  echo "WARNING: aider not found in PATH after installation"
+  echo "PATH=$PATH"
+  # Try to find it
+  find ~/.local -name "aider" -type f 2>/dev/null | head -5
+fi
 
 start_artifact_server() {
   python3 - <<'PY'

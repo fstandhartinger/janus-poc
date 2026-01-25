@@ -1,9 +1,11 @@
 'use client';
 
-import { useCallback, useRef, useState, type FormEvent, type ChangeEvent, type KeyboardEvent } from 'react';
+import { useCallback, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
 import { FilePreview } from './FilePreview';
 import { MicrophonePermissionBanner } from './MicrophonePermissionDialog';
 import { VoiceInputButton } from './VoiceInputButton';
+import { PlusMenu } from './chat/PlusMenu';
+import { SelectedTags } from './chat/SelectedTags';
 import {
   ALL_ACCEPT_TYPES,
   MAX_FILES_PER_MESSAGE,
@@ -13,26 +15,21 @@ import {
 } from '@/lib/file-types';
 import { detectFileCategory, formatBytes } from '@/lib/file-utils';
 import { processFile } from '@/lib/file-processor';
+import type { GenerationFlags, GenerationTag } from '@/types/generation';
 
 interface ChatInputProps {
-  onSend: (
-    content: string,
-    files: AttachedFile[],
-    options?: { deepResearch?: boolean; researchMode?: 'light' | 'max' }
-  ) => void;
+  onSend: (content: string, files: AttachedFile[], generationFlags?: GenerationFlags) => void;
   disabled?: boolean;
 }
 
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
-  const [deepResearchEnabled, setDeepResearchEnabled] = useState(false);
-  const [researchMode, setResearchMode] = useState<'light' | 'max'>('light');
+  const [selectedTags, setSelectedTags] = useState<GenerationTag[]>([]);
   const [statusMessage, setStatusMessage] = useState<{ type: 'error' | 'info'; text: string } | null>(
     null
   );
   const [processingFiles, setProcessingFiles] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const voiceInputEnabled = process.env.NEXT_PUBLIC_ENABLE_VOICE_INPUT === 'true';
 
@@ -44,18 +41,27 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     textareaRef.current?.focus();
   }, []);
 
+  const buildGenerationFlags = useCallback((tags: GenerationTag[]): GenerationFlags | undefined => {
+    if (tags.length === 0) return undefined;
+    return {
+      generate_image: tags.includes('generate_image'),
+      generate_video: tags.includes('generate_video'),
+      generate_audio: tags.includes('generate_audio'),
+      deep_research: tags.includes('deep_research'),
+      web_search: tags.includes('web_search'),
+    };
+  }, []);
+
   const submitMessage = useCallback(() => {
     if (!input.trim() && attachedFiles.length === 0) return;
-    onSend(
-      input.trim(),
-      attachedFiles,
-      deepResearchEnabled ? { deepResearch: true, researchMode } : undefined
-    );
+    const generationFlags = buildGenerationFlags(selectedTags);
+    onSend(input.trim(), attachedFiles, generationFlags);
     setInput('');
     setAttachedFiles([]);
+    setSelectedTags([]);
     setStatusMessage(null);
     setProcessingFiles([]);
-  }, [attachedFiles, deepResearchEnabled, input, onSend, researchMode]);
+  }, [attachedFiles, buildGenerationFlags, input, onSend, selectedTags]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -69,8 +75,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     }
   };
 
-  const handleFileChange = async (e: ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = Array.from(e.target.files || []);
+  const handleFileSelect = async (fileList: FileList) => {
+    const selectedFiles = Array.from(fileList);
     if (selectedFiles.length === 0) return;
 
     setStatusMessage(null);
@@ -78,20 +84,17 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     const remainingSlots = MAX_FILES_PER_MESSAGE - attachedFiles.length;
     if (remainingSlots <= 0) {
       setStatusMessage({ type: 'error', text: `Maximum ${MAX_FILES_PER_MESSAGE} files per message` });
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
       return;
     }
 
-    const files = selectedFiles.slice(0, remainingSlots);
+    const filesToProcess = selectedFiles.slice(0, remainingSlots);
     if (selectedFiles.length > remainingSlots) {
       setStatusMessage({ type: 'error', text: `Maximum ${MAX_FILES_PER_MESSAGE} files per message` });
     }
 
     let totalSize = attachedFiles.reduce((sum, file) => sum + file.size, 0);
 
-    for (const file of files) {
+    for (const file of filesToProcess) {
       const category = detectFileCategory(file);
       if (!category) {
         setStatusMessage({ type: 'error', text: `Unsupported file type: ${file.name}` });
@@ -133,13 +136,20 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       }
     }
 
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
   };
 
   const removeFile = (id: string) => {
     setAttachedFiles((prev) => prev.filter((file) => file.id !== id));
+  };
+
+  const toggleTag = (tag: GenerationTag) => {
+    setSelectedTags((prev) =>
+      prev.includes(tag) ? prev.filter((item) => item !== tag) : [...prev, tag]
+    );
+  };
+
+  const removeTag = (tag: GenerationTag) => {
+    setSelectedTags((prev) => prev.filter((item) => item !== tag));
   };
 
   return (
@@ -164,35 +174,6 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         </div>
       )}
 
-      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-        <button
-          type="button"
-          onClick={() => setDeepResearchEnabled((current) => !current)}
-          disabled={disabled}
-          aria-pressed={deepResearchEnabled}
-          className={`rounded-full border px-3 py-1 transition-colors ${
-            deepResearchEnabled
-              ? 'border-moss/40 bg-moss/10 text-moss'
-              : 'border-ink-700 text-ink-400 hover:border-ink-500 hover:text-ink-200'
-          }`}
-        >
-          Deep research
-        </button>
-        {deepResearchEnabled && (
-          <label className="flex items-center gap-2 text-ink-400">
-            Mode
-            <select
-              value={researchMode}
-              onChange={(event) => setResearchMode(event.target.value as 'light' | 'max')}
-              className="rounded-full border border-ink-700 bg-ink-800/70 px-2 py-1 text-ink-200"
-            >
-              <option value="light">light</option>
-              <option value="max">max</option>
-            </select>
-          </label>
-        )}
-      </div>
-
       {attachedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
           {attachedFiles.map((file) => (
@@ -202,27 +183,12 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       )}
 
       <div className="chat-input-container">
-        <button
-          type="button"
-          onClick={() => fileInputRef.current?.click()}
+        <PlusMenu
+          onFileSelect={handleFileSelect}
+          selectedTags={selectedTags}
+          onTagToggle={toggleTag}
           disabled={disabled}
-          className="w-9 h-9 rounded-full border border-[#1F2937] flex items-center justify-center text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#374151] transition-colors disabled:opacity-50"
-          aria-label="Attach files"
-          title="Attach files"
-        >
-          <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
           accept={ALL_ACCEPT_TYPES}
-          multiple
-          onChange={handleFileChange}
-          disabled={disabled}
-          className="hidden"
-          data-testid="file-input"
         />
 
         <textarea
@@ -253,6 +219,8 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           </svg>
         </button>
       </div>
+
+      <SelectedTags tags={selectedTags} onRemove={removeTag} disabled={disabled} />
     </form>
   );
 }
