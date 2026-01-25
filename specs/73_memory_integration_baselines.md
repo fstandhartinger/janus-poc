@@ -1,6 +1,7 @@
 # Spec 73: Memory Integration for Baseline Implementations
 
-**Status:** NOT STARTED
+## Status: COMPLETE
+
 **Priority:** High
 **Complexity:** Medium
 **Prerequisites:** Spec 72 (Memory Service Backend)
@@ -348,3 +349,5 @@ ____________________
 - If memory service is unavailable, continue without memories
 - The memory context is injected into the LAST user message (not as a separate message)
 - Extraction happens in background after `[DONE]` is sent
+
+NR_OF_TRIES: 1

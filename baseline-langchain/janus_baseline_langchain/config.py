@@ -132,6 +132,32 @@ class Settings(BaseSettings):
     request_timeout: float = Field(default=30.0, description="HTTP request timeout")
     max_retries: int = Field(default=2, description="Max retries for external APIs")
 
+    # Memory service configuration
+    memory_service_url: str = Field(
+        default="https://janus-memory-service.onrender.com",
+        description="URL of the memory service",
+        validation_alias=AliasChoices(
+            "MEMORY_SERVICE_URL",
+            "BASELINE_LANGCHAIN_MEMORY_SERVICE_URL",
+        ),
+    )
+    enable_memory_feature: bool = Field(
+        default=True,
+        description="Whether memory feature is enabled server-side",
+        validation_alias=AliasChoices(
+            "ENABLE_MEMORY_FEATURE",
+            "BASELINE_LANGCHAIN_ENABLE_MEMORY_FEATURE",
+        ),
+    )
+    memory_timeout_seconds: float = Field(
+        default=5.0,
+        description="Timeout for memory service calls",
+        validation_alias=AliasChoices(
+            "MEMORY_TIMEOUT_SECONDS",
+            "BASELINE_LANGCHAIN_MEMORY_TIMEOUT_SECONDS",
+        ),
+    )
+
     # Logging
     log_level: str = Field(
         default="INFO",

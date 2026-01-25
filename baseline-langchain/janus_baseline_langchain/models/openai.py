@@ -109,6 +109,8 @@ class ChatCompletionRequest(BaseModel):
     response_format: Optional[ResponseFormat] = None
     user: Optional[str] = None
     metadata: Optional[dict[str, Any]] = None
+    user_id: Optional[str] = None
+    enable_memory: bool = False
 
 
 class FinishReason(str, Enum):

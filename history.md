@@ -45,3 +45,4 @@
 - Completed spec 70_hero_video_redesign.md with in-place autoplay hero video, scroll-scrubbing canvas frames, watermark masking, and new Playwright coverage.
 - Completed spec 71_competition_page_improvements.md with clickable Mermaid modals, updated leaderboard/prize pool data, collapsible sections, accessible contributor copy, and FAQ accordions.
 - Completed spec 72_memory_service_backend.md with the FastAPI memory service, LLM extraction/relevance flow, Postgres-backed storage, tests, and Render deployment setup.
+- Completed spec 73_memory_integration_baselines.md with memory-aware request fields, prompt injection, background extraction, and baseline test coverage.

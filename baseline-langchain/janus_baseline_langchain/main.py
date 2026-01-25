@@ -1,5 +1,6 @@
 """Janus Baseline LangChain - FastAPI application entry point."""
 
+import asyncio
 from contextlib import asynccontextmanager
 import json
 import re
@@ -35,6 +36,7 @@ from janus_baseline_langchain.models import (
 )
 from janus_baseline_langchain.streaming import optimized_stream_response
 from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel
+from janus_baseline_langchain.services import MemoryService, get_memory_service
 from janus_baseline_langchain.services.vision import (
     contains_images,
     convert_to_langchain_messages,
@@ -145,6 +147,45 @@ def _extract_text(content: MessageContent | None) -> str:
         elif isinstance(part, ImageUrlContent):
             parts.append(f"[Image: {part.image_url.url}]")
     return " ".join(p for p in parts if p).strip()
+
+
+def _latest_user_message_index(messages: list[Message]) -> int | None:
+    for index in range(len(messages) - 1, -1, -1):
+        if messages[index].role == MessageRole.USER:
+            return index
+    return None
+
+
+def _build_conversation_base(messages: list[Message]) -> list[dict[str, str]]:
+    conversation: list[dict[str, str]] = []
+    for message in messages:
+        conversation.append(
+            {
+                "role": message.role.value,
+                "content": _extract_text(message.content),
+            }
+        )
+    return conversation
+
+
+def _inject_memory_context(messages: list[Message], memory_context: str) -> None:
+    index = _latest_user_message_index(messages)
+    if index is None or not memory_context:
+        return
+    message = messages[index]
+    content = message.content
+
+    if isinstance(content, list):
+        image_parts: list[object] = []
+        for part in content:
+            if isinstance(part, ImageUrlContent):
+                image_parts.append(part)
+            elif isinstance(part, dict) and part.get("type") == "image_url":
+                image_parts.append(part)
+        message.content = [TextContent(text=memory_context), *image_parts]
+        return
+
+    message.content = memory_context
 
 
 def _to_langchain_message(message: Message) -> object | None:
@@ -381,6 +422,7 @@ async def _stream_basic_response(
     settings: Settings,
     messages: list[object],
     include_usage: bool,
+    response_collector: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     if settings.use_model_router:
         llm = _get_router(settings)
@@ -404,6 +446,8 @@ async def _stream_basic_response(
             )
             started = True
         for part in content_parts:
+            if response_collector is not None:
+                response_collector.append(part)
             yield _chunk_payload(
                 request_id,
                 model_name,
@@ -455,6 +499,7 @@ async def stream_agent_response(
     user_input: str,
     history: Iterable[object],
     include_usage: bool,
+    response_collector: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     async def raw_stream() -> AsyncGenerator[str, None]:
         tool_index = 0
@@ -474,6 +519,8 @@ async def stream_agent_response(
                     chunk = event.get("data", {}).get("chunk")
                     content = getattr(chunk, "content", None)
                     if content:
+                        if response_collector is not None:
+                            response_collector.append(str(content))
                         yield _chunk_payload(
                             request_id,
                             model,
@@ -553,6 +600,7 @@ async def _stream_vision_response(
     settings: Settings,
     messages: list[object],
     include_usage: bool,
+    response_collector: list[str] | None = None,
 ) -> AsyncGenerator[str, None]:
     async def raw_stream() -> AsyncGenerator[str, None]:
         primary = settings.vision_model_primary
@@ -581,6 +629,8 @@ async def _stream_vision_response(
                         )
                         started = True
                     for part in content_parts:
+                        if response_collector is not None:
+                            response_collector.append(part)
                         yield _chunk_payload(
                             request_id,
                             attempt_model,
@@ -654,9 +704,25 @@ async def _run_vision_completion(
 async def chat_completions(
     request: ChatCompletionRequest,
     settings: Settings = Depends(get_settings),
+    memory_service: MemoryService = Depends(get_memory_service),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
     request_id = _generate_request_id()
+
+    memory_enabled = bool(
+        settings.enable_memory_feature and request.enable_memory and request.user_id
+    )
+    conversation_base = _build_conversation_base(request.messages)
+    if memory_enabled and request.user_id:
+        prompt = _latest_user_text(request.messages)
+        memory_context = await memory_service.get_memory_context(request.user_id, prompt)
+        if memory_context:
+            messages_for_processing = [
+                message.model_copy(deep=True) for message in request.messages
+            ]
+            _inject_memory_context(messages_for_processing, memory_context)
+            request.messages = messages_for_processing
+
     use_vision = settings.enable_vision_routing and contains_images(request.messages)
     model = settings.vision_model_primary if use_vision else (request.model or settings.model)
 
@@ -672,10 +738,33 @@ async def chat_completions(
     tool_call = _infer_tool_call(request)
 
     if request.stream:
+        full_response_parts: list[str] = []
+
+        async def stream_with_memory(
+            stream: AsyncGenerator[str, None],
+        ) -> AsyncGenerator[str, None]:
+            try:
+                async for payload in stream:
+                    yield payload
+            finally:
+                if memory_enabled and request.user_id:
+                    assistant_response = "".join(full_response_parts)
+                    conversation = conversation_base + [
+                        {"role": "assistant", "content": assistant_response}
+                    ]
+                    asyncio.create_task(
+                        memory_service.extract_memories(
+                            user_id=request.user_id,
+                            conversation=conversation,
+                        )
+                    )
+
         include_usage = bool(request.stream_options and request.stream_options.include_usage)
         if tool_call and not use_vision:
+            stream = _stream_tool_call_response(request_id, model, tool_call, include_usage)
+            wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
-                _stream_tool_call_response(request_id, model, tool_call, include_usage),
+                wrapped_stream,
                 media_type="text/event-stream",
                 headers={
                     "Cache-Control": "no-cache",
@@ -684,13 +773,16 @@ async def chat_completions(
             )
         if use_vision:
             vision_messages = convert_to_langchain_messages(request.messages)
+            stream = _stream_vision_response(
+                request_id,
+                settings,
+                vision_messages,
+                include_usage,
+                response_collector=full_response_parts,
+            )
+            wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
-                _stream_vision_response(
-                    request_id,
-                    settings,
-                    vision_messages,
-                    include_usage,
-                ),
+                wrapped_stream,
                 media_type="text/event-stream",
                 headers={
                     "Cache-Control": "no-cache",
@@ -698,13 +790,16 @@ async def chat_completions(
                 },
             )
         base_messages = convert_to_langchain_messages(request.messages)
+        stream = _stream_basic_response(
+            request_id,
+            settings,
+            base_messages,
+            include_usage,
+            response_collector=full_response_parts,
+        )
+        wrapped_stream = stream_with_memory(optimized_stream_response(stream))
         return StreamingResponse(
-            _stream_basic_response(
-                request_id,
-                settings,
-                base_messages,
-                include_usage,
-            ),
+            wrapped_stream,
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -713,7 +808,18 @@ async def chat_completions(
             )
 
     if tool_call and not use_vision:
-        return _format_tool_call_response(request_id, model, tool_call)
+        response = _format_tool_call_response(request_id, model, tool_call)
+        if memory_enabled and request.user_id:
+            conversation = conversation_base + [
+                {"role": "assistant", "content": ""}
+            ]
+            asyncio.create_task(
+                memory_service.extract_memories(
+                    user_id=request.user_id,
+                    conversation=conversation,
+                )
+            )
+        return response
 
     if use_vision:
         vision_messages = convert_to_langchain_messages(request.messages)
@@ -723,7 +829,18 @@ async def chat_completions(
             logger.error("vision_completion_error", error=str(exc))
             output = "Error: failed to generate vision response."
             model_name = model
-        return _format_response(request_id, model_name, output)
+        response = _format_response(request_id, model_name, output)
+        if memory_enabled and request.user_id:
+            conversation = conversation_base + [
+                {"role": "assistant", "content": output}
+            ]
+            asyncio.create_task(
+                memory_service.extract_memories(
+                    user_id=request.user_id,
+                    conversation=conversation,
+                )
+            )
+        return response
 
     try:
         base_messages = convert_to_langchain_messages(request.messages)
@@ -732,7 +849,18 @@ async def chat_completions(
         logger.error("agent_invoke_error", error=str(exc))
         output = "Error: failed to generate response."
 
-    return _format_response(request_id, model_name, output)
+    response = _format_response(request_id, model_name, output)
+    if memory_enabled and request.user_id:
+        conversation = conversation_base + [
+            {"role": "assistant", "content": output}
+        ]
+        asyncio.create_task(
+            memory_service.extract_memories(
+                user_id=request.user_id,
+                conversation=conversation,
+            )
+        )
+    return response
 
 
 def main() -> None:

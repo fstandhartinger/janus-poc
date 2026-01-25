@@ -197,6 +197,35 @@ class Settings(BaseSettings):
         default=3600, description="Artifact TTL in seconds"
     )
 
+    # Memory service configuration
+    memory_service_url: str = Field(
+        default="https://janus-memory-service.onrender.com",
+        description="URL of the memory service",
+        validation_alias=AliasChoices(
+            "MEMORY_SERVICE_URL",
+            "BASELINE_AGENT_CLI_MEMORY_SERVICE_URL",
+            "BASELINE_MEMORY_SERVICE_URL",
+        ),
+    )
+    enable_memory_feature: bool = Field(
+        default=True,
+        description="Whether memory feature is enabled server-side",
+        validation_alias=AliasChoices(
+            "ENABLE_MEMORY_FEATURE",
+            "BASELINE_AGENT_CLI_ENABLE_MEMORY_FEATURE",
+            "BASELINE_ENABLE_MEMORY_FEATURE",
+        ),
+    )
+    memory_timeout_seconds: float = Field(
+        default=5.0,
+        description="Timeout for memory service calls",
+        validation_alias=AliasChoices(
+            "MEMORY_TIMEOUT_SECONDS",
+            "BASELINE_AGENT_CLI_MEMORY_TIMEOUT_SECONDS",
+            "BASELINE_MEMORY_TIMEOUT_SECONDS",
+        ),
+    )
+
     # Agent pack configuration
     agent_pack_path: str = Field(
         default="./agent-pack", description="Path to the baseline agent pack directory"

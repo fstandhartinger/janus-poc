@@ -133,6 +133,8 @@ class ChatCompletionRequest(BaseModel):
     tool_choice: Optional[Union[str, dict[str, Any]]] = None
     user: Optional[str] = None
     metadata: Optional[dict[str, Any]] = None
+    user_id: Optional[str] = None
+    enable_memory: bool = False
 
 
 class FinishReason(str, Enum):

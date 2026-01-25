@@ -1,5 +1,6 @@
 """Janus Baseline Competitor - FastAPI application entry point."""
 
+import asyncio
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator, Union
 
@@ -13,14 +14,22 @@ from janus_baseline_agent_cli import __version__
 from janus_baseline_agent_cli.config import get_settings
 from janus_baseline_agent_cli.models import (
     ChatCompletionRequest,
+    ChatCompletionChunk,
     ChatCompletionResponse,
+    ImageUrlContent,
+    Message,
+    MessageRole,
+    TextContent,
+    extract_text_content,
 )
 from janus_baseline_agent_cli.services import (
     ComplexityDetector,
     LLMService,
+    MemoryService,
     SandyService,
     get_complexity_detector,
     get_llm_service,
+    get_memory_service,
     get_sandy_service,
 )
 from janus_baseline_agent_cli.streaming import optimized_stream_response
@@ -47,6 +56,70 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+
+
+def _latest_user_message_index(messages: list[Message]) -> int | None:
+    for index in range(len(messages) - 1, -1, -1):
+        if messages[index].role == MessageRole.USER:
+            return index
+    return None
+
+
+def _extract_last_user_prompt(messages: list[Message]) -> str:
+    index = _latest_user_message_index(messages)
+    if index is None:
+        return ""
+    return extract_text_content(messages[index].content)
+
+
+def _build_conversation_base(messages: list[Message]) -> list[dict[str, str]]:
+    conversation: list[dict[str, str]] = []
+    for message in messages:
+        conversation.append(
+            {
+                "role": message.role.value,
+                "content": extract_text_content(message.content),
+            }
+        )
+    return conversation
+
+
+def _extract_chunk_content(chunk: ChatCompletionChunk) -> str:
+    if not chunk.choices:
+        return ""
+    parts: list[str] = []
+    for choice in chunk.choices:
+        if choice.delta and choice.delta.content:
+            parts.append(choice.delta.content)
+    return "".join(parts)
+
+
+def _extract_response_content(response: ChatCompletionResponse) -> str:
+    if not response.choices:
+        return ""
+    message = response.choices[0].message
+    content = getattr(message, "content", None)
+    return content or ""
+
+
+def _inject_memory_context(messages: list[Message], memory_context: str) -> None:
+    index = _latest_user_message_index(messages)
+    if index is None or not memory_context:
+        return
+    message = messages[index]
+    content = message.content
+
+    if isinstance(content, list):
+        image_parts: list[object] = []
+        for part in content:
+            if isinstance(part, ImageUrlContent):
+                image_parts.append(part)
+            elif isinstance(part, dict) and part.get("type") == "image_url":
+                image_parts.append(part)
+        message.content = [TextContent(text=memory_context), *image_parts]
+        return
+
+    message.content = memory_context
 
 
 def _extract_auth_token(authorization: str | None) -> str | None:
@@ -110,6 +183,9 @@ async def stream_response(
     complexity_detector: ComplexityDetector,
     llm_service: LLMService,
     sandy_service: SandyService,
+    memory_service: MemoryService | None = None,
+    memory_user_id: str | None = None,
+    conversation_base: list[dict[str, str]] | None = None,
 ) -> AsyncGenerator[str, None]:
     """Generate streaming response based on complexity."""
     analysis = await complexity_detector.analyze_async(request.messages)
@@ -138,14 +214,35 @@ async def stream_response(
         message_count=len(request.messages),
     )
 
+    full_response_parts: list[str] = []
+
     async def raw_stream() -> AsyncGenerator[str, None]:
-        if settings.always_use_agent or (is_complex and sandy_service.is_available):
-            async for chunk in sandy_service.execute_complex(request):
-                yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
-        else:
-            async for chunk in llm_service.stream(request):
-                yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
-        yield "data: [DONE]\n\n"
+        try:
+            if settings.always_use_agent or (is_complex and sandy_service.is_available):
+                async for chunk in sandy_service.execute_complex(request):
+                    chunk_text = _extract_chunk_content(chunk)
+                    if chunk_text:
+                        full_response_parts.append(chunk_text)
+                    yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+            else:
+                async for chunk in llm_service.stream(request):
+                    chunk_text = _extract_chunk_content(chunk)
+                    if chunk_text:
+                        full_response_parts.append(chunk_text)
+                    yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+            yield "data: [DONE]\n\n"
+        finally:
+            if memory_service and memory_user_id and conversation_base is not None:
+                assistant_response = "".join(full_response_parts)
+                conversation = conversation_base + [
+                    {"role": "assistant", "content": assistant_response}
+                ]
+                asyncio.create_task(
+                    memory_service.extract_memories(
+                        user_id=memory_user_id,
+                        conversation=conversation,
+                    )
+                )
 
     async for payload in optimized_stream_response(raw_stream()):
         yield payload
@@ -157,6 +254,7 @@ async def chat_completions(
     complexity_detector: ComplexityDetector = Depends(get_complexity_detector),
     llm_service: LLMService = Depends(get_llm_service),
     sandy_service: SandyService = Depends(get_sandy_service),
+    memory_service: MemoryService = Depends(get_memory_service),
     authorization: str | None = Header(default=None, alias="Authorization"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
@@ -165,9 +263,31 @@ async def chat_completions(
     if auth_token:
         request._auth_token = auth_token
 
+    memory_enabled = bool(
+        settings.enable_memory_feature and request.enable_memory and request.user_id
+    )
+    conversation_base = _build_conversation_base(request.messages)
+    if memory_enabled and request.user_id:
+        prompt = _extract_last_user_prompt(request.messages)
+        memory_context = await memory_service.get_memory_context(request.user_id, prompt)
+        if memory_context:
+            messages_for_processing = [
+                message.model_copy(deep=True) for message in request.messages
+            ]
+            _inject_memory_context(messages_for_processing, memory_context)
+            request.messages = messages_for_processing
+
     if request.stream:
         return StreamingResponse(
-            stream_response(request, complexity_detector, llm_service, sandy_service),
+            stream_response(
+                request,
+                complexity_detector,
+                llm_service,
+                sandy_service,
+                memory_service if memory_enabled else None,
+                request.user_id if memory_enabled else None,
+                conversation_base if memory_enabled else None,
+            ),
             media_type="text/event-stream",
             headers={
                 "Cache-Control": "no-cache",
@@ -199,8 +319,23 @@ async def chat_completions(
             complexity_reason=reason,
         )
         if settings.always_use_agent or (is_complex and sandy_service.is_available):
-            return await sandy_service.complete(request)
-        return await llm_service.complete(request)
+            response = await sandy_service.complete(request)
+        else:
+            response = await llm_service.complete(request)
+
+        if memory_enabled and request.user_id:
+            assistant_response = _extract_response_content(response)
+            conversation = conversation_base + [
+                {"role": "assistant", "content": assistant_response}
+            ]
+            asyncio.create_task(
+                memory_service.extract_memories(
+                    user_id=request.user_id,
+                    conversation=conversation,
+                )
+            )
+
+        return response
 
 
 def main() -> None:
