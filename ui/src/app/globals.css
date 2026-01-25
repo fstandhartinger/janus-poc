@@ -1000,7 +1000,6 @@ html {
   flex: 1;
   min-height: 0;
   height: calc(100dvh - 64px);
-  position: relative;
   overflow: hidden;
   box-sizing: border-box;
 }
