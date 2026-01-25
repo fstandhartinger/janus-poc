@@ -75,7 +75,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("CHUTES_API_KEY", "JANUS_CHUTES_API_KEY"),
     )
     chutes_search_url: str = Field(
-        default="https://search.chutes.ai",
+        default="https://chutes-search.onrender.com",
         description="Chutes search base URL",
         validation_alias=AliasChoices("CHUTES_SEARCH_URL", "JANUS_CHUTES_SEARCH_URL"),
     )
