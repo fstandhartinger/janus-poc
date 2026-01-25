@@ -24,6 +24,7 @@ from .openai import (
     Artifact,
     ArtifactType,
 )
+from .debug import DebugEvent, DebugEventType
 from .utils import extract_images, extract_text_content
 
 __all__ = [
@@ -49,6 +50,8 @@ __all__ = [
     "ToolCall",
     "Artifact",
     "ArtifactType",
+    "DebugEvent",
+    "DebugEventType",
     "extract_images",
     "extract_text_content",
 ]
