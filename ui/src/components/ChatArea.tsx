@@ -369,7 +369,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   };
 
   return (
-    <div className="chat-area flex-1 flex flex-col min-h-0">
+    <div className="chat-area">
       <CanvasPanel onAIEdit={handleAIEdit} disabled={isStreaming} />
       <div className="chat-topbar shrink-0">
         <div className="chat-topbar-left">
@@ -432,7 +432,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
       ) : (
         /* Chat mode: messages scroll, input fixed at bottom */
         <>
-          <div className="chat-messages-container flex-1 overflow-y-auto min-h-0 px-6 py-6" aria-busy={isStreaming}>
+          <div className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
             <div className="max-w-4xl mx-auto">
               <DeepResearchProgress stages={researchStages} isActive={researchActive} />
               <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
@@ -457,7 +457,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
             </div>
           </div>
 
-          <div className="chat-input-bottom shrink-0 px-6 pb-6 pt-2">
+          <div className="chat-input-bottom px-6">
             <div className="max-w-4xl mx-auto">
               <ChatInput onSend={handleSend} disabled={isStreaming} />
             </div>

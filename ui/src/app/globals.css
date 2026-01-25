@@ -1015,6 +1015,17 @@ html {
   }
 }
 
+/* Chat area - must fill parent and use flex column to push input to bottom */
+.chat-area {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
 .chat-sidebar {
   width: 18rem;
   display: flex;
@@ -1388,18 +1399,20 @@ html {
   min-height: 0;
 }
 
-/* Messages container with proper scrolling */
+/* Messages container with proper scrolling - takes all available space */
 .chat-messages-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-/* Bottom-fixed input area */
+/* Bottom-fixed input area - always at bottom, never grows */
 .chat-input-bottom {
+  flex: 0 0 auto;
   background: linear-gradient(to top, rgba(11, 15, 20, 0.95) 0%, rgba(11, 15, 20, 0.8) 50%, transparent 100%);
   padding-top: 1.5rem;
-  /* Ensure input stays above mobile keyboard */
-  position: sticky;
-  bottom: 0;
+  padding-bottom: 16px;
 }
 
 .chat-empty-title {
@@ -1529,9 +1542,7 @@ html {
 
   .chat-input-bottom {
     /* Add safe area padding for iOS notch devices */
-    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom, 0px));
-    /* Ensure it stays at the bottom even when keyboard appears */
-    flex-shrink: 0;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px));
   }
 
   /* When input is focused, ensure visibility above keyboard */
