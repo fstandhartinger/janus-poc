@@ -240,9 +240,14 @@ class Settings(BaseSettings):
     )
     enable_file_tools: bool = Field(default=True, description="Enable file tooling")
     baseline_agent: str = Field(
-        default="aider",
+        default="claude-code",
         validation_alias="JANUS_BASELINE_AGENT",
         description="CLI agent command to run inside the sandbox",
+    )
+    use_sandy_agent_api: bool = Field(
+        default=True,
+        validation_alias="USE_SANDY_AGENT_API",
+        description="Use Sandy's built-in agent/run API instead of manual exec (faster, better configured)",
     )
 
     # Complexity detection

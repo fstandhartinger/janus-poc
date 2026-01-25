@@ -5,13 +5,14 @@ import base64
 import hashlib
 import json
 import mimetypes
+import re
 import shlex
 import time
 import uuid
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
-from typing import AsyncGenerator, Callable, Optional
+from typing import Any, AsyncGenerator, Callable, Optional
 
 import httpx
 import structlog
@@ -37,6 +38,41 @@ from janus_baseline_agent_cli.services.vision import contains_images, get_image_
 from janus_baseline_agent_cli.services.response_processor import process_agent_response
 
 logger = structlog.get_logger()
+
+
+def _parse_sse_events(data: str) -> list[dict[str, Any]]:
+    """Parse SSE event data into a list of JSON events."""
+    events: list[dict[str, Any]] = []
+    current_data = ""
+
+    for line in data.split("\n"):
+        if line.startswith("data: "):
+            current_data += line[6:]
+        elif line == "" and current_data:
+            try:
+                parsed = json.loads(current_data)
+                events.append(parsed)
+            except json.JSONDecodeError:
+                pass
+            current_data = ""
+
+    # Handle any remaining data
+    if current_data:
+        try:
+            parsed = json.loads(current_data)
+            events.append(parsed)
+        except json.JSONDecodeError:
+            pass
+
+    return events
+
+
+def _strip_ansi(text: str) -> str:
+    """Strip ANSI escape codes from text."""
+    text = re.sub(r"\x1b\[[0-9;]*m", "", text)
+    text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text)
+    text = text.replace("\r", "")
+    return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
 
 
 @dataclass
@@ -777,6 +813,154 @@ class SandyService:
         except Exception as e:
             logger.warning("sandy_terminate_error", error=str(e))
 
+    async def _run_agent_via_api(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        agent: str,
+        model: str,
+        prompt: str,
+        max_duration: int = 600,
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        """
+        Run an agent via Sandy's built-in agent/run API.
+
+        This uses Sandy's agent runner which handles:
+        - Agent configuration with yolo mode (--permission-mode acceptEdits, etc.)
+        - Environment setup with API keys
+        - Config file creation for each agent
+        - SSE streaming output
+
+        Events yielded:
+        - status: Progress messages
+        - agent-output: Raw agent output (especially for claude-code)
+        - files-update: File change notifications
+        - heartbeat: Keep-alive
+        - output: Text output
+        - complete: Final completion event
+        - error: Error events
+        """
+        url = f"{self._base_url}/api/sandboxes/{sandbox_id}/agent/run"
+        payload = {
+            "agent": agent,
+            "model": model,
+            "prompt": prompt,
+            "maxDuration": max_duration,
+            "raw_prompt": True,  # Skip web dev context wrapping
+        }
+
+        logger.info(
+            "agent_api_request",
+            sandbox_id=sandbox_id,
+            agent=agent,
+            model=model,
+            prompt_length=len(prompt),
+            max_duration=max_duration,
+        )
+
+        try:
+            # Use streaming request for SSE
+            async with client.stream(
+                "POST",
+                url,
+                json=payload,
+                headers={
+                    **self._get_headers(),
+                    "Accept": "text/event-stream",
+                },
+                timeout=httpx.Timeout(
+                    connect=30.0,
+                    read=float(max_duration + 60),  # Extra buffer for response
+                    write=30.0,
+                    pool=30.0,
+                ),
+            ) as response:
+                if response.status_code != 200:
+                    error_text = ""
+                    async for chunk in response.aiter_text():
+                        error_text += chunk
+                    logger.error(
+                        "agent_api_error",
+                        status_code=response.status_code,
+                        error=error_text[:500],
+                    )
+                    yield {
+                        "type": "error",
+                        "error": f"Agent API returned {response.status_code}: {error_text[:200]}",
+                    }
+                    return
+
+                # Process SSE stream
+                buffer = ""
+                async for chunk in response.aiter_text():
+                    buffer += chunk
+                    # Process complete events (lines ending with double newline)
+                    while "\n\n" in buffer:
+                        event_end = buffer.index("\n\n")
+                        event_data = buffer[:event_end]
+                        buffer = buffer[event_end + 2:]
+
+                        for line in event_data.split("\n"):
+                            if line.startswith("data: "):
+                                data = line[6:]
+                                try:
+                                    parsed = json.loads(data)
+                                    yield parsed
+                                except json.JSONDecodeError:
+                                    # Not JSON, yield as raw output
+                                    if data.strip():
+                                        yield {"type": "output", "text": data}
+
+                # Process any remaining buffer
+                if buffer.strip():
+                    for line in buffer.split("\n"):
+                        if line.startswith("data: "):
+                            data = line[6:]
+                            try:
+                                parsed = json.loads(data)
+                                yield parsed
+                            except json.JSONDecodeError:
+                                if data.strip():
+                                    yield {"type": "output", "text": data}
+
+        except httpx.TimeoutException as e:
+            logger.error("agent_api_timeout", error=str(e))
+            yield {"type": "error", "error": f"Agent execution timed out: {e}"}
+        except Exception as e:
+            logger.error("agent_api_exception", error=str(e))
+            yield {"type": "error", "error": f"Agent execution failed: {e}"}
+
+    def _select_agent_for_api(self) -> str:
+        """Select agent for Sandy's agent/run API."""
+        requested = self._baseline_agent.strip().lower()
+        if requested in {"claude", "claude-code"}:
+            return "claude-code"
+        if requested == "codex":
+            return "codex"
+        if requested == "aider":
+            return "aider"
+        if requested == "opencode":
+            return "opencode"
+        if requested == "openhands":
+            return "openhands"
+        if requested == "droid":
+            return "droid"
+        # Default to claude-code for best results
+        return "claude-code"
+
+    def _select_model_for_api(self, request: ChatCompletionRequest) -> str:
+        """Select model for Sandy's agent/run API."""
+        # Use the model from request, or default to a good model
+        model = request.model
+        # Sandy's agent API expects certain model formats
+        # Claude Code uses Anthropic models, Codex uses OpenAI-compatible
+        if model.startswith("gpt-") or model.startswith("o1-") or model.startswith("o3-"):
+            return model
+        if "claude" in model.lower():
+            return model
+        # Default model for general use
+        return "claude-sonnet-4-20250514"
+
     def _generate_id(self) -> str:
         """Generate a completion ID."""
         return f"chatcmpl-baseline-sandy-{uuid.uuid4().hex[:12]}"
@@ -1285,6 +1469,432 @@ class SandyService:
                 artifacts = await self._collect_artifacts(
                     client, sandbox_id, public_url
                 )
+                if artifacts:
+                    links = self._format_artifact_links(artifacts)
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    content=f"\n\nArtifacts available:\n{links}"
+                                )
+                            )
+                        ],
+                    )
+
+            finally:
+                # Cleanup
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(
+                            delta=Delta(reasoning_content="Terminating sandbox...\n")
+                        )
+                    ],
+                )
+                await self._terminate_sandbox(client, sandbox_id)
+
+                sandbox_seconds = time.perf_counter() - sandbox_start
+
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)
+                    ],
+                )
+
+                # Include usage with sandbox time
+                if request.stream_options and request.stream_options.include_usage:
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[],
+                        usage=Usage(
+                            prompt_tokens=0,
+                            completion_tokens=0,
+                            total_tokens=0,
+                            sandbox_seconds=sandbox_seconds,
+                        ),
+                    )
+
+    @log_function_call
+    async def complete_via_agent_api(
+        self, request: ChatCompletionRequest
+    ) -> ChatCompletionResponse:
+        """
+        Execute a task using Sandy's agent/run API and return a non-streaming response.
+
+        This collects all streaming events and returns the final result.
+        """
+        request_id = self._generate_id()
+        model = request.model
+        task = self._extract_task(request)
+
+        if not self.is_available:
+            content = (
+                "I would execute this task in a Sandy sandbox:\n\n"
+                f"**Task:** {task}\n\nSandy is not currently configured. "
+                "Please configure SANDY_BASE_URL to enable sandbox execution."
+            )
+            return ChatCompletionResponse(
+                id=request_id,
+                model=model,
+                choices=[
+                    Choice(
+                        message=AssistantMessage(
+                            role="assistant",
+                            content=content,
+                        ),
+                        finish_reason=FinishReason.STOP,
+                    )
+                ],
+            )
+
+        agent = self._select_agent_for_api()
+        api_model = self._select_model_for_api(request)
+        sandbox_start = time.perf_counter()
+        output_parts: list[str] = []
+
+        async with self._client_factory() as client:
+            sandbox_info = await self._create_sandbox(client)
+            if not sandbox_info:
+                return ChatCompletionResponse(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        Choice(
+                            message=AssistantMessage(
+                                role="assistant",
+                                content="Error: Failed to create sandbox.",
+                            ),
+                            finish_reason=FinishReason.STOP,
+                        )
+                    ],
+                )
+
+            sandbox_id, public_url = sandbox_info
+            sandbox_url = self._sandbox_url(sandbox_id, public_url)
+            artifacts: list[Artifact] = []
+
+            try:
+                async for event in self._run_agent_via_api(
+                    client,
+                    sandbox_id,
+                    agent,
+                    api_model,
+                    task,
+                    max_duration=self._timeout,
+                ):
+                    event_type = event.get("type", "")
+
+                    if event_type == "output":
+                        text = _strip_ansi(event.get("text", ""))
+                        if text:
+                            output_parts.append(text)
+
+                    elif event_type == "agent-output":
+                        data = event.get("data", {})
+                        if isinstance(data, dict):
+                            msg_type = data.get("type", "")
+                            if msg_type == "assistant":
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "text":
+                                            text = block.get("text", "")
+                                            if text:
+                                                output_parts.append(text)
+
+                    elif event_type == "error":
+                        error_msg = event.get("error", "Unknown error")
+                        output_parts.append(f"Error: {error_msg}")
+
+                result = "\n".join(output_parts) if output_parts else "Agent completed without output."
+                result = process_agent_response(result, sandbox_url)
+
+                artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
+                if artifacts:
+                    links = self._format_artifact_links(artifacts)
+                    result = f"{result}\n\nArtifacts available:\n{links}"
+
+                return ChatCompletionResponse(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        Choice(
+                            message=AssistantMessage(
+                                role="assistant",
+                                content=result,
+                                artifacts=artifacts or None,
+                            ),
+                            finish_reason=FinishReason.STOP,
+                        )
+                    ],
+                    usage=Usage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                        sandbox_seconds=time.perf_counter() - sandbox_start,
+                    ),
+                )
+
+            finally:
+                await self._terminate_sandbox(client, sandbox_id)
+
+    async def execute_via_agent_api(
+        self,
+        request: ChatCompletionRequest,
+    ) -> AsyncGenerator[ChatCompletionChunk, None]:
+        """
+        Execute a task using Sandy's built-in agent/run API.
+
+        This is the preferred method as it:
+        - Uses Sandy's pre-configured agent settings with yolo mode
+        - Handles agent setup, config files, and environment
+        - Provides faster sandbox boot times (no bootstrap needed)
+        - Streams real-time output from the agent
+        """
+        request_id = self._generate_id()
+        model = request.model
+        task = self._extract_task(request)
+
+        # Emit initial role
+        yield ChatCompletionChunk(
+            id=request_id,
+            model=model,
+            choices=[ChunkChoice(delta=Delta(role=MessageRole.ASSISTANT))],
+        )
+
+        if not self.is_available:
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[
+                    ChunkChoice(
+                        delta=Delta(
+                            content=(
+                                "I would execute this task in a Sandy sandbox:\n\n"
+                                f"**Task:** {task}\n\nSandy is not currently configured. "
+                                "Please configure SANDY_BASE_URL to enable sandbox execution."
+                            )
+                        )
+                    )
+                ],
+            )
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)],
+            )
+            return
+
+        # Select agent and model for Sandy's API
+        agent = self._select_agent_for_api()
+        api_model = self._select_model_for_api(request)
+
+        yield ChatCompletionChunk(
+            id=request_id,
+            model=model,
+            choices=[
+                ChunkChoice(
+                    delta=Delta(
+                        reasoning_content=f"Starting {agent} agent with model {api_model}...\n"
+                    )
+                )
+            ],
+        )
+
+        sandbox_start = time.perf_counter()
+        output_parts: list[str] = []
+        has_error = False
+        exit_code = 0
+
+        async with self._client_factory() as client:
+            # Create sandbox (Sandy's agent/run handles the rest)
+            sandbox_info = await self._create_sandbox(client)
+
+            if not sandbox_info:
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(
+                            delta=Delta(content="Error: Failed to create sandbox.")
+                        )
+                    ],
+                )
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)
+                    ],
+                )
+                return
+
+            sandbox_id, public_url = sandbox_info
+            sandbox_url = self._sandbox_url(sandbox_id, public_url)
+
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[
+                    ChunkChoice(
+                        delta=Delta(
+                            reasoning_content=f"Sandbox created: {sandbox_id}\n"
+                        )
+                    )
+                ],
+            )
+
+            try:
+                # Run agent via Sandy's API
+                async for event in self._run_agent_via_api(
+                    client,
+                    sandbox_id,
+                    agent,
+                    api_model,
+                    task,
+                    max_duration=self._timeout,
+                ):
+                    event_type = event.get("type", "")
+
+                    if event_type == "status":
+                        # Progress status messages
+                        message = event.get("message", "")
+                        if message:
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(reasoning_content=f"{message}\n")
+                                    )
+                                ],
+                            )
+
+                    elif event_type == "output":
+                        # Text output from agent
+                        text = _strip_ansi(event.get("text", ""))
+                        if text:
+                            output_parts.append(text)
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(reasoning_content=f"{text}\n")
+                                    )
+                                ],
+                            )
+
+                    elif event_type == "agent-output":
+                        # Structured agent output (especially from claude-code)
+                        data = event.get("data", {})
+                        if isinstance(data, dict):
+                            # Extract content from Claude Code stream-json output
+                            msg_type = data.get("type", "")
+                            if msg_type == "assistant":
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict):
+                                            if block.get("type") == "text":
+                                                text = block.get("text", "")
+                                                if text:
+                                                    output_parts.append(text)
+                                            elif block.get("type") == "tool_use":
+                                                tool_name = block.get("name", "")
+                                                yield ChatCompletionChunk(
+                                                    id=request_id,
+                                                    model=model,
+                                                    choices=[
+                                                        ChunkChoice(
+                                                            delta=Delta(
+                                                                reasoning_content=f"Using tool: {tool_name}\n"
+                                                            )
+                                                        )
+                                                    ],
+                                                )
+
+                    elif event_type == "files-update":
+                        # File changes detected
+                        changes = event.get("changes", [])
+                        if changes:
+                            change_summary = ", ".join(
+                                f"{c.get('path', 'unknown')} ({c.get('changeType', 'modified')})"
+                                for c in changes[:5]
+                            )
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(
+                                            reasoning_content=f"Files changed: {change_summary}\n"
+                                        )
+                                    )
+                                ],
+                            )
+
+                    elif event_type == "heartbeat":
+                        # Keep-alive, just continue
+                        pass
+
+                    elif event_type == "complete":
+                        # Agent execution complete
+                        exit_code = event.get("exitCode", 0)
+                        success = event.get("success", exit_code == 0)
+                        duration = event.get("duration", 0)
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[
+                                ChunkChoice(
+                                    delta=Delta(
+                                        reasoning_content=(
+                                            f"Agent completed ({'success' if success else 'failed'}) "
+                                            f"in {duration:.1f}s\n"
+                                        )
+                                    )
+                                )
+                            ],
+                        )
+
+                    elif event_type == "error":
+                        # Error from agent
+                        error_msg = event.get("error", "Unknown error")
+                        has_error = True
+                        output_parts.append(f"Error: {error_msg}")
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[
+                                ChunkChoice(
+                                    delta=Delta(
+                                        reasoning_content=f"Error: {error_msg}\n"
+                                    )
+                                )
+                            ],
+                        )
+
+                # Emit final content
+                result = "\n".join(output_parts) if output_parts else "Agent completed without output."
+                result = process_agent_response(result, sandbox_url)
+
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[ChunkChoice(delta=Delta(content=result))],
+                )
+
+                # Collect artifacts
+                artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
                 if artifacts:
                     links = self._format_artifact_links(artifacts)
                     yield ChatCompletionChunk(

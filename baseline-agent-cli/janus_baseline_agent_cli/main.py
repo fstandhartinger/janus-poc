@@ -276,14 +276,26 @@ async def stream_response(
         first_chunk = True
         try:
             if using_agent:
-                async for chunk in sandy_service.execute_complex(request):
-                    chunk_text = _extract_chunk_content(chunk)
-                    if chunk_text:
-                        full_response_parts.append(chunk_text)
-                    if first_chunk and metadata_payload:
-                        chunk = chunk.model_copy(update={"metadata": metadata_payload})
-                    first_chunk = False
-                    yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+                # Use Sandy's agent/run API if enabled (faster, better configured)
+                if settings.use_sandy_agent_api:
+                    async for chunk in sandy_service.execute_via_agent_api(request):
+                        chunk_text = _extract_chunk_content(chunk)
+                        if chunk_text:
+                            full_response_parts.append(chunk_text)
+                        if first_chunk and metadata_payload:
+                            chunk = chunk.model_copy(update={"metadata": metadata_payload})
+                        first_chunk = False
+                        yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+                else:
+                    # Fallback to manual exec approach
+                    async for chunk in sandy_service.execute_complex(request):
+                        chunk_text = _extract_chunk_content(chunk)
+                        if chunk_text:
+                            full_response_parts.append(chunk_text)
+                        if first_chunk and metadata_payload:
+                            chunk = chunk.model_copy(update={"metadata": metadata_payload})
+                        first_chunk = False
+                        yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
             else:
                 async for chunk in llm_service.stream(request):
                     chunk_text = _extract_chunk_content(chunk)
@@ -389,7 +401,11 @@ async def chat_completions(
             complexity_reason=reason,
         )
         if settings.always_use_agent or (is_complex and sandy_service.is_available):
-            response = await sandy_service.complete(request)
+            # Use Sandy's agent/run API if enabled (faster, better configured)
+            if settings.use_sandy_agent_api:
+                response = await sandy_service.complete_via_agent_api(request)
+            else:
+                response = await sandy_service.complete(request)
         else:
             response = await llm_service.complete(request)
 

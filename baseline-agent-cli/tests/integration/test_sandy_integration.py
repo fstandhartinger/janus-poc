@@ -232,7 +232,10 @@ async def test_sandy_env_passes_auth_token() -> None:
     agent_command = next(
         cmd
         for cmd in fake_client.exec_commands
-        if ("aider" in cmd or "run_agent.py" in cmd) and "command -v" not in cmd
+        if ("aider" in cmd or "run_agent.py" in cmd)
+        and "command -v" not in cmd
+        and not cmd.startswith("PATH=")  # Exclude PATH debug commands
+        and "which aider" not in cmd  # Exclude agent detection commands
     )
     assert "SANDY_API_KEY=child-token" in agent_command
     assert "SANDY_BASE_URL=" in agent_command
