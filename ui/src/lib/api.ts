@@ -4,8 +4,8 @@
 
 import type { ChatCompletionRequest, ChatCompletionChunk, ChatStreamEvent, Model } from '@/types/chat';
 
-const DEFAULT_TIMEOUT_MS = 15000;
-const DEFAULT_STREAM_TIMEOUT_MS = 30000;
+const DEFAULT_TIMEOUT_MS = 30000;
+const DEFAULT_STREAM_TIMEOUT_MS = 600000; // 10 minutes for long agentic tasks
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_DELAY_MS = 500;
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
@@ -200,7 +200,8 @@ export async function fetchModels(): Promise<Model[]> {
 
 export async function* streamChatCompletion(
   request: ChatCompletionRequest,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  onResponse?: (response: Response) => void
 ): AsyncGenerator<ChatStreamEvent> {
   const response = await fetchWithRetry(
     CHAT_PROXY_URL,
@@ -223,6 +224,8 @@ export async function* streamChatCompletion(
       retryableStatus: [408, 425, 500, 502, 503, 504],
     }
   );
+
+  onResponse?.(response);
 
   if (!response.ok) {
     if (response.status === 429) {

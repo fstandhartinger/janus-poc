@@ -192,7 +192,7 @@ class Settings(BaseSettings):
         validation_alias="SANDY_API_KEY",
         description="Sandy API key",
     )
-    sandy_timeout: int = Field(default=300, description="Sandy sandbox timeout in seconds")
+    sandy_timeout: int = Field(default=600, description="Sandy sandbox timeout in seconds")
     artifact_port: int = Field(
         default=8787,
         validation_alias="JANUS_ARTIFACT_PORT",
