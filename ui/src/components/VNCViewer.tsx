@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import RFB from '@novnc/novnc/lib/rfb';
+import type RFBType from '@novnc/novnc/lib/rfb';
 
 interface VNCViewerProps {
   sandboxUrl: string;
@@ -29,46 +29,57 @@ export function VNCViewer({
   onDisconnect,
 }: VNCViewerProps) {
   const canvasRef = useRef<HTMLDivElement>(null);
-  const rfbRef = useRef<RFB | null>(null);
+  const rfbRef = useRef<RFBType | null>(null);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    let rfb: RFB | null = null;
+    let rfb: RFBType | null = null;
+    let mounted = true;
 
-    try {
-      const wsUrl = buildWsUrl(sandboxUrl, vncPort);
-      rfb = new RFB(canvasRef.current, wsUrl, {
-        credentials: { password: '' },
-      });
+    // Dynamic import to avoid SSR issues (noVNC uses window)
+    import('@novnc/novnc/lib/rfb').then(({ default: RFB }) => {
+      if (!mounted || !canvasRef.current) return;
 
-      rfb.addEventListener('connect', () => {
-        setConnected(true);
-        setError(null);
-        onConnect?.();
-      });
+      try {
+        const wsUrl = buildWsUrl(sandboxUrl, vncPort);
+        rfb = new RFB(canvasRef.current, wsUrl, {
+          credentials: { password: '' },
+        });
 
-      rfb.addEventListener('disconnect', (event: Event) => {
-        setConnected(false);
-        const detail = (event as CustomEvent<{ clean?: boolean }>).detail;
-        if (detail?.clean) {
-          onDisconnect?.();
-        } else {
-          setError('Connection lost');
-        }
-      });
+        rfb.addEventListener('connect', () => {
+          setConnected(true);
+          setError(null);
+          onConnect?.();
+        });
 
-      rfb.scaleViewport = true;
-      rfb.resizeSession = true;
-      rfbRef.current = rfb;
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      setError(`Failed to connect: ${message}`);
-    }
+        rfb.addEventListener('disconnect', (event: Event) => {
+          setConnected(false);
+          const detail = (event as CustomEvent<{ clean?: boolean }>).detail;
+          if (detail?.clean) {
+            onDisconnect?.();
+          } else {
+            setError('Connection lost');
+          }
+        });
+
+        rfb.scaleViewport = true;
+        rfb.resizeSession = true;
+        rfbRef.current = rfb;
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err);
+        setError(`Failed to connect: ${message}`);
+      }
+    }).catch((err) => {
+      if (mounted) {
+        setError(`Failed to load VNC library: ${err.message}`);
+      }
+    });
 
     return () => {
+      mounted = false;
       if (rfb) {
         rfb.disconnect();
       }
