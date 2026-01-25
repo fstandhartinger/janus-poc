@@ -953,13 +953,19 @@ class SandyService:
         # Use the model from request, or default to a good model
         model = request.model
         # Sandy's agent API expects certain model formats
-        # Claude Code uses Anthropic models, Codex uses OpenAI-compatible
+        # Skip generic baseline aliases
+        if model in {"baseline", "janus-router", "janus-baseline"}:
+            # Use a good default model for agent execution
+            return "deepseek-ai/DeepSeek-V3-0324-TEE"
+        # Pass through specific model names
         if model.startswith("gpt-") or model.startswith("o1-") or model.startswith("o3-"):
             return model
         if "claude" in model.lower():
             return model
+        if "/" in model:  # Looks like a Chutes model path
+            return model
         # Default model for general use
-        return "claude-sonnet-4-20250514"
+        return "deepseek-ai/DeepSeek-V3-0324-TEE"
 
     def _generate_id(self) -> str:
         """Generate a completion ID."""
