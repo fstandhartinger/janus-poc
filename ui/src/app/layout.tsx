@@ -6,12 +6,9 @@ export const metadata: Metadata = {
   description: "Build the intelligence engine on the decentralized intelligence network powered by Bittensor. Anything In, Anything Out.",
   keywords: ["Intelligence", "Bittensor", "OpenAI", "Competition", "Decentralized Intelligence"],
   icons: {
-    icon: [
-      { url: "/favicon-16.png", sizes: "16x16", type: "image/png" },
-      { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
-    ],
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
+    icon: "/favicon-new.png",
+    shortcut: "/favicon-new.png",
+    apple: "/favicon-new.png",
   },
 };
 
