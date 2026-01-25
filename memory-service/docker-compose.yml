@@ -1,0 +1,24 @@
+version: "3.8"
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: memory
+      POSTGRES_PASSWORD: memory
+      POSTGRES_DB: memory_db
+    ports:
+      - "5434:5432"
+
+  memory:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: postgresql+asyncpg://memory:memory@db:5432/memory_db
+      MEMORY_INIT_DB: "true"
+      CHUTES_API_KEY: ${CHUTES_API_KEY:-}
+    ports:
+      - "8090:8000"
+    depends_on:
+      - db

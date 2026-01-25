@@ -42,3 +42,6 @@
 - Completed spec 67_code_review_ui.md with UI a11y fixes (main landmarks, heading hierarchy, contrast), API client retries/timeouts, and updated tests.
 - Completed spec 68_code_review_bench.md with TTFT timeout enforcement, tool-call success handling, SSE parsing robustness, research metadata merging, config weight validation, and new tests.
 - Completed spec 69_comprehensive_testing_suite.md with test runner refinements, gateway smoke/integration skip guards, and logging middleware typing updates.
+- Completed spec 70_hero_video_redesign.md with in-place autoplay hero video, scroll-scrubbing canvas frames, watermark masking, and new Playwright coverage.
+- Completed spec 71_competition_page_improvements.md with clickable Mermaid modals, updated leaderboard/prize pool data, collapsible sections, accessible contributor copy, and FAQ accordions.
+- Completed spec 72_memory_service_backend.md with the FastAPI memory service, LLM extraction/relevance flow, Postgres-backed storage, tests, and Render deployment setup.

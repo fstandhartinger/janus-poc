@@ -13,6 +13,7 @@
 | **Janus Baseline Agent** | https://janus-baseline-agent.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-agent.onrender.com/health) |
 | **Janus Baseline LangChain** | https://janus-baseline-langchain.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-langchain.onrender.com/health) |
 | **Janus Scoring Service** | https://janus-scoring-service.onrender.com | [![Scoring](https://img.shields.io/badge/live-online-63D297)](https://janus-scoring-service.onrender.com/health) |
+| **Janus Memory Service** | https://janus-memory-service.onrender.com | [![Memory](https://img.shields.io/badge/live-online-63D297)](https://janus-memory-service.onrender.com/health) |
 
 ## Components
 
@@ -24,6 +25,7 @@
 | [Baseline LangChain](baseline-langchain/) | LangChain-based baseline competitor | 8082 |
 | [Bench](bench/) | Evaluation harness and scoring | CLI |
 | [Scoring Service](scoring-service/) | Benchmark scoring backend | 8100 |
+| [Memory Service](memory-service/) | Memory extraction and retrieval backend | 8090 |
 
 ## Quick Start
 
@@ -64,6 +66,12 @@ python -m venv .venv && source .venv/bin/activate
 pip install -e "../bench"
 pip install -r requirements.txt
 uvicorn scoring_service.main:app --reload --port 8100
+
+# Terminal 6: Memory Service (optional)
+cd memory-service
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+DATABASE_URL=postgresql+asyncpg://user:pass@localhost:5432/memory_db MEMORY_INIT_DB=true uvicorn memory_service.main:app --reload --port 8090
 ```
 
 Open http://localhost:3000 to use the chat interface.
