@@ -1,6 +1,6 @@
 # Spec 89: Fix Deep Research Feature
 
-## Status: COMPLETE
+## Status: NOT STARTED
 
 ## Context / Why
 
@@ -112,4 +112,17 @@ Implement deep research using:
 
 ## Notes
 
-The chutes-search service at `https://chutes-search.onrender.com` was found in the Render services list. This may be the correct URL instead of `https://search.chutes.ai`.
+### URL Fix Applied
+The gateway was updated to use `https://chutes-search.onrender.com` instead of the non-existent `https://search.chutes.ai`.
+
+### Current Blocker: chutes-search service bug
+The chutes-search service at `https://chutes-search.onrender.com` has a code bug:
+```
+TypeError: Cannot read properties of undefined (reading 'content')
+```
+
+This error occurs in `.next/server/app/api/chat/route.js` when processing chat requests. The service needs to be fixed in the `chutes-search` repository, not janus-poc.
+
+### To Complete This Spec
+1. Fix the bug in chutes-search service (separate repo)
+2. Or implement alternative deep research using different provider (Brave Search, etc.)
