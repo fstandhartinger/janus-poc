@@ -5,13 +5,86 @@ An alternative Janus baseline implementation built on LangChain. This service ru
 ## Architecture
 
 - **FastAPI API**: Handles OpenAI-compatible requests and SSE streaming.
-- **LangChain Agent**: Uses `ChatOpenAI` with an OpenAI-tools agent.
+- **Complexity Detection**: Routes simple requests to a fast path and complex requests to the agent.
+- **LangChain Agent**: Uses `ChatOpenAI` with an OpenAI-tools agent for tool execution.
 - **Tools**:
   - `image_generation`: Chutes image generation API
   - `text_to_speech`: Chutes Kokoro TTS API
+  - `music_generation`: DiffRhythm music generation
+  - `audio_generation`: Audio/sound generation
+  - `video_generation`: Chutes video generation
   - `web_search`: Tavily search API
+  - `deep_research`: Chutes search with citations
   - `code_execution`: LangChain Python REPL tool
+  - `write_file` / `read_file`: File operations for artifacts
   - `investigate_memory`: Retrieve full memory content when memory references are present
+
+```mermaid
+flowchart TB
+    subgraph Request ["Incoming Request"]
+        REQ["POST /v1/chat/completions"]
+    end
+
+    subgraph Routing ["Complexity Detection"]
+        DETECT["Complexity Detector"]
+        KEYWORDS["Keyword Check"]
+        LLM_VERIFY["LLM Verification"]
+    end
+
+    subgraph FastPath ["Fast Path"]
+        DIRECT_LLM["Direct ChatOpenAI"]
+        FAST_STREAM["Stream Response"]
+    end
+
+    subgraph AgentPath ["Agent Path"]
+        AGENT["LangChain Agent"]
+        TOOLS["Available Tools"]
+    end
+
+    subgraph Tools ["Agent Capabilities"]
+        IMG["Image Generation"]
+        VIDEO["Video Generation"]
+        AUDIO["Audio Generation"]
+        TTS["Text-to-Speech"]
+        SEARCH["Web Search"]
+        RESEARCH["Deep Research"]
+        CODE["Code Execution"]
+        FILES["File Operations"]
+    end
+
+    subgraph Response ["Response"]
+        SSE["SSE Stream"]
+        REASONING["reasoning_content"]
+        CONTENT["content"]
+        ARTIFACTS["artifacts"]
+    end
+
+    REQ --> DETECT
+    DETECT --> KEYWORDS
+    KEYWORDS -->|"Complex"| AGENT
+    KEYWORDS -->|"Simple"| LLM_VERIFY
+    LLM_VERIFY -->|"needs_agent: true"| AGENT
+    LLM_VERIFY -->|"needs_agent: false"| DIRECT_LLM
+    LLM_VERIFY -->|"Error"| AGENT
+
+    DIRECT_LLM --> FAST_STREAM
+    FAST_STREAM --> SSE
+
+    AGENT --> TOOLS
+    TOOLS --> IMG
+    TOOLS --> VIDEO
+    TOOLS --> AUDIO
+    TOOLS --> TTS
+    TOOLS --> SEARCH
+    TOOLS --> RESEARCH
+    TOOLS --> CODE
+    TOOLS --> FILES
+    AGENT --> SSE
+
+    SSE --> REASONING
+    SSE --> CONTENT
+    SSE --> ARTIFACTS
+```
 
 ## Environment Variables
 
@@ -24,11 +97,17 @@ An alternative Janus baseline implementation built on LangChain. This service ru
 | `BASELINE_LANGCHAIN_OPENAI_API_KEY` | OpenAI API key | - |
 | `BASELINE_LANGCHAIN_OPENAI_BASE_URL` | OpenAI-compatible base URL | `https://api.openai.com/v1` |
 | `BASELINE_LANGCHAIN_CHUTES_API_KEY` | Chutes API key (image/TTS) | - |
+| `BASELINE_LANGCHAIN_CHUTES_API_BASE` | Chutes API base URL | `https://llm.chutes.ai/v1` |
 | `BASELINE_LANGCHAIN_TAVILY_API_KEY` | Tavily API key (web search) | - |
+| `BASELINE_LANGCHAIN_CHUTES_SEARCH_URL` | Chutes search base URL | `https://chutes-search.onrender.com` |
 | `BASELINE_LANGCHAIN_VISION_MODEL_PRIMARY` | Primary vision model | `Qwen/Qwen3-VL-235B-A22B-Instruct` |
 | `BASELINE_LANGCHAIN_VISION_MODEL_FALLBACK` | Fallback vision model | `chutesai/Mistral-Small-3.2-24B-Instruct-2506` |
 | `BASELINE_LANGCHAIN_VISION_MODEL_TIMEOUT` | Vision request timeout (seconds) | `60.0` |
 | `BASELINE_LANGCHAIN_ENABLE_VISION_ROUTING` | Enable vision routing | `true` |
+| `BASELINE_LANGCHAIN_ARTIFACTS_DIR` | Local artifacts directory | `/tmp/janus_baseline_langchain_artifacts` |
+| `BASELINE_LANGCHAIN_ARTIFACT_BASE_URL` | Base URL for served artifacts | `/artifacts` |
+| `BASELINE_LANGCHAIN_COMPLEXITY_THRESHOLD` | Token threshold for agent routing | `100` |
+| `BASELINE_LANGCHAIN_ALWAYS_USE_AGENT` | Force agent routing | `false` |
 
 For container usage, `HOST`, `PORT`, `DEBUG`, `LOG_LEVEL`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `CHUTES_API_KEY`, and `TAVILY_API_KEY` are also accepted.
 

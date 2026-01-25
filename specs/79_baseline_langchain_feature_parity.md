@@ -1,6 +1,6 @@
 # Spec 79: Baseline LangChain Feature Parity
 
-**Status:** NOT STARTED
+## Status: COMPLETE
 **Priority:** High
 **Complexity:** High
 **Prerequisites:** Spec 71, Spec 73, Spec 78
@@ -417,3 +417,5 @@ flowchart TB
 - Consider sharing complexity.py between both baselines
 - Web search can remain Tavily or switch to chutes-search
 - Artifacts need to be served via endpoint or base64 encoded
+
+NR_OF_TRIES: 1

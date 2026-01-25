@@ -117,6 +117,48 @@ class Settings(BaseSettings):
             "BASELINE_LANGCHAIN_CHUTES_API_KEY",
         ),
     )
+    chutes_api_base: str = Field(
+        default="https://llm.chutes.ai/v1",
+        description="Chutes API base URL",
+        validation_alias=AliasChoices(
+            "CHUTES_API_BASE",
+            "BASELINE_LANGCHAIN_CHUTES_API_BASE",
+        ),
+    )
+    chutes_search_url: str = Field(
+        default="https://chutes-search.onrender.com",
+        description="Chutes search base URL",
+        validation_alias=AliasChoices(
+            "CHUTES_SEARCH_URL",
+            "BASELINE_LANGCHAIN_CHUTES_SEARCH_URL",
+        ),
+    )
+
+    # Artifacts
+    artifacts_dir: str = Field(
+        default="/tmp/janus_baseline_langchain_artifacts",
+        description="Local artifacts directory",
+        validation_alias=AliasChoices(
+            "ARTIFACTS_DIR",
+            "BASELINE_LANGCHAIN_ARTIFACTS_DIR",
+        ),
+    )
+    artifact_base_url: str = Field(
+        default="/artifacts",
+        description="Base URL for served artifacts",
+        validation_alias=AliasChoices(
+            "ARTIFACT_BASE_URL",
+            "BASELINE_LANGCHAIN_ARTIFACT_BASE_URL",
+        ),
+    )
+    artifact_ttl_seconds: int = Field(
+        default=3600,
+        description="Artifact TTL in seconds",
+        validation_alias=AliasChoices(
+            "ARTIFACT_TTL_SECONDS",
+            "BASELINE_LANGCHAIN_ARTIFACT_TTL_SECONDS",
+        ),
+    )
 
     # Web search
     tavily_api_key: Optional[str] = Field(
@@ -155,6 +197,40 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices(
             "MEMORY_TIMEOUT_SECONDS",
             "BASELINE_LANGCHAIN_MEMORY_TIMEOUT_SECONDS",
+        ),
+    )
+
+    # Complexity detection
+    complexity_threshold: int = Field(
+        default=100,
+        description="Token count threshold for complex path",
+        validation_alias=AliasChoices(
+            "COMPLEXITY_THRESHOLD",
+            "BASELINE_LANGCHAIN_COMPLEXITY_THRESHOLD",
+        ),
+    )
+    always_use_agent: bool = Field(
+        default=False,
+        description="Always route to agent path",
+        validation_alias=AliasChoices(
+            "ALWAYS_USE_AGENT",
+            "BASELINE_LANGCHAIN_ALWAYS_USE_AGENT",
+        ),
+    )
+    llm_routing_model: str = Field(
+        default="XiaomiMiMo/MiMo-V2-Flash",
+        description="Fast model to use for routing decisions",
+        validation_alias=AliasChoices(
+            "LLM_ROUTING_MODEL",
+            "BASELINE_LANGCHAIN_LLM_ROUTING_MODEL",
+        ),
+    )
+    llm_routing_timeout: float = Field(
+        default=3.0,
+        description="Timeout in seconds for LLM routing check",
+        validation_alias=AliasChoices(
+            "LLM_ROUTING_TIMEOUT",
+            "BASELINE_LANGCHAIN_LLM_ROUTING_TIMEOUT",
         ),
     )
 

@@ -55,3 +55,4 @@
 - Completed spec 77_memory_management_ui.md with memory management UI, memory CRUD hooks, gateway proxy routes, and memory service update/clear endpoints/tests.
 - Re-verified spec 77_memory_management_ui.md status formatting for Ralph loop detection.
 - Completed spec 78_plus_menu_generation_tags.md with the plus menu UI, generation flag wiring, baseline routing/prompt updates, and new tests.
+- Completed spec 79_baseline_langchain_feature_parity.md with complexity routing, deep research/video/audio/file tools, artifact streaming, auth passthrough, and updated LangChain baseline tests/docs.

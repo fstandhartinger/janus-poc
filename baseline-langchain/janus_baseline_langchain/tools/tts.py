@@ -8,6 +8,7 @@ import httpx
 from langchain_core.tools import tool
 
 from janus_baseline_langchain.config import get_settings
+from janus_baseline_langchain.services import get_request_auth_token
 
 KOKORO_URL = "https://chutes-kokoro.chutes.ai/speak"
 
@@ -62,14 +63,15 @@ def _post_with_retries(
 def text_to_speech(text: str, voice: str = "af_heart", speed: float = 1.0) -> str:
     """Convert text to natural speech using Kokoro TTS."""
     settings = get_settings()
-    if not settings.chutes_api_key:
+    token = get_request_auth_token() or settings.chutes_api_key
+    if not token:
         return "Error: CHUTES_API_KEY not configured"
 
     speed = max(0.5, min(2.0, speed))
 
     payload = {"text": text, "voice": voice, "speed": speed}
     headers = {
-        "Authorization": f"Bearer {settings.chutes_api_key}",
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
 

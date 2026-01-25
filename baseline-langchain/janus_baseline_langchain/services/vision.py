@@ -58,6 +58,21 @@ def contains_images(messages: Iterable) -> bool:
     return False
 
 
+def count_images(messages: Iterable) -> int:
+    """Count image parts in the provided messages."""
+    count = 0
+    for message in messages:
+        content = message.get("content") if isinstance(message, dict) else message.content
+        if content is None or isinstance(content, str):
+            continue
+        for part in content:
+            if isinstance(part, dict) and part.get("type") == "image_url":
+                count += 1
+            elif isinstance(part, ImageUrlContent):
+                count += 1
+    return count
+
+
 def convert_to_langchain_messages(messages: list) -> list[BaseMessage]:
     """Convert OpenAI messages to LangChain format, preserving images."""
     lc_messages: list[BaseMessage] = []

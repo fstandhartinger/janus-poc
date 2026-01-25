@@ -7,9 +7,9 @@ import re
 from typing import Any, AsyncGenerator, Iterable, Union
 
 import structlog
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Header, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, SecretStr
@@ -26,6 +26,7 @@ from janus_baseline_langchain.models import (
     Delta,
     FinishReason,
     FunctionCall,
+    Artifact,
     GenerationFlags,
     ImageUrlContent,
     Message,
@@ -37,7 +38,17 @@ from janus_baseline_langchain.models import (
 )
 from janus_baseline_langchain.streaming import optimized_stream_response
 from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel
-from janus_baseline_langchain.services import MemoryService, get_memory_service
+from janus_baseline_langchain.services import (
+    MemoryService,
+    clear_artifact_collection,
+    get_artifact_manager,
+    get_collected_artifacts,
+    get_complexity_detector,
+    get_memory_service,
+    set_request_auth_token,
+    start_artifact_collection,
+    ComplexityDetector,
+)
 from janus_baseline_langchain.services.vision import (
     contains_images,
     convert_to_langchain_messages,
@@ -120,6 +131,21 @@ async def health_check() -> HealthResponse:
     return HealthResponse(status="ok", version=__version__)
 
 
+@app.get("/artifacts/{artifact_name}")
+async def get_artifact(
+    artifact_name: str,
+    artifact_manager=Depends(get_artifact_manager),
+) -> FileResponse:
+    """Serve locally generated artifacts."""
+    try:
+        path = artifact_manager.resolve_path(artifact_name)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    if not path.exists():
+        raise HTTPException(status_code=404, detail="Artifact not found")
+    return FileResponse(path)
+
+
 @app.get("/v1/router/metrics")
 async def get_router_metrics() -> dict[str, Any]:
     """Get composite model router metrics."""
@@ -189,6 +215,18 @@ def _inject_memory_context(messages: list[Message], memory_context: str) -> None
     message.content = memory_context
 
 
+def _extract_auth_token(authorization: str | None) -> str | None:
+    if not authorization:
+        return None
+    token = authorization.strip()
+    if not token:
+        return None
+    parts = token.split()
+    if len(parts) == 2 and parts[0].lower() == "bearer":
+        return parts[1]
+    return token
+
+
 def _to_langchain_message(message: Message) -> object | None:
     content = _extract_text(message.content)
     if message.role == MessageRole.USER:
@@ -208,13 +246,22 @@ def _generate_request_id() -> str:
     return f"chatcmpl-baseline-langchain-{uuid.uuid4().hex[:12]}"
 
 
-def _format_response(request_id: str, model: str, output: str) -> ChatCompletionResponse:
+def _format_response(
+    request_id: str,
+    model: str,
+    output: str,
+    artifacts: list[Artifact] | None = None,
+) -> ChatCompletionResponse:
     return ChatCompletionResponse(
         id=request_id,
         model=model,
         choices=[
             Choice(
-                message=Message(role=MessageRole.ASSISTANT, content=output),
+                message=Message(
+                    role=MessageRole.ASSISTANT,
+                    content=output,
+                    artifacts=artifacts or None,
+                ),
                 finish_reason=FinishReason.STOP,
             )
         ],
@@ -268,12 +315,13 @@ def _tool_event_message(event: dict[str, Any]) -> str:
 def _get_router(
     settings: Settings,
     api_key_override: str | None = None,
+    base_url_override: str | None = None,
 ) -> CompositeRoutingChatModel:
     """Get or create the global router instance."""
-    if api_key_override:
+    if api_key_override or base_url_override:
         return CompositeRoutingChatModel(
-            api_key=api_key_override,
-            base_url=settings.openai_base_url,
+            api_key=api_key_override or settings.openai_api_key or "dummy-key",
+            base_url=base_url_override or settings.openai_base_url,
             default_temperature=settings.temperature,
         )
     global _router_instance
@@ -317,8 +365,9 @@ def _resolve_request_auth(
     request: ChatCompletionRequest,
     settings: Settings,
 ) -> tuple[str | None, str]:
-    if request.chutes_access_token:
-        return request.chutes_access_token, settings.openai_base_url
+    token = request.chutes_access_token or getattr(request, "_auth_token", None)
+    if token:
+        return token, settings.chutes_api_base
     return settings.openai_api_key, settings.openai_base_url
 
 
@@ -534,8 +583,13 @@ async def _stream_basic_response(
     base_url_override: str | None = None,
     metadata: dict[str, Any] | None = None,
 ) -> AsyncGenerator[str, None]:
-    if settings.use_model_router:
-        llm = _get_router(settings, api_key_override=api_key_override)
+    use_router = settings.use_model_router and not api_key_override
+    if use_router:
+        llm = _get_router(
+            settings,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
+        )
         model_name = "composite-routing"
     else:
         llm = _create_text_chain(
@@ -604,8 +658,13 @@ async def _run_basic_completion(
     api_key_override: str | None = None,
     base_url_override: str | None = None,
 ) -> tuple[str, str]:
-    if settings.use_model_router:
-        llm = _get_router(settings, api_key_override=api_key_override)
+    use_router = settings.use_model_router and not api_key_override
+    if use_router:
+        llm = _get_router(
+            settings,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
+        )
         result = await llm.ainvoke(messages)
         return "composite-routing", str(getattr(result, "content", result))
 
@@ -703,6 +762,23 @@ async def stream_agent_response(
             )
             yield "data: [DONE]\n\n"
             return
+
+        artifacts = get_collected_artifacts()
+        if artifacts:
+            yield _chunk_payload(
+                request_id,
+                model,
+                Delta(
+                    janus={
+                        "event": "artifacts",
+                        "payload": {
+                            "artifacts": [
+                                artifact.model_dump(mode="json") for artifact in artifacts
+                            ]
+                        },
+                    }
+                ),
+            )
 
         if include_usage:
             yield _chunk_payload(
@@ -858,10 +934,17 @@ async def _run_vision_completion(
 async def chat_completions(
     request: ChatCompletionRequest,
     settings: Settings = Depends(get_settings),
+    complexity_detector: ComplexityDetector = Depends(get_complexity_detector),
     memory_service: MemoryService = Depends(get_memory_service),
+    authorization: str | None = Header(default=None, alias="Authorization"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
     request_id = _generate_request_id()
+    auth_token = _extract_auth_token(authorization) or request.chutes_access_token
+    if auth_token:
+        request._auth_token = auth_token
+    set_request_auth_token(auth_token)
+    start_artifact_collection()
     api_key_override, base_url_override = _resolve_request_auth(request, settings)
 
     memory_enabled = bool(
@@ -880,23 +963,35 @@ async def chat_completions(
             _inject_memory_context(messages_for_processing, memory_context)
             request.messages = messages_for_processing
 
+    analysis = await complexity_detector.analyze_async(
+        request.messages,
+        request.generation_flags,
+    )
+
     flags_payload = _generation_flags_payload(request.generation_flags)
-    use_generation_agent = bool(flags_payload)
+    use_generation_agent = analysis.is_complex
     flag_reasons = (
         _generation_flag_reasons(request.generation_flags)
         if request.generation_flags and flags_payload
         else []
     )
-    metadata_payload = (
-        {
+    metadata_payload = None
+    if flags_payload or use_generation_agent:
+        metadata_payload = {
             "generation_flags": flags_payload,
             "using_agent": use_generation_agent,
-            "complexity_reason": (
-                f"generation_flags: {', '.join(flag_reasons)}" if flag_reasons else "generation_flags"
-            ),
+            "complexity_reason": analysis.reason,
         }
-        if flags_payload
-        else None
+
+    logger.info(
+        "complexity_check",
+        request_id=request_id,
+        is_complex=analysis.is_complex,
+        reason=analysis.reason,
+        keywords_matched=analysis.keywords_matched,
+        multimodal_detected=analysis.multimodal_detected,
+        has_images=analysis.has_images,
+        image_count=analysis.image_count,
     )
 
     use_vision = settings.enable_vision_routing and contains_images(request.messages)
@@ -934,6 +1029,7 @@ async def chat_completions(
                             conversation=conversation,
                         )
                     )
+                clear_artifact_collection()
 
         include_usage = bool(request.stream_options and request.stream_options.include_usage)
         if use_generation_agent:
@@ -944,6 +1040,8 @@ async def chat_completions(
                 user_id=request.user_id,
                 enable_memory=memory_enabled,
                 has_memory_context=has_memory_context,
+                api_key_override=api_key_override,
+                base_url_override=base_url_override,
             )
             stream = stream_agent_response(
                 agent,
@@ -1031,6 +1129,8 @@ async def chat_completions(
             user_id=request.user_id,
             enable_memory=memory_enabled,
             has_memory_context=has_memory_context,
+            api_key_override=api_key_override,
+            base_url_override=base_url_override,
         )
         try:
             result = await agent.ainvoke(
@@ -1043,7 +1143,13 @@ async def chat_completions(
         except Exception as exc:
             logger.error("agent_invoke_error", error=str(exc))
             output = "Error: failed to generate response."
-        response = _format_response(request_id, request.model or settings.model, output)
+        artifacts = get_collected_artifacts()
+        response = _format_response(
+            request_id,
+            request.model or settings.model,
+            output,
+            artifacts=artifacts or None,
+        )
         if memory_enabled and request.user_id:
             conversation = conversation_base + [
                 {"role": "assistant", "content": output}
@@ -1054,6 +1160,7 @@ async def chat_completions(
                     conversation=conversation,
                 )
             )
+        clear_artifact_collection()
         return response
 
     if tool_call and not use_vision:
@@ -1068,6 +1175,7 @@ async def chat_completions(
                     conversation=conversation,
                 )
             )
+        clear_artifact_collection()
         return response
 
     if use_vision:
@@ -1094,6 +1202,7 @@ async def chat_completions(
                     conversation=conversation,
                 )
             )
+        clear_artifact_collection()
         return response
 
     try:
@@ -1119,6 +1228,7 @@ async def chat_completions(
                 conversation=conversation,
             )
         )
+    clear_artifact_collection()
     return response
 
 

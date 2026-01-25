@@ -7,6 +7,7 @@ import httpx
 from langchain_core.tools import tool
 
 from janus_baseline_langchain.config import get_settings
+from janus_baseline_langchain.services import get_request_auth_token
 
 DEFAULT_IMAGE_MODEL = "Qwen/Qwen2.5-VL-72B-Instruct"
 DEFAULT_IMAGE_SIZE = "1024x1024"
@@ -40,7 +41,8 @@ def _post_with_retries(
 def image_generation(prompt: str) -> str:
     """Generate an image from a text description."""
     settings = get_settings()
-    if not settings.chutes_api_key:
+    token = get_request_auth_token() or settings.chutes_api_key
+    if not token:
         return "Image generation unavailable: missing API key."
 
     payload = {
@@ -49,11 +51,11 @@ def image_generation(prompt: str) -> str:
         "n": 1,
         "size": DEFAULT_IMAGE_SIZE,
     }
-    headers = {"Authorization": f"Bearer {settings.chutes_api_key}"}
+    headers = {"Authorization": f"Bearer {token}"}
 
     try:
         response = _post_with_retries(
-            "https://llm.chutes.ai/v1/images/generations",
+            f"{settings.chutes_api_base.rstrip('/')}/images/generations",
             headers=headers,
             payload=payload,
             timeout=settings.request_timeout,

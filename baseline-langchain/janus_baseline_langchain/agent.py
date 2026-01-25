@@ -11,11 +11,16 @@ from pydantic import SecretStr
 from janus_baseline_langchain.config import Settings
 from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel
 from janus_baseline_langchain.tools import (
+    audio_generation_tool,
     code_execution_tool,
+    deep_research_tool,
+    file_read_tool,
+    file_write_tool,
     image_generation_tool,
     InvestigateMemoryTool,
     music_generation_tool,
     text_to_speech_tool,
+    video_generation_tool,
     web_search_tool,
 )
 
@@ -25,32 +30,46 @@ You have access to these tools:
 - image_generation: Generate images using AI (Chutes API)
 - text_to_speech: Convert text to audio (Kokoro TTS)
 - music_generation: Generate full songs or instrumentals (DiffRhythm)
+- audio_generation: Generate audio or sound effects
+- video_generation: Generate videos from text prompts
 - web_search: Search the web for current information
+- deep_research: Perform comprehensive research with citations
 - code_execution: Execute Python code safely
+- write_file: Write content to a file artifact
+- read_file: Read content from a file artifact
 
 Always use the appropriate tool for the task. For image requests, use image_generation.
 For audio/speech requests, use text_to_speech.
 For music or song generation, use music_generation.
+For sound effects or other audio requests, use audio_generation.
+For video requests, use video_generation.
 For questions about current events or real-time data, use web_search.
+For comprehensive research, use deep_research.
 For calculations or data processing, use code_execution.
 """
 
 
-def create_llm(settings: Settings) -> Union[CompositeRoutingChatModel, ChatOpenAI]:
+def create_llm(
+    settings: Settings,
+    *,
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
+) -> Union[CompositeRoutingChatModel, ChatOpenAI]:
     """Create the LLM instance based on settings."""
-    api_key = settings.chutes_api_key or settings.openai_api_key or "dummy-key"
+    api_key = api_key_override or settings.chutes_api_key or settings.openai_api_key or "dummy-key"
+    base_url = base_url_override or settings.openai_base_url
 
-    if settings.use_model_router:
+    if settings.use_model_router and not api_key_override:
         return CompositeRoutingChatModel(
             api_key=api_key,
-            base_url=settings.openai_base_url,
+            base_url=base_url,
             default_temperature=settings.temperature,
         )
 
     return ChatOpenAI(
         model=settings.model,
         api_key=SecretStr(api_key),
-        base_url=settings.openai_base_url,
+        base_url=base_url,
         temperature=settings.temperature,
         streaming=True,
         max_retries=settings.max_retries,
@@ -64,16 +83,27 @@ def create_agent(
     user_id: str | None = None,
     enable_memory: bool = False,
     has_memory_context: bool = False,
+    api_key_override: str | None = None,
+    base_url_override: str | None = None,
 ) -> AgentExecutor:
     """Create a LangChain agent executor configured for Janus."""
-    llm = create_llm(settings)
+    llm = create_llm(
+        settings,
+        api_key_override=api_key_override,
+        base_url_override=base_url_override,
+    )
 
     tools = [
         image_generation_tool,
         text_to_speech_tool,
         music_generation_tool,
+        audio_generation_tool,
+        video_generation_tool,
         web_search_tool,
+        deep_research_tool,
         code_execution_tool,
+        file_write_tool,
+        file_read_tool,
     ]
     if settings.enable_memory_feature and enable_memory and user_id and has_memory_context:
         tools.append(

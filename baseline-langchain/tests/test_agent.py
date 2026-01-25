@@ -18,8 +18,14 @@ def test_create_agent_includes_tools() -> None:
     assert {
         "image_generation",
         "text_to_speech",
+        "music_generation",
+        "audio_generation",
+        "video_generation",
         "web_search",
+        "deep_research",
         "code_execution",
+        "write_file",
+        "read_file",
     }.issubset(tool_names)
 
 

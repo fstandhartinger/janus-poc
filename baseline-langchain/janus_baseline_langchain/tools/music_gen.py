@@ -8,6 +8,7 @@ import httpx
 from langchain_core.tools import tool
 
 from janus_baseline_langchain.config import get_settings
+from janus_baseline_langchain.services import get_request_auth_token
 
 DIFFRHYTHM_URL = "https://chutes-diffrhythm.chutes.ai/generate"
 DEFAULT_STEPS = 32
@@ -46,7 +47,8 @@ def music_generation(
 ) -> str:
     """Generate music using DiffRhythm."""
     settings = get_settings()
-    if not settings.chutes_api_key:
+    token = get_request_auth_token() or settings.chutes_api_key
+    if not token:
         return "Music generation unavailable: missing API key."
 
     payload = {
@@ -55,7 +57,7 @@ def music_generation(
         "style_prompt": style_prompt,
     }
     headers = {
-        "Authorization": f"Bearer {settings.chutes_api_key}",
+        "Authorization": f"Bearer {token}",
         "Content-Type": "application/json",
     }
 

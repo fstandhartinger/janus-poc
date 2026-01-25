@@ -6,12 +6,22 @@ import httpx
 import pytest
 from tavily import TavilyClient
 
+from janus_baseline_langchain.services import (
+    get_collected_artifacts,
+    set_request_auth_token,
+    start_artifact_collection,
+)
 from janus_baseline_langchain.tools import (
     InvestigateMemoryTool,
+    audio_generation_tool,
     code_execution_tool,
+    deep_research_tool,
+    file_read_tool,
+    file_write_tool,
     image_generation_tool,
     music_generation_tool,
     text_to_speech_tool,
+    video_generation_tool,
     web_search_tool,
 )
 
@@ -155,3 +165,131 @@ async def test_investigate_memory_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     result = await tool.ainvoke({"memory_ids": ["mem_1"], "query": "pizza"})
     assert "## Retrieved Memories" in result
     assert "[mem_1] User likes pizza" in result
+
+
+@pytest.mark.asyncio
+async def test_deep_research_tool(monkeypatch: pytest.MonkeyPatch) -> None:
+    class FakeResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {
+                "answer": "Research summary.",
+                "sources": [
+                    {"title": "Example Source", "url": "https://example.com"},
+                ],
+            }
+
+    class FakeClient:
+        def __init__(self, *args, **kwargs) -> None:
+            pass
+
+        async def __aenter__(self) -> "FakeClient":
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb) -> None:
+            return None
+
+        async def post(self, *args, **kwargs) -> FakeResponse:
+            return FakeResponse()
+
+    monkeypatch.setattr(
+        "janus_baseline_langchain.tools.deep_research.httpx.AsyncClient",
+        FakeClient,
+    )
+
+    result = await deep_research_tool.ainvoke({"query": "Explain Janus", "mode": "max"})
+    assert "Research summary." in result
+    assert "Sources" in result
+    assert "https://example.com" in result
+
+
+@pytest.mark.asyncio
+async def test_video_generation_tool_adds_artifact(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"url": "https://example.com/video.mp4"}
+
+    def fake_post(*args, **kwargs) -> DummyResponse:  # type: ignore[no-untyped-def]
+        return DummyResponse()
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    set_request_auth_token("user-token")
+    start_artifact_collection()
+
+    result = await video_generation_tool.ainvoke("Test video prompt")
+    artifacts = get_collected_artifacts()
+
+    assert "Video generated" in result
+    assert artifacts
+    assert artifacts[0].url == "https://example.com/video.mp4"
+
+
+@pytest.mark.asyncio
+async def test_audio_generation_tool_adds_artifact(monkeypatch: pytest.MonkeyPatch) -> None:
+    class DummyResponse:
+        content = b"fake-audio"
+
+        def raise_for_status(self) -> None:
+            return None
+
+    def fake_post(*args, **kwargs) -> DummyResponse:  # type: ignore[no-untyped-def]
+        return DummyResponse()
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    set_request_auth_token("user-token")
+    start_artifact_collection()
+
+    result = await audio_generation_tool.ainvoke({"prompt": "Hello", "type": "speech"})
+    artifacts = get_collected_artifacts()
+
+    assert result.startswith("data:audio/wav;base64,")
+    assert artifacts
+
+
+@pytest.mark.asyncio
+async def test_file_tools_create_artifacts(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    artifacts_dir = tmp_path / "artifacts"
+    artifacts_dir.mkdir()
+    monkeypatch.setenv("BASELINE_LANGCHAIN_ARTIFACTS_DIR", str(artifacts_dir))
+
+    start_artifact_collection()
+    result = await file_write_tool.ainvoke(
+        {"filename": "report.txt", "content": "hello", "mime_type": "text/plain"}
+    )
+    assert "report.txt" in result
+
+    artifacts = get_collected_artifacts()
+    assert artifacts
+    artifact_path = artifacts_dir / "report.txt"
+    assert artifact_path.exists()
+
+    read_result = await file_read_tool.ainvoke({"filename": "report.txt"})
+    assert "hello" in read_result
+
+
+@pytest.mark.asyncio
+async def test_auth_token_passthrough(monkeypatch: pytest.MonkeyPatch) -> None:
+    captured_headers: dict[str, str] = {}
+
+    class DummyResponse:
+        def raise_for_status(self) -> None:
+            return None
+
+        def json(self) -> dict:
+            return {"data": [{"url": "https://example.com/image.png"}]}
+
+    def fake_post(*args, **kwargs) -> DummyResponse:  # type: ignore[no-untyped-def]
+        captured_headers.update(kwargs.get("headers", {}))
+        return DummyResponse()
+
+    monkeypatch.setattr(httpx, "post", fake_post)
+    set_request_auth_token("passthrough-token")
+
+    result = await image_generation_tool.ainvoke("token test")
+    assert result.startswith("http")
+    assert captured_headers.get("Authorization") == "Bearer passthrough-token"

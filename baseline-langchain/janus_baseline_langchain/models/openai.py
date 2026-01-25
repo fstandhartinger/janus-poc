@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 
 class MessageRole(str, Enum):
@@ -55,12 +55,36 @@ class ToolCall(BaseModel):
     function: FunctionCall
 
 
+class ArtifactType(str, Enum):
+    """Artifact types."""
+
+    IMAGE = "image"
+    FILE = "file"
+    DATASET = "dataset"
+    BINARY = "binary"
+
+
+class Artifact(BaseModel):
+    """Artifact descriptor for non-text outputs."""
+
+    id: str
+    type: ArtifactType
+    mime_type: str
+    display_name: str
+    size_bytes: int
+    sha256: Optional[str] = None
+    created_at: datetime = Field(default_factory=datetime.now)
+    ttl_seconds: int = 3600
+    url: str
+
+
 class Message(BaseModel):
     """Chat message."""
 
     role: MessageRole
     content: Optional[MessageContent] = None
     name: Optional[str] = None
+    artifacts: Optional[list[Artifact]] = None
     tool_calls: Optional[list[ToolCall]] = None
     tool_call_id: Optional[str] = None
 
@@ -106,6 +130,8 @@ class GenerationFlags(BaseModel):
 
 class ChatCompletionRequest(BaseModel):
     """OpenAI-compatible chat completion request."""
+
+    _auth_token: Optional[str] = PrivateAttr(default=None)
 
     model: str
     messages: list[Message]
