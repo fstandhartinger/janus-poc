@@ -1,0 +1,14 @@
+Using skills: read-context → speckit-implement to follow the Ralph build flow.
+
+I tightened janus-bench around TTFT enforcement, tool-call success handling, SSE parsing robustness, and research metadata preservation, then added config weight validation + tests and marked the spec complete. Changes are in `bench/janus_bench/runner.py`, `bench/janus_bench/config.py`, `bench/tests/test_runner.py`, `bench/tests/test_config.py`, `specs/68_code_review_bench.md`, and `history.md`.
+
+Tests run:
+- `cd bench && pytest`
+- `cd gateway && pytest` (took ~3 minutes)
+- `cd ui && npm test`
+- `cd gateway && mypy janus_gateway`
+- `cd ui && npm run typecheck`
+
+I noticed a large set of pre-existing, unrelated changes in the repo (`git status` shows many edits across `baseline-*`, `gateway/`, `ui/`, `specs/`, etc.). Per instructions, I stopped before committing/pushing or doing Render/Telegram steps. How would you like me to proceed?
+1) I stage/commit only the files touched for spec 68 and continue with deploy/verification.
+2) I wait while you clean or clarify the working tree.

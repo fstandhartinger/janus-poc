@@ -1,0 +1,6 @@
+Using skill `speckit-implement` to follow the Ralph loop. I ran `git status` and found pre-existing changes I didn’t make (modified: `.specify/memory/constitution.md`, `README.md`, `baseline/janus_baseline/*`, `baseline/tests/test_complexity.py`, some `specs/*`, and UI files; untracked: `.codex/`, `logs/`, several new `specs/30+` files, plus UI assets/components). Per instructions I need your direction before proceeding.
+
+How would you like me to proceed?
+1) Treat these as in‑progress and continue (include them with the rename work)
+2) Stash/commit them separately first, then continue
+3) Stop here and you’ll clean up, then I continue

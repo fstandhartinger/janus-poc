@@ -46,6 +46,9 @@ export function HeroSection() {
               <a href="#instructions" className="btn-primary text-base px-8 py-3">
                 Start Competing
               </a>
+              <Link href="/competition/scoring" className="btn-secondary text-base px-8 py-3">
+                Run Scoring
+              </Link>
               <Link href="/chat" className="btn-secondary text-base px-8 py-3">
                 Explore Demo Chat
               </Link>

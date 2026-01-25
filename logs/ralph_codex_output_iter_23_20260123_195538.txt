@@ -1,0 +1,6 @@
+Using skill `speckit-implement` to follow the Ralph loop. I ran `git status -sb` and found extensive pre‑existing changes I didn’t make (including the `baseline/` → `baseline-agent-cli/` renames plus docs/UI/spec edits and untracked files). Per instructions I need your direction before proceeding.
+
+How would you like me to handle the current worktree?
+1. Treat the existing changes as intended and continue validating/completing Spec 26.
+2. Clean/stash unrelated changes and redo the rename work from a clean state.
+3. Something else — tell me the exact subset you want me to proceed with.

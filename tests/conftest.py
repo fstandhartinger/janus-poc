@@ -8,31 +8,53 @@ import httpx
 import pytest
 import pytest_asyncio
 
+from tests.config import TestConfig, config
 from tests.utils import is_service_available
 
 
 @pytest.fixture(scope="session")
-def baseline_cli_url() -> str:
-    """URL for baseline-agent-cli service."""
-    return os.getenv("BASELINE_CLI_URL", "http://localhost:8001")
+def test_config() -> TestConfig:
+    """Shared test configuration."""
+    return config
 
 
 @pytest.fixture(scope="session")
-def baseline_langchain_url() -> str:
+def baseline_cli_url(test_config: TestConfig) -> str:
+    """URL for baseline-agent-cli service."""
+    return test_config.get_urls(test_config.default_mode())["baseline_cli"]
+
+
+@pytest.fixture(scope="session")
+def baseline_langchain_url(test_config: TestConfig) -> str:
     """URL for baseline-langchain service."""
-    return os.getenv("BASELINE_LANGCHAIN_URL", "http://localhost:8002")
+    return test_config.get_urls(test_config.default_mode())["baseline_langchain"]
 
 
 @pytest.fixture(scope="session")
 def baseline_cli_model() -> str:
     """Default model for baseline-agent-cli smoke tests."""
-    return os.getenv("BASELINE_CLI_MODEL", "baseline")
+    return os.getenv("TEST_BASELINE_CLI_MODEL", os.getenv("BASELINE_CLI_MODEL", "baseline"))
 
 
 @pytest.fixture(scope="session")
 def baseline_langchain_model() -> str:
     """Default model for baseline-langchain smoke tests."""
-    return os.getenv("BASELINE_LANGCHAIN_MODEL", "gpt-4o-mini")
+    return os.getenv(
+        "TEST_BASELINE_LANGCHAIN_MODEL",
+        os.getenv("BASELINE_LANGCHAIN_MODEL", "gpt-4o-mini"),
+    )
+
+
+@pytest.fixture(scope="session")
+def gateway_url(test_config: TestConfig) -> str:
+    """URL for gateway service."""
+    return test_config.get_urls(test_config.default_mode())["gateway"]
+
+
+@pytest.fixture(scope="session")
+def ui_url(test_config: TestConfig) -> str:
+    """URL for UI service."""
+    return test_config.get_urls(test_config.default_mode())["ui"]
 
 
 @pytest_asyncio.fixture(scope="session")
@@ -80,3 +102,4 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "smoke: smoke tests")
     config.addinivalue_line("markers", "integration: integration tests")
     config.addinivalue_line("markers", "slow: slow tests")
+    config.addinivalue_line("markers", "visual: visual tests")

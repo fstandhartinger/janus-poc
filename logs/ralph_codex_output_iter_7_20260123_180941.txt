@@ -1,0 +1,8 @@
+Using speckit-implement to follow Ralph Build Mode and re-verify a completed spec.
+
+Re-verified `specs/14_roadmap_milestones.md`:
+- Tests mentioned in the spec: none to run.
+- Acceptance criteria: milestones are concrete/testable; DoD reads unambiguous.
+- Edge cases/regressions: none observed for this doc-only spec.
+
+<promise>DONE</promise>

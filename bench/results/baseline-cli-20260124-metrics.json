@@ -1,0 +1,2632 @@
+{
+  "composite_score": 23.25,
+  "quality_score": 1.875,
+  "speed_score": 0.0,
+  "cost_score": 50.0,
+  "streaming_score": 100.0,
+  "multimodal_score": 0.0,
+  "avg_ttft_ms": 2673.6853890273337,
+  "p50_ttft_ms": 2015.8950704972085,
+  "p95_ttft_ms": 5254.417919199659,
+  "avg_tps": 0.0,
+  "p50_tps": 0.0,
+  "p95_tps": 0.0,
+  "avg_latency_seconds": 2.6737194602031003,
+  "p50_latency_seconds": 2.0158950704972085,
+  "p95_latency_seconds": 5.25441791919966,
+  "continuity_score": 1.0,
+  "continuity_gap_count": 0,
+  "total_tokens": 0,
+  "avg_tokens_per_task": 0.0,
+  "total_cost_usd": 0.0,
+  "avg_cost_per_task": 0.0,
+  "tasks_by_benchmark": {
+    "janus_research": {
+      "total": 100,
+      "passed": 0,
+      "failed": 100,
+      "avg_latency_seconds": 2.2466572671002725,
+      "avg_quality_score": 0.0,
+      "avg_speed_score": 0.4497778529582447,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.28,
+      "avg_multimodal_score": 0.0
+    },
+    "janus_tool_use": {
+      "total": 80,
+      "passed": 0,
+      "failed": 80,
+      "avg_latency_seconds": 2.902606382562317,
+      "avg_quality_score": 0.037500000000000006,
+      "avg_speed_score": 0.42598359556595145,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.28,
+      "avg_multimodal_score": 0.0
+    },
+    "janus_multimodal": {
+      "total": 60,
+      "passed": 0,
+      "failed": 60,
+      "avg_latency_seconds": 1.8527588401169244,
+      "avg_quality_score": 0.0,
+      "avg_speed_score": 0.469502470865832,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.3955,
+      "avg_multimodal_score": 0.0
+    },
+    "janus_streaming": {
+      "total": 50,
+      "passed": 0,
+      "failed": 50,
+      "avg_latency_seconds": 3.990348183460228,
+      "avg_quality_score": 0.0,
+      "avg_speed_score": 0.38133231335197704,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.28,
+      "avg_multimodal_score": 0.0
+    },
+    "janus_cost": {
+      "total": 40,
+      "passed": 0,
+      "failed": 40,
+      "avg_latency_seconds": 2.8692561242995906,
+      "avg_quality_score": 0.0,
+      "avg_speed_score": 0.4325180873275235,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.28,
+      "avg_multimodal_score": 0.0
+    }
+  },
+  "failed_tasks": [
+    {
+      "task_id": "fact_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.082656245998805,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_002",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.806141404002119,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.7658183639978233,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 3.38673395600199,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.8431931839986646,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.050308582998696,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.051423915003397,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.997533387002477,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.270688233002147,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.631671389000985,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.8756686089982395,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.652808720999019,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 3.613317122999433,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.8953853240018361,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_015",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.6631938030004676,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.108518989000004,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.6827729149990773,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.1948097519998555,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.7545760399989376,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "fact_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.080557962999592,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.5720476060014335,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_002",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.2083130769970012,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.809911314998317,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.214173688000301,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.7261066540013417,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 3.17703011499907,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4454912680012058,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.0846969180020096,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 5.261475459999929,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 3.622782426999038,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.484391253998183,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.636907511998288,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.728592313000263,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.7894644090010843,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_015",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.1171483770012856,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.224511843000073,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.7246868869988248,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.0678299899991543,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.115582837999682,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "current_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3722162740014028,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.2626228510016517,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_002",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 3.0122353750011825,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.8196464579996245,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3012289370017243,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.2111246550011856,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.234139092000987,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 3.887365023001621,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3771046469992143,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.185353557997587,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3693181750022632,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.003586595001252,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4751545889994304,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3681832210022549,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4246691450025537,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_015",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.5032450600010634,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 12.560855800002173,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.826421632002166,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.9432262990012532,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.501450476000173,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "compare_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 0.9471462569999858,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.2115183060013806,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_002",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.9953110399983416,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.9148995020004804,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.4297049199994945,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.648676548000367,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.605607429999509,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.367126412998914,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.133876402000169,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.375819769997179,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3656941120025294,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 3.634367704999022,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.8790402640006505,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.2717095059997519,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.6660827550003887,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_015",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.51409194399821,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.0373156500027108,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.501445001002139,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.61170926900013,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.5801538240011723,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "synthesis_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4472932880016742,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4403427680008463,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_002",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.1412214619995211,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4007486990012694,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.8138898850011174,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.438615936000133,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.5424930149965803,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.8176050939982815,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.388721159997658,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.6431467090005754,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.1011117110028863,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.266022370000428,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4424237290004385,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.4828028709998762,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.2954326020008011,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_015",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3422061950004718,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 5.166422155998589,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.672201725999912,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 2.1085117039983743,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.3546486820014252,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "deep_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 1.6104986170030315,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.654120808998414,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.5791941069983295,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.733275152000715,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_004",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.3304550710017793,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.872534222999093,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.9800562980017276,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.446225253999728,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.702716126001178,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.7962848540009873,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4489321159999236,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.6107793859991943,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.8889146280016575,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.08065673999954,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.2823346030018,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.32212359299956,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_016",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.914488735001214,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_017",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.7926803160007694,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_018",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9537479630016605,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_019",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.019334077998792,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_020",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.458037134998449,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_021",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.7896621969994158,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_022",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.038720762000594,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_023",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.5383810349994747,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_024",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.85520124300092,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "func_025",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.949117235999438,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 5.323419101998297,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.7443654439994134,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.0118598729968653,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_004",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.2524548599976697,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.3351773070025956,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.423416700999951,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.356571244999941,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.401394082000479,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 5.038257398002315,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.900824394000665,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.1671304079973197,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.973988546000328,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.689778166000906,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.725807722999889,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 5.228868792000867,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_016",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.5756744649988832,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_017",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9522518019985,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_018",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4930514869993203,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_019",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.3819673219986726,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "select_020",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.830284024999855,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4843056210011127,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.645608284001355,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.1635501729979296,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_004",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9637879770016298,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.5730715729987423,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.3910543309975765,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.528805949998059,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.200596945996949,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.4003975769992394,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.2277215479989536,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.8424194129984244,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.512352732999716,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.400522682000883,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.486260317000415,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.2940353990015865,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_016",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.846942558000592,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_017",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9498229259988875,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_018",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9988581299985526,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_019",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.7039814550007577,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "chain_020",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.1801510000004782,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4825674969979445,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.6880666729994118,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.143036708999716,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_004",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.8049761180009227,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.846565820000251,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 9.25778661199729,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.6800580990020535,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.5039069929989637,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.0612862080015475,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.308911503998388,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.165214463999291,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.4989662100015266,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.3451494759974594,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 32.22401436200016,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "code_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 3.559240465001494,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_001",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 6.389451971001108,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_002",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.7287604480006848,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_003",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.5722532809995755,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_004",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 11.30270021799879,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_005",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.0028780790016754,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_006",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.822876095000538,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_007",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.857400853998115,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_008",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.3788325790010276,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_009",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.1002678260010725,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_010",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.819114896999963,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_011",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.354092427998694,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_012",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.5857160449995717,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_013",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.1996077080002578,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_014",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.1847057810009574,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_015",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.0199302679975517,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_016",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.8089115160000802,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_017",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.155084539001109,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_018",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.850505176000297,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_019",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.844799979000527,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "gen_020",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.514197366999724,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_001",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.3127496859997336,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_002",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.8593690039997455,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_003",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.8560840889986139,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_004",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.9163199959984922,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_005",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.3201505670003826,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_006",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.1450577269970381,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_007",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.0623838460014667,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_008",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.9996015370015812,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_009",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.8986792840005364,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_010",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.2738657360023353,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_011",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.0220309110009111,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_012",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.4493618560009054,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_013",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.9458286560002307,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_014",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.0947289700015972,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_015",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.9353774720002548,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_016",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.8917399929996463,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_017",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.4835998560010921,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_018",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.798275642999215,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_019",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.4273434189999534,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "vision_020",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.9857442770007765,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_001",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.8021067820009193,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_002",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.1919083270004194,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_003",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.9742338530013512,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_004",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.0912972860023729,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_005",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.0431166400012444,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_006",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.3549591780029004,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_007",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 3.7026887870015344,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_008",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 0.8956654110006639,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_009",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.816917513999215,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "mixed_010",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.1869941389995802,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_001",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.5891381810033636,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_002",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.8745504830003483,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_003",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.5378301979981188,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_004",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.4144907539994165,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_005",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.5608780330003356,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_006",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.7982464660017285,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_007",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.6800044589981553,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_008",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 4.365657053000177,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_009",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 2.290220782997494,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "route_010",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 1.8242465000002994,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_001",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.348667354999634,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_002",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.3372888270023395,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_003",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.5701216599991312,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_004",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.1715947939992475,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_005",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 4.749129198000446,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_006",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 17.996586303001095,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_007",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 5.611956569002359,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_008",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 6.240705536001769,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_009",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.2465601850017265,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_010",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 1.7859443109991844,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_011",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.320558434999839,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_012",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.177174697000737,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_013",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 10.139550370000507,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_014",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.944947253999999,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_015",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.3676741830022365,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_016",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.7092308749997756,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_017",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.846996050000598,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_018",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.0529881900001783,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_019",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 1.640076546002092,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "short_020",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.4681628049984283,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_001",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.0254356210025435,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_002",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.5373875289988064,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_003",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.457173431001138,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_004",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.5904036659994745,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_005",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.8445427010010462,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_006",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.107788573997823,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_007",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.491945264999231,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_008",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 1.9136290379974525,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_009",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 1.8646907699985604,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_010",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.334458336001262,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_011",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.948997927000164,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_012",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 32.73136163399977,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_013",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.6102516840001044,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_014",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 1.9698201259998314,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_015",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.6938788689985813,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_016",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.3550834490015404,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_017",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.382462162997399,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_018",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.268972810001287,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_019",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.1831437340006232,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "long_020",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.4451823290000902,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_001",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.79826161100209,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_002",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.3717204089989536,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_003",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.783371301000443,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_004",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.8121305519998714,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_005",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 5.2457920359993295,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_006",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 3.0281316680011514,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_007",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 2.177352160000737,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_008",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 1.8659598820013343,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_009",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 10.298034092000307,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "reason_010",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 1.6541316629991343,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_001",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.35874290799984,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_002",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.7056929360005597,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_003",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 9.949424643000384,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_004",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.280640492997918,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_005",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.0239750369983085,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_006",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.377472456999385,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_007",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.8046907919997466,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_008",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.525945571996999,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_009",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.3542438559998118,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_010",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.6309310539982107,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_011",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.5166487460010103,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_012",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.99713427000097,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_013",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 18.922750255998835,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_014",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 4.5983026860012615,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "concise_015",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.482700937001937,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_001",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.6591147819999605,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_002",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.8469265329986229,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_003",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.5538473470005556,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_004",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.9074273059995903,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_005",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.495124279997981,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_006",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.5394705349972355,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_007",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.18848117500238,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_008",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.1310049839994463,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_009",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.1204034949987545,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "explain_010",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.924786404997576,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_001",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 3.304243784998107,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_002",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.6054264880003757,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_003",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.5611622930009617,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_004",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.500983379999525,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_005",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.5149048849998508,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_006",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.9999926810014585,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_007",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.388977057999,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_008",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.629500299000938,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_009",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.4972252919978928,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "tool_010",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.8319747729983646,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "direct_001",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.160695973998372,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "direct_002",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.8534836979997635,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "direct_003",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.7624121389999345,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "direct_004",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 4.179089222001494,
+      "error": "'NoneType' object is not iterable"
+    },
+    {
+      "task_id": "direct_005",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.0842895200003113,
+      "error": "'NoneType' object is not iterable"
+    }
+  ],
+  "slow_tasks": [
+    {
+      "task_id": "fact_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.082656245998805,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "fact_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.051423915003397,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "fact_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.997533387002477,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "current_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.809911314998317,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "current_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 5.261475459999929,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "compare_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.234139092000987,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "compare_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 12.560855800002173,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "compare_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.501450476000173,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "synthesis_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 4.4297049199994945,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "deep_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 5.166422155998589,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "func_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.654120808998414,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "func_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.8889146280016575,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "select_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 5.323419101998297,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "select_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 5.038257398002315,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "select_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 5.228868792000867,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "select_020",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.830284024999855,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "chain_016",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 4.846942558000592,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "code_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 9.25778661199729,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "code_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 32.22401436200016,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "gen_001",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 6.389451971001108,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "gen_004",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 11.30270021799879,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "route_008",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 4.365657053000177,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "short_005",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 4.749129198000446,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "short_006",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 17.996586303001095,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "short_007",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 5.611956569002359,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "short_008",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 6.240705536001769,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "short_013",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 10.139550370000507,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "long_012",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 32.73136163399977,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "reason_005",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 5.2457920359993295,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "reason_009",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 10.298034092000307,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "concise_003",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 9.949424643000384,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "concise_013",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 18.922750255998835,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "concise_014",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 4.5983026860012615,
+      "threshold_seconds": 4.031790140994417
+    },
+    {
+      "task_id": "direct_004",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 4.179089222001494,
+      "threshold_seconds": 4.031790140994417
+    }
+  ]
+}

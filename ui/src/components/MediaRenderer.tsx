@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type {
   AudioContent,
   FileContent,
@@ -9,7 +9,7 @@ import type {
   VideoContent,
 } from '@/types/chat';
 import { detectFileCategoryFromMetadata, formatBytes } from '@/lib/file-utils';
-import { AudioPlayer } from './AudioPlayer';
+import { AudioResponse } from './audio/AudioResponse';
 import { FileIcon } from './FileIcon';
 
 type MediaItem = ImageUrlContent | VideoContent | AudioContent | FileContent;
@@ -52,10 +52,11 @@ function MediaItemView({ item }: { item: MediaItem }) {
       return <VideoPlayer video={item.video} />;
     case 'audio':
       return (
-        <AudioPlayer
-          src={item.audio.url}
+        <AudioResponse
+          audioUrl={item.audio.url}
+          type="sound"
           title="Audio clip"
-          downloadName={getAudioDownloadName(item.audio)}
+          metadata={item.audio.duration ? { duration: item.audio.duration } : undefined}
         />
       );
     case 'file':
@@ -71,6 +72,7 @@ function ImageDisplay({ url }: { url: string }) {
   const displayUrl = useCompressedImage(url);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoaded(false);
   }, [displayUrl]);
 
@@ -156,53 +158,39 @@ function VideoPlayer({ video }: { video: VideoContent['video'] }) {
   );
 }
 
-function getAudioDownloadName(audio: AudioContent['audio']) {
-  const mimeType = audio.mime_type || '';
-  if (mimeType.includes('mpeg') || mimeType.includes('mp3')) {
-    return 'audio.mp3';
-  }
-  if (mimeType.includes('ogg')) {
-    return 'audio.ogg';
-  }
-  if (mimeType.includes('wav')) {
-    return 'audio.wav';
-  }
-  return 'audio.wav';
-}
-
 function FileDownload({ file }: { file: FileContent['file'] }) {
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(file.url ?? null);
   const mimeType = file.mime_type || '';
   const category = detectFileCategoryFromMetadata(file.name, mimeType) || 'text';
   const sizeLabel = file.size ? formatBytes(file.size) : mimeType || 'File';
 
-  useEffect(() => {
+  const { url: downloadUrl, revoke } = useMemo(() => {
     if (file.url) {
-      setDownloadUrl(file.url);
-      return;
+      return { url: file.url, revoke: undefined };
     }
 
     if (!file.content) {
-      setDownloadUrl(null);
-      return;
+      return { url: null, revoke: undefined };
     }
 
     if (file.content.startsWith('data:')) {
-      setDownloadUrl(file.content);
-      return;
+      return { url: file.content, revoke: undefined };
     }
 
     const base64Url = buildBase64Url(file.content, mimeType);
     if (base64Url) {
-      setDownloadUrl(base64Url);
-      return;
+      return { url: base64Url, revoke: undefined };
     }
 
     const blob = new Blob([file.content], { type: mimeType || 'text/plain' });
     const objectUrl = URL.createObjectURL(blob);
-    setDownloadUrl(objectUrl);
-    return () => URL.revokeObjectURL(objectUrl);
+    return { url: objectUrl, revoke: () => URL.revokeObjectURL(objectUrl) };
   }, [file.content, file.url, mimeType]);
+
+  useEffect(() => {
+    return () => {
+      revoke?.();
+    };
+  }, [revoke]);
 
   const fileLabel = file.name || 'Download file';
   const FileVisual = mimeType.startsWith('video/')
@@ -273,6 +261,7 @@ function useCompressedImage(url: string) {
 
   useEffect(() => {
     let cancelled = false;
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDisplayUrl(url);
 
     if (!url.startsWith('data:image/')) {

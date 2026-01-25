@@ -1,0 +1,6 @@
+Using skills `read-context` and `speckit-implement` (read required context, then run the Ralph spec loop). I ran `git status -sb` and found pre‑existing changes I didn’t make, including extensive renames from `baseline/` to `baseline-agent-cli/`, plus modified docs/config/tests and untracked items like `.codex/` and `logs/`. Per instructions I need your direction before proceeding.
+
+How would you like to handle the existing worktree state?
+1) Treat the current changes as in‑progress and continue spec 26 from here.
+2) Reset/clean to `origin/main` and re‑run the spec from scratch.
+3) Something else (tell me your preferred approach).

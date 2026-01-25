@@ -1,0 +1,15 @@
+Using speckit-implement skill for the Ralph loop re-verification.
+
+Kept SSE streaming alive during competitor silence and ensured streams always terminate with `[DONE]`, then added contract coverage to validate keep-alives, reasoning/janus passthrough, and usage chunk ordering. Updated `gateway/janus_gateway/routers/chat.py` to drive keep-alives via a timed queue and append `[DONE]` when the upstream ends without it, and added `gateway/tests/test_streaming_contract.py` to exercise the 3‑minute stream, janus events, and include_usage behavior.
+
+Tests run:
+- `cd gateway && pytest`
+- `cd gateway && mypy janus_gateway`
+- `cd ui && npm test`
+- `cd ui && npm run typecheck`
+
+Notes:
+- Pytest emitted a PendingDeprecationWarning from `starlette` about the `multipart` import.
+- No additional manual visual testing beyond Playwright e2e runs (no UI changes).
+
+<promise>DONE</promise>

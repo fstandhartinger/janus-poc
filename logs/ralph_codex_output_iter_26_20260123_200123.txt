@@ -1,0 +1,8 @@
+Using skills `read-context` and `speckit-implement` (read constitution + run the Ralph spec loop).
+
+I located the highest‑priority incomplete spec `specs/26_baseline_rename.md`, but `git status` shows a large set of pre‑existing modifications (baseline‑agent‑cli, gateway, docs/specs, UI) plus untracked `.codex/`, `logs/`, etc. Per instructions I need your direction before proceeding.
+
+How would you like to proceed?
+1) Continue on top of the existing changes.
+2) Pause so you can commit/stash/clean first.
+3) Have me isolate just the spec 26 changes and ignore the rest.

@@ -1,0 +1,7 @@
+Using `read-context`, `speckit-implement`, and `commit-push` to follow the Ralph loop and required commit/push steps.
+
+I noticed pre-existing changes in the repo (modified: `.specify/memory/constitution.md`, `CLAUDE.md`, `README.md`, `specs/11_chat_ui.md`, `specs/competition/02_description_and_scoring.md`, several `ui/src/app/competition/*` files; untracked: `.codex/`, `.claude/commands/*`, `.playwright-mcp/`, `logs/`, and new competition component files). To avoid accidentally committing unrelated work, how should I proceed?
+
+1) Continue and only stage/commit the files I change for the re-verification  
+2) Include all existing changes in the next commit  
+3) Pause while you clean up or commit those changes yourself

@@ -1,0 +1,24 @@
+name: gui-sandbox
+base_image: sandy-base:latest
+packages:
+  apt:
+    - xvfb
+    - x11vnc
+    - python3-pyatspi
+    - at-spi2-core
+    - dbus-x11
+    - libgtk-3-0
+  pip:
+    - pyautogui
+    - pillow
+    - python-xlib
+
+environment:
+  DISPLAY: ":99"
+  DBUS_SESSION_BUS_ADDRESS: "unix:path=/run/dbus/system_bus_socket"
+
+startup:
+  - "Xvfb :99 -screen 0 1920x1080x24 &"
+  - "dbus-daemon --session --fork"
+  - "/usr/lib/at-spi2-core/at-spi-bus-launcher &"
+  - "x11vnc -display :99 -forever -shared -nopw -listen 0.0.0.0 &"

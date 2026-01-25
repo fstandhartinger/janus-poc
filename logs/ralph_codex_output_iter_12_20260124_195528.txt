@@ -1,0 +1,1 @@
+Using speckit-implement with test-all → commit-push → deploy-watch → notify-telegram → verify-complete; skipping visual-test since this spec is backend-only unless UI changes surface.

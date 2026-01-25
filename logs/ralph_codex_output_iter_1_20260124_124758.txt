@@ -1,0 +1,12 @@
+Using skills: read-context → speckit-implement → test-all → commit-push → deploy-watch; visual-test + notify-telegram are pending because I hit unexpected untracked files; update-docs skipped (no README/INTERNAL changes needed).
+
+I verified spec 44 locally, fixed the TypeScript narrowing for deep research SSE events, ran the full test suite, and deployed. But production is still missing `/api/research` — the gateway OpenAPI doesn’t list it and `POST /api/research` returns 404. When I checked the repo, several deep‑research files appear untracked (not in git), which would explain why the deployed build doesn’t include them.
+
+- Untracked deep‑research files I found: `gateway/janus_gateway/routers/research.py`, `gateway/tests/test_research.py`, `baseline-agent-cli/agent-pack/lib/deep_research.py`, `baseline-agent-cli/tests/test_deep_research.py`, `ui/src/components/DeepResearchProgress.tsx`
+- Production evidence: `https://janus-gateway-bqou.onrender.com/openapi.json` has no research path; `POST https://janus-gateway-bqou.onrender.com/api/research` returns 404
+- Tests run: `cd gateway && ../.venv/bin/pytest` (37 passed), `cd baseline-agent-cli && ../.venv/bin/pytest` (39 passed), `cd ui && npm test` (18 passed), `cd gateway && ../.venv/bin/mypy janus_gateway`, `cd ui && npm run typecheck`
+- Deploys: janus‑gateway, janus‑ui, janus‑baseline‑agent are all live for commit `2b8be6f`
+
+How would you like me to proceed?
+1) Add/commit the untracked deep‑research files so production gets `/api/research`, then redeploy + complete visual tests + Telegram updates.
+2) Roll back the spec 44 completion (and leave the repo as‑is), since the deep‑research implementation isn’t actually in git.

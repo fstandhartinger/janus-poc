@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from janus_gateway import __version__
 from janus_gateway.config import get_settings
+from janus_gateway.middleware.logging import RequestLoggingMiddleware
 from janus_gateway.routers import (
     artifacts_router,
     chat_router,
@@ -24,6 +25,7 @@ settings = get_settings()
 # Configure structured logging
 structlog.configure(
     processors=[
+        structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -98,6 +100,9 @@ app = FastAPI(
     redoc_url="/redoc" if settings.debug else None,
     lifespan=lifespan,
 )
+
+# Request logging middleware
+app.add_middleware(RequestLoggingMiddleware)
 
 # Add CORS middleware
 app.add_middleware(

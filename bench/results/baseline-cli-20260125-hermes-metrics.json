@@ -1,0 +1,1337 @@
+{
+  "composite_score": 46.67777222055536,
+  "quality_score": 43.487500000000004,
+  "speed_score": 90.90138766911696,
+  "cost_score": 60.62186591869172,
+  "streaming_score": 3.950320881743684,
+  "multimodal_score": 14.166666666666666,
+  "avg_ttft_ms": 1546.0547368908892,
+  "p50_ttft_ms": 1134.8198284995306,
+  "p95_ttft_ms": 1854.7266692499766,
+  "avg_tps": 57.734707083943604,
+  "p50_tps": 86.24916254362716,
+  "p95_tps": 92.67928300663883,
+  "avg_latency_seconds": 4.999320183048412,
+  "p50_latency_seconds": 2.848973421499977,
+  "p95_latency_seconds": 10.59849391775133,
+  "continuity_score": 0.38040229605283726,
+  "continuity_gap_count": 8032,
+  "total_tokens": 0,
+  "avg_tokens_per_task": 0.0,
+  "total_cost_usd": 0.0,
+  "avg_cost_per_task": 0.0,
+  "tasks_by_benchmark": {
+    "janus_research": {
+      "total": 100,
+      "passed": 100,
+      "failed": 0,
+      "avg_latency_seconds": 6.800768687650271,
+      "avg_quality_score": 0.5385,
+      "avg_speed_score": 0.9994506821575032,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.7097587730244862,
+      "avg_multimodal_score": 1.0
+    },
+    "janus_tool_use": {
+      "total": 80,
+      "passed": 7,
+      "failed": 73,
+      "avg_latency_seconds": 2.6788257553624133,
+      "avg_quality_score": 0.33125,
+      "avg_speed_score": 0.5248313552843683,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.529060010649522,
+      "avg_multimodal_score": 0.0625
+    },
+    "janus_multimodal": {
+      "total": 60,
+      "passed": 60,
+      "failed": 0,
+      "avg_latency_seconds": 6.987922135583116,
+      "avg_quality_score": 0.7,
+      "avg_speed_score": 0.7319427735104304,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.612336709810353,
+      "avg_multimodal_score": 0.14166666666666666
+    },
+    "janus_streaming": {
+      "total": 50,
+      "passed": 50,
+      "failed": 0,
+      "avg_latency_seconds": 4.443864382999309,
+      "avg_quality_score": 0.7,
+      "avg_speed_score": 0.9997454817475045,
+      "avg_cost_score": 0.5,
+      "avg_streaming_score": 0.6483488868814916,
+      "avg_multimodal_score": 1.0
+    },
+    "janus_cost": {
+      "total": 40,
+      "passed": 30,
+      "failed": 10,
+      "avg_latency_seconds": 2.8481045981750865,
+      "avg_quality_score": 0.701,
+      "avg_speed_score": 0.849057154812499,
+      "avg_cost_score": 0.6062186591869172,
+      "avg_streaming_score": 0.6642148605489517,
+      "avg_multimodal_score": 0.75
+    }
+  },
+  "failed_tasks": [
+    {
+      "task_id": "func_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.5134637459996156,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4677476970027783,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.324342178995721,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_004",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.7982608239981346,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8887129299982917,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.115243846004887,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.1984300830008578,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.0441639829950873,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.519855018996168,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.1295048510000925,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 0.9049925029976293,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.0102605760039296,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.124838647992874,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.6527713039977243,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 0.9382131300008041,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_016",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.6160185730041121,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_017",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8522395709951525,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_018",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.5524388330013608,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_019",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.195706992999476,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_020",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.874352822000219,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_021",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9290664660002221,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_022",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.2143951219986775,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_023",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9526029839980765,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_024",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.3187074590023258,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "func_025",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4153819600032875,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9171042919988395,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.6189972909996868,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.12889711799653,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_004",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.3242649090025225,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8401630950029357,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.559257502995024,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.5612127300046268,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.306835522998881,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.1350914759968873,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.7420857179968152,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.084853137996106,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.518096923995472,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 0.9919261790055316,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.0501474010015954,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "select_016",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.934967121000227,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.956779906002339,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9796187249958166,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.2672020760001033,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.2644707830040716,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.0079821919935057,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8075542599981418,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9341944469997543,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9731987260020105,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.0664689400000498,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4859313820052193,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.3982080389978364,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.394021756001166,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.0360641660008696,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.2689865290012676,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_016",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8539139330023318,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_017",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8856740629998967,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_018",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.5767566639988218,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_019",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.4772293569985777,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "chain_020",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.2979886199973407,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_001",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.7062095500004943,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_002",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.271580107997579,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_003",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.1011434710017056,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_004",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8666088550016866,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_005",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9175372480021906,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_006",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.0275315339968074,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_007",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.8495411019976018,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_008",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.316310150003119,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 32.413440175005235,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_011",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.4531460170037462,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_012",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.9181663650015253,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_013",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.594423235997965,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_014",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 1.5128043939985218,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "code_015",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 2.3236614220004412,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_001",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.3522977199972956,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_002",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.381466171995271,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_003",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.7916605260033975,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_004",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.8661617629986722,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_005",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.5104525110000395,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_006",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.8029147269990062,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_007",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 2.587512110003445,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_008",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.9753945670017856,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_009",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.4450671289960155,
+      "error": "unknown_error"
+    },
+    {
+      "task_id": "tool_010",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 1.3250018399994588,
+      "error": "unknown_error"
+    }
+  ],
+  "slow_tasks": [
+    {
+      "task_id": "fact_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.733290184001817,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "fact_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.2567523539983085,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "fact_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.220233723997808,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "fact_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 5.899208937000367,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.14357506899978,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.29369284400309,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 5.882908960997156,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.252028276001511,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.131880023996928,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.362540698006342,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.773747544997605,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.312059206997219,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.413106895997771,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 9.900705919004395,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_015",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.589893526004744,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.552411160999327,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "current_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.362402144994121,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.429575393995037,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_002",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.203616717997647,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.366959665996546,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.587483656003315,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.585943395999493,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.106712895998498,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 9.002188051003031,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.676763883995591,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.548750461006421,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 11.78908275700087,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.908509591994516,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.944906078999338,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 9.401442893999047,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 10.627102247002767,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.655504212001688,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 14.268536911004048,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "compare_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.117418262001593,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_001",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 12.1547654399983,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_002",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.737030944997969,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_003",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 9.930498150002677,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 10.470063634995313,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.416480963001959,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.7450052780041005,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.47952220300067,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.702922385004058,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_009",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 10.723118899004476,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 9.51027673700446,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.197636919998331,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_012",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.896496846995433,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.113192386001174,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.913853294005094,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.83647800199833,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.37005108899757,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.146424698999908,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 10.302031664003152,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "synthesis_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.550796147996152,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_004",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.6305887429989525,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_005",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.087107259001641,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_006",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.326655272998323,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_007",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.5106623450046754,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_008",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.088003060001938,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_010",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.551116936003382,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_011",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.1183976710017305,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_013",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 6.3436963700005435,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_014",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.334162548999302,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_015",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.100568866000685,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_016",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.345313564001117,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_017",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 7.691004591004457,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_018",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 5.860275151004316,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_019",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 10.738284387996828,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "deep_020",
+      "benchmark": "janus_research",
+      "task_type": "research",
+      "latency_seconds": 8.67719569500332,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "select_017",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 28.425324656003795,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "select_018",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 5.818508429998474,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "select_019",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 7.442529285995988,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "code_009",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 32.413440175005235,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "code_010",
+      "benchmark": "janus_tool_use",
+      "task_type": "tool_use",
+      "latency_seconds": 6.918188606003241,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_006",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 42.4425329279984,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_007",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 7.252854706006474,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_008",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 46.40738259199861,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_009",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 32.63057734599715,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_012",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 7.8146988400039845,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_017",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 49.58037775699631,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_018",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 46.86466675099655,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "gen_020",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 8.7394308169969,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "route_002",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 46.91272498699982,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "route_010",
+      "benchmark": "janus_multimodal",
+      "task_type": "multimodal",
+      "latency_seconds": 32.642689403000986,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_002",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 8.105308500002138,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_003",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 10.199386271997355,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_004",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 6.639547926999512,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_007",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 10.563528181999573,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_008",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 11.855372322999756,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_009",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 9.141694430996722,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_012",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 8.030153503998008,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_013",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 5.80936081600521,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_014",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 5.720739275995584,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_017",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 8.322362507002254,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "long_018",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 7.8805032829986885,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "reason_008",
+      "benchmark": "janus_streaming",
+      "task_type": "streaming",
+      "latency_seconds": 8.91954091200023,
+      "threshold_seconds": 5.697946842999954
+    },
+    {
+      "task_id": "direct_005",
+      "benchmark": "janus_cost",
+      "task_type": "cost",
+      "latency_seconds": 31.70371228899603,
+      "threshold_seconds": 5.697946842999954
+    }
+  ]
+}

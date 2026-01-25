@@ -1,0 +1,6 @@
+Using skills `read-context` and `speckit-implement` (read required context, then run the Ralph spec loop). I ran `git status -sb` and found pre‑existing changes I didn’t make, including a large baseline → baseline-agent-cli rename, plus edits in `README.md`, docs, gateway/bench configs/tests, multiple specs, and some UI files, along with untracked logs and new spec files. Per instructions I need your direction before proceeding.
+
+How would you like me to proceed?
+1) Continue and treat the current worktree changes as intentional/in‑progress.
+2) Stop and wait while you clean/stash/commit them.
+3) I should revert/clean specific paths (tell me which).

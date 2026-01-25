@@ -1,0 +1,14 @@
+Using speckit-implement to run the Ralph loop for the highest‑priority incomplete spec.
+
+Spec 25 was already implemented; I only marked it complete in `specs/25_llm_complexity_second_pass.md`.
+
+Tests run:
+- `cd gateway && pytest`
+- `cd ui && npm test`
+- `cd gateway && mypy janus_gateway`
+- `cd ui && npm run typecheck`
+- `cd baseline && pytest`
+
+I noticed unexpected existing changes in the worktree (e.g., `baseline/janus_baseline/...`, `ui/src/...`, `README.md`, plus untracked `.codex/`, `logs/`, `ui/public/...`). Per the instructions, I stopped before committing/pushing. How do you want to proceed?
+1) Commit only `specs/25_llm_complexity_second_pass.md` and ignore the rest for now  
+2) Address/include the other changes first

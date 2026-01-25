@@ -29,16 +29,16 @@ cd baseline-agent-cli
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-python -m janus_baseline_agent_cli.main
-# Baseline runs on http://localhost:8001
+BASELINE_AGENT_CLI_PORT=8081 python -m janus_baseline_agent_cli.main
+# Baseline runs on http://localhost:8081
 
 # 4. (Optional) Start the Baseline LangChain competitor (new terminal)
 cd baseline-langchain
 python -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
-python -m janus_baseline_langchain.main
-# Baseline LangChain runs on http://localhost:8002
+BASELINE_LANGCHAIN_PORT=8082 python -m janus_baseline_langchain.main
+# Baseline LangChain runs on http://localhost:8082
 
 # 5. Start the Chat UI (new terminal)
 cd ui
@@ -66,14 +66,14 @@ curl http://localhost:8000/health
 ### Baseline
 
 ```bash
-curl http://localhost:8001/health
+curl http://localhost:8081/health
 # Expected: {"status":"ok","version":"0.1.0"}
 ```
 
 ### Baseline LangChain
 
 ```bash
-curl http://localhost:8002/health
+curl http://localhost:8082/health
 # Expected: {"status":"ok","version":"0.1.0"}
 ```
 

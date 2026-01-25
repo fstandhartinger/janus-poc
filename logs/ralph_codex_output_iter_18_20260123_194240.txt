@@ -1,0 +1,5 @@
+Using `speckit-implement` to follow the Ralph spec loop. I ran `git status -sb` and found pre-existing changes I didn’t make (baseline → `baseline-agent-cli` renames already staged as renames, plus modified `README.md`, `render.yaml`, `ui/src/app/chat/page.tsx`, `ui/src/app/globals.css`, several `specs/*`, and untracked `.codex/`, `logs/`, `ui/public/...`). Per instructions I need your direction before proceeding.  
+
+How would you like to proceed?
+1) Treat these as in‑progress and continue Spec 26 on top of them.
+2) Pause until you clean/stash/commit them and tell me to continue.

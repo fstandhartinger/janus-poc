@@ -1,0 +1,19 @@
+Implemented judge configuration plus a research-scoring helper module and generator script to complete Spec 31, and marked it COMPLETE.
+
+**Changes**
+- Added judge + subset settings in `bench/janus_bench/config.py` and introduced research scoring utilities in `bench/janus_bench/scorers/research.py` with exports in `bench/janus_bench/scorers/__init__.py`.
+- Added the research items generator at `scripts/generate_research_items.py` and a research scoring override test in `bench/tests/test_runner.py`.
+- Updated `specs/31_janus_research_benchmark.md` to COMPLETE.
+
+**Tests**
+- `cd bench && pytest`
+- `cd gateway && pytest` (long-running keep-alive test; ~3 minutes)
+- `cd ui && npm test`
+- `cd gateway && mypy janus_gateway`
+- `cd ui && npm run typecheck`
+
+**Notes**
+- Warnings seen: Next.js outputFileTracingRoot warning during Playwright; Starlette PendingDeprecationWarning in gateway tests.
+- There are unrelated local modifications/untracked files in the repo; I did not stage or commit them.
+
+<promise>DONE</promise>

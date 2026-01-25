@@ -1,0 +1,27 @@
+Using skills: speckit-implement (Ralph loop), research (Bittensor messaging), test-all, visual-test, commit-push, deploy-watch.
+
+Landing page copy now reflects the intelligence engine positioning, plus new flexibility/ideals sections and the How It Works z-index fix across `ui/src/components/landing/HowItWorks.tsx`, `ui/src/components/landing/FlexibilitySection.tsx`, `ui/src/components/landing/IdealsSection.tsx`, `ui/src/components/landing/FeatureCards.tsx`, and `ui/src/components/landing/PoweredBy.tsx`. Footer, metadata, and CTA copy are aligned in `ui/src/components/landing/Footer.tsx` and `ui/src/app/layout.tsx`, tests updated in `ui/e2e/landing.spec.ts`, and `specs/23_landing_copy_fixes.md` is marked COMPLETE.
+
+**Tests**
+- `cd gateway && pytest`
+- `cd gateway && mypy janus_gateway`
+- `cd ui && npm run build`
+- `cd ui && npm test`
+- `cd ui && npm run typecheck`
+
+**Visual Checks**
+- `landing-1920x1080`, `landing-768x1024`, `landing-375x812`
+- `landing-how-it-works-1920x1080-v2` (step circles above line)
+- Resource timing check: no failed requests detected
+
+**Deployment**
+- Verified https://janus-ui.onrender.com now serves the updated copy/sections and footer links.
+
+**Repo State**
+- Unrelated local changes still present: `.specify/memory/constitution.md`, `CLAUDE.md`, `README.md`, `gateway/README.md`, `specs/11_chat_ui.md`, plus untracked `.codex/`, `.playwright-mcp/`, `logs/`, `render.yaml`, `gateway/tests/test_competitor_registry.py`, `.claude/commands/*`.
+
+**Next Steps**
+1) Extend the rebrand language to competition/marketplace pages if you want it consistent site-wide.
+2) Tell me how you want to handle the unrelated local changes/untracked files.
+
+<promise>DONE</promise>

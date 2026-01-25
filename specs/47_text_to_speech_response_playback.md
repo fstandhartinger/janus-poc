@@ -1,6 +1,6 @@
 # Spec 47: Text-to-Speech Response Playback
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -619,4 +619,4 @@ None (uses native Audio API)
 - `specs/39_speech_to_text_voice_input.md` - Voice input (opposite direction)
 - `specs/11_chat_ui.md` - Chat UI integration
 
-NR_OF_TRIES: 1
+NR_OF_TRIES: 2

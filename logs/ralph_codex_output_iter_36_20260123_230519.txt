@@ -1,0 +1,10 @@
+Using **read-context** and **speckit-implement** for the Ralph loop; **commit-push** is queued once the repo state is clarified.
+
+I hit a blocker: `git status` shows many pre‑existing modified/untracked files outside this spec (e.g., `baseline-agent-cli/*`, `docs/*`, `specs/*`, `.codex/`, `logs/`, etc.). Per instructions I need your direction before committing.
+
+How should I proceed?
+1) Commit only the spec 33 changes and leave everything else untouched.  
+2) Include all current changes in the commit.  
+3) Something else (e.g., stash/clean unrelated changes first).
+
+Once you choose, I’ll finish the commit/push and deployment verification.

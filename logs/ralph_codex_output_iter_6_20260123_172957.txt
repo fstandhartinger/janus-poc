@@ -1,0 +1,23 @@
+Using read-context + speckit-implement to follow the Ralph loop for spec 24.
+
+Expanded baseline routing to detect multimodal/research prompts, added an optional always‑agent mode, and wired Sandy env vars for Render so multimodal requests take the agent path.
+
+**Details**
+- `baseline/janus_baseline/services/complexity.py`: expanded complexity keywords, added multimodal detection + analysis data for logging, and adjusted decision order.
+- `baseline/janus_baseline/main.py`: logs detailed routing decisions and honors `BASELINE_ALWAYS_USE_AGENT` for streaming.
+- `baseline/janus_baseline/config.py` and `baseline/README.md`: added and documented the always‑agent setting.
+- `baseline/tests/test_complexity.py`: added multimodal routing tests; `specs/24_multimodal_routing.md`: marked complete.
+- `render.yaml`: added `SANDY_BASE_URL` and `SANDY_API_KEY` env vars for the baseline service (tracked in git now).
+
+**Tests**
+- `pytest` (baseline)
+- `pytest` (gateway)
+- `npm test` (ui)
+- `mypy janus_gateway`
+- `npm run typecheck`
+
+**Notes**
+- I noticed pre‑existing local changes in `.specify/memory/constitution.md`, `CLAUDE.md`, `README.md`, `specs/11_chat_ui.md`, plus untracked `.codex/`, `.playwright-mcp/`, `logs/`, and `.claude/commands/*`; I left them untouched. How would you like me to handle those?
+- Sandy/Chutes image generation wasn’t exercised locally; if you want that verified, set `SANDY_API_KEY` in Render and run the streaming integration check.
+
+<promise>DONE</promise>

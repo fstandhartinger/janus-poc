@@ -1,0 +1,16 @@
+Updated the spec status to complete in `specs/competition/05_architecture_overview.md` after confirming the architecture overview, platform services, security model, and benchmark integration sections are already implemented and render correctly on the competition page.
+
+Validation I ran:
+- `pytest` (passed; 23 tests, 1 warning about `python_multipart`)
+- `mypy janus_gateway` (passed)
+- `npm test` (Playwright; 18 passed)
+- `npm run typecheck` (passed)
+- `npm run build` (for accurate visual checks)
+- Puppeteer visual checks on `/competition` with screenshots: `competition-desktop`, `competition-tablet`, `competition-mobile`
+- Verified Mermaid diagrams render (SVG present for architecture, services sequence, egress, and bench runner diagrams)
+
+I need guidance before committing/pushing: `git status` shows pre‑existing changes I didn’t make, and I must not proceed without your direction. Current unexpected changes:
+- Modified: `.specify/memory/constitution.md`, `CLAUDE.md`, `README.md`, `specs/11_chat_ui.md`, `specs/competition/02_description_and_scoring.md`, `ui/src/app/competition/components/ScoringBreakdown.tsx`
+- Untracked: `.claude/commands/speckit.implement.md`, `.claude/commands/speckit.specify.md`, `.codex/`, `.playwright-mcp/`, `logs/`, `ui/public/Janus_God_and_Bull_Video_Generation.mp4`, `ui/public/Janus_God_and_Bull_Video_Generation.mp4:Zone.Identifier`, `ui/src/app/competition/components/CompetitionOverview.tsx`
+
+How do you want me to proceed with these? (e.g., commit only the spec status change, include everything, or pause for cleanup)

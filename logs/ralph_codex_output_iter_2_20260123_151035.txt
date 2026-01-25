@@ -1,0 +1,30 @@
+Skills used: speckit-implement (spec loop), test-all (full suite), visual-test (screenshots), commit-push (git), deploy-watch (Render), notify-telegram (updates). Skipped continue because the handoff summary already covered context.
+
+Tightened chat e2e coverage to match the hydrated UI, and documented/tested baseline URL normalization so local/prod routing stays consistent. Updated `gateway/README.md`, added `gateway/tests/test_competitor_registry.py`, and stabilized selectors/actions in `ui/e2e/chat.spec.ts`.
+
+**Tests**
+- `cd gateway && pytest` (warns about `python_multipart` deprecation)
+- `cd gateway && mypy janus_gateway`
+- `cd ui && NEXT_PUBLIC_GATEWAY_URL=http://localhost:8010 npm run build`
+- `cd ui && NEXT_PUBLIC_GATEWAY_URL=http://localhost:8010 npm test`
+- `cd ui && npm run typecheck`
+
+**Visuals**
+- Landing: `landing-1920x1080-final`, `landing-768x1024-final`, `landing-375x812-final`
+- Chat: `chat-1920x1080-final`, `chat-768x1024-final`, `chat-375x812-final`, interaction `chat-375x812-response`
+- Console/network check on `/chat`: no console errors or failed requests (Playwright script)
+
+**Deploy/Verification**
+- Render deploys live: `janus-ui` (`dep-d5ppn1ndiees738m6ofg`), `janus-gateway` (`dep-d5ppn3fdiees738m6p7g`), `janus-baseline` (`dep-d5ppn2fdiees738m6on0`)
+- Production checks OK: `https://janus-ui.onrender.com`, `https://janus-gateway-bqou.onrender.com/health`, `https://janus-gateway-bqou.onrender.com/v1/models`, chat completion POST
+- Telegram updates sent (start + deploy)
+
+**Notes**
+- Local port `8000` is owned by `docker-proxy`, so local gateway ran on `8010` and UI tests used `NEXT_PUBLIC_GATEWAY_URL=http://localhost:8010`.
+- Next.js build warning about workspace root still appears.
+- Pre-existing uncommitted changes remain in `.specify/memory/constitution.md`, `CLAUDE.md`, `README.md`, `specs/11_chat_ui.md`, plus untracked `.codex/`, `.playwright-mcp/`, `logs/`, `render.yaml`.
+
+If you want, I can:
+1) Set `outputFileTracingRoot` in `ui/next.config.js` to silence the Next.js workspace-root warning.
+
+<promise>DONE</promise>

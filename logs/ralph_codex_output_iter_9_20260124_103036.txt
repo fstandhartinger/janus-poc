@@ -1,0 +1,33 @@
+Using skills: continue → speckit-implement → test-all → commit-push → deploy-watch → visual-test → notify-telegram → verify-complete — finishing the spec 43 follow‑up with full validation.
+
+Mapped baseline model aliases to the configured model so gateway chat completions no longer send `baseline` upstream, added coverage, and recorded the follow‑up in history.
+
+**Changes**
+- `baseline-agent-cli/janus_baseline_agent_cli/services/llm.py` map `baseline`/`baseline-langchain` to the configured model before vision routing.
+- `baseline-agent-cli/tests/test_vision.py` add coverage for alias selection.
+- `history.md` note the follow‑up fix.
+
+**Tests**
+- `cd baseline-agent-cli && pytest`
+- `cd gateway && ./.venv/bin/pytest`
+- `cd gateway && ./.venv/bin/mypy janus_gateway`
+- `cd ui && npm test`
+- `cd ui && npm run typecheck`
+
+**Deploy + Prod checks**
+- Render deploys live for `janus-baseline-agent`, `janus-gateway`, `janus-ui`.
+- `GET https://janus-gateway-bqou.onrender.com/health` → 200
+- `GET https://janus-gateway-bqou.onrender.com/v1/models` → 200
+- `POST https://janus-gateway-bqou.onrender.com/v1/chat/completions` (model `baseline`) → 200 with reply.
+
+**Visual**
+- Puppeteer screenshots: `janus-ui-desktop`, `janus-ui-tablet`, `janus-ui-mobile`, `janus-ui-chat-desktop`.
+- Frontend fetch from UI to `/v1/models` returned 200.
+- No “Application error” banner detected.
+
+**Notifications**
+- Telegram text + audio sent.
+
+Note: pre-existing local modified/untracked files remain untouched.
+
+<promise>DONE</promise>

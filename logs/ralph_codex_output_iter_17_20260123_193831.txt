@@ -1,0 +1,6 @@
+I just ran `git status` and found unexpected pre-existing changes/untracked files not related to this rename (e.g., `.specify/memory/constitution.md`, `CLAUDE.md`, `specs/11_chat_ui.md`, `specs/competition/02_description_and_scoring.md`, `ui/src/app/chat/page.tsx`, `ui/src/app/globals.css`, plus untracked `.claude/`, `.codex/`, `.playwright-mcp/`, `logs/`, and some UI assets). Per instructions I’m stopping here.
+
+How would you like to proceed?
+1) Keep those changes and I’ll commit only the baseline rename work (selective staging)
+2) Stash/clean the unrelated changes first
+3) Include everything in one commit

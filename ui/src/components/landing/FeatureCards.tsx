@@ -1,30 +1,37 @@
 import type { CSSProperties } from 'react';
 
-interface FeatureCardProps {
+type AudienceVariant = 'user' | 'builder';
+
+interface BenefitCardProps {
   icon: React.ReactNode;
   title: string;
   description: string;
+  variant: AudienceVariant;
   delay?: number;
 }
 
-function FeatureCard({ icon, title, description, delay = 0 }: FeatureCardProps) {
+function BenefitCard({
+  icon,
+  title,
+  description,
+  variant,
+  delay = 0,
+}: BenefitCardProps) {
   return (
     <div
       data-reveal
-      className="reveal glass-card p-6 sm:p-8"
+      className={`reveal benefit-card ${variant}`}
       style={{ '--reveal-delay': `${delay}ms` } as CSSProperties}
     >
-      <div className="w-12 h-12 rounded-xl bg-[#63D297]/10 flex items-center justify-center text-[#63D297] mb-4">
-        {icon}
-      </div>
-      <h3 className="text-xl font-semibold text-[#F3F4F6] mb-3">{title}</h3>
-      <p className="text-[#9CA3AF] leading-relaxed">{description}</p>
+      <div className="benefit-icon">{icon}</div>
+      <h3 className="benefit-title">{title}</h3>
+      <p className="benefit-description">{description}</p>
     </div>
   );
 }
 
 export function FeatureCards() {
-  const features = [
+  const userBenefits = [
     {
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -38,12 +45,30 @@ export function FeatureCards() {
     {
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 17l6-6 4 4 7-7" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M14 4h7v7" />
+        </svg>
+      ),
+      title: 'Always Improving',
+      description:
+        'A competitive marketplace of intelligence engines means you always get the best. Implementations are continuously benchmarked for quality, speed, and cost.',
+    },
+  ];
+
+  const builderBenefits = [
+    {
+      icon: (
+        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 4h14v3a5 5 0 01-5 5h-4a5 5 0 01-5-5V4z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12v3a4 4 0 004 4 4 4 0 004-4v-3" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 21h8" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 6H3a3 3 0 003 3" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 6h2a3 3 0 01-3 3" />
         </svg>
       ),
       title: 'Intelligence Rodeo',
       description:
-        'Compete to build the best intelligence engine. Benchmarks score implementations on many use cases and composite metrics: quality, speed, cost. Top performers earn rewards.',
+        'Compete to build the best Janus implementation. Get benchmarked on quality, speed, and cost across diverse use cases. Top performers earn TAO rewards.',
     },
     {
       icon: (
@@ -53,12 +78,27 @@ export function FeatureCards() {
       ),
       title: 'Build & Earn',
       description:
-        'Publish reusable components (research nodes, tools, memory systems). Earn rewards whenever another Janus submission uses your component.',
+        'Create reusable components: research tools, memory systems, specialized agents. Earn rewards whenever your components power other submissions.',
+    },
+  ];
+
+  const audienceGroups = [
+    {
+      id: 'users',
+      label: 'For Users',
+      variant: 'user' as const,
+      benefits: userBenefits,
+    },
+    {
+      id: 'builders',
+      label: 'For Builders',
+      variant: 'builder' as const,
+      benefits: builderBenefits,
     },
   ];
 
   return (
-    <section className="py-16 lg:py-24">
+    <section className="why-janus-section py-16 lg:py-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div data-reveal className="reveal text-center mb-12">
           <h2 className="text-3xl sm:text-4xl font-semibold text-[#F3F4F6] mb-4">
@@ -69,10 +109,39 @@ export function FeatureCards() {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
-          {features.map((feature, index) => (
-            <FeatureCard key={index} {...feature} delay={index * 120} />
-          ))}
+        <div className="space-y-12">
+          {audienceGroups.map((group, groupIndex) => {
+            const groupDelay = groupIndex * 120;
+            return (
+              <div
+                key={group.id}
+                className="audience-group"
+                role="group"
+                aria-labelledby={`${group.id}-audience`}
+              >
+                <div
+                  data-reveal
+                  className="reveal audience-label"
+                  style={{ '--reveal-delay': `${groupDelay}ms` } as CSSProperties}
+                >
+                  <h3 id={`${group.id}-audience`} className={`audience-badge ${group.variant}`}>
+                    {group.label}
+                  </h3>
+                </div>
+
+                <div className="benefit-grid">
+                  {group.benefits.map((benefit, index) => (
+                    <BenefitCard
+                      key={benefit.title}
+                      {...benefit}
+                      variant={group.variant}
+                      delay={groupDelay + (index + 1) * 120}
+                    />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     </section>

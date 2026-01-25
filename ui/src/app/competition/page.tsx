@@ -10,6 +10,7 @@ import {
   Leaderboard,
   PrizePool,
   ScoringBreakdown,
+  ScoringNav,
   SubmissionGuide,
   SubmissionForm,
   TechRequirements,
@@ -27,6 +28,7 @@ export default function CompetitionPage() {
         <PrizePool />
         <ComponentMarketplace />
         <ScoringBreakdown />
+        <ScoringNav />
         <ArchitectureOverview />
         <TechRequirements />
         <BenchRunner />

@@ -1,0 +1,24 @@
+Extended chat attachments end-to-end: UI now accepts documents/code/data with previews and limits, and the gateway extracts file text before LLM routing.
+
+**Changes**
+- Added file type registry + processing + preview components in `ui/src/lib/*` and `ui/src/components/*`, and updated `ui/src/components/ChatInput.tsx`, `ui/src/components/ChatArea.tsx`, `ui/src/components/MessageBubble.tsx` to send/display file parts.
+- Added backend extraction + preprocessing in `gateway/janus_gateway/services/file_extractor.py` and `gateway/janus_gateway/services/message_processor.py`, expanded models in `gateway/janus_gateway/models/openai.py`, and wired preprocessing in `gateway/janus_gateway/routers/chat.py`.
+- Added file-type tests in `gateway/tests/test_file_extractor.py` and `gateway/tests/test_message_processor.py`, and marked `specs/37_extended_file_attachments.md` complete with history update.
+
+**Validation**
+- `cd gateway && .venv/bin/pytest`
+- `cd gateway && .venv/bin/mypy janus_gateway`
+- `cd ui && npm run typecheck`
+- `cd ui && npm test`
+
+**Production Checks**
+- Render deploys live for `janus-gateway-bqou` and `janus-ui`.
+- `curl` health/models/chat completions against `https://janus-gateway-bqou.onrender.com`.
+- Puppeteer screenshots captured: `janus-ui-chat-desktop`, `janus-ui-chat-tablet`, `janus-ui-chat-mobile`.
+
+**Notes**
+- Playwright warned about Next.js workspace root selection due to multiple lockfiles.
+- Telegram text + audio updates sent.
+- Unrelated working tree changes remain: `.specify/memory/constitution.md` and untracked `.codex/`, `.claude/commands/`, `.playwright-mcp/`, `logs/`, `ui/public/Janus_God_and_Bull_Video_Generation.mp4:Zone.Identifier`. How would you like me to handle those?
+
+<promise>DONE</promise>

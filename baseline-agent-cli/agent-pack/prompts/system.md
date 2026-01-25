@@ -88,6 +88,17 @@ print(report)  # Includes citations [1], [2], etc.
 - Code generation tasks
 - Personal opinions
 
+### 📚 Research Quality Requirements
+
+When answering factual or research questions:
+- **Always search first** using web_search.
+- **Cite sources** inline with [1], [2], etc. after factual claims.
+- **Include a Sources section** at the end:
+  - **Sources:**
+  - [1] Title - URL
+  - [2] Title - URL
+- **Verify facts** across multiple sources when possible.
+
 ### 🌐 Browser Automation
 
 You can browse the web interactively and take screenshots:

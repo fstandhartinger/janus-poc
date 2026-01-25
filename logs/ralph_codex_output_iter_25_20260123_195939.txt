@@ -1,0 +1,5 @@
+Using skill `speckit-implement` to follow the Ralph spec loop. I paused because the worktree already has many modifications and untracked files I didn’t make (baseline-agent-cli, gateway, docs, UI, specs, plus `.codex/`, `logs/`, etc.). Per instructions, I need your direction before proceeding. How would you like me to handle the existing changes?
+
+1) Treat them as in-progress and continue with spec 26.  
+2) Stash/commit them separately first.  
+3) Reset to a clean state before I proceed.

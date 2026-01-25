@@ -173,6 +173,9 @@ Before marking any task complete, verify:
 - Check past chat histories for similar examples
 - Summarize findings before proceeding
 
+### Local Environment Setup
+For runtime configuration, API keys, and deployment credentials, refer to `credentials.md` in the project root. This file contains instructions for locating necessary values from local sources.
+
 ---
 
 ## Technical Stack
@@ -324,14 +327,18 @@ This analyzes specs vs current code and creates IMPLEMENTATION_PLAN.md.
 
 Each iteration:
 1. Reads specs in numerical order
-2. Picks the highest priority incomplete spec
-3. Implements completely
-4. Runs tests
-5. Verifies acceptance criteria
-6. Commits and pushes
-7. Outputs `<promise>DONE</promise>` if successful
-8. Exits for fresh context
-9. Loop restarts
+2. Picks the highest priority incomplete spec (or if that one seems to be unachievable or needs any of the other ones as a precondition, chooses that one instead)
+3. Looks for a note in that spec about NR_OF_TRIES and increments it, if that note isn't found, adds it (at the very bottom). If NR_OF_TRIES already > 0 also look at history.md to understand what we struggled with or learnt alrady about it in previous tries. If NR_OF_TRIES=10 then we know this spec is unachievable (too hard or too big), so split it into simpler specs
+4. Implements completely
+5. Puts some notes about it into the history.md (e.g. lessons learned, but very concise). These notes can later help to understand what previous iterations did.
+6. Runs tests
+7. Verifies acceptance criteria
+8. Commits and pushes
+9. If commit triggered a deploy on render, watch deploy on Render via MCP until successful (fix and re-commit+push if needed, as often as needed)
+10. Send two summaries about this iteration via telegram as explained in ../.cursor/commands/notify-telegram.md and ../.cursor/commands/notify-telegram-audio.md. Also send an image of a mermaid diagram (rendered) that explains what you built in the implementation of this spec.
+11. Outputs `<promise>DONE</promise>` if successful
+12. Exits for fresh context
+13. Loop restarts
 
 ### Completion Signal Rules
 

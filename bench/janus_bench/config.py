@@ -3,7 +3,7 @@
 from functools import lru_cache
 from typing import Optional
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -29,7 +29,10 @@ class Settings(BaseSettings):
 
     # Timeout settings
     request_timeout: int = Field(default=300, description="Request timeout in seconds")
-    ttft_timeout: int = Field(default=5, description="Time to first token timeout in seconds")
+    ttft_timeout: float = Field(
+        default=5.0,
+        description="Time to first token timeout in seconds",
+    )
 
     # Scoring weights (must sum to 100)
     weight_quality: int = Field(default=40, description="Quality score weight percentage")
@@ -67,6 +70,19 @@ class Settings(BaseSettings):
         default=120,
         description="Judge request timeout in seconds",
     )
+
+    @model_validator(mode="after")
+    def validate_weights(self) -> "Settings":
+        total = (
+            self.weight_quality
+            + self.weight_speed
+            + self.weight_cost
+            + self.weight_streaming
+            + self.weight_multimodal
+        )
+        if total != 100:
+            raise ValueError(f"Scoring weights must sum to 100 (got {total}).")
+        return self
 
 
 @lru_cache

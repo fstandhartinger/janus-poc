@@ -1,0 +1,22 @@
+Skills used: read-context + speckit-implement for the Ralph loop; test-all + commit-push done; deploy-watch + visual-test + notify-telegram pending Render workspace selection.
+
+Updated the chat UI to simplify the chrome, fix mobile viewport behavior, and add rich media rendering so messages can show videos, audio, files, and click‑to‑expand images.
+
+Details:
+- Removed the hero tagline, workspace header, and reasoning toggle; defaulted reasoning to on and tightened the chat flex layout for mobile in `ui/src/components/ChatArea.tsx`, `ui/src/components/Sidebar.tsx`, `ui/src/components/landing/HeroSection.tsx`, `ui/src/store/chat.ts`, and `ui/src/app/globals.css`.
+- Added `ui/src/components/MediaRenderer.tsx` and wired it into `ui/src/components/MessageBubble.tsx` to render image/video/audio/file content with skeletons and accessibility labels.
+- Expanded chat content types in `ui/src/types/chat.ts` and updated Playwright coverage + docs in `ui/e2e/chat.spec.ts` and `ui/README.md`.
+- Marked `specs/40_chat_ui_polish_and_media.md` complete and logged progress in `history.md`.
+
+Tests:
+- `gateway/.venv/bin/pytest`
+- `gateway/.venv/bin/mypy janus_gateway`
+- `ui/npm run build`
+- `ui/npm test`
+- `ui/npm run typecheck`
+
+Need input:
+1) Confirm I should select Render workspace `tea-cspqj3l6l47c739nvitg` (Florians Workspace) so I can watch the deploy and run production checks/screenshots.
+2) There are pre‑existing uncommitted changes in `baseline-agent-cli/`, `baseline-langchain/`, `.specify/memory/constitution.md`, and `specs/38_multimodal_vision_models.md`. Should I ignore them or help clean them up?
+
+Pending after workspace selection: Render deploy watch, production API smoke checks, Puppeteer screenshots (desktop/tablet/mobile), and Telegram updates.

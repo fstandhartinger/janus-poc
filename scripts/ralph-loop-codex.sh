@@ -29,6 +29,8 @@ MAX_ITERATIONS=0  # 0 = unlimited
 MODE="build"
 RLM_CONTEXT_FILE=""
 CODEX_CMD="${CODEX_CMD:-codex}"
+FULL_LOG=true
+RALPH_LOG_DIR=""
 TAIL_LINES=5
 TAIL_RENDERED_LINES=0
 ROLLING_OUTPUT_LINES=5
@@ -45,6 +47,12 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 mkdir -p "$LOG_DIR"
+
+# Set up ralph-logs directory for full logging
+RALPH_LOG_DIR="$PROJECT_DIR/ralph-logs"
+if [ "$FULL_LOG" = true ]; then
+    mkdir -p "$RALPH_LOG_DIR"
+fi
 
 # Check constitution for YOLO setting
 YOLO_ENABLED=true
@@ -78,6 +86,10 @@ RLM Mode (optional):
   --rlm-context <file>  Treat a large context file as external environment.
                         The agent should read slices instead of loading it all.
   --rlm [file]          Shortcut for --rlm-context (defaults to rlm/context.txt)
+
+Full Logging (enabled by default):
+  --no-full-log         Disable full terminal output capture
+                        By default, complete terminal output is captured to ralph-logs/
 
 RLM workspace (when enabled):
   - rlm/trace/     Prompt snapshots + outputs per iteration
@@ -192,6 +204,10 @@ while [[ $# -gt 0 ]]; do
                 RLM_CONTEXT_FILE="rlm/context.txt"
                 shift
             fi
+            ;;
+        --no-full-log)
+            FULL_LOG=false
+            shift
             ;;
         -h|--help)
             show_help
@@ -438,6 +454,7 @@ echo -e "${BLUE}Mode:${NC}     $MODE"
 echo -e "${BLUE}Prompt:${NC}   $PROMPT_FILE"
 echo -e "${BLUE}Branch:${NC}   $CURRENT_BRANCH"
 echo -e "${YELLOW}YOLO:${NC}     $([ "$YOLO_ENABLED" = true ] && echo "ENABLED" || echo "DISABLED")"
+[ "$FULL_LOG" = true ] && echo -e "${BLUE}Full Log:${NC} $RALPH_LOG_DIR/ (captures full terminal output)"
 [ -n "$RLM_CONTEXT_FILE" ] && echo -e "${BLUE}RLM:${NC}      $RLM_CONTEXT_FILE"
 [ -n "$SESSION_LOG" ] && echo -e "${BLUE}Log:${NC}      $SESSION_LOG"
 [ $MAX_ITERATIONS -gt 0 ] && echo -e "${BLUE}Max:${NC}      $MAX_ITERATIONS iterations"
@@ -477,6 +494,10 @@ while true; do
     # Log file for this iteration
     LOG_FILE="$LOG_DIR/ralph_codex_${MODE}_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S').log"
     OUTPUT_FILE="$LOG_DIR/ralph_codex_output_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S').txt"
+    FULL_LOG_FILE=""
+    if [ "$FULL_LOG" = true ]; then
+        FULL_LOG_FILE="$RALPH_LOG_DIR/ralph_codex_${MODE}_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S')_full.log"
+    fi
     RLM_STATUS="unknown"
     : > "$LOG_FILE"
     WATCH_PID=""
@@ -541,38 +562,63 @@ EOF
 
     # Run Codex with exec mode, reading prompt from stdin with "-"
     # Use --output-last-message to capture the final response for checking
+    # If FULL_LOG is enabled, use 'script' to capture complete terminal output
     echo -e "${BLUE}Running: cat $EFFECTIVE_PROMPT_FILE | $CODEX_CMD $CODEX_FLAGS - --output-last-message $OUTPUT_FILE${NC}"
+    [ "$FULL_LOG" = true ] && echo -e "${BLUE}Full logging enabled: $FULL_LOG_FILE${NC}"
     echo ""
-    
-    CODEX_EXIT=0
-    if cat "$EFFECTIVE_PROMPT_FILE" | "$CODEX_CMD" $CODEX_FLAGS - --output-last-message "$OUTPUT_FILE" 2>&1 | tee "$LOG_FILE"; then
-        if [ -n "$WATCH_PID" ]; then
-            kill "$WATCH_PID" 2>/dev/null || true
-            wait "$WATCH_PID" 2>/dev/null || true
+
+    CODEX_SUCCESS=false
+
+    if [ "$FULL_LOG" = true ]; then
+        # Use script to capture full terminal output (including streaming UI)
+        # -q = quiet, -e = return exit code, -c = command
+        if script -q -e -c "cat '$EFFECTIVE_PROMPT_FILE' | '$CODEX_CMD' $CODEX_FLAGS - --output-last-message '$OUTPUT_FILE' 2>&1 | tee '$LOG_FILE'" "$FULL_LOG_FILE"; then
+            CODEX_SUCCESS=true
         fi
+    else
+        if cat "$EFFECTIVE_PROMPT_FILE" | "$CODEX_CMD" $CODEX_FLAGS - --output-last-message "$OUTPUT_FILE" 2>&1 | tee "$LOG_FILE"; then
+            CODEX_SUCCESS=true
+        fi
+    fi
+
+    # Stop watcher if running
+    if [ -n "$WATCH_PID" ]; then
+        kill "$WATCH_PID" 2>/dev/null || true
+        wait "$WATCH_PID" 2>/dev/null || true
+    fi
+
+    if [ "$CODEX_SUCCESS" = true ]; then
         echo ""
         echo -e "${GREEN}✓ Codex execution completed${NC}"
-        
+        [ -n "$FULL_LOG_FILE" ] && echo -e "${CYAN}  Full log: $FULL_LOG_FILE${NC}"
+
         # Check if DONE promise was output (accept both DONE and ALL_DONE variants)
+        # Check output file first, then log file, then full log
+        DONE_FOUND=false
+        DETECTED_SIGNAL=""
+
         if [ -f "$OUTPUT_FILE" ] && grep -qE "<promise>(ALL_)?DONE</promise>" "$OUTPUT_FILE"; then
             DETECTED_SIGNAL=$(grep -oE "<promise>(ALL_)?DONE</promise>" "$OUTPUT_FILE" | tail -1)
+            DONE_FOUND=true
+        elif grep -qE "<promise>(ALL_)?DONE</promise>" "$LOG_FILE"; then
+            DETECTED_SIGNAL=$(grep -oE "<promise>(ALL_)?DONE</promise>" "$LOG_FILE" | tail -1)
+            DONE_FOUND=true
+        elif [ -n "$FULL_LOG_FILE" ] && [ -f "$FULL_LOG_FILE" ] && grep -qE "<promise>(ALL_)?DONE</promise>" "$FULL_LOG_FILE"; then
+            DETECTED_SIGNAL=$(grep -oE "<promise>(ALL_)?DONE</promise>" "$FULL_LOG_FILE" | tail -1)
+            DONE_FOUND=true
+        fi
+
+        if [ "$DONE_FOUND" = true ]; then
             echo -e "${GREEN}✓ Completion signal detected: ${DETECTED_SIGNAL}${NC}"
             echo -e "${GREEN}✓ Task completed successfully!${NC}"
             CONSECUTIVE_FAILURES=0
             RLM_STATUS="done"
-            
+
             if [ "$MODE" = "plan" ]; then
                 echo ""
                 echo -e "${GREEN}Planning complete!${NC}"
                 break
             fi
-        # Also check the main log
-        elif grep -qE "<promise>(ALL_)?DONE</promise>" "$LOG_FILE"; then
-            DETECTED_SIGNAL=$(grep -oE "<promise>(ALL_)?DONE</promise>" "$LOG_FILE" | tail -1)
-            echo -e "${GREEN}✓ Completion signal detected: ${DETECTED_SIGNAL}${NC}"
-            echo -e "${GREEN}✓ Task completed successfully!${NC}"
-            CONSECUTIVE_FAILURES=0
-            RLM_STATUS="done"
         else
             echo -e "${YELLOW}⚠ No completion signal found${NC}"
             echo -e "${YELLOW}  Agent did not output <promise>DONE</promise> or <promise>ALL_DONE</promise>${NC}"
@@ -580,24 +626,21 @@ EOF
             CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
             RLM_STATUS="incomplete"
             print_latest_output "$LOG_FILE" "Codex"
-            
+
             if [ $CONSECUTIVE_FAILURES -ge $MAX_CONSECUTIVE_FAILURES ]; then
                 echo ""
                 echo -e "${RED}⚠ $MAX_CONSECUTIVE_FAILURES consecutive iterations without completion.${NC}"
                 echo -e "${RED}  The agent may be stuck. Check logs:${NC}"
                 echo -e "${RED}  - $LOG_FILE${NC}"
                 echo -e "${RED}  - $OUTPUT_FILE${NC}"
+                [ -n "$FULL_LOG_FILE" ] && echo -e "${RED}  - $FULL_LOG_FILE${NC}"
                 CONSECUTIVE_FAILURES=0
             fi
         fi
     else
-        if [ -n "$WATCH_PID" ]; then
-            kill "$WATCH_PID" 2>/dev/null || true
-            wait "$WATCH_PID" 2>/dev/null || true
-        fi
-        CODEX_EXIT=$?
-        echo -e "${RED}✗ Codex execution failed (exit code: $CODEX_EXIT)${NC}"
+        echo -e "${RED}✗ Codex execution failed${NC}"
         echo -e "${YELLOW}Check log: $LOG_FILE${NC}"
+        [ -n "$FULL_LOG_FILE" ] && echo -e "${YELLOW}Full log: $FULL_LOG_FILE${NC}"
         CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
         RLM_STATUS="error"
         print_latest_output "$LOG_FILE" "Codex"

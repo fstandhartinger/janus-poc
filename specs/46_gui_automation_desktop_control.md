@@ -1,6 +1,6 @@
 # Spec 46: GUI Automation & Desktop Control
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -882,3 +882,5 @@ python-xlib>=0.33
 - `specs/45_browser_automation_screenshots.md` - Browser automation
 - `specs/41_enhanced_agent_system_prompt.md` - Agent capabilities
 - `specs/43_agent_sandbox_management.md` - Sandbox creation
+
+NR_OF_TRIES: 1

@@ -1,0 +1,14 @@
+Added the five-step competition flow and a full prize pool section (widget, diagram, rules, transparency) on the competition page to satisfy the process/prize pool spec; used speckit-implement to follow the Ralph loop for the highest-priority competition spec. The pool snapshot and formatting live in `ui/src/app/competition/components/prizePoolData.ts`, the new section is in `ui/src/app/competition/components/PrizePool.tsx`, and the five-step update plus Earn subtext is in `ui/src/app/competition/components/HowItWorks.tsx`, with page wiring in `ui/src/app/competition/page.tsx` and exports in `ui/src/app/competition/components/index.ts`. FAQ prize pool rules were updated in `ui/src/app/competition/components/FAQ.tsx`, the leaderboard anchor added in `ui/src/app/competition/components/Leaderboard.tsx`, Playwright coverage tightened in `ui/e2e/competition.spec.ts`, and the spec was marked complete in `specs/competition/03_steps_and_prize_pool.md`.
+
+**Tests**
+- `pytest` (gateway) — pass; warning: PendingDeprecationWarning in `starlette/formparsers.py` about python_multipart
+- `mypy janus_gateway`
+- `npm test` (ui)
+- `npm run typecheck` (ui)
+
+**Visual**
+- Puppeteer screenshots: competition-desktop (1920x1080), competition-tablet (768x1024), competition-mobile (375x812); no visible error overlay
+
+Note: repo still has unrelated uncommitted changes/untracked items left as-is.
+
+<promise>DONE</promise>

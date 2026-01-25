@@ -1,0 +1,10 @@
+Using speckit-implement + read-context + test-all; pausing commit-push/deploy-watch/notify-telegram/visual-test until you confirm how to handle pre-existing worktree changes.
+
+- `specs/42_sandbox_file_serving.md` already appears COMPLETE in HEAD (and the helper files exist), so there’s no diff to commit; I initially saw it as DRAFT in the working tree and may have overwritten a local change.
+- The repo is already dirty with many unrelated modifications, so I stopped short of committing/pushing.
+- Tests run and passing: `cd baseline-agent-cli && pytest`, `cd gateway && pytest` (via `gateway/.venv`), `cd gateway && mypy janus_gateway`, `cd ui && npm test`, `cd ui && npm run typecheck`.
+
+How do you want to proceed?
+1) Restore the earlier DRAFT version of `specs/42_sandbox_file_serving.md` and continue from that state.
+2) Keep current HEAD state and move on to the next incomplete spec (`specs/43_agent_sandbox_management.md`).
+3) Something else.

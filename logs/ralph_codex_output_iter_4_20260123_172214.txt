@@ -1,0 +1,18 @@
+Using skills: read-context (load constitution/AGENTS) and speckit-implement (Ralph loop implementation).
+
+Marked the competition spec index as complete by updating the status line in `specs/competition/00_index.md` so the index spec is now closed.
+
+Tests:
+- `pytest` (gateway)
+- `mypy janus_gateway` (gateway)
+- `npm test` (ui)
+- `npm run typecheck` (ui)
+
+Notes:
+- Commit/push: `fc6fa43`.
+- Pre-existing uncommitted changes in the repo were left untouched and not included.
+- No UI changes here, so no manual visual pass beyond Playwright tests.
+
+Next step: run the next Ralph iteration for the next incomplete spec (likely `specs/competition/02_description_and_scoring.md`).
+
+<promise>DONE</promise>

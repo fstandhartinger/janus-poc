@@ -1,0 +1,40 @@
+Using skills read-context and speckit-implement (read required context, then follow the Ralph spec loop). I found unexpected pre-existing changes in the worktree and must stop before proceeding.
+
+Tracked modified files:
+- `.specify/memory/constitution.md`
+- `CLAUDE.md`
+- `README.md`
+- `baseline/janus_baseline/config.py`
+- `baseline/janus_baseline/main.py`
+- `baseline/janus_baseline/models/__init__.py`
+- `baseline/janus_baseline/models/openai.py`
+- `baseline/janus_baseline/services/complexity.py`
+- `baseline/tests/test_complexity.py`
+- `specs/11_chat_ui.md`
+- `specs/25_llm_complexity_second_pass.md`
+- `specs/competition/02_description_and_scoring.md`
+- `ui/e2e/competition.spec.ts`
+- `ui/src/app/chat/page.tsx`
+- `ui/src/app/competition/components/BenchRunner.tsx`
+- `ui/src/app/competition/components/FAQ.tsx`
+- `ui/src/app/competition/components/ScoringBreakdown.tsx`
+- `ui/src/app/competition/components/SubmissionForm.tsx`
+- `ui/src/app/competition/components/index.ts`
+- `ui/src/app/competition/page.tsx`
+- `ui/src/app/globals.css`
+
+Untracked:
+- `.claude/commands/speckit.implement.md`
+- `.claude/commands/speckit.specify.md`
+- `.codex/`
+- `.playwright-mcp/`
+- `logs/`
+- `ui/public/Janus_God_and_Bull_Video_Generation.mp4`
+- `ui/public/Janus_God_and_Bull_Video_Generation.mp4:Zone.Identifier`
+- `ui/src/app/competition/components/CompetitionOverview.tsx`
+- `ui/src/app/competition/components/ComponentMarketplace.tsx`
+
+The next highest-priority incomplete spec is `specs/26_baseline_rename.md`. How would you like me to proceed with the existing changes?
+1) Continue and treat them as baseline.
+2) Stash/commit them first.
+3) Reset to a clean state (destructive).

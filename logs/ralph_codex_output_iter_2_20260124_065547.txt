@@ -1,0 +1,14 @@
+Using commit-push + deploy-watch to commit/push the migration fix and monitor Render deployments.
+
+**Changes**
+- Fixed Alembic revision linkage for the Janus benchmarks migration to follow `011_add_model_comparisons` (`backend/alembic/versions/012_add_janus_benchmarks.py`).
+
+**Tests**
+- `./.venv/bin/pytest`
+
+**Deploy + Verification**
+- Render: `chutes-bench-runner-api-v2` deploy `dep-d5q6ippr0fns73c7ojd0` live; `chutes-bench-runner-ui` deploy `dep-d5q6ip1r0fns73c7oiq0` live.
+- Production API checks: `GET /api/health`, `GET /api/models?limit=1`, `GET /api/benchmarks?limit=5` (Janus benchmarks present).
+- UI visual checks (no visible errors) on https://chutes-bench-runner-ui.onrender.com: `chutes-bench-runner-ui-desktop`, `chutes-bench-runner-ui-tablet`, `chutes-bench-runner-ui-mobile`, `chutes-bench-runner-ui-janus-section`.
+
+<promise>DONE</promise>

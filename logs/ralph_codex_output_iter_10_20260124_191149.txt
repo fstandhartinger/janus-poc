@@ -1,0 +1,19 @@
+Finished baseline containerization by committing the Docker assets and compose defaults needed for reliable local runs, plus a small typing fix in the Sandy competitor runner. Spec 55 is now marked COMPLETE and history is updated.
+
+- Added/committed container artifacts: `baseline-agent-cli/Dockerfile`, `baseline-agent-cli/.dockerignore`, `baseline-langchain/Dockerfile`, `baseline-langchain/.dockerignore`, `gateway/Dockerfile`, `gateway/.dockerignore`, `scripts/build-containers.sh`, `scripts/run-local.sh`, `docs/container-registry.md`, `gateway/janus_gateway/services/competitor_runner.py`.
+- Updated `docker-compose.yml` to pass `OPENAI_BASE_URL` and set baseline model defaults for reliable Chutes-backed local testing.
+- Recorded status/NR_OF_TRIES in `specs/55_baseline_containerization.md` and a note in `history.md`.
+
+Validation:
+- `gateway`: `pytest` (42 passed), `mypy janus_gateway` OK.
+- `ui`: `npm test` (Playwright, 18 passed), `npm run typecheck` OK.
+- Local compose smoke: health checks + chat completions succeeded (with `OPENAI_BASE_URL=https://llm.chutes.ai/v1`, `BASELINE_LANGCHAIN_MODEL=Qwen/Qwen3-14B`).
+- Render deploys live: janus-baseline-agent, janus-gateway, janus-ui.
+- Prod checks: gateway `/health`, `/v1/models`, `/v1/chat/completions` OK; UI visual check with desktop/tablet/mobile screenshots; no console/page errors.
+
+Notes:
+- Temporarily stopped `sn120-viewer_backend_1` to free port 8000 for the compose smoke test, then restarted it.
+- `docker compose` warns the `version` key is obsolete; left unchanged.
+- Telegram update + audio + mermaid diagram sent.
+
+<promise>DONE</promise>

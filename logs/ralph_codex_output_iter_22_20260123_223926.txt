@@ -1,0 +1,12 @@
+Using speckit-implement to run the Ralph spec loop for Spec 32; skipping read-context because speckit-implement already covers the required context reads.
+
+**Status**
+- Implemented tool-use subtype handling, scoring helpers, and dataset updates in `bench/janus_bench/adapters/base.py`, `bench/janus_bench/adapters/janus_research.py`, `bench/janus_bench/adapters/janus_tool_use.py`, `bench/janus_bench/scorers/tool_use.py`, `bench/janus_bench/scorers/__init__.py`, `bench/janus_bench/datasets/data/janus/tool_use_items.json`.
+- Added tool-use subtype dataset test and adjusted scorer test in `bench/tests/test_datasets.py`, `bench/tests/test_tool_use_scorer.py`.
+- Tests run: `pytest` (bench), `pytest` (gateway), `mypy janus_gateway`, `npm test`, `npm run typecheck`.
+- Visual check: Puppeteer screenshots (desktop/tablet/mobile) on the UI landing page; required headless launch due to missing X server.
+
+**Blocker**
+- `git status` shows many pre-existing modified/untracked files unrelated to this spec (e.g., `.specify/memory/constitution.md`, `README.md`, `baseline-agent-cli/*`, `docs/*`, `specs/*`, and multiple untracked paths). How would you like me to proceed with commits:  
+  1) Stage only my files listed above, or  
+  2) Include everything in the current working tree?

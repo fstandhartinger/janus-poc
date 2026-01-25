@@ -12,8 +12,8 @@ Janus is a competitive, OpenAI-compatible intelligence API where miners submit c
 |-----------|------------|------|-------------|
 | Chat UI | Next.js | 3000 | ChatGPT-like interface with streaming |
 | Gateway | FastAPI | 8000 | OpenAI-compatible proxy and routing |
-| Baseline (Agent CLI) | FastAPI | 8001 | Reference competitor implementation |
-| Baseline (LangChain) | FastAPI | 8002 | LangChain-based baseline competitor |
+| Baseline (Agent CLI) | FastAPI | 8081 | Reference competitor implementation |
+| Baseline (LangChain) | FastAPI | 8082 | LangChain-based baseline competitor |
 | Sandy | - | - | Sandbox-as-a-service for CLI agents |
 | Bench Runner | CLI | - | Evaluation harness |
 
@@ -171,7 +171,7 @@ The gateway and competitors implement the OpenAI Chat Completions API with exten
 │                                                         │
 │  ┌──────────┐    ┌──────────┐    ┌──────────┐          │
 │  │  UI      │───▶│  Gateway │───▶│ Baseline │          │
-│  │  :3000   │    │  :8000   │    │  :8001   │          │
+│  │  :3000   │    │  :8000   │    │  :8081   │          │
 │  └──────────┘    └──────────┘    └──────────┘          │
 │                         │                               │
 │                         ▼                               │

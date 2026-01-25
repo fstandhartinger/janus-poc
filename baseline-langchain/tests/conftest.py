@@ -1,7 +1,12 @@
 """Pytest configuration and fixtures."""
 
+import importlib.util
+
 import pytest
 from fastapi.testclient import TestClient
+
+if importlib.util.find_spec("langchain_core") is None:
+    pytest.skip("langchain_core not installed", allow_module_level=True)
 
 from janus_baseline_langchain.config import get_settings
 from janus_baseline_langchain.main import app

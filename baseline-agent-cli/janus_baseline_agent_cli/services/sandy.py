@@ -17,6 +17,7 @@ import httpx
 import structlog
 
 from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.logging import log_function_call
 from janus_baseline_agent_cli.models import (
     Artifact,
     ArtifactType,
@@ -76,6 +77,7 @@ class SandyService:
         """Check if Sandy is configured."""
         return bool(self._base_url)
 
+    @log_function_call
     async def create_sandbox(self) -> str:
         """Create a new sandbox and return its ID."""
         async with self._client_factory() as client:
@@ -85,6 +87,7 @@ class SandyService:
         sandbox_id, _ = result
         return sandbox_id
 
+    @log_function_call
     async def exec(self, sandbox_id: str, command: str) -> ExecResult:
         """Execute a command in a sandbox."""
         async with self._client_factory() as client:
@@ -93,6 +96,7 @@ class SandyService:
             )
         return ExecResult(stdout=stdout, stderr=stderr, exit_code=exit_code)
 
+    @log_function_call
     async def write_file(self, sandbox_id: str, path: str, content: str | bytes) -> bool:
         """Write a file into the sandbox."""
         data = content.encode("utf-8") if isinstance(content, str) else content
@@ -101,6 +105,7 @@ class SandyService:
                 return True
             return await self._write_file_via_exec(client, sandbox_id, path, data)
 
+    @log_function_call
     async def read_file(self, sandbox_id: str, path: str) -> str:
         """Read a file from the sandbox."""
         async with self._client_factory() as client:
@@ -109,6 +114,7 @@ class SandyService:
             raise FileNotFoundError(path)
         return data.decode("utf-8", errors="replace")
 
+    @log_function_call
     async def terminate(self, sandbox_id: str) -> None:
         """Terminate a sandbox."""
         async with self._client_factory() as client:
@@ -632,6 +638,7 @@ class SandyService:
                 return task_text
         return "No task specified"
 
+    @log_function_call
     async def complete(self, request: ChatCompletionRequest) -> ChatCompletionResponse:
         """Execute a complex task and return a non-streaming response."""
         request_id = self._generate_id()

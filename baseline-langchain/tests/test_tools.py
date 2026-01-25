@@ -51,7 +51,8 @@ async def test_tts_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(httpx, "post", fake_post)
 
     result = await text_to_speech_tool.ainvoke({"text": "Hello", "voice": "am_michael"})
-    assert result.startswith("data:audio")
+    assert result.startswith(":::audio")
+    assert "data:audio/wav;base64," in result
 
 
 @pytest.mark.asyncio

@@ -52,6 +52,15 @@ class BenchmarkRunner:
         """Close the HTTP client."""
         await self.client.aclose()
 
+    def _parse_sse_line(self, line: str) -> tuple[Optional[str], bool]:
+        if not line:
+            return None, False
+        if line.startswith(":"):
+            return None, True
+        if line.startswith("data:"):
+            return line[5:].lstrip(), False
+        return None, False
+
     async def run_task(self, task: BenchmarkTask) -> TaskResult:
         """Run a single benchmark task.
 
@@ -108,7 +117,32 @@ class BenchmarkRunner:
                     error_text = error_body.decode("utf-8", errors="replace")
                     error = f"HTTP {response.status_code}: {error_text}"
                 else:
-                    async for line in response.aiter_lines():
+                    aiter = response.aiter_lines()
+                    while True:
+                        try:
+                            if first_token_time is None and self.settings.ttft_timeout > 0:
+                                elapsed = time.perf_counter() - start_time
+                                remaining = self.settings.ttft_timeout - elapsed
+                                if remaining <= 0:
+                                    error = (
+                                        f"TTFT timeout after {self.settings.ttft_timeout}s"
+                                    )
+                                    break
+                                try:
+                                    line = await asyncio.wait_for(
+                                        aiter.__anext__(),
+                                        timeout=remaining,
+                                    )
+                                except asyncio.TimeoutError:
+                                    error = (
+                                        f"TTFT timeout after {self.settings.ttft_timeout}s"
+                                    )
+                                    break
+                            else:
+                                line = await aiter.__anext__()
+                        except StopAsyncIteration:
+                            break
+
                         current_time = time.perf_counter()
 
                         # Track gaps
@@ -117,81 +151,89 @@ class BenchmarkRunner:
                             max_gap = gap
                         last_event_time = current_time
 
-                        # Parse SSE events
-                        if line.startswith("data: "):
-                            data = line[6:].strip()
-
-                            if data == "[DONE]":
-                                break
-
-                            try:
-                                chunk = json.loads(data)
-                                total_chunks += 1
-
-                                choices = chunk.get("choices", [])
-                                if choices:
-                                    delta = choices[0].get("delta", {})
-                                    content = delta.get("content", "")
-                                    reasoning_delta = (
-                                        delta.get("reasoning_content")
-                                        or delta.get("reasoning")
-                                    )
-
-                                    if first_token_time is None and (content or reasoning_delta):
-                                        first_token_time = current_time
-
-                                    if "tool_calls" in delta:
-                                        for tool_call in delta["tool_calls"]:
-                                            index = tool_call.get("index", 0)
-                                            entry = tool_call_chunks.setdefault(
-                                                index,
-                                                {
-                                                    "id": None,
-                                                    "type": None,
-                                                    "function": {
-                                                        "name": "",
-                                                        "arguments": "",
-                                                    },
-                                                },
-                                            )
-                                            if "id" in tool_call:
-                                                entry["id"] = tool_call["id"]
-                                            if "type" in tool_call:
-                                                entry["type"] = tool_call["type"]
-                                            if "function" in tool_call:
-                                                function = tool_call["function"]
-                                                if isinstance(function, dict):
-                                                    entry_function = entry.get("function")
-                                                    if not isinstance(entry_function, dict):
-                                                        entry_function = {"name": "", "arguments": ""}
-                                                        entry["function"] = entry_function
-                                                    name = function.get("name")
-                                                    if isinstance(name, str):
-                                                        entry_function["name"] = name
-                                                    arguments_fragment = function.get("arguments")
-                                                    if arguments_fragment is not None:
-                                                        entry_function["arguments"] = (
-                                                            f"{entry_function.get('arguments', '')}{arguments_fragment}"
-                                                        )
-                                    if content:
-                                        response_text += content
-                                        token_chunks.append(content)
-                                        token_timestamps.append(current_time)
-
-                                    if reasoning_delta:
-                                        reasoning_content += str(reasoning_delta)
-                                        has_reasoning_content = True
-
-                                # Extract usage (usually in final chunk)
-                                if "usage" in chunk:
-                                    usage_data = chunk["usage"]
-
-                            except json.JSONDecodeError:
-                                pass
-
-                        elif line.startswith(": "):
-                            # Keep-alive comment
+                        line = line.strip()
+                        data, is_keep_alive = self._parse_sse_line(line)
+                        if is_keep_alive:
                             keep_alive_count += 1
+                            continue
+                        if data is None:
+                            continue
+                        if data == "[DONE]":
+                            break
+
+                        try:
+                            chunk = json.loads(data)
+                        except json.JSONDecodeError:
+                            continue
+
+                        total_chunks += 1
+
+                        choices = chunk.get("choices", [])
+                        if choices:
+                            delta = choices[0].get("delta", {})
+                            if not isinstance(delta, dict):
+                                delta = {}
+                            content = delta.get("content", "")
+                            reasoning_delta = delta.get("reasoning_content") or delta.get(
+                                "reasoning"
+                            )
+                            tool_calls_delta = delta.get("tool_calls")
+
+                            if first_token_time is None and (
+                                content
+                                or reasoning_delta
+                                or (
+                                    isinstance(tool_calls_delta, list)
+                                    and tool_calls_delta
+                                )
+                            ):
+                                first_token_time = current_time
+
+                            if isinstance(tool_calls_delta, list):
+                                for tool_call in tool_calls_delta:
+                                    index = tool_call.get("index", 0)
+                                    entry = tool_call_chunks.setdefault(
+                                        index,
+                                        {
+                                            "id": None,
+                                            "type": None,
+                                            "function": {
+                                                "name": "",
+                                                "arguments": "",
+                                            },
+                                        },
+                                    )
+                                    if "id" in tool_call:
+                                        entry["id"] = tool_call["id"]
+                                    if "type" in tool_call:
+                                        entry["type"] = tool_call["type"]
+                                    if "function" in tool_call:
+                                        function = tool_call["function"]
+                                        if isinstance(function, dict):
+                                            entry_function = entry.get("function")
+                                            if not isinstance(entry_function, dict):
+                                                entry_function = {"name": "", "arguments": ""}
+                                                entry["function"] = entry_function
+                                            name = function.get("name")
+                                            if isinstance(name, str):
+                                                entry_function["name"] = name
+                                            arguments_fragment = function.get("arguments")
+                                            if arguments_fragment is not None:
+                                                entry_function["arguments"] = (
+                                                    f"{entry_function.get('arguments', '')}{arguments_fragment}"
+                                                )
+                            if content:
+                                response_text += content
+                                token_chunks.append(content)
+                                token_timestamps.append(current_time)
+
+                            if reasoning_delta:
+                                reasoning_content += str(reasoning_delta)
+                                has_reasoning_content = True
+
+                        # Extract usage (usually in final chunk)
+                        if "usage" in chunk:
+                            usage_data = chunk["usage"]
 
         except httpx.TimeoutException:
             error = "Request timed out"
@@ -260,11 +302,13 @@ class BenchmarkRunner:
             task_metadata["reasoning_content_length"] = len(reasoning_content)
 
         # Create result
+        has_payload = bool(response_text.strip()) or bool(tool_calls) or bool(reasoning_content)
+        success = error is None and has_payload
         result = TaskResult(
             task_id=task.id,
             benchmark=task.benchmark,
             task_type=task.type,
-            success=error is None and len(response_text) > 0,
+            success=success,
             response_text=response_text if response_text else None,
             error=error,
             latency_seconds=latency,
@@ -290,7 +334,9 @@ class BenchmarkRunner:
                 judge_output,
             ) = await self._score_research_task(task, response_text)
             result.quality_score = quality_score
-            result.metadata = research_metadata
+            merged_metadata = dict(task_metadata or {})
+            merged_metadata.update(research_metadata)
+            result.metadata = merged_metadata or None
             result.judge_score = judge_score
             result.judge_output = judge_output
         elif task.type == TaskType.TOOL_USE:

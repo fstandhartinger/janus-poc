@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from janus_baseline_agent_cli.config import Settings, get_settings
 from janus_baseline_agent_cli.tools.music import MUSIC_TOOL
+from janus_baseline_agent_cli.tools.tts import TTS_TOOL
 
 GUI_TOOLS = [
     {
@@ -202,6 +203,7 @@ _BASE_TOOL_DEFINITIONS = {
         },
     },
     "generate_music": MUSIC_TOOL["function"],
+    "text_to_speech": TTS_TOOL["function"],
 }
 
 
@@ -224,6 +226,7 @@ def get_registered_tools(settings: Settings | None = None) -> dict[str, dict]:
         tools["file_read"] = _BASE_TOOL_DEFINITIONS["file_read"]
         tools["file_write"] = _BASE_TOOL_DEFINITIONS["file_write"]
     tools["generate_music"] = _BASE_TOOL_DEFINITIONS["generate_music"]
+    tools["text_to_speech"] = _BASE_TOOL_DEFINITIONS["text_to_speech"]
 
     return tools
 

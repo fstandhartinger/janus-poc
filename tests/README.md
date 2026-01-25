@@ -1,23 +1,50 @@
-# Baseline Test Suite
+# Janus Test Suite
 
-This folder contains shared smoke tests that exercise both baseline services.
+This folder contains shared smoke, integration, and visual tests across the
+gateway, baselines, and UI.
 
 ## Prerequisites
 
-- `baseline-agent-cli` running on `http://localhost:8001`
-- `baseline-langchain` running on `http://localhost:8002`
+- `gateway` running on `http://localhost:8000`
+- `baseline-agent-cli` running on `http://localhost:8081`
+- `baseline-langchain` running on `http://localhost:8082`
+- `ui` running on `http://localhost:3000`
 
 You can override the defaults with:
 
-- `BASELINE_CLI_URL`
-- `BASELINE_LANGCHAIN_URL`
-- `BASELINE_CLI_MODEL`
-- `BASELINE_LANGCHAIN_MODEL`
+- `TEST_MODE=local|deployed|both`
+- `TEST_GATEWAY_URL`, `TEST_BASELINE_CLI_URL`, `TEST_BASELINE_LANGCHAIN_URL`, `TEST_UI_URL`
+- `TEST_GATEWAY_DEPLOYED_URL`, `TEST_BASELINE_CLI_DEPLOYED_URL`,
+  `TEST_BASELINE_LANGCHAIN_DEPLOYED_URL`, `TEST_UI_DEPLOYED_URL`
+- `TEST_BASELINE_CLI_MODEL`, `TEST_BASELINE_LANGCHAIN_MODEL`
+- `TEST_SCREENSHOT_DIR`
+
+Legacy variables (`BASELINE_*`) are still supported.
 
 ## Run Smoke Tests
 
 ```bash
 pytest tests/smoke -v -m smoke
+```
+
+## Run Integration Tests
+
+```bash
+pytest tests/integration -v -m integration
+```
+
+## Run Visual Tests
+
+```bash
+pytest tests/visual -v -m visual
+```
+
+## Run the Full Suite
+
+```bash
+./scripts/run-tests.sh local
+./scripts/run-tests.sh deployed
+./scripts/run-tests.sh both
 ```
 
 ## Notes

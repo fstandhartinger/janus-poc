@@ -1,9 +1,10 @@
 'use client';
 import type { Message } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
-import { AudioPlayer } from './AudioPlayer';
+import { parseAudioContent } from '@/lib/audio-parser';
 import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
+import { AudioResponse } from './audio/AudioResponse';
 import { RichContent } from './viz/RichContent';
 
 interface MessageBubbleProps {
@@ -11,24 +12,69 @@ interface MessageBubbleProps {
   showReasoning: boolean;
 }
 
-const AUDIO_DATA_REGEX = /data:audio\/(wav|mp3|ogg);base64,[A-Za-z0-9+/=]+/g;
+const AUDIO_BLOCK_REGEX = /:::audio\[([^\]]*)\]\s*\r?\n(data:audio\/[^;]+;base64,[A-Za-z0-9+/=]+)\s*\r?\n:::/g;
+const INLINE_AUDIO_REGEX = /data:audio\/(wav|mp3|ogg);base64,[A-Za-z0-9+/=]+/g;
 
-function extractAudioContent(content: string) {
+function stripAudioContent(content: string) {
   if (!content) {
-    return { cleanedText: content, audioUrls: [] as string[] };
+    return content;
   }
 
-  const audioUrls = content.match(AUDIO_DATA_REGEX) ?? [];
-  if (audioUrls.length === 0) {
-    return { cleanedText: content, audioUrls };
-  }
-
-  const cleanedText = content
-    .replace(AUDIO_DATA_REGEX, '')
+  return content
+    .replace(AUDIO_BLOCK_REGEX, '')
+    .replace(INLINE_AUDIO_REGEX, '')
     .replace(/\n{3,}/g, '\n\n')
     .trim();
+}
 
-  return { cleanedText, audioUrls };
+function normalizeAudioMetadata(metadata?: Record<string, unknown>) {
+  if (!metadata) {
+    return undefined;
+  }
+
+  const voice = typeof metadata.voice === 'string' ? metadata.voice : undefined;
+  const style = typeof metadata.style === 'string' ? metadata.style : undefined;
+  const duration = normalizeDuration(metadata.duration);
+  const hasVocals = normalizeBoolean(metadata.hasVocals ?? metadata['has_vocals']);
+
+  if (!voice && !style && duration === undefined && hasVocals === undefined) {
+    return undefined;
+  }
+
+  return {
+    voice,
+    style,
+    duration,
+    hasVocals,
+  };
+}
+
+function normalizeDuration(value: unknown): number | undefined {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+  if (typeof value === 'string') {
+    const parsed = Number(value);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return undefined;
+}
+
+function normalizeBoolean(value: unknown): boolean | undefined {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  if (typeof value === 'string') {
+    if (value.toLowerCase() === 'true') {
+      return true;
+    }
+    if (value.toLowerCase() === 'false') {
+      return false;
+    }
+  }
+  return undefined;
 }
 
 export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
@@ -42,7 +88,8 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
           .map((c) => c.text)
           .join('\n');
   const textContent = stripCanvasBlocks(rawTextContent);
-  const { cleanedText, audioUrls } = extractAudioContent(textContent);
+  const parsedAudio = parseAudioContent(textContent);
+  const cleanedText = stripAudioContent(textContent);
   const hasText = Boolean(cleanedText);
 
   return (
@@ -74,14 +121,15 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
           <RichContent content={cleanedText} />
         )}
 
-        {audioUrls.length > 0 && (
+        {parsedAudio.length > 0 && (
           <div className="mt-3 space-y-2">
-            {audioUrls.map((url, index) => (
-              <AudioPlayer
+            {parsedAudio.map((audio, index) => (
+              <AudioResponse
                 key={`${message.id}-audio-${index}`}
-                src={url}
-                title={`Generated Audio ${index + 1}`}
-                downloadName={`audio-${index + 1}.wav`}
+                audioUrl={audio.url}
+                type={audio.type}
+                title={audio.title ?? (parsedAudio.length > 1 ? `Audio ${index + 1}` : undefined)}
+                metadata={normalizeAudioMetadata(audio.metadata)}
               />
             ))}
           </div>

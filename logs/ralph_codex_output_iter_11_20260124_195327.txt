@@ -1,0 +1,12 @@
+Using skills: `read-context` + `speckit-implement` (Ralph build loop). Skipping `commit-push`, `deploy-watch`, `notify-telegram`, `visual-test`, `test-all`, `verify-complete` for now because the speckit loop covers them, but I can’t proceed until the repo state is clarified.
+
+I ran `git status -sb` and found unexpected pre-existing changes (modified/deleted/untracked) across many files. Examples:
+- Tracked deletions: `specs/55_scoring_service_backend.md` and many other `specs/*.md`
+- Untracked replacements: `specs/56_scoring_service_backend.md`, `specs/57_scoring_ui_page.md`, etc.
+- Widespread modified files across `gateway/`, `ui/`, `baseline-*`, `docs/`, and scripts
+
+Per the instruction to stop on unexpected changes, I’m pausing here. How would you like to proceed with the existing changes? Options:
+1) Keep them as baseline and continue only with new changes for the spec
+2) Stash/move them aside
+3) Clean/reset to a known state
+4) Tell me which paths are safe to ignore vs. include

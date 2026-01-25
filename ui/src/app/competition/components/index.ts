@@ -8,6 +8,7 @@ export { HowItWorks } from './HowItWorks';
 export { Leaderboard } from './Leaderboard';
 export { PrizePool } from './PrizePool';
 export { ScoringBreakdown } from './ScoringBreakdown';
+export { ScoringNav } from './ScoringNav';
 export { SubmissionGuide } from './SubmissionGuide';
 export { SubmissionForm } from './SubmissionForm';
 export { TechRequirements } from './TechRequirements';

@@ -1,0 +1,17 @@
+Using the **speckit-implement** skill because you asked for Ralph Build Mode spec implementation.
+
+I’ve implemented the LLM second-pass routing, added config knobs, and updated streaming to use async analysis, plus new async tests for LLM routing behavior in `baseline/janus_baseline/services/complexity.py`, `baseline/janus_baseline/config.py`, `baseline/janus_baseline/main.py`, `baseline/janus_baseline/models/openai.py`, and `baseline/tests/test_complexity.py`.
+
+Tests run:
+- `cd baseline && pytest`
+- `cd gateway && pytest`
+- `cd ui && npm test`
+- `cd gateway && mypy janus_gateway`
+- `cd ui && npm run typecheck`
+
+I noticed unexpected, pre-existing changes I didn’t make (e.g. `CLAUDE.md`, `README.md`, `specs/11_chat_ui.md`, `ui/src/app/chat/page.tsx`, plus untracked `.codex/`, `logs/`, etc.). How would you like me to proceed with commits?
+1) Commit only the files I changed for Spec 25  
+2) Include all current changes  
+3) Something else (please specify)
+
+Once you confirm, I’ll mark `specs/25_llm_complexity_second_pass.md` as COMPLETE and finish the commit/push.

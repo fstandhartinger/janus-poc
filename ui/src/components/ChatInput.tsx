@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useRef, useState, type FormEvent, type ChangeEvent } from 'react';
+import { useCallback, useRef, useState, type FormEvent, type ChangeEvent, type KeyboardEvent } from 'react';
 import { FilePreview } from './FilePreview';
 import { MicrophonePermissionBanner } from './MicrophonePermissionDialog';
 import { VoiceInputButton } from './VoiceInputButton';
@@ -15,13 +15,19 @@ import { detectFileCategory, formatBytes } from '@/lib/file-utils';
 import { processFile } from '@/lib/file-processor';
 
 interface ChatInputProps {
-  onSend: (content: string, files: AttachedFile[]) => void;
+  onSend: (
+    content: string,
+    files: AttachedFile[],
+    options?: { deepResearch?: boolean; researchMode?: 'light' | 'max' }
+  ) => void;
   disabled?: boolean;
 }
 
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [deepResearchEnabled, setDeepResearchEnabled] = useState(false);
+  const [researchMode, setResearchMode] = useState<'light' | 'max'>('light');
   const [statusMessage, setStatusMessage] = useState<{ type: 'error' | 'info'; text: string } | null>(
     null
   );
@@ -38,14 +44,28 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     textareaRef.current?.focus();
   }, []);
 
+  const submitMessage = useCallback(() => {
+    if (!input.trim() && attachedFiles.length === 0) return;
+    onSend(
+      input.trim(),
+      attachedFiles,
+      deepResearchEnabled ? { deepResearch: true, researchMode } : undefined
+    );
+    setInput('');
+    setAttachedFiles([]);
+    setStatusMessage(null);
+    setProcessingFiles([]);
+  }, [attachedFiles, deepResearchEnabled, input, onSend, researchMode]);
+
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (input.trim() || attachedFiles.length > 0) {
-      onSend(input.trim(), attachedFiles);
-      setInput('');
-      setAttachedFiles([]);
-      setStatusMessage(null);
-      setProcessingFiles([]);
+    submitMessage();
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submitMessage();
     }
   };
 
@@ -144,6 +164,35 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         </div>
       )}
 
+      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+        <button
+          type="button"
+          onClick={() => setDeepResearchEnabled((current) => !current)}
+          disabled={disabled}
+          aria-pressed={deepResearchEnabled}
+          className={`rounded-full border px-3 py-1 transition-colors ${
+            deepResearchEnabled
+              ? 'border-moss/40 bg-moss/10 text-moss'
+              : 'border-ink-700 text-ink-400 hover:border-ink-500 hover:text-ink-200'
+          }`}
+        >
+          Deep research
+        </button>
+        {deepResearchEnabled && (
+          <label className="flex items-center gap-2 text-ink-400">
+            Mode
+            <select
+              value={researchMode}
+              onChange={(event) => setResearchMode(event.target.value as 'light' | 'max')}
+              className="rounded-full border border-ink-700 bg-ink-800/70 px-2 py-1 text-ink-200"
+            >
+              <option value="light">light</option>
+              <option value="max">max</option>
+            </select>
+          </label>
+        )}
+      </div>
+
       {attachedFiles.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-3">
           {attachedFiles.map((file) => (
@@ -171,6 +220,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           accept={ALL_ACCEPT_TYPES}
           multiple
           onChange={handleFileChange}
+          disabled={disabled}
           className="hidden"
           data-testid="file-input"
         />
@@ -179,12 +229,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleSubmit(e);
-            }
-          }}
+          onKeyDown={handleKeyDown}
           placeholder="Ask anything..."
           disabled={disabled}
           rows={1}

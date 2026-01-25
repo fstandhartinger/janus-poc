@@ -1,0 +1,21 @@
+Using the speckit-implement skill to run the Ralph build loop for the marketplace spec.
+
+**Changes**
+- Built the full marketplace experience (hero, filters, grid, detail modal, and sections) in `ui/src/app/marketplace/MarketplaceView.tsx` and `ui/src/app/marketplace/components`.
+- Added static component data + icons in `ui/src/app/marketplace/data/components.json` and `ui/public/marketplace`, plus styling in `ui/src/app/globals.css`.
+- Promoted the Mermaid renderer to `ui/src/components/MermaidDiagram.tsx` and wired it into `ui/src/app/competition/components/ArchitectureOverview.tsx`.
+- Added the smoke test in `ui/e2e/marketplace.spec.ts` and marked the spec complete in `specs/20_marketplace_page.md`.
+- Committed and pushed to `main`.
+
+**Tests & checks**
+- `pytest`
+- `mypy janus_gateway`
+- `npm run build`
+- `npm test`
+- `npm run typecheck`
+- Visual check: screenshots `marketplace-desktop`, `marketplace-tablet`, `marketplace-mobile`; no console or network errors.
+
+**Note**
+- Unrelated local changes remain in `.specify/memory/constitution.md`, `CLAUDE.md`, `README.md`, `specs/11_chat_ui.md`, and several untracked paths; I left them untouched.
+
+<promise>DONE</promise>

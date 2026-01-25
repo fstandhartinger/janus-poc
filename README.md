@@ -124,6 +124,9 @@ Test matrix (component -> category):
 | End-to-end | Smoke | Run gateway + baseline + UI and verify `/health` + a chat request |
 
 ```bash
+# Comprehensive test runner
+./scripts/run-tests.sh local
+
 # Gateway tests
 cd gateway && pytest
 
@@ -142,6 +145,9 @@ cd scoring-service && pytest
 # UI tests
 cd ui && npm test
 ```
+
+The shared tests in `tests/` honor `TEST_MODE` (`local`, `deployed`, `both`) and
+`TEST_*_URL` overrides. Visual screenshots land in `./test-screenshots/`.
 
 ## Environment Variables
 

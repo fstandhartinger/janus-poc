@@ -1,0 +1,26 @@
+Using speckit-implement to execute the Ralph spec loop for spec 29.
+
+Implemented the hero video easter egg by making the landing hero image interactive, adding a fullscreen modal with autoplay/pause/close behavior and focus trapping, and adding subtle hover/focus styling; exported the modal and tracked the MP4 so it ships with the app.
+- Updated `ui/src/components/landing/HeroSection.tsx` to manage modal state and trigger on click/Enter.
+- Added `ui/src/components/landing/HeroVideoModal.tsx` for overlay playback, keyboard handling, and focus trap.
+- Updated `ui/src/components/landing/index.ts` and `ui/src/app/globals.css` for exports and hover/focus effects.
+- Marked `specs/29_hero_video_easter_egg.md` complete and added `ui/public/Janus_God_and_Bull_Video_Generation.mp4`.
+
+Tests:
+- `cd ui && npm run typecheck`
+- `cd ui && npm test` (warned about Next.js workspace root/lockfiles)
+- `cd gateway && pytest` (warned about python_multipart deprecation)
+- `cd gateway && mypy janus_gateway`
+
+Visual checks (Puppeteer):
+- `landing-hero-desktop-final`, `landing-hero-tablet-final`, `landing-hero-mobile-final`
+- Verified modal autoplay, click-to-pause, Escape/backdrop close, and ended-close via DOM checks.
+
+Notes:
+- Left unrelated modified/untracked files untouched (existing dirty tree).
+- Deployment not manually verified; push to `main` should trigger auto-deploy if configured.
+
+Next steps:
+1. Proceed with spec 30 (`specs/30_janus_benchmark_integration.md`) if you want me to continue.
+
+<promise>DONE</promise>

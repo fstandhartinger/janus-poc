@@ -43,6 +43,8 @@ MODE="build"
 CLAUDE_CMD="${CLAUDE_CMD:-claude}"
 YOLO_FLAG="--dangerously-skip-permissions"
 RLM_CONTEXT_FILE=""
+FULL_LOG=true
+RALPH_LOG_DIR=""
 TAIL_LINES=5
 TAIL_RENDERED_LINES=0
 ROLLING_OUTPUT_LINES=5
@@ -59,6 +61,12 @@ CYAN='\033[0;36m'
 NC='\033[0m'
 
 mkdir -p "$LOG_DIR"
+
+# Set up ralph-logs directory for full logging
+RALPH_LOG_DIR="$PROJECT_DIR/ralph-logs"
+if [ "$FULL_LOG" = true ]; then
+    mkdir -p "$RALPH_LOG_DIR"
+fi
 
 # Check constitution for YOLO setting
 YOLO_ENABLED=true
@@ -96,6 +104,10 @@ RLM Mode (optional):
   --rlm-context <file>  Treat a large context file as external environment.
                         The agent should read slices instead of loading it all.
   --rlm [file]          Shortcut for --rlm-context (defaults to rlm/context.txt)
+
+Full Logging (enabled by default):
+  --no-full-log         Disable full terminal output capture
+                        By default, complete terminal output is captured to ralph-logs/
 
 How it works:
   1. Each iteration feeds PROMPT.md to Claude via stdin
@@ -219,6 +231,10 @@ while [[ $# -gt 0 ]]; do
                 RLM_CONTEXT_FILE="rlm/context.txt"
                 shift
             fi
+            ;;
+        --no-full-log)
+            FULL_LOG=false
+            shift
             ;;
         -h|--help)
             show_help
@@ -544,6 +560,7 @@ echo -e "${BLUE}Mode:${NC}     $MODE"
 echo -e "${BLUE}Prompt:${NC}   $PROMPT_FILE"
 echo -e "${BLUE}Branch:${NC}   $CURRENT_BRANCH"
 echo -e "${YELLOW}YOLO:${NC}     $([ "$YOLO_ENABLED" = true ] && echo "ENABLED" || echo "DISABLED")"
+[ "$FULL_LOG" = true ] && echo -e "${BLUE}Full Log:${NC} $RALPH_LOG_DIR/ (captures full terminal output)"
 [ -n "$RLM_CONTEXT_FILE" ] && echo -e "${BLUE}RLM:${NC}      $RLM_CONTEXT_FILE"
 [ -n "$SESSION_LOG" ] && echo -e "${BLUE}Log:${NC}      $SESSION_LOG"
 [ $MAX_ITERATIONS -gt 0 ] && echo -e "${BLUE}Max:${NC}      $MAX_ITERATIONS iterations"
@@ -587,6 +604,10 @@ while true; do
 
     # Log file for this iteration
     LOG_FILE="$LOG_DIR/ralph_${MODE}_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S').log"
+    FULL_LOG_FILE=""
+    if [ "$FULL_LOG" = true ]; then
+        FULL_LOG_FILE="$RALPH_LOG_DIR/ralph_${MODE}_iter_${ITERATION}_$(date '+%Y%m%d_%H%M%S')_full.log"
+    fi
     : > "$LOG_FILE"
     WATCH_PID=""
 
@@ -603,15 +624,38 @@ while true; do
     fi
 
     # Run Claude with prompt via stdin, capture output
+    # If FULL_LOG is enabled, use 'script' to capture complete terminal output
     CLAUDE_OUTPUT=""
-    if CLAUDE_OUTPUT=$(cat "$PROMPT_FILE" | "$CLAUDE_CMD" $CLAUDE_FLAGS 2>&1 | tee "$LOG_FILE"); then
-        if [ -n "$WATCH_PID" ]; then
-            kill "$WATCH_PID" 2>/dev/null || true
-            wait "$WATCH_PID" 2>/dev/null || true
+    CLAUDE_SUCCESS=false
+
+    if [ "$FULL_LOG" = true ]; then
+        # Use script to capture full terminal output (including streaming UI)
+        # -q = quiet, -e = return exit code, -c = command
+        echo -e "${BLUE}Full logging enabled: $FULL_LOG_FILE${NC}"
+        if script -q -e -c "cat '$PROMPT_FILE' | '$CLAUDE_CMD' $CLAUDE_FLAGS 2>&1 | tee '$LOG_FILE'" "$FULL_LOG_FILE"; then
+            CLAUDE_SUCCESS=true
         fi
+        # Read output from full log for checking magic phrase
+        if [ -f "$FULL_LOG_FILE" ]; then
+            CLAUDE_OUTPUT=$(cat "$FULL_LOG_FILE")
+        fi
+    else
+        if CLAUDE_OUTPUT=$(cat "$PROMPT_FILE" | "$CLAUDE_CMD" $CLAUDE_FLAGS 2>&1 | tee "$LOG_FILE"); then
+            CLAUDE_SUCCESS=true
+        fi
+    fi
+
+    # Stop watcher if running
+    if [ -n "$WATCH_PID" ]; then
+        kill "$WATCH_PID" 2>/dev/null || true
+        wait "$WATCH_PID" 2>/dev/null || true
+    fi
+
+    if [ "$CLAUDE_SUCCESS" = true ]; then
         echo ""
         echo -e "${GREEN}✓ Claude execution completed${NC}"
-        
+        [ -n "$FULL_LOG_FILE" ] && echo -e "${CYAN}  Full log: $FULL_LOG_FILE${NC}"
+
         # Check if DONE promise was output (accept both DONE and ALL_DONE variants)
         if echo "$CLAUDE_OUTPUT" | grep -qE "<promise>(ALL_)?DONE</promise>"; then
             DETECTED_SIGNAL=$(echo "$CLAUDE_OUTPUT" | grep -oE "<promise>(ALL_)?DONE</promise>" | tail -1)
@@ -619,7 +663,7 @@ while true; do
             echo -e "${GREEN}✓ Task completed successfully!${NC}"
             CONSECUTIVE_FAILURES=0
             RLM_STATUS="done"
-            
+
             # For planning mode, stop after one successful plan
             if [ "$MODE" = "plan" ]; then
                 echo ""
@@ -636,7 +680,7 @@ while true; do
             CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
             RLM_STATUS="incomplete"
             print_latest_output "$LOG_FILE" "Claude"
-            
+
             if [ $CONSECUTIVE_FAILURES -ge $MAX_CONSECUTIVE_FAILURES ]; then
                 echo ""
                 echo -e "${RED}⚠ $MAX_CONSECUTIVE_FAILURES consecutive iterations without completion.${NC}"
@@ -649,12 +693,9 @@ while true; do
             fi
         fi
     else
-        if [ -n "$WATCH_PID" ]; then
-            kill "$WATCH_PID" 2>/dev/null || true
-            wait "$WATCH_PID" 2>/dev/null || true
-        fi
         echo -e "${RED}✗ Claude execution failed${NC}"
         echo -e "${YELLOW}Check log: $LOG_FILE${NC}"
+        [ -n "$FULL_LOG_FILE" ] && echo -e "${YELLOW}Full log: $FULL_LOG_FILE${NC}"
         CONSECUTIVE_FAILURES=$((CONSECUTIVE_FAILURES + 1))
         RLM_STATUS="error"
         print_latest_output "$LOG_FILE" "Claude"

@@ -1,0 +1,15 @@
+Updated the “Why Janus?” landing section to split user vs builder benefits, added the new “Always Improving” card, and introduced audience-specific styling so the badges/hover states read clearly. Changes are in `ui/src/components/landing/FeatureCards.tsx`, `ui/src/app/globals.css`, `specs/51_why_janus_section_clarity.md`, and `history.md`.
+
+Validation done:
+- Tests: `gateway/.venv/bin/pytest`, `gateway/.venv/bin/mypy janus_gateway`, `ui npm test`, `ui npm run typecheck`
+- Visual checks (Playwright, Why Janus section):
+  - Desktop: `/home/flori/Dev/chutes/janus-poc/tmp/playwright_mcp/sessions/97870ac0665882ec/20260124T162921_screenshot_0f16d27a9b984f8a98be3855323e0bcd.png`
+  - Tablet: `/home/flori/Dev/chutes/janus-poc/tmp/playwright_mcp/sessions/97870ac0665882ec/20260124T162940_screenshot_13091f50df234a3c9c10117fde3a2088.png`
+  - Mobile: `/home/flori/Dev/chutes/janus-poc/tmp/playwright_mcp/sessions/97870ac0665882ec/20260124T163002_screenshot_29ba803c4f1c439db184ac8f7283af0a.png`
+
+Blocking issue: the repo has a large number of pre-existing/unrelated changes (modified/deleted specs, baseline files, scripts, etc.). Per instructions, I need your direction before committing/pushing. How do you want to proceed?
+1) Commit only my changes (the four files above) and ignore everything else  
+2) Include all current changes in this commit  
+3) Pause so you can clean/stash, then I’ll commit/push
+
+Once you confirm, I’ll proceed with commit/push, Render deploy watch, and Telegram text/audio + mermaid diagram upload.

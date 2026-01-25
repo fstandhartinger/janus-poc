@@ -12,6 +12,7 @@ from openai.types.chat import (
 )
 
 from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.logging import log_function_call
 from janus_baseline_agent_cli.models import (
     AssistantMessage,
     ChatCompletionChunk,
@@ -211,6 +212,7 @@ class LLMService:
             **tool_params,
         )
 
+    @log_function_call
     async def complete(
         self,
         request: ChatCompletionRequest,
@@ -339,6 +341,7 @@ class LLMService:
             ) if response.usage else None,
         )
 
+    @log_function_call
     async def stream(
         self,
         request: ChatCompletionRequest,

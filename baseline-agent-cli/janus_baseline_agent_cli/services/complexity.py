@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from functools import lru_cache
-import json
 import re
 from typing import Optional
 
@@ -10,7 +9,9 @@ import httpx
 import structlog
 
 from janus_baseline_agent_cli.config import Settings, get_settings
+from janus_baseline_agent_cli.logging import log_function_call
 from janus_baseline_agent_cli.models import Message, MessageContent
+from janus_baseline_agent_cli.tools.parser import robust_parse_tool_call
 from janus_baseline_agent_cli.services.vision import contains_images, count_images
 
 logger = structlog.get_logger()
@@ -21,7 +22,7 @@ ROUTING_PROMPT = """Analyze this user request and decide if it needs agent sandb
 
 Agent sandbox is REQUIRED for:
 - Image/video/audio generation ("generate an image", "create a video", "text to speech")
-- Code execution ("run this code", "execute", "test this script")
+- Code execution ("run this code", "execute", "test this script" or queries that are best answered by writing/running code)
 - Web search ("search for", "find current", "latest news")
 - File operations ("download", "save to file", "read file")
 - Browser automation ("test in browser", "open URL", "take screenshot", "click on")
@@ -32,10 +33,10 @@ Agent sandbox is REQUIRED for:
 
 Direct LLM response is ONLY sufficient for:
 - General conversation and chitchat
-- Explanations, definitions, and summaries
+- Explanations, definitions, and summaries that don't require up-to-date information or context from the internet
 - Simple math (without needing to run code)
 - Writing assistance (text generation without execution)
-- Questions that can be answered from knowledge alone
+- Questions that can be answered from knowledge alone (and where there is no need to look up the latest information or context from the internet)
 
 IMPORTANT: When in doubt, choose needs_agent=true. It's better to use the agent unnecessarily than to fail a task that needs tools.
 
@@ -470,6 +471,7 @@ class ComplexityDetector:
             text_preview=text_preview,
         )
 
+    @log_function_call
     async def _llm_routing_check(self, text: str) -> tuple[bool, str]:
         """LLM verification for routing decision. Returns (needs_agent, reason)."""
         if not self._settings.openai_api_key:
@@ -508,10 +510,7 @@ class ComplexityDetector:
                 if tool_calls:
                     tool_call = tool_calls[0]
                     arguments = tool_call.get("function", {}).get("arguments", "{}")
-                    if isinstance(arguments, dict):
-                        args = arguments
-                    else:
-                        args = json.loads(arguments)
+                    args = robust_parse_tool_call(arguments)
                     return bool(args.get("needs_agent", False)), str(
                         args.get("reason", "llm_decision")
                     )
@@ -530,6 +529,7 @@ class ComplexityDetector:
             )
             return True, f"llm_check_error: {exc}"
 
+    @log_function_call
     async def analyze_async(self, messages: list[Message]) -> ComplexityAnalysis:
         """Async analysis with mandatory LLM verification for fast path."""
         first_pass = self.analyze(messages)

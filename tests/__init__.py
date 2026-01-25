@@ -1,1 +1,1 @@
-"""Shared smoke and integration tests for baseline services."""
+"""Shared smoke, integration, and visual tests for Janus services."""

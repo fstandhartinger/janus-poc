@@ -1,5 +1,6 @@
 """Tests for benchmark runner."""
 
+import asyncio
 import json
 import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
@@ -178,6 +179,97 @@ class TestBenchmarkRunner:
         assert result.success is False
         assert result.error is not None
         assert "500" in result.error
+
+        await runner.close()
+
+    @pytest.mark.asyncio
+    async def test_run_task_tool_calls_mark_success(self, runner):
+        """Tool-call-only responses should still be successful."""
+        tool_task = BenchmarkTask(
+            id="tool_001",
+            suite=Suite.PUBLIC_DEV,
+            type=TaskType.TOOL_USE,
+            prompt="Call get_weather for Paris",
+            metadata={"tool_use_task_type": "function_calling"},
+        )
+
+        tool_chunks = [
+            json.dumps(
+                {
+                    "choices": [
+                        {
+                            "index": 0,
+                            "delta": {
+                                "tool_calls": [
+                                    {
+                                        "index": 0,
+                                        "id": "call_1",
+                                        "type": "function",
+                                        "function": {
+                                            "name": "get_weather",
+                                            "arguments": "{\"location\":\"Paris\"}",
+                                        },
+                                    }
+                                ]
+                            },
+                        }
+                    ],
+                }
+            ),
+            "[DONE]",
+        ]
+
+        async def mock_aiter_lines():
+            for chunk in tool_chunks:
+                yield f"data: {chunk}"
+
+        mock_response = AsyncMock()
+        mock_response.status_code = 200
+        mock_response.aiter_lines = mock_aiter_lines
+
+        mock_context = AsyncMock()
+        mock_context.__aenter__.return_value = mock_response
+        mock_context.__aexit__.return_value = None
+
+        with patch.object(runner.client, "stream", return_value=mock_context):
+            result = await runner.run_task(tool_task)
+
+        assert result.success is True
+        assert result.metadata
+        assert result.metadata["first_token_received"] is True
+        assert result.metadata["tool_calls"][0]["function"] == "get_weather"
+
+        await runner.close()
+
+    @pytest.mark.asyncio
+    async def test_run_task_ttft_timeout(self, sample_task):
+        """TTFT timeouts should surface as task errors."""
+        settings = Settings(
+            target_url="http://localhost:8000",
+            model="test-model",
+            request_timeout=30,
+            ttft_timeout=0.001,
+        )
+        runner = BenchmarkRunner(settings)
+
+        async def slow_aiter_lines():
+            await asyncio.sleep(0.01)
+            yield "data: [DONE]"
+
+        mock_response = AsyncMock()
+        mock_response.status_code = 200
+        mock_response.aiter_lines = slow_aiter_lines
+
+        mock_context = AsyncMock()
+        mock_context.__aenter__.return_value = mock_response
+        mock_context.__aexit__.return_value = None
+
+        with patch.object(runner.client, "stream", return_value=mock_context):
+            result = await runner.run_task(sample_task)
+
+        assert result.success is False
+        assert result.error
+        assert "TTFT timeout" in result.error
 
         await runner.close()
 

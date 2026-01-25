@@ -1,0 +1,7 @@
+I ran into unexpected pre‑existing changes in the repo (baseline‑agent‑cli, bench, specs, ui, etc.) that I didn’t touch. Per your instructions I need guidance before committing/pushing. How would you like me to proceed?
+
+1) Commit only the changes I made (baseline‑langchain + gateway/docs/README updates)  
+2) Include all existing changes in the commit  
+3) Pause while you clean up the worktree
+
+Tests already run (in case you want to proceed): `baseline-langchain` pytest + mypy, `gateway` pytest + mypy, `ui` npm test + typecheck.

@@ -1,6 +1,6 @@
 # Spec 41: Enhanced Agent System Prompt
 
-## Status: DRAFT
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -317,3 +317,5 @@ baseline-agent-cli/
 - `specs/42_sandbox_file_serving.md` - File serving infrastructure
 - `specs/43_agent_sandbox_management.md` - Agent sandbox creation
 - `specs/44_deep_research_integration.md` - Research capabilities
+
+NR_OF_TRIES: 1

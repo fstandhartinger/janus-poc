@@ -1,0 +1,25 @@
+Skills: speckit-implement/read-context/test-all/commit-push/notify-telegram to run the Ralph spec loop, verify via full tests, and report progress; deploy-watch is pending workspace selection.
+
+Implemented spec 52 by adding a comprehensive baseline testing suite (shared smoke tests, baseline unit/integration coverage, CI workflow) plus supporting helpers in the baseline implementations.
+
+**Changes**
+- Added shared smoke suite + helpers + docs in `tests/` to cover 53 realistic scenarios across both baselines, with skip logic when services aren’t reachable. (`tests/smoke/*`, `tests/utils/__init__.py`, `tests/conftest.py`, `tests/README.md`)
+- Added baseline-agent-cli utilities and unit coverage (message parsing helpers, tool registry, response formatting) and exposed Sandy service wrappers for integration tests. (`baseline-agent-cli/janus_baseline_agent_cli/models/utils.py`, `baseline-agent-cli/janus_baseline_agent_cli/tools/__init__.py`, `baseline-agent-cli/janus_baseline_agent_cli/services/response_formatting.py`, `baseline-agent-cli/janus_baseline_agent_cli/services/sandy.py`, `baseline-agent-cli/tests/unit/*`, `baseline-agent-cli/tests/integration/test_sandy_integration.py`)
+- Added baseline-langchain unit/integration tests + marker registration. (`baseline-langchain/tests/unit/test_tool_schemas.py`, `baseline-langchain/tests/integration/test_tool_execution.py`, `baseline-langchain/tests/conftest.py`)
+- Added baseline CI workflow + docker-compose for smoke runs, and updated spec/history status. (`.github/workflows/baseline-tests.yml`, `docker-compose.yml`, `specs/52_comprehensive_baseline_testing.md`, `history.md`)
+- Telegram text/audio updates and a rendered mermaid diagram were sent.
+
+**Tests**
+- `cd baseline-agent-cli && pytest`
+- `cd baseline-langchain && .venv/bin/pytest` (2 integration tests skipped: missing API keys)
+- `pytest tests/smoke -v -m smoke` (all skipped; services not running locally)
+- `cd gateway && .venv/bin/pytest`
+- `cd gateway && .venv/bin/mypy janus_gateway`
+- `cd ui && npm test`
+- `cd ui && npm run typecheck`
+
+Note: repo already had unrelated changes; I didn’t touch or stage them.
+
+**Need from you**
+1) Confirm I should select Render workspace “Florians Workspace” (ID `tea-cspqj3l6l47c739nvitg`) so I can watch the deploy via MCP.
+2) Optionally, run `docker-compose up -d` and re-run `pytest tests/smoke -m smoke` if you want local smoke coverage beyond the skip checks.
