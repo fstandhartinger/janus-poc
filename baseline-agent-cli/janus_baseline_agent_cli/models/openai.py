@@ -129,6 +129,8 @@ class ChatCompletionRequest(BaseModel):
     max_tokens: Optional[int] = Field(default=None, ge=1)
     stream: Optional[bool] = False
     stream_options: Optional[StreamOptions] = None
+    tools: Optional[list[ToolDefinition]] = None
+    tool_choice: Optional[Union[str, dict[str, Any]]] = None
     user: Optional[str] = None
     metadata: Optional[dict[str, Any]] = None
 
@@ -177,6 +179,7 @@ class Delta(BaseModel):
     role: Optional[MessageRole] = None
     content: Optional[str] = None
     reasoning_content: Optional[str] = None
+    tool_calls: Optional[list[ToolCall]] = None
     janus: Optional[dict[str, Any]] = None
 
 
