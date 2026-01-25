@@ -12,6 +12,32 @@ interface TranscriptionResult {
   duration?: number;
 }
 
+interface TranscriptionErrorDetail {
+  error: string;
+  code: string;
+  recoverable: boolean;
+  suggestion?: string;
+}
+
+export class TranscriptionFailedError extends Error {
+  readonly code: string;
+  readonly recoverable: boolean;
+  readonly suggestion?: string;
+
+  constructor(
+    message: string,
+    code: string = 'UNKNOWN',
+    recoverable: boolean = true,
+    suggestion?: string
+  ) {
+    super(message);
+    this.name = 'TranscriptionFailedError';
+    this.code = code;
+    this.recoverable = recoverable;
+    this.suggestion = suggestion;
+  }
+}
+
 export async function transcribeAudio(
   audioBlob: Blob,
   options: TranscriptionOptions = {}
@@ -20,7 +46,12 @@ export async function transcribeAudio(
 
   const apiKey = process.env.NEXT_PUBLIC_CHUTES_API_KEY;
   if (!apiKey) {
-    throw new Error('Chutes API key not configured');
+    throw new TranscriptionFailedError(
+      'Chutes API key not configured',
+      'API_KEY_MISSING',
+      false,
+      'Please type your message instead'
+    );
   }
 
   const response = await fetch(WHISPER_ENDPOINT, {
@@ -37,7 +68,12 @@ export async function transcribeAudio(
 
   if (!response.ok) {
     const error = await response.text();
-    throw new Error(`Transcription failed: ${error}`);
+    throw new TranscriptionFailedError(
+      `Transcription failed: ${error}`,
+      'DIRECT_API_ERROR',
+      true,
+      'Please try again'
+    );
   }
 
   const result = await response.json();
@@ -67,10 +103,58 @@ export async function transcribeViaGateway(
   });
 
   if (!response.ok) {
-    throw new Error('Transcription failed');
+    let errorData: TranscriptionErrorDetail;
+
+    try {
+      const data = await response.json();
+      errorData = data.detail || data;
+    } catch {
+      errorData = {
+        error: 'Transcription failed',
+        code: 'UNKNOWN',
+        recoverable: true,
+        suggestion: 'Please try again',
+      };
+    }
+
+    throw new TranscriptionFailedError(
+      errorData.error || 'Transcription failed',
+      errorData.code || 'UNKNOWN',
+      errorData.recoverable ?? true,
+      errorData.suggestion
+    );
   }
 
   return response.json();
+}
+
+export interface TranscriptionHealthStatus {
+  available: boolean;
+  endpoint: string;
+  api_key_configured: boolean;
+  error?: string;
+}
+
+export async function checkTranscriptionHealth(): Promise<TranscriptionHealthStatus> {
+  try {
+    const response = await fetch(`${GATEWAY_URL}/api/transcribe/health`);
+    if (!response.ok) {
+      return {
+        available: false,
+        endpoint: '',
+        api_key_configured: false,
+        error: 'Health check failed',
+      };
+    }
+    return response.json();
+  } catch (e) {
+    return {
+      available: false,
+      endpoint: '',
+      api_key_configured: false,
+      error: e instanceof Error ? e.message : 'Unknown error',
+    };
+  }
 }
 
 async function blobToBase64(blob: Blob): Promise<string> {
@@ -86,4 +170,4 @@ async function blobToBase64(blob: Blob): Promise<string> {
   });
 }
 
-export type { TranscriptionOptions, TranscriptionResult };
+export type { TranscriptionOptions, TranscriptionResult, TranscriptionErrorDetail };

@@ -44,6 +44,34 @@ structlog.configure(
 logger = structlog.get_logger()
 
 
+def log_service_health_status() -> None:
+    """Log health status of configured services on startup."""
+    # Check transcription service
+    if not settings.chutes_api_key:
+        logger.warning(
+            "transcription_not_configured",
+            message=(
+                "CHUTES_API_KEY not configured - transcription endpoint will return 503. "
+                "Set CHUTES_API_KEY environment variable to enable voice transcription."
+            ),
+        )
+    else:
+        logger.info("transcription_service_configured")
+
+    # Check gateway URL
+    if not settings.gateway_url:
+        logger.warning(
+            "gateway_url_not_configured",
+            message="GATEWAY_URL not set - some features may not work correctly.",
+        )
+
+    # Log competitor configuration
+    logger.info(
+        "competitor_config",
+        default_competitor=settings.default_competitor,
+    )
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager for startup and shutdown."""
@@ -55,6 +83,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         port=settings.port,
         debug=settings.debug,
     )
+    log_service_health_status()
     yield
     # Shutdown
     logger.info("gateway_stopping")

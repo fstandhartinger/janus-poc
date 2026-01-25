@@ -1,16 +1,23 @@
 """Transcription proxy routes."""
 
-from typing import Optional
+import logging
+import os
+from typing import Any, Optional
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from janus_gateway.config import get_settings
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/api", tags=["transcription"])
 
-WHISPER_ENDPOINT = "https://chutes-whisper-large-v3.chutes.ai/transcribe"
+WHISPER_ENDPOINT = os.environ.get(
+    "WHISPER_ENDPOINT",
+    "https://chutes-whisper-large-v3.chutes.ai/transcribe",
+)
 
 
 class TranscriptionRequest(BaseModel):
@@ -28,6 +35,82 @@ class TranscriptionResponse(BaseModel):
     duration: Optional[float] = None
 
 
+class TranscriptionHealthResponse(BaseModel):
+    """Health check response for transcription service."""
+
+    available: bool
+    endpoint: str
+    api_key_configured: bool
+    error: Optional[str] = None
+
+
+class TranscriptionErrorDetail(BaseModel):
+    """Detailed transcription error response."""
+
+    error: str
+    code: str
+    recoverable: bool
+    suggestion: Optional[str] = None
+
+
+def create_error_response(
+    error: str,
+    code: str,
+    recoverable: bool,
+    suggestion: Optional[str] = None,
+) -> dict[str, Any]:
+    """Create a structured error response."""
+    return {
+        "error": error,
+        "code": code,
+        "recoverable": recoverable,
+        "suggestion": suggestion,
+    }
+
+
+@router.get("/transcribe/health", response_model=TranscriptionHealthResponse)
+async def transcription_health() -> TranscriptionHealthResponse:
+    """
+    Check if transcription service is available.
+
+    Returns status of:
+    - API key configuration
+    - Whisper endpoint reachability
+    """
+    settings = get_settings()
+    api_key = settings.chutes_api_key
+
+    if not api_key:
+        return TranscriptionHealthResponse(
+            available=False,
+            endpoint=WHISPER_ENDPOINT,
+            api_key_configured=False,
+            error="CHUTES_API_KEY not configured",
+        )
+
+    # Quick ping to verify endpoint (optional, can be slow)
+    try:
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            # Just check if endpoint responds (OPTIONS or HEAD)
+            response = await client.options(WHISPER_ENDPOINT)
+            # Any response (even 405) means endpoint is reachable
+            reachable = response.status_code < 500
+    except Exception as e:
+        logger.warning(f"Transcription endpoint unreachable: {e}")
+        return TranscriptionHealthResponse(
+            available=False,
+            endpoint=WHISPER_ENDPOINT,
+            api_key_configured=True,
+            error=f"Endpoint unreachable: {str(e)}",
+        )
+
+    return TranscriptionHealthResponse(
+        available=reachable,
+        endpoint=WHISPER_ENDPOINT,
+        api_key_configured=True,
+    )
+
+
 @router.post("/transcribe", response_model=TranscriptionResponse)
 async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionResponse:
     """Proxy transcription requests to Chutes Whisper API."""
@@ -36,10 +119,33 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
     api_key = settings.chutes_api_key
 
     if not api_key:
-        raise HTTPException(status_code=503, detail="Transcription service not configured")
+        logger.error("Transcription failed: CHUTES_API_KEY not configured")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=create_error_response(
+                error="Voice transcription is temporarily unavailable",
+                code="TRANSCRIPTION_NOT_CONFIGURED",
+                recoverable=False,
+                suggestion="Please type your message instead",
+            ),
+        )
+
+    # Validate audio data
+    if not request.audio_b64:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=create_error_response(
+                error="No audio data provided",
+                code="MISSING_AUDIO",
+                recoverable=True,
+                suggestion="Please record audio before submitting",
+            ),
+        )
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
+            logger.info(f"Sending transcription request to {WHISPER_ENDPOINT}")
+
             response = await client.post(
                 WHISPER_ENDPOINT,
                 headers={
@@ -52,20 +158,80 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
                 },
             )
 
+            logger.info(f"Transcription response: {response.status_code}")
+
+            if response.status_code == 401:
+                logger.error("Transcription failed: Invalid API key")
+                raise HTTPException(
+                    status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    detail=create_error_response(
+                        error="Voice transcription authentication failed",
+                        code="INVALID_API_KEY",
+                        recoverable=False,
+                        suggestion="Please type your message instead",
+                    ),
+                )
+
+            if response.status_code == 429:
+                logger.warning("Transcription rate limited")
+                raise HTTPException(
+                    status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                    detail=create_error_response(
+                        error="Too many transcription requests",
+                        code="RATE_LIMITED",
+                        recoverable=True,
+                        suggestion="Please wait a moment and try again",
+                    ),
+                )
+
             if response.status_code != 200:
+                logger.error(
+                    f"Transcription failed: {response.status_code} - {response.text}"
+                )
                 raise HTTPException(
                     status_code=response.status_code,
-                    detail=f"Transcription failed: {response.text}",
+                    detail=create_error_response(
+                        error=f"Transcription failed: {response.text}",
+                        code="UPSTREAM_ERROR",
+                        recoverable=True,
+                        suggestion="Please try again",
+                    ),
                 )
 
             result = response.json()
+            text = result.get("text", result.get("transcription", ""))
+
+            if not text:
+                logger.warning("Transcription returned empty text")
+
+            logger.info(f"Transcription successful: {len(text)} characters")
+
             return TranscriptionResponse(
-                text=result.get("text", result.get("transcription", "")),
+                text=text,
                 language=result.get("language"),
                 duration=result.get("duration"),
             )
 
         except httpx.TimeoutException as exc:
-            raise HTTPException(status_code=504, detail="Transcription timed out") from exc
+            logger.error(f"Transcription timed out: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_504_GATEWAY_TIMEOUT,
+                detail=create_error_response(
+                    error="Transcription timed out",
+                    code="TIMEOUT",
+                    recoverable=True,
+                    suggestion="Please try a shorter recording",
+                ),
+            ) from exc
+
         except httpx.RequestError as exc:
-            raise HTTPException(status_code=502, detail=f"Transcription service error: {exc}") from exc
+            logger.error(f"Transcription request error: {exc}")
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=create_error_response(
+                    error="Could not reach transcription service",
+                    code="SERVICE_UNREACHABLE",
+                    recoverable=True,
+                    suggestion="Please try again in a moment",
+                ),
+            ) from exc

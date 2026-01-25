@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { useAudioRecorder } from '@/hooks/useAudioRecorder';
-import { transcribeViaGateway } from '@/lib/transcription';
+import { TranscriptionFailedError, transcribeViaGateway, checkTranscriptionHealth } from '@/lib/transcription';
 
 interface VoiceInputButtonProps {
   onTranscription: (text: string) => void;
@@ -23,6 +23,17 @@ function MicIcon() {
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M5 11a7 7 0 0014 0" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v3" />
+    </svg>
+  );
+}
+
+function MicOffIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 3a3 3 0 00-3 3v6a3 3 0 006 0V6a3 3 0 00-3-3z" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M5 11a7 7 0 0014 0" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 18v3" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 3l18 18" />
     </svg>
   );
 }
@@ -51,6 +62,8 @@ function SpinnerIcon() {
 export function VoiceInputButton({ onTranscription, disabled, className }: VoiceInputButtonProps) {
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [transcriptionError, setTranscriptionError] = useState<string | null>(null);
+  const [voiceInputDisabled, setVoiceInputDisabled] = useState(false);
+  const [errorSuggestion, setErrorSuggestion] = useState<string | null>(null);
 
   const {
     isRecording,
@@ -65,10 +78,20 @@ export function VoiceInputButton({ onTranscription, disabled, className }: Voice
 
   const error = transcriptionError || recordingError;
 
+  // Check service health on mount
+  useEffect(() => {
+    void checkTranscriptionHealth().then((health) => {
+      if (!health.available) {
+        setVoiceInputDisabled(true);
+      }
+    });
+  }, []);
+
   const handleTranscription = useCallback(
     async (blob: Blob) => {
       setIsTranscribing(true);
       setTranscriptionError(null);
+      setErrorSuggestion(null);
       try {
         const result = await transcribeViaGateway(blob);
         const text = result.text?.trim();
@@ -76,7 +99,15 @@ export function VoiceInputButton({ onTranscription, disabled, className }: Voice
           onTranscription(text);
         }
       } catch (err) {
-        setTranscriptionError('Transcription failed. Try again.');
+        if (err instanceof TranscriptionFailedError) {
+          setTranscriptionError(err.suggestion || err.message);
+          setErrorSuggestion(err.suggestion || null);
+          if (!err.recoverable) {
+            setVoiceInputDisabled(true);
+          }
+        } else {
+          setTranscriptionError('Voice input failed. Please type your message.');
+        }
       } finally {
         setIsTranscribing(false);
         reset();
@@ -92,15 +123,16 @@ export function VoiceInputButton({ onTranscription, disabled, className }: Voice
   }, [audioBlob, isRecording, isTranscribing, handleTranscription]);
 
   const handleClick = useCallback(() => {
-    if (disabled || isTranscribing) return;
+    if (disabled || isTranscribing || voiceInputDisabled) return;
 
     if (isRecording) {
       stopRecording();
     } else {
       setTranscriptionError(null);
+      setErrorSuggestion(null);
       startRecording();
     }
-  }, [disabled, isTranscribing, isRecording, startRecording, stopRecording]);
+  }, [disabled, isTranscribing, voiceInputDisabled, isRecording, startRecording, stopRecording]);
 
   useEffect(() => {
     if (!isRecording) return;
@@ -122,12 +154,21 @@ export function VoiceInputButton({ onTranscription, disabled, className }: Voice
     const idle =
       'border-[#1F2937] text-[#9CA3AF] hover:text-[#F3F4F6] hover:border-[#374151]';
     const recording = 'bg-red-500/20 border-red-500 text-red-500 animate-pulse';
+    const unavailable = 'border-[#374151] text-[#4B5563] cursor-not-allowed';
 
-    return [base, isRecording ? recording : idle, className].filter(Boolean).join(' ');
-  }, [className, isRecording]);
+    return [
+      base,
+      voiceInputDisabled ? unavailable : isRecording ? recording : idle,
+      className,
+    ]
+      .filter(Boolean)
+      .join(' ');
+  }, [className, isRecording, voiceInputDisabled]);
 
   const statusMessage = error
     ? error
+    : voiceInputDisabled
+    ? 'Voice input is temporarily unavailable'
     : isTranscribing
     ? 'Transcribing voice input'
     : isRecording
@@ -143,24 +184,36 @@ export function VoiceInputButton({ onTranscription, disabled, className }: Voice
       <button
         type="button"
         onClick={handleClick}
-        disabled={disabled || isTranscribing}
+        disabled={disabled || isTranscribing || voiceInputDisabled}
         className={buttonClasses}
         aria-label={
-          isRecording
+          voiceInputDisabled
+            ? 'Voice input unavailable'
+            : isRecording
             ? 'Stop recording'
             : isTranscribing
             ? 'Transcribing voice input'
             : 'Start voice input'
         }
         title={
-          isRecording
+          voiceInputDisabled
+            ? 'Voice input is temporarily unavailable'
+            : isRecording
             ? 'Stop recording'
             : isTranscribing
             ? 'Transcribing...'
             : 'Start voice input'
         }
       >
-        {isTranscribing ? <SpinnerIcon /> : isRecording ? <StopIcon /> : <MicIcon />}
+        {voiceInputDisabled ? (
+          <MicOffIcon />
+        ) : isTranscribing ? (
+          <SpinnerIcon />
+        ) : isRecording ? (
+          <StopIcon />
+        ) : (
+          <MicIcon />
+        )}
       </button>
 
       {isRecording && (
@@ -169,9 +222,15 @@ export function VoiceInputButton({ onTranscription, disabled, className }: Voice
         </div>
       )}
 
-      {error && (
+      {error && !voiceInputDisabled && (
         <div className="absolute -top-9 left-1/2 -translate-x-1/2 rounded bg-red-500/90 px-2 py-1 text-xs text-white whitespace-nowrap">
           {error}
+        </div>
+      )}
+
+      {voiceInputDisabled && (
+        <div className="absolute -top-9 left-1/2 -translate-x-1/2 rounded bg-yellow-600/90 px-2 py-1 text-xs text-white whitespace-nowrap">
+          Voice input unavailable
         </div>
       )}
     </div>
