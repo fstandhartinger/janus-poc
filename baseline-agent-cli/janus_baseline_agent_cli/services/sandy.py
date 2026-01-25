@@ -34,6 +34,8 @@ from janus_baseline_agent_cli.models import (
     MessageRole,
     Usage,
 )
+from janus_baseline_agent_cli.models.debug import DebugEventType
+from janus_baseline_agent_cli.services.debug import DebugEmitter
 from janus_baseline_agent_cli.services.vision import contains_images, get_image_urls
 from janus_baseline_agent_cli.services.response_processor import process_agent_response
 
@@ -73,6 +75,19 @@ def _strip_ansi(text: str) -> str:
     text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text)
     text = text.replace("\r", "")
     return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
+
+
+def _debug_step_for_tool(tool_name: str) -> str:
+    normalized = tool_name.lower()
+    if "search" in normalized:
+        return "TOOL_SEARCH"
+    if "image" in normalized or "vision" in normalized:
+        return "TOOL_IMG"
+    if "file" in normalized or "read" in normalized or "write" in normalized:
+        return "TOOL_FILES"
+    if "code" in normalized or "exec" in normalized or "python" in normalized:
+        return "TOOL_CODE"
+    return "TOOL_CODE"
 
 
 @dataclass
@@ -982,9 +997,8 @@ class SandyService:
         """Select model for Sandy's agent/run API.
 
         Supported models on Chutes include:
-        - deepseek-ai/DeepSeek-V3-0324-TEE (default, very capable)
-        - deepseek-ai/DeepSeek-V3.2-0324-TEE (newer version)
-        - MiniMax/MiniMax-M2.1-TEE (fast, good quality)
+        - MiniMaxAI/MiniMax-M2.1-TEE (default, fast, good tool call support)
+        - deepseek-ai/DeepSeek-V3-0324-TEE (powerful but has tool call parsing issues)
         - zai-org/GLM-4.7-TEE (Chinese model, good for general tasks)
         - Qwen/Qwen3-VL-235B-A22B-Instruct (for vision tasks)
         - chutesai/Mistral-Small-3.2-24B-Instruct-2506 (fast, small)
@@ -995,8 +1009,9 @@ class SandyService:
         # Sandy's agent API expects certain model formats
         # Skip generic baseline aliases
         if model in {"baseline", "janus-router", "janus-baseline"}:
-            # Use a good default model for agent execution
-            selected = "deepseek-ai/DeepSeek-V3-0324-TEE"
+            # Use MiniMax as default - DeepSeek has issues with tool call parsing
+            # in Sandy's agent runner (causes "'dict object' has no attribute 'name'" errors)
+            selected = "MiniMaxAI/MiniMax-M2.1-TEE"
             logger.info(
                 "model_selection",
                 requested=model,
@@ -1031,8 +1046,8 @@ class SandyService:
             )
             return model
 
-        # Default model for general use
-        selected = "deepseek-ai/DeepSeek-V3-0324-TEE"
+        # Default model for general use - use MiniMax which has better tool call support
+        selected = "MiniMaxAI/MiniMax-M2.1-TEE"
         logger.info(
             "model_selection",
             requested=model,
@@ -1129,6 +1144,14 @@ class SandyService:
         model = request.model
         task = self._extract_task(request)
         has_images = contains_images(request.messages)
+
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.SANDBOX_INIT,
+                "SANDY",
+                "Starting sandbox execution",
+                data={"has_images": has_images},
+            )
 
         if not self.is_available:
             content = (
@@ -1264,6 +1287,7 @@ class SandyService:
     async def execute_complex(
         self,
         request: ChatCompletionRequest,
+        debug_emitter: DebugEmitter | None = None,
     ) -> AsyncGenerator[ChatCompletionChunk, None]:
         """Execute a complex task using Sandy sandbox."""
         request_id = self._generate_id()
@@ -1291,6 +1315,12 @@ class SandyService:
 
         if not self.is_available:
             # Sandy not configured - return a mock response
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.ERROR,
+                    "SANDY",
+                    "Sandy is not configured",
+                )
             yield ChatCompletionChunk(
                 id=request_id,
                 model=model,
@@ -1366,6 +1396,13 @@ class SandyService:
             sandbox_id, public_url = sandbox_info
             sandbox_url = self._sandbox_url(sandbox_id, public_url)
             artifacts: list[Artifact] = []
+
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.AGENT_THINKING,
+                    "AGENT",
+                    f"Sandbox created: {sandbox_id}",
+                )
 
             yield ChatCompletionChunk(
                 id=request_id,
@@ -1522,6 +1559,13 @@ class SandyService:
                         )
                     ],
                 )
+                if debug_emitter:
+                    await debug_emitter.emit(
+                        DebugEventType.RESPONSE_COMPLETE,
+                        "SSE",
+                        f"Agent execution complete (exit code: {exit_code})",
+                        data={"exit_code": exit_code},
+                    )
 
                 result = stdout.strip() if stdout else ""
                 if not result:
@@ -1728,6 +1772,7 @@ class SandyService:
     async def execute_via_agent_api(
         self,
         request: ChatCompletionRequest,
+        debug_emitter: DebugEmitter | None = None,
     ) -> AsyncGenerator[ChatCompletionChunk, None]:
         """
         Execute a task using Sandy's built-in agent/run API.
@@ -1742,6 +1787,13 @@ class SandyService:
         model = request.model
         task = self._extract_task(request)
 
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.SANDBOX_INIT,
+                "SANDY",
+                "Starting sandbox execution",
+            )
+
         # Emit initial role
         yield ChatCompletionChunk(
             id=request_id,
@@ -1750,6 +1802,12 @@ class SandyService:
         )
 
         if not self.is_available:
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.ERROR,
+                    "SANDY",
+                    "Sandy is not configured",
+                )
             yield ChatCompletionChunk(
                 id=request_id,
                 model=model,
@@ -1775,6 +1833,14 @@ class SandyService:
         # Select agent and model for Sandy's API
         agent = self._select_agent_for_api()
         api_model = self._select_model_for_api(request)
+
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.AGENT_THINKING,
+                "AGENT",
+                f"Starting {agent} agent with model {api_model}",
+                data={"agent": agent, "model": api_model},
+            )
 
         yield ChatCompletionChunk(
             id=request_id,
@@ -1847,6 +1913,12 @@ class SandyService:
                         # Progress status messages
                         message = event.get("message", "")
                         if message:
+                            if debug_emitter:
+                                await debug_emitter.emit(
+                                    DebugEventType.AGENT_THINKING,
+                                    "AGENT",
+                                    message,
+                                )
                             yield ChatCompletionChunk(
                                 id=request_id,
                                 model=model,
@@ -1861,6 +1933,12 @@ class SandyService:
                         # Text output from agent
                         text = _strip_ansi(event.get("text", ""))
                         if text:
+                            if debug_emitter:
+                                await debug_emitter.emit(
+                                    DebugEventType.RESPONSE_CHUNK,
+                                    "AGENT",
+                                    text,
+                                )
                             output_parts.append(text)
                             yield ChatCompletionChunk(
                                 id=request_id,
@@ -1890,6 +1968,13 @@ class SandyService:
                                                     output_parts.append(text)
                                             elif block.get("type") == "tool_use":
                                                 tool_name = block.get("name", "")
+                                                if debug_emitter:
+                                                    await debug_emitter.emit(
+                                                        DebugEventType.TOOL_CALL_START,
+                                                        _debug_step_for_tool(tool_name),
+                                                        f"Using tool: {tool_name}",
+                                                        data={"tool": tool_name},
+                                                    )
                                                 yield ChatCompletionChunk(
                                                     id=request_id,
                                                     model=model,
@@ -1906,6 +1991,21 @@ class SandyService:
                         # File changes detected
                         changes = event.get("changes", [])
                         if changes:
+                            if debug_emitter:
+                                for change in changes:
+                                    filename = change.get("path", "unknown")
+                                    change_type = change.get("changeType", "modified")
+                                    await debug_emitter.emit(
+                                        DebugEventType.FILE_CREATED
+                                        if change_type == "created"
+                                        else DebugEventType.FILE_MODIFIED,
+                                        "TOOL_FILES",
+                                        f"File {change_type}: {filename}",
+                                        data={
+                                            "filename": filename,
+                                            "change_type": change_type,
+                                        },
+                                    )
                             change_summary = ", ".join(
                                 f"{c.get('path', 'unknown')} ({c.get('changeType', 'modified')})"
                                 for c in changes[:5]
@@ -1931,6 +2031,17 @@ class SandyService:
                         exit_code = event.get("exitCode", 0)
                         success = event.get("success", exit_code == 0)
                         duration = event.get("duration", 0)
+                        if debug_emitter:
+                            await debug_emitter.emit(
+                                DebugEventType.RESPONSE_COMPLETE,
+                                "SSE",
+                                f"Agent completed ({'success' if success else 'failed'})",
+                                data={
+                                    "success": success,
+                                    "exit_code": exit_code,
+                                    "duration": duration,
+                                },
+                            )
                         yield ChatCompletionChunk(
                             id=request_id,
                             model=model,
@@ -1951,6 +2062,12 @@ class SandyService:
                         error_msg = event.get("error", "Unknown error")
                         has_error = True
                         output_parts.append(f"Error: {error_msg}")
+                        if debug_emitter:
+                            await debug_emitter.emit(
+                                DebugEventType.ERROR,
+                                "AGENT",
+                                f"Error: {error_msg}",
+                            )
                         yield ChatCompletionChunk(
                             id=request_id,
                             model=model,
