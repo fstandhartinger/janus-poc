@@ -846,7 +846,7 @@ class SandyService:
             "model": model,
             "prompt": prompt,
             "maxDuration": max_duration,
-            "raw_prompt": True,  # Skip web dev context wrapping
+            "rawPrompt": True,  # Skip web dev context wrapping (camelCase for Sandy API)
         }
 
         logger.info(
