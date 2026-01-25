@@ -86,6 +86,7 @@ flowchart TB
 - SSE streaming with `reasoning_content` field
 - Artifact generation for file outputs
 - Full Chutes API integration (LLM, images, TTS, search)
+- Deep research via chutes-search with light/max modes and citations
 
 ## Installation
 
@@ -105,7 +106,7 @@ pip install -e ".[dev]"
 python -m janus_baseline_agent_cli.main
 
 # Or with uvicorn directly
-uvicorn janus_baseline_agent_cli.main:app --port 8001 --reload
+uvicorn janus_baseline_agent_cli.main:app --port 8080 --reload
 ```
 
 ## Testing
@@ -123,8 +124,10 @@ Legacy `BASELINE_` prefixed environment variables are still accepted.
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `BASELINE_AGENT_CLI_HOST` | `0.0.0.0` | Server host |
-| `BASELINE_AGENT_CLI_PORT` | `8001` | Server port |
+| `BASELINE_AGENT_CLI_PORT` | `8080` | Server port |
 | `BASELINE_AGENT_CLI_DEBUG` | `false` | Enable debug mode |
+
+The service also honors `HOST`, `PORT`, `DEBUG`, and `LOG_LEVEL` for containerized deployments.
 
 ### Chutes API Configuration
 
@@ -133,10 +136,23 @@ The baseline uses [Chutes](https://chutes.ai) as the inference provider. Chutes 
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `BASELINE_AGENT_CLI_OPENAI_API_KEY` | - | **Chutes API key** (named for OpenAI client compatibility) |
-| `BASELINE_AGENT_CLI_OPENAI_BASE_URL` | - | Chutes API URL: `https://api.chutes.ai/v1` |
-| `BASELINE_AGENT_CLI_MODEL` | `gpt-4o-mini` | Model for fast path (must be available on Chutes) |
+| `BASELINE_AGENT_CLI_OPENAI_BASE_URL` | - | Legacy alias for the Chutes API URL |
+| `BASELINE_AGENT_CLI_CHUTES_API_BASE` | `https://llm.chutes.ai/v1` | Chutes API base URL |
+| `BASELINE_AGENT_CLI_MODEL` | `janus-router` | Model name exposed to clients |
+| `BASELINE_AGENT_CLI_DIRECT_MODEL` | `zai-org/GLM-4.7-TEE` | Direct model when router is disabled |
+
+For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
 
 > **Note**: Despite the `OPENAI_` prefix, these variables configure access to **Chutes**, not OpenAI. The prefix exists because the implementation uses the OpenAI Python client library, which Chutes supports via its OpenAI-compatible API.
+
+### Vision Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BASELINE_AGENT_CLI_VISION_MODEL_PRIMARY` | `Qwen/Qwen3-VL-235B-A22B-Instruct` | Primary vision model for image understanding |
+| `BASELINE_AGENT_CLI_VISION_MODEL_FALLBACK` | `chutesai/Mistral-Small-3.2-24B-Instruct-2506` | Fallback vision model for image understanding |
+| `BASELINE_AGENT_CLI_VISION_MODEL_TIMEOUT` | `60.0` | Timeout for vision model requests (seconds) |
+| `BASELINE_AGENT_CLI_ENABLE_VISION_ROUTING` | `true` | Route requests with images to vision models |
 
 ### Sandy Sandbox Configuration
 
@@ -170,13 +186,29 @@ The baseline uses [Chutes](https://chutes.ai) as the inference provider. Chutes 
 
 > Note: LLM verification is always performed before using the fast path.
 
+### Model Router Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BASELINE_AGENT_CLI_USE_MODEL_ROUTER` | `true` | Enable the local composite model router |
+| `BASELINE_AGENT_CLI_ROUTER_HOST` | `127.0.0.1` | Router host |
+| `BASELINE_AGENT_CLI_ROUTER_PORT` | `8000` | Router port |
+
 ## Example Configuration
 
 ```bash
 # .env file
 BASELINE_AGENT_CLI_OPENAI_API_KEY=cpk_your_chutes_api_key
-BASELINE_AGENT_CLI_OPENAI_BASE_URL=https://api.chutes.ai/v1
-BASELINE_AGENT_CLI_MODEL=gpt-4o-mini
+BASELINE_AGENT_CLI_CHUTES_API_BASE=https://llm.chutes.ai/v1
+BASELINE_AGENT_CLI_USE_MODEL_ROUTER=true
+BASELINE_AGENT_CLI_ROUTER_HOST=127.0.0.1
+BASELINE_AGENT_CLI_ROUTER_PORT=8000
+BASELINE_AGENT_CLI_MODEL=janus-router
+BASELINE_AGENT_CLI_DIRECT_MODEL=zai-org/GLM-4.7-TEE
+BASELINE_AGENT_CLI_VISION_MODEL_PRIMARY=Qwen/Qwen3-VL-235B-A22B-Instruct
+BASELINE_AGENT_CLI_VISION_MODEL_FALLBACK=chutesai/Mistral-Small-3.2-24B-Instruct-2506
+BASELINE_AGENT_CLI_VISION_MODEL_TIMEOUT=60.0
+BASELINE_AGENT_CLI_ENABLE_VISION_ROUTING=true
 
 SANDY_BASE_URL=https://sandy.example.com
 SANDY_API_KEY=your_sandy_api_key
@@ -198,7 +230,7 @@ The CLI agent (Claude Code) reads these files to understand available capabiliti
 
 ```bash
 # Simple request (fast path)
-curl -X POST http://localhost:8001/v1/chat/completions \
+curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "baseline",
@@ -207,7 +239,7 @@ curl -X POST http://localhost:8001/v1/chat/completions \
   }'
 
 # Complex request (agent path)
-curl -X POST http://localhost:8001/v1/chat/completions \
+curl -X POST http://localhost:8080/v1/chat/completions \
   -H "Content-Type: application/json" \
   -d '{
     "model": "baseline",

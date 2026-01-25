@@ -72,6 +72,28 @@ PY
   done
 ) >/workspace/artifact_server.log 2>&1 &
 
+# Start the model router in the background
+echo "Starting Janus Model Router..."
+python3 -m janus_baseline_agent_cli.router.server >/workspace/router.log 2>&1 &
+ROUTER_PID=$!
+
+# Wait for router to be ready
+for i in {1..30}; do
+  if curl -s http://127.0.0.1:8000/health >/dev/null 2>&1; then
+    echo "Router ready!"
+    break
+  fi
+  sleep 0.5
+done
+
+# Configure agent to use local router
+export OPENAI_API_BASE="http://127.0.0.1:8000/v1"
+export OPENAI_API_KEY="${CHUTES_API_KEY}"
+export OPENAI_MODEL="janus-router"
+
+# Cleanup on exit
+trap "kill $ROUTER_PID 2>/dev/null" EXIT
+
 # Set up environment
 export PYTHONDONTWRITEBYTECODE=1
 export NODE_NO_WARNINGS=1

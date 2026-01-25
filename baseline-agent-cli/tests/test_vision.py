@@ -62,7 +62,7 @@ def test_get_image_urls() -> None:
 
 
 def test_select_model_routes_to_vision() -> None:
-    settings = Settings(enable_vision_routing=True)
+    settings = Settings(enable_vision_routing=True, use_model_router=False)
     service = LLMService(settings)
     request = ChatCompletionRequest(
         model="gpt-4o-mini",
@@ -80,7 +80,7 @@ def test_select_model_routes_to_vision() -> None:
 
 
 def test_select_model_respects_disabled_routing() -> None:
-    settings = Settings(enable_vision_routing=False)
+    settings = Settings(enable_vision_routing=False, use_model_router=False)
     service = LLMService(settings)
     request = ChatCompletionRequest(
         model="custom-model",
@@ -97,7 +97,7 @@ def test_select_model_respects_disabled_routing() -> None:
 
 
 def test_select_model_uses_default_for_baseline_alias() -> None:
-    settings = Settings(model="gpt-4o-mini")
+    settings = Settings(model="gpt-4o-mini", use_model_router=False)
     service = LLMService(settings)
     request = ChatCompletionRequest(
         model="baseline",

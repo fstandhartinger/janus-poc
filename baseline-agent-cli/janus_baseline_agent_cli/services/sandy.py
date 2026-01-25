@@ -165,7 +165,7 @@ class SandyService:
         sandbox_url = self._sandbox_url(sandbox_id, public_url)
         artifact_base = self._artifact_url_base(sandbox_id, public_url)
         chutes_api_key = self._settings.chutes_api_key or self._settings.openai_api_key or ""
-        chutes_api_url = self._settings.openai_base_url or "https://api.chutes.ai/v1"
+        chutes_api_url = self._settings.chutes_api_base_effective
         auth_token = self._resolve_auth_token(request)
         return {
             "JANUS_WORKSPACE": "/workspace",
@@ -178,6 +178,7 @@ class SandyService:
             "JANUS_ENABLE_NETWORK": "true",
             "CHUTES_API_KEY": chutes_api_key,
             "CHUTES_API_URL": chutes_api_url,
+            "CHUTES_API_BASE": chutes_api_url,
             "JANUS_SANDBOX_ID": sandbox_id,
             "JANUS_SANDBOX_URL": sandbox_url,
             "JANUS_SANDBOX_PUBLIC_URL": public_url or "",

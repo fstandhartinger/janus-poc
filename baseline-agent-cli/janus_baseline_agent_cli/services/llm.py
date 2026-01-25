@@ -13,6 +13,7 @@ from openai.types.chat import (
 
 from janus_baseline_agent_cli.config import Settings, get_settings
 from janus_baseline_agent_cli.models import (
+    AssistantMessage,
     ChatCompletionChunk,
     ChatCompletionRequest,
     ChatCompletionResponse,
@@ -22,11 +23,22 @@ from janus_baseline_agent_cli.models import (
     FinishReason,
     Message,
     MessageRole,
+    ToolCall,
     Usage,
+)
+from janus_baseline_agent_cli.agent.efficiency import (
+    optimize_system_prompt,
+    truncate_context_intelligently,
 )
 from janus_baseline_agent_cli.services.vision import contains_images
 
 logger = structlog.get_logger()
+
+
+def _split_stream_content(content: str, max_chars: int = 40) -> list[str]:
+    if len(content) <= max_chars:
+        return [content]
+    return [content[i : i + max_chars] for i in range(0, len(content), max_chars)]
 
 
 class LLMService:
@@ -43,9 +55,10 @@ class LLMService:
     def _get_client(self) -> AsyncOpenAI:
         """Get or create OpenAI client."""
         if self._client is None:
+            api_key = self._settings.effective_api_key or "dummy-key"
             self._client = AsyncOpenAI(
-                api_key=self._settings.openai_api_key or "dummy-key",
-                base_url=self._settings.openai_base_url,
+                api_key=api_key,
+                base_url=self._settings.effective_api_base,
             )
         return self._client
 
@@ -54,7 +67,7 @@ class LLMService:
         return f"chatcmpl-baseline-{uuid.uuid4().hex[:12]}"
 
     def _should_mock(self) -> bool:
-        return not self._settings.openai_api_key and not self._settings.openai_base_url
+        return self._settings.effective_api_key is None
 
     def _mock_text(self) -> str:
         return (
@@ -64,9 +77,18 @@ class LLMService:
 
     def select_model(self, request: ChatCompletionRequest) -> str:
         """Select the appropriate model based on message content."""
+        if self._settings.use_model_router:
+            return self._settings.effective_model
         requested_model = request.model or self._settings.model
-        if requested_model in {"baseline", "baseline-langchain"}:
+        if requested_model in {
+            "baseline",
+            "baseline-langchain",
+            "janus-baseline-agent-cli",
+            "janus-baseline-langchain",
+        }:
             requested_model = self._settings.model
+        if requested_model == "janus-router":
+            requested_model = self._settings.direct_model
         if self._enable_vision_routing and contains_images(request.messages):
             logger.info(
                 "vision_routing_enabled",
@@ -96,11 +118,72 @@ class LLMService:
         return formatted
 
     def _format_messages(self, request: ChatCompletionRequest) -> list[dict]:
-        return [
-            {"role": m.role.value, "content": self._format_content(m.content)}
-            for m in request.messages
-            if m.content is not None
-        ]
+        messages = truncate_context_intelligently(request.messages)
+        task_type = self._infer_task_type(messages)
+        formatted: list[dict] = []
+        for message in messages:
+            if message.content is None:
+                continue
+            content = self._format_content(message.content)
+            if message.role == MessageRole.SYSTEM and isinstance(content, str):
+                content = optimize_system_prompt(content, task_type)
+            formatted.append({"role": message.role.value, "content": content})
+        return formatted
+
+    def _format_tools(self, request: ChatCompletionRequest) -> tuple[list[dict], object] | tuple[None, None]:
+        if not request.tools:
+            return None, None
+        tools = []
+        for tool in request.tools:
+            if hasattr(tool, "model_dump"):
+                tools.append(tool.model_dump())
+            else:
+                tools.append(tool)
+        tool_choice = request.tool_choice
+        if tool_choice is not None and hasattr(tool_choice, "model_dump"):
+            tool_choice = tool_choice.model_dump()
+        return tools, tool_choice
+
+    def _convert_tool_calls(self, tool_calls: list[object]) -> list[ToolCall]:
+        converted: list[ToolCall] = []
+        for call in tool_calls:
+            if hasattr(call, "model_dump"):
+                payload = call.model_dump()
+            elif isinstance(call, dict):
+                payload = call
+            else:
+                function = getattr(call, "function", None)
+                payload = {
+                    "id": getattr(call, "id", "tool"),
+                    "type": getattr(call, "type", "function"),
+                    "function": {
+                        "name": getattr(function, "name", ""),
+                        "arguments": getattr(function, "arguments", ""),
+                    },
+                }
+            try:
+                converted.append(ToolCall(**payload))
+            except Exception:
+                continue
+        return converted
+
+    def _infer_task_type(self, messages: list[Message]) -> str:
+        user_messages = [m for m in messages if m.role == MessageRole.USER]
+        if not user_messages:
+            return "general"
+        text = user_messages[-1].content
+        if not isinstance(text, str):
+            return "general"
+        lowered = text.lower()
+        if any(token in lowered for token in ("calculate", "equation", "solve", "math")):
+            return "math"
+        if any(token in lowered for token in ("code", "python", "script", "bug", "function")):
+            return "code"
+        if any(token in lowered for token in ("story", "poem", "creative", "write a")):
+            return "creative"
+        if any(token in lowered for token in ("what is", "who is", "when is", "where is")):
+            return "factual"
+        return "simple_qa"
 
     async def _create_completion(
         self,
@@ -111,6 +194,12 @@ class LLMService:
         timeout: float,
         stream: bool,
     ):
+        tools, tool_choice = self._format_tools(request)
+        tool_params: dict[str, object] = {}
+        if tools:
+            tool_params["tools"] = tools
+            if tool_choice is not None:
+                tool_params["tool_choice"] = tool_choice
         return await client.chat.completions.create(
             model=model,
             messages=messages,  # type: ignore
@@ -118,6 +207,7 @@ class LLMService:
             max_tokens=request.max_tokens or self._settings.max_tokens,
             stream=stream,
             timeout=timeout,
+            **tool_params,
         )
 
     async def complete(
@@ -223,9 +313,19 @@ class LLMService:
             choices=[
                 Choice(
                     index=c.index,
-                    message=Message(
-                        role=MessageRole(c.message.role),
-                        content=c.message.content,
+                    message=(
+                        AssistantMessage(
+                            content=c.message.content,
+                            reasoning_content=getattr(c.message, "reasoning_content", None),
+                            tool_calls=self._convert_tool_calls(c.message.tool_calls)
+                            if c.message.tool_calls
+                            else None,
+                        )
+                        if getattr(c.message, "tool_calls", None)
+                        else Message(
+                            role=MessageRole(c.message.role),
+                            content=c.message.content,
+                        )
                     ),
                     finish_reason=FinishReason(c.finish_reason) if c.finish_reason else None,
                 )
@@ -332,20 +432,49 @@ class LLMService:
                 if chunk.choices:
                     delta = chunk.choices[0].delta
                     finish_reason = chunk.choices[0].finish_reason
-
-                    yield ChatCompletionChunk(
-                        id=request_id,
-                        model=model,
-                        choices=[
-                            ChunkChoice(
-                                delta=Delta(content=delta.content if delta.content else None),
-                                finish_reason=FinishReason(finish_reason) if finish_reason else None,
-                            )
-                        ],
+                    tool_calls = (
+                        self._convert_tool_calls(delta.tool_calls)
+                        if getattr(delta, "tool_calls", None)
+                        else None
                     )
 
-                    if delta.content:
-                        completion_tokens += 1  # Rough estimate
+                    content = delta.content or ""
+                    content_parts = _split_stream_content(content) if content else []
+
+                    if content_parts:
+                        for index, part in enumerate(content_parts):
+                            is_last = index == len(content_parts) - 1
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(
+                                            content=part,
+                                            tool_calls=tool_calls if index == 0 else None,
+                                        ),
+                                        finish_reason=(
+                                            FinishReason(finish_reason)
+                                            if finish_reason and is_last
+                                            else None
+                                        ),
+                                    )
+                                ],
+                            )
+                            completion_tokens += 1  # Rough estimate
+                    else:
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[
+                                ChunkChoice(
+                                    delta=Delta(content=None, tool_calls=tool_calls),
+                                    finish_reason=FinishReason(finish_reason)
+                                    if finish_reason
+                                    else None,
+                                )
+                            ],
+                        )
 
                 if chunk.usage:
                     prompt_tokens = chunk.usage.prompt_tokens

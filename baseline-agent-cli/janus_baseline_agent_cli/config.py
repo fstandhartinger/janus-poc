@@ -92,7 +92,16 @@ class Settings(BaseSettings):
             "BASELINE_OPENAI_BASE_URL",
         ),
     )
-    model: str = Field(default="gpt-4o-mini", description="Default model for fast path")
+    model: str = Field(default="janus-router", description="Default model for fast path")
+    direct_model: str = Field(
+        default="zai-org/GLM-4.7-TEE",
+        description="Direct model when router is disabled",
+        validation_alias=AliasChoices(
+            "DIRECT_MODEL",
+            "BASELINE_AGENT_CLI_DIRECT_MODEL",
+            "BASELINE_DIRECT_MODEL",
+        ),
+    )
     max_tokens: int = Field(default=4096, description="Max tokens for responses")
     temperature: float = Field(default=0.7, description="Default temperature")
 
@@ -100,7 +109,50 @@ class Settings(BaseSettings):
     chutes_api_key: Optional[str] = Field(
         default=None,
         description="Chutes API key",
-        validation_alias=AliasChoices("CHUTES_API_KEY", "JANUS_CHUTES_API_KEY"),
+        validation_alias=AliasChoices(
+            "CHUTES_API_KEY",
+            "JANUS_CHUTES_API_KEY",
+            "BASELINE_AGENT_CLI_CHUTES_API_KEY",
+            "BASELINE_CHUTES_API_KEY",
+        ),
+    )
+    chutes_api_base: str = Field(
+        default="https://llm.chutes.ai/v1",
+        description="Chutes API base URL",
+        validation_alias=AliasChoices(
+            "CHUTES_API_BASE",
+            "BASELINE_AGENT_CLI_CHUTES_API_BASE",
+            "BASELINE_CHUTES_API_BASE",
+        ),
+    )
+
+    # Model router configuration
+    use_model_router: bool = Field(
+        default=True,
+        description="Enable local model router",
+        validation_alias=AliasChoices(
+            "USE_MODEL_ROUTER",
+            "BASELINE_AGENT_CLI_USE_MODEL_ROUTER",
+            "BASELINE_USE_MODEL_ROUTER",
+        ),
+    )
+    router_host: str = Field(
+        default="127.0.0.1",
+        description="Model router host",
+        validation_alias=AliasChoices(
+            "ROUTER_HOST",
+            "BASELINE_AGENT_CLI_ROUTER_HOST",
+            "BASELINE_ROUTER_HOST",
+        ),
+    )
+    router_port: int = Field(
+        default=8000,
+        description="Model router port",
+        validation_alias=AliasChoices(
+            "ROUTER_PORT",
+            "BASELINE_AGENT_CLI_ROUTER_PORT",
+            "BASELINE_ROUTER_PORT",
+        ),
     )
 
     # Vision settings
@@ -191,6 +243,30 @@ class Settings(BaseSettings):
             "BASELINE_LOG_LEVEL",
         ),
     )
+
+    @property
+    def effective_api_key(self) -> Optional[str]:
+        """Get the API key for OpenAI-compatible calls."""
+        return self.openai_api_key or self.chutes_api_key
+
+    @property
+    def chutes_api_base_effective(self) -> str:
+        """Get the Chutes API base URL."""
+        return self.openai_base_url or self.chutes_api_base
+
+    @property
+    def effective_api_base(self) -> str:
+        """Get the API base URL (router or Chutes)."""
+        if self.use_model_router:
+            return f"http://{self.router_host}:{self.router_port}/v1"
+        return self.chutes_api_base_effective
+
+    @property
+    def effective_model(self) -> str:
+        """Get the effective model name."""
+        if self.use_model_router:
+            return "janus-router"
+        return self.direct_model
 
 
 @lru_cache

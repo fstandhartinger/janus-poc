@@ -50,6 +50,8 @@ ENV HOST=0.0.0.0
 ENV PORT=8080
 ENV LOG_LEVEL=INFO
 ENV DEBUG=false
+ENV BASELINE_USE_MODEL_ROUTER=true
+ENV BASELINE_ROUTER_PORT=8000
 
 # Health check
 HEALTHCHECK --interval=10s --timeout=5s --start-period=10s --retries=3 \
@@ -60,5 +62,5 @@ EXPOSE 8080
 
 USER app
 
-# Run the server
-CMD ["python", "-m", "janus_baseline_agent_cli.main"]
+# Run router and server
+CMD ["sh", "-c", "python -m janus_baseline_agent_cli.router.server & sleep 2 && python -m janus_baseline_agent_cli.main"]

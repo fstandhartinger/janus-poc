@@ -33,3 +33,9 @@
 - Completed spec 55_baseline_containerization.md with baseline/gateway Dockerfiles, compose workflow, container scripts, Sandy runner scaffold, and documentation updates.
 - Re-verified spec 55_baseline_containerization.md artifacts and marked the spec COMPLETE with NR_OF_TRIES tracking.
 - Completed spec 56_scoring_service_backend.md with the new scoring-service backend, Neon schema, janus-bench integration, tests, and Render blueprint updates.
+- Completed spec 57_scoring_ui_page.md with the scoring run submission page, live run status views, run detail dashboards, and scoring API proxies in the UI.
+
+## 2026-01-25
+- Began spec 58_baseline_performance_optimization.md with benchmark analysis tooling, robust streaming SSE output, and smoke-test coverage updates for the baselines.
+- Ran full Janus intelligence suite for both baselines using Hermes-4-14B + Qwen2.5-VL-32B and captured metrics; tool-use benchmarks still lag while research/streaming/multimodal improved.
+- Completed spec 59_composite_model_router.md with the local router service, LLM-based classification, fallback routing, metrics endpoint, and updated baseline packaging/tests.

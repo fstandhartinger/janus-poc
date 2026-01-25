@@ -87,7 +87,18 @@ class TestConservativeDefaults:
         assert "conservative_default" in analysis.reason
 
     @pytest.mark.asyncio
-    async def test_no_api_key_defaults_to_agent(self) -> None:
+    async def test_no_api_key_defaults_to_agent(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        for key in (
+            "OPENAI_API_KEY",
+            "CHUTES_API_KEY",
+            "BASELINE_OPENAI_API_KEY",
+            "BASELINE_AGENT_CLI_OPENAI_API_KEY",
+            "BASELINE_CHUTES_API_KEY",
+            "BASELINE_AGENT_CLI_CHUTES_API_KEY",
+        ):
+            monkeypatch.delenv(key, raising=False)
         settings = Settings(openai_api_key=None)
         detector = ComplexityDetector(settings)
 
