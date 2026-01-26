@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 interface LeaderboardEntry {
   rank: number;
@@ -49,7 +50,9 @@ export function LeaderboardCompare({ runScore }: { runScore: number }) {
           return;
         }
 
-        const response = await fetch('/api/scoring/leaderboard?limit=8');
+        const response = await fetch('/api/scoring/leaderboard?limit=8', {
+          headers: applyPreReleaseHeader(),
+        });
         if (!response.ok) {
           throw new Error('Failed to load leaderboard');
         }

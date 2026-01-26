@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 interface TaskResult {
   id: string;
@@ -45,7 +46,9 @@ export function TaskResultsTable({ runId, autoLoad = false }: { runId: string; a
     setError(null);
 
     try {
-      const response = await fetch(`/api/scoring/runs/${runId}/results`);
+      const response = await fetch(`/api/scoring/runs/${runId}/results`, {
+        headers: applyPreReleaseHeader(),
+      });
       if (!response.ok) {
         throw new Error('Failed to load results');
       }

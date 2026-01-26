@@ -375,5 +375,13 @@ cd ui && npm run typecheck
 
 ---
 
+## Pre-release Access
+
+- If automating the frontend via Playwright (or similar), enter the pre-release
+  password stored in `CHUTES_JANUS_PRE_RELEASE_PWD`.
+
+---
+
 **Created**: 2025-01-22
-**Version**: 1.0.0
+**Version**: 1.0.1
+**Amendments**: Added pre-release access guidance for browser automation.

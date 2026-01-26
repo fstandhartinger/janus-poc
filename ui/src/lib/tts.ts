@@ -3,6 +3,7 @@
  */
 
 import { GATEWAY_URL } from './api';
+import { applyPreReleaseHeader } from './preRelease';
 
 export interface TTSVoice {
   id: string;
@@ -78,7 +79,7 @@ export async function generateSpeech(
 
   const response = await fetch(endpoint, {
     method: 'POST',
-    headers,
+    headers: applyPreReleaseHeader(headers),
     body: JSON.stringify({
       text: cleanText,
       voice,

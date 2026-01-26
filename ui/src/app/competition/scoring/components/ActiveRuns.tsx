@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 interface ActiveRun {
   id: string;
@@ -22,6 +23,7 @@ export function ActiveRuns() {
 
     const fetchRuns = async () => {
       const response = await fetch('/api/scoring/runs?limit=20', {
+        headers: applyPreReleaseHeader(),
         signal: controller.signal,
       });
       if (response.ok && isMounted) {

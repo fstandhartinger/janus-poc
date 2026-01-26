@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 export type AuthUser = {
   userId: string;
@@ -18,6 +19,7 @@ const fetchAuthMe = async (): Promise<AuthUser | null> => {
   const response = await fetch('/api/auth/me', {
     credentials: 'include',
     cache: 'no-store',
+    headers: applyPreReleaseHeader(),
   });
 
   if (!response.ok) {
@@ -66,6 +68,7 @@ export const useAuth = () => {
     await fetch('/api/auth/logout', {
       method: 'POST',
       credentials: 'include',
+      headers: applyPreReleaseHeader(),
     });
     setUser(null);
   }, []);

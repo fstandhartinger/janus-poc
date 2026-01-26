@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 interface RunSummary {
   run_id: string;
@@ -28,7 +29,9 @@ export function StreamingMetrics({ runId }: { runId: string }) {
     let isMounted = true;
 
     const fetchSummary = async () => {
-      const response = await fetch(`/api/scoring/runs/${runId}/summary`);
+      const response = await fetch(`/api/scoring/runs/${runId}/summary`, {
+        headers: applyPreReleaseHeader(),
+      });
       if (response.ok && isMounted) {
         setSummary(await response.json());
       }

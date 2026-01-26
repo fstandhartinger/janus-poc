@@ -74,6 +74,11 @@ class Settings(BaseSettings):
         description="Chutes API key",
         validation_alias=AliasChoices("CHUTES_API_KEY", "JANUS_CHUTES_API_KEY"),
     )
+    pre_release_password: Optional[str] = Field(
+        default=None,
+        description="Pre-release password required for API access",
+        validation_alias=AliasChoices("CHUTES_JANUS_PRE_RELEASE_PWD", "JANUS_PRE_RELEASE_PASSWORD"),
+    )
     chutes_search_url: str = Field(
         default="https://chutes-search.onrender.com",
         description="Chutes search base URL",

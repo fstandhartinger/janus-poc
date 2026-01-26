@@ -54,12 +54,18 @@ export async function POST(request: NextRequest) {
     payload.chutes_access_token = session.accessToken;
   }
 
+  const preReleaseHeader = request.headers.get('x-prereleasepassword');
+  const upstreamHeaders: Record<string, string> = {
+    'Content-Type': 'application/json',
+    Accept: 'text/event-stream',
+  };
+  if (preReleaseHeader) {
+    upstreamHeaders['X-PreReleasePassword'] = preReleaseHeader;
+  }
+
   const upstreamResponse = await fetch(`${GATEWAY_URL}/v1/chat/completions`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Accept: 'text/event-stream',
-    },
+    headers: upstreamHeaders,
     body: JSON.stringify(payload),
     cache: 'no-store',
   });

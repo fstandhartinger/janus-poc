@@ -1,4 +1,5 @@
 import { GATEWAY_URL } from './api';
+import { applyPreReleaseHeader } from './preRelease';
 
 const WHISPER_ENDPOINT = 'https://chutes-whisper-large-v3.chutes.ai/transcribe';
 
@@ -94,9 +95,9 @@ export async function transcribeViaGateway(
 
   const response = await fetch(`${GATEWAY_URL}/api/transcribe`, {
     method: 'POST',
-    headers: {
+    headers: applyPreReleaseHeader({
       'Content-Type': 'application/json',
-    },
+    }),
     body: JSON.stringify(payload),
   });
 
@@ -136,7 +137,9 @@ export interface TranscriptionHealthStatus {
 
 export async function checkTranscriptionHealth(): Promise<TranscriptionHealthStatus> {
   try {
-    const response = await fetch(`${GATEWAY_URL}/api/transcribe/health`);
+    const response = await fetch(`${GATEWAY_URL}/api/transcribe/health`, {
+      headers: applyPreReleaseHeader(),
+    });
     if (!response.ok) {
       return {
         available: false,

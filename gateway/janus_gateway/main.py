@@ -10,6 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from janus_gateway import __version__
 from janus_gateway.config import get_settings
 from janus_gateway.middleware.logging import RequestLoggingMiddleware
+from janus_gateway.middleware.pre_release_password import PreReleasePasswordMiddleware
 from janus_gateway.routers import (
     artifacts_router,
     chat_router,
@@ -120,6 +121,10 @@ Currently open access. API keys coming soon.
 
 # Request logging middleware
 app.add_middleware(RequestLoggingMiddleware)
+
+# Pre-release password middleware
+if settings.pre_release_password:
+    app.add_middleware(PreReleasePasswordMiddleware, password=settings.pre_release_password)
 
 # Add CORS middleware
 app.add_middleware(

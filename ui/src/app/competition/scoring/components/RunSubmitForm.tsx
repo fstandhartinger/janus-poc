@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 type TargetType = 'url' | 'container';
 type Suite = 'quick' | 'full' | 'research' | 'tool_use' | 'multimodal' | 'streaming' | 'cost';
@@ -36,7 +37,7 @@ export function RunSubmitForm() {
       const modelValue = model === 'custom' && customModel ? customModel : model;
       const response = await fetch('/api/scoring/runs', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: applyPreReleaseHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({
           target_type: targetType,
           target_url: targetType === 'url' ? targetUrl : undefined,

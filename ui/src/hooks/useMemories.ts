@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { GATEWAY_URL } from '@/lib/api';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 export type MemoryRecord = {
   id: string;
@@ -39,7 +40,7 @@ export function useMemories(userId?: string, enabled = true): UseMemoriesResult 
     try {
       const response = await fetch(
         `${MEMORY_API_BASE}?user_id=${encodeURIComponent(userId)}`,
-        { cache: 'no-store' }
+        { cache: 'no-store', headers: applyPreReleaseHeader() }
       );
       if (!response.ok) {
         throw new Error(await response.text());
@@ -60,7 +61,7 @@ export function useMemories(userId?: string, enabled = true): UseMemoriesResult 
       setError(null);
       const response = await fetch(`${MEMORY_API_BASE}/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: applyPreReleaseHeader({ 'Content-Type': 'application/json' }),
         body: JSON.stringify({ user_id: userId, ...updates }),
       });
       if (!response.ok) {
@@ -77,7 +78,7 @@ export function useMemories(userId?: string, enabled = true): UseMemoriesResult 
       setError(null);
       const response = await fetch(
         `${MEMORY_API_BASE}/${id}?user_id=${encodeURIComponent(userId)}`,
-        { method: 'DELETE' }
+        { method: 'DELETE', headers: applyPreReleaseHeader() }
       );
       if (!response.ok) {
         throw new Error(await response.text());
@@ -94,7 +95,7 @@ export function useMemories(userId?: string, enabled = true): UseMemoriesResult 
     try {
       const response = await fetch(
         `${MEMORY_API_BASE}/clear?user_id=${encodeURIComponent(userId)}`,
-        { method: 'DELETE' }
+        { method: 'DELETE', headers: applyPreReleaseHeader() }
       );
       if (!response.ok) {
         throw new Error(await response.text());

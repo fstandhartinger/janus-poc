@@ -6,6 +6,7 @@ import { ScoreRadar } from './ScoreRadar';
 import { TaskResultsTable } from './TaskResultsTable';
 import { StreamingMetrics } from './StreamingMetrics';
 import { LeaderboardCompare } from './LeaderboardCompare';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 interface RunDetail {
   id: string;
@@ -46,7 +47,9 @@ export function RunDetailContent({ runId }: { runId: string }) {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchRun = useCallback(async () => {
-    const response = await fetch(`/api/scoring/runs/${runId}`);
+    const response = await fetch(`/api/scoring/runs/${runId}`, {
+      headers: applyPreReleaseHeader(),
+    });
     if (!response.ok) {
       if (response.status === 404) {
         setRun(null);

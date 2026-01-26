@@ -3,6 +3,7 @@
  */
 
 import type { ChatCompletionRequest, ChatCompletionChunk, ChatStreamEvent, Model } from '@/types/chat';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 const DEFAULT_TIMEOUT_MS = 30000;
 const DEFAULT_STREAM_TIMEOUT_MS = 600000; // 10 minutes for long agentic tasks
@@ -192,7 +193,7 @@ async function fetchJson<T>(
 export async function fetchModels(): Promise<Model[]> {
   const data = await fetchJson<{ data: Model[] }>(
     `${GATEWAY_URL}/v1/models`,
-    {},
+    { headers: applyPreReleaseHeader() },
     { timeoutMs: DEFAULT_TIMEOUT_MS }
   );
   return Array.isArray(data.data) ? data.data : [];
@@ -207,10 +208,10 @@ export async function* streamChatCompletion(
     CHAT_PROXY_URL,
     {
       method: 'POST',
-      headers: {
+      headers: applyPreReleaseHeader({
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
-      },
+      }),
       body: JSON.stringify({
         ...request,
         stream: true,
@@ -343,10 +344,10 @@ export async function* streamDeepResearch(
     `${GATEWAY_URL}/api/research`,
     {
       method: 'POST',
-      headers: {
+      headers: applyPreReleaseHeader({
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
-      },
+      }),
       body: JSON.stringify(request),
       signal,
     },

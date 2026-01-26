@@ -5,6 +5,8 @@
  * and optional remote log aggregation.
  */
 
+import { applyPreReleaseHeader } from '@/lib/preRelease';
+
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 export interface LogContext {
@@ -122,9 +124,9 @@ class Logger {
     try {
       await fetch(this.config.remoteEndpoint, {
         method: 'POST',
-        headers: {
+        headers: applyPreReleaseHeader({
           'Content-Type': 'application/json',
-        },
+        }),
         body: JSON.stringify({ logs: entries }),
       });
     } catch (error) {
