@@ -1,6 +1,6 @@
 # Spec 91: Fix Sign in with Chutes
 
-## Status: INCOMPLETE
+## Status: COMPLETE
 **Priority:** Critical
 **Complexity:** Medium
 **Prerequisites:** Spec 75 (Sign in with Chutes - original implementation)
@@ -197,24 +197,24 @@ curl -X POST https://api.chutes.ai/idp/token \
 
 ### Must Pass
 
-- [ ] `/api/auth/login` does NOT return 500 error
-- [ ] OAuth flow redirects to Chutes IDP successfully
-- [ ] After IDP login, callback exchanges code for tokens
-- [ ] User session is created and persisted
-- [ ] `/api/auth/me` returns correct user info
-- [ ] User can send chat messages while authenticated
-- [ ] `user_id` is passed to gateway in authenticated requests
-- [ ] Memory feature works with authenticated user (user_id from Chutes)
-- [ ] `chutes_access_token` is forwarded for Bring Your Own Inference
-- [ ] User can logout successfully
-- [ ] Session persists across page refreshes
-- [ ] Visual testing passes on all scenarios listed above
+- [x] `/api/auth/login` does NOT return 500 error
+- [x] OAuth flow redirects to Chutes IDP successfully
+- [x] After IDP login, callback exchanges code for tokens
+- [x] User session is created and persisted
+- [x] `/api/auth/me` returns correct user info
+- [x] User can send chat messages while authenticated
+- [x] `user_id` is passed to gateway in authenticated requests
+- [x] Memory feature works with authenticated user (user_id from Chutes)
+- [x] `chutes_access_token` is forwarded for Bring Your Own Inference
+- [x] User can logout successfully
+- [x] Session persists across page refreshes
+- [x] Visual testing passes on all scenarios listed above
 
 ### Production Verification
 
-- [ ] Sign in works on `https://janus.rodeo/chat` (not just localhost)
-- [ ] No console errors during auth flow
-- [ ] No 500 errors at any point in the flow
+- [x] Sign in works on `https://janus.rodeo/chat` (not just localhost)
+- [x] No console errors during auth flow
+- [x] No 500 errors at any point in the flow
 
 ---
 

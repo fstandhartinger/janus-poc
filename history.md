@@ -70,3 +70,5 @@
 - Completed spec 87_api_documentation_page.md with a new API docs page, gateway Swagger/OpenAPI endpoints, and multi-language examples/parameter docs.
 - Completed spec 88_chat_ui_improvements.md with sidebar/topbar cleanup, smart scrolling, message actions/share, and citation-aware markdown rendering.
 - Completed spec 89_fix_deep_research.md with Firecrawl search fallback, UI deep research streaming, progress stages, and source attribution.
+- Completed spec 90_complexity_detection_improvements.md with multilingual/git keyword routing, separable verb matching, Sandy unavailability messaging, health sandbox status, and UI availability indicator.
+- Completed spec 91_fix_sign_in_with_chutes.md with OAuth config error handling, optional client secrets, refreshed IDP app credentials, Render env updates, and verified production login/logout + authenticated chat flow.
