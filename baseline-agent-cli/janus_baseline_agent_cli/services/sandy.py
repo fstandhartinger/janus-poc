@@ -931,6 +931,7 @@ class SandyService:
         env = self._build_agent_env(sandbox_id, public_url, request, has_images)
         if env:
             payload["env"] = env
+            payload["envVars"] = env
 
         # Pass the public router URL if configured - enables smart model switching,
         # 429 fallbacks, and multimodal routing for Sandy agents

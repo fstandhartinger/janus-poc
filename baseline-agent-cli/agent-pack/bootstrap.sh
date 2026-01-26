@@ -258,6 +258,42 @@ EOF
   echo "Claude Code configured to use local router"
 fi
 
+# Persist agent env for runners that don't inherit env from bootstrap.
+echo "=== Persisting agent environment ==="
+python3 - <<'PY'
+import os
+from pathlib import Path
+import shlex
+
+env_path = Path("/workspace/agent-pack/.janus_env")
+keys = [
+    "CHUTES_API_KEY",
+    "CHUTES_API_URL",
+    "CHUTES_API_BASE",
+    "OPENAI_API_BASE",
+    "OPENAI_API_KEY",
+    "OPENAI_MODEL",
+    "ANTHROPIC_BASE_URL",
+    "ANTHROPIC_API_KEY",
+    "CLAUDE_API_BASE_URL",
+    "CLAUDE_MODEL",
+    "JANUS_SYSTEM_PROMPT_PATH",
+]
+lines = []
+for key in keys:
+    value = os.environ.get(key)
+    if not value:
+        continue
+    lines.append(f"export {key}={shlex.quote(value)}")
+
+if lines:
+    env_path.write_text("\n".join(lines) + "\n")
+    env_path.chmod(0o600)
+    print(f"Wrote {len(lines)} env entries to {env_path}")
+else:
+    print("No env vars to persist")
+PY
+
 # Set up environment
 export PYTHONDONTWRITEBYTECODE=1
 export NODE_NO_WARNINGS=1

@@ -11,6 +11,12 @@ if [ -z "${REAL_CLAUDE}" ] || [ "${REAL_CLAUDE}" = "$0" ]; then
   exit 127
 fi
 
+JANUS_ENV_FILE="${JANUS_ENV_FILE:-/workspace/agent-pack/.janus_env}"
+if [ -z "${CHUTES_API_KEY:-}" ] && [ -f "$JANUS_ENV_FILE" ]; then
+  # shellcheck disable=SC1090
+  . "$JANUS_ENV_FILE"
+fi
+
 args=()
 has_output_format=false
 has_include_partial=false

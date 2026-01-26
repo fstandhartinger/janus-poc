@@ -25,6 +25,7 @@ router or Sandy agent/run API.
    - The Sandy agent/run process did not inherit `CHUTES_API_KEY` even though
      the baseline service had it configured.
    - Claude Code reported the variable as unset when asked to print it.
+   - Bootstrap ran with the key, but agent-run did not inherit the bootstrap env.
 
 2. **Claude Code flags not controlled in agent/run**
    - The agent-run API owns the CLI invocation, so our baseline service cannot
@@ -76,12 +77,20 @@ In the agent-pack model router (`agent-pack/router/server.py`):
 Ensure the baseline agent service has `CHUTES_API_KEY` set in Render so the
 sandbox environment can inherit it.
 
+### D) Persist env in agent-pack for agent/run
+
+Write a sanitized env export file during bootstrap (no secrets printed to logs)
+and have the `claude` wrapper source it when `CHUTES_API_KEY` is missing.
+This ensures agent-run processes inherit the sandbox env even if Sandy does not
+propagate `env` payloads.
+
 ## Implementation Steps
 
 1. Add `baseline-agent-cli/agent-pack/bin/claude` wrapper with the guard flags.
 2. Clamp `max_tokens` in the router’s Anthropic handler.
 3. Set `CHUTES_API_KEY` for the baseline agent service in Render.
-4. Redeploy baseline agent and retest the two demo prompts.
+4. Persist env in the agent pack and rehydrate it in the Claude wrapper.
+5. Redeploy baseline agent and retest the two demo prompts.
 
 ## Acceptance Criteria
 
@@ -102,4 +111,3 @@ sandbox environment can inherit it.
 3. **UI (Playwright MCP):**
    - Use Janus chat UI with pre-release password
    - Run the two demo prompts and verify streaming + final output
-
