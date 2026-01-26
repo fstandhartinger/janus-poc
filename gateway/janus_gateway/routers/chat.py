@@ -8,7 +8,7 @@ from typing import AsyncGenerator, Union, cast
 
 import httpx
 import structlog
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import StreamingResponse
 
 from janus_gateway.config import Settings, get_settings
@@ -25,6 +25,7 @@ from janus_gateway.models import (
     Usage,
 )
 from janus_gateway.services import CompetitorRegistry, MessageProcessor, get_competitor_registry
+from janus_gateway.services.debug_registry import DebugRequestRegistry, get_debug_registry
 
 router = APIRouter(prefix="/v1", tags=["chat"])
 logger = structlog.get_logger()
@@ -36,12 +37,19 @@ def generate_request_id() -> str:
     return f"chatcmpl-{uuid.uuid4().hex[:24]}"
 
 
+def generate_debug_request_id() -> str:
+    """Generate a unique debug request ID."""
+    return f"debug-{uuid.uuid4().hex[:16]}"
+
+
 async def stream_from_competitor(
     client: httpx.AsyncClient,
     competitor_url: str,
     request: ChatCompletionRequest,
     request_id: str,
     settings: Settings,
+    debug_request_id: str | None = None,
+    baseline_agent: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """Stream responses from a competitor, adding keep-alives."""
     keep_alive_interval = settings.keep_alive_interval
@@ -54,11 +62,17 @@ async def stream_from_competitor(
     )
 
     try:
+        headers: dict[str, str] = {}
+        if debug_request_id:
+            headers["X-Debug-Request-Id"] = debug_request_id
+        if baseline_agent:
+            headers["X-Baseline-Agent"] = baseline_agent
         async with client.stream(
             "POST",
             f"{competitor_url}/v1/chat/completions",
             json=competitor_request,
             timeout=settings.request_timeout,
+            headers=headers or None,
         ) as response:
             if response.status_code != 200:
                 error_body = await response.aread()
@@ -231,11 +245,15 @@ async def mock_streaming_response(
 async def chat_completions(
     request: ChatCompletionRequest,
     http_request: Request,
+    response: Response,
     registry: CompetitorRegistry = Depends(get_competitor_registry),
+    debug_registry: DebugRequestRegistry = Depends(get_debug_registry),
     settings: Settings = Depends(get_settings),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
     request_id = generate_request_id()
+    debug_request_id = generate_debug_request_id() if request.debug else None
+    baseline_agent = http_request.headers.get("X-Baseline-Agent")
     start_time = time.time()
 
     logger.info(
@@ -254,8 +272,16 @@ async def chat_completions(
 
     # Resolve competitor: explicit competitor_id overrides model-based selection.
     competitor = registry.get(request.competitor_id) if request.competitor_id else None
+    default_competitor = registry.get_default()
     if competitor is None and request.competitor_id is None:
-        competitor = registry.get(request.model) or registry.get_default()
+        competitor = registry.get(request.model) or default_competitor
+
+    if debug_request_id:
+        baseline_id = competitor.id if competitor else (default_competitor.id if default_competitor else "")
+        if baseline_id:
+            debug_registry.register(debug_request_id, baseline_id)
+        if not request.stream:
+            response.headers["X-Debug-Request-Id"] = debug_request_id
 
     if request.stream:
         # Streaming response
@@ -263,7 +289,13 @@ async def chat_completions(
             async def stream_with_logging() -> AsyncGenerator[str, None]:
                 async with httpx.AsyncClient() as client:
                     async for chunk in stream_from_competitor(
-                        client, competitor.url, processed_request, request_id, settings
+                        client,
+                        competitor.url,
+                        processed_request,
+                        request_id,
+                        settings,
+                        debug_request_id,
+                        baseline_agent,
                     ):
                         yield chunk
                 logger.info(
@@ -279,6 +311,7 @@ async def chat_completions(
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
                     "X-Request-Id": request_id,
+                    **({"X-Debug-Request-Id": debug_request_id} if debug_request_id else {}),
                 },
             )
         else:
@@ -300,6 +333,7 @@ async def chat_completions(
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
                     "X-Request-Id": request_id,
+                    **({"X-Debug-Request-Id": debug_request_id} if debug_request_id else {}),
                 },
             )
 
@@ -308,16 +342,22 @@ async def chat_completions(
         if competitor:
             async with httpx.AsyncClient() as client:
                 try:
-                    response = await client.post(
+                    fwd_headers: dict[str, str] = {}
+                    if debug_request_id:
+                        fwd_headers["X-Debug-Request-Id"] = debug_request_id
+                    if baseline_agent:
+                        fwd_headers["X-Baseline-Agent"] = baseline_agent
+                    competitor_response = await client.post(
                         f"{competitor.url}/v1/chat/completions",
                         json=processed_request.model_dump(
                             exclude_none=True,
                             exclude={"competitor_id"},
                         ),
                         timeout=settings.request_timeout,
+                        headers=fwd_headers or None,
                     )
-                    response.raise_for_status()
-                    data = response.json()
+                    competitor_response.raise_for_status()
+                    data = competitor_response.json()
                     # Override the ID
                     data["id"] = request_id
                     return ChatCompletionResponse(**data)

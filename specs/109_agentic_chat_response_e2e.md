@@ -1,8 +1,32 @@
 # Spec 109: Agentic Chat Response E2E Verification
 
-## Status: FIXED
+## Status: ONGOING (Multiple Issues Found)
 
-### Root Cause Found & Fixed (2026-01-26):
+### Update 2 (2026-01-26): Gateway Header Forwarding + Agent Compatibility
+
+**Additional Issues Found**:
+
+1. **Gateway does NOT forward X-Baseline-Agent header** - When requests go through the gateway, the agent selection header is dropped, so users can't choose between Claude Code, Aider, etc.
+
+2. **Claude Code has intermittent issues with OpenAI-compatible APIs** - Testing revealed:
+   - Sometimes Claude Code works quickly (~6 seconds)
+   - Other times it hangs after "Using tool: Bash" (90+ seconds)
+   - This behavior is inconsistent, even with identical prompts
+
+3. **Aider works reliably** with OpenAI-compatible API (MiniMax-M2.1-TEE)
+
+4. **PUBLIC_ROUTER_URL not configured on Render** - Agents in Sandy sandbox use Sandy's default configuration
+
+**Additional Fixes Made**:
+1. Gateway now forwards `X-Baseline-Agent` header to baseline service
+2. Both streaming and non-streaming paths updated
+
+**Recommendation**: Consider using Aider as the default agent until Claude Code's intermittent issues are resolved, OR investigate Sandy's Claude Code configuration.
+
+---
+
+### Update 1 (2026-01-26): Streaming Content Fix
+
 The issue was in `baseline-agent-cli/janus_baseline_agent_cli/services/sandy.py` in the `execute_via_agent_api` function:
 
 **Problem**: When `agent-output` events came in with text content (from Claude Code), the text was being collected in `output_parts` but **NOT** yielded as `content` during streaming. All agent output was going to `reasoning_content` (thinking panel) and the actual `content` was only emitted once at the very end.
