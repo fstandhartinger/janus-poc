@@ -151,7 +151,7 @@ curl -X POST https://janus-baseline-agent.onrender.com/v1/chat/completions \
   -d '{"model": "baseline-cli-agent", "messages": [{"role": "user", "content": "Run: echo TEST_SUCCESS && date"}], "stream": true}'
 ```
 
-**Result: SUCCESS**
+**Result: SUCCESS (Intermittent)**
 - Claude Code started with MiniMax-M2.1-TEE model
 - Used Bash tool to execute command
 - Output captured:
@@ -159,12 +159,37 @@ curl -X POST https://janus-baseline-agent.onrender.com/v1/chat/completions \
   TEST_SUCCESS
   Mon Jan 26 12:19:18 UTC 2026
   ```
-- Completion time: **6.6 seconds**
+- Completion time: **6.6 seconds** (when working)
 
 **Test 2: Complex Tasks (Web Download)**
-- Simple commands work reliably
+- Simple commands work reliably when the service is responsive
 - Complex multi-step tasks may still timeout due to model response times
 - This is not a router issue but a model latency issue
+
+### Additional Optimizations (2026-01-26)
+
+**1. Classification Fast Paths**
+Added to `classifier.py` to skip LLM classification for common patterns:
+- Messages < 30 chars: Skip classification (pre-flight checks)
+- Programming patterns detected: Skip classification, route to programming model
+- Reduces "Pre-flight check is taking longer than expected" warnings
+
+**2. Reduced Classifier Timeout**
+Changed from 10 seconds to 5 seconds with graceful fallback.
+
+**3. UI Fix: Thinking Section Expand/Collapse**
+Fixed bug in `MessageBubble.tsx` where the thinking section couldn't be re-expanded after auto-collapse.
+- Used ref to track auto-collapse state
+- Only auto-collapse once, then let user control
+
+### Known Issues / Reliability Notes
+
+**Intermittent Failures**: The Claude Code agent is dependent on external services:
+1. **Chutes Model API**: MiniMax-M2.1-TEE can be slow or rate-limited
+2. **Sandy Sandbox API**: Sometimes doesn't respond to agent/run requests
+3. **Network latency**: Between Render (Oregon) and Chutes/Sandy
+
+**Workaround**: If a request fails, retry. Simple commands typically succeed within 6-10 seconds when services are responsive.
 
 ## Acceptance Criteria
 
