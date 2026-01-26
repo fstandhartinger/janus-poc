@@ -40,7 +40,7 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         task_types=[TaskType.SIMPLE_TEXT],
         priority=0,
         max_tokens=1024,
-        timeout_seconds=10.0,
+        timeout_seconds=5.0,  # Reduced from 10s - fail fast to fallback
     ),
     "fast": ModelConfig(
         model_id="zai-org/GLM-4.7-Flash",

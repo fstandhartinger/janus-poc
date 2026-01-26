@@ -190,16 +190,19 @@ export function MessageBubble({
   // Auto-collapse thinking when actual content starts streaming
   // Start expanded (true), then collapse when content arrives
   const [isThinkingExpanded, setIsThinkingExpanded] = useState(!hasText);
+  const hasAutoCollapsedRef = useRef(false);
 
-  // Auto-collapse when content starts appearing
+  // Auto-collapse ONCE when content starts appearing, then let user control
   useEffect(() => {
     if (!hasUsefulReasoning) {
       return;
     }
-    if (hasText && isThinkingExpanded) {
+    // Only auto-collapse once - after that, user controls the state
+    if (hasText && !hasAutoCollapsedRef.current) {
+      hasAutoCollapsedRef.current = true;
       setIsThinkingExpanded(false);
     }
-  }, [hasText, hasUsefulReasoning, isThinkingExpanded]);
+  }, [hasText, hasUsefulReasoning]);
 
   if (!hasRenderableContent) {
     return null;

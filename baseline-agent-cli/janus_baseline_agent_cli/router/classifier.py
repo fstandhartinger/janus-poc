@@ -89,8 +89,27 @@ class TaskClassifier:
             return TaskType.VISION, 1.0
 
         user_content = self._extract_user_content(messages)
+        user_lower = user_content.lower().strip()
+
+        # Fast path for very short messages (pre-flight checks, greetings)
+        # Skip LLM classification entirely for these
+        if len(user_content) < 30:
+            return TaskType.SIMPLE_TEXT, 0.95
+
+        # Fast path for common programming patterns - skip LLM classification
+        programming_patterns = (
+            "write a", "create a", "implement", "code", "function",
+            "class ", "def ", "const ", "let ", "var ",
+            "import ", "from ", "require(", "export ",
+            "bash", "shell", "terminal", "command", "run:",
+            "echo ", "curl ", "npm ", "pip ", "git ",
+        )
+        if any(pattern in user_lower for pattern in programming_patterns):
+            return TaskType.PROGRAMMING, 0.9
+
+        # Fast path for simple questions
         if len(user_content) < 50 and not any(
-            keyword in user_content.lower()
+            keyword in user_lower
             for keyword in (
                 "write",
                 "create",
