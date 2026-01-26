@@ -395,25 +395,25 @@ class SandyService:
             # --output-format stream-json: Structured JSONL output
             # --no-session-persistence: Fresh context each run (no session contamination)
             # --dangerously-skip-permissions: YOLO mode for automation
-            # --append-system-prompt: Inject Janus capabilities (image gen via Chutes API)
-            # Must run from /workspace for file access
-            # Embed the critical system prompt directly to ensure it's passed
-            janus_prompt = (
-                "You are a Janus agent with FULL sandbox access and REAL image generation. "
-                "CRITICAL: For image requests, use Chutes API - POST to https://image.chutes.ai/generate "
-                "with JSON body: {prompt, width: 1024, height: 1024, steps: 30}. "
-                "Response has b64_json field. Return as: ![Image](data:image/png;base64,{b64_json}). "
-                "NEVER create SVG or ASCII art. Read /workspace/docs/models/ for all API docs."
+            # Prepend Janus capabilities directly to the task (simplest approach)
+            janus_context = (
+                "[CONTEXT: You are a Janus agent with REAL image generation. "
+                "For image requests, use Python: import requests; "
+                "r = requests.post('https://image.chutes.ai/generate', "
+                "json={'prompt': 'description', 'width': 1024, 'height': 1024, 'steps': 30}); "
+                "Return image as ![Image](data:image/png;base64,{r.json()['b64_json']}). "
+                "NEVER create SVG. Read /workspace/docs/models/ for API docs.]\n\n"
             )
+            enhanced_task = shlex.quote(janus_context + task)
             command = [
-                "bash", "-c",
-                (
-                    f"cd /workspace && claude -p --verbose --output-format stream-json "
-                    f"--no-session-persistence --dangerously-skip-permissions "
-                    f"--append-system-prompt '{janus_prompt}' "
-                    f"--allowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch "
-                    f"{quoted_task}"
-                ),
+                "claude",
+                "-p",
+                "--verbose",
+                "--output-format", "stream-json",
+                "--no-session-persistence",
+                "--dangerously-skip-permissions",
+                "--allowedTools", "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
+                enhanced_task,
             ]
         elif agent == "aider":
             # Aider needs specific flags for non-interactive mode
