@@ -23,6 +23,7 @@
     "@novnc/novnc": "^1.4.0",
     "chart.js": "^4.4.0",
     "codemirror": "^6.0.0",
+    "katex": "^0.16.11",
     "lucide-react": "^0.563.0",
     "mammoth": "^1.6.0",
     "mermaid": "^11.12.2",
@@ -32,7 +33,9 @@
     "react-dom": "19.2.3",
     "react-markdown": "^10.1.0",
     "react-syntax-highlighter": "^15.5.0",
+    "rehype-katex": "^7.0.1",
     "remark-gfm": "^4.0.1",
+    "remark-math": "^6.0.0",
     "xlsx": "^0.18.5",
     "zustand": "^5.0.10"
   },

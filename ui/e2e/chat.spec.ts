@@ -50,7 +50,7 @@ test.describe('Chat UI', () => {
   });
 
   test('shows streaming responses incrementally', async ({ page }) => {
-    await page.route('**/v1/chat/completions', async (route) => {
+    await page.route('**/api/chat', async (route) => {
       const streamChunks = [
         'data: {"id":"chatcmpl-test","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
         'data: {"id":"chatcmpl-test","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"Hello from Janus"},"finish_reason":null}]}',

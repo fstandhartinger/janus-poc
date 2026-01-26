@@ -1,12 +1,14 @@
 'use client';
 
-import { useCallback, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Sidebar, ChatArea } from '@/components';
-import { Header } from '@/components/landing';
 import { useCanvasStore } from '@/store/canvas';
 import { useChatStore } from '@/store/chat';
+import { useSettingsStore } from '@/store/settings';
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
+const DEBUG_STORAGE_KEY = 'chat-debug-enabled';
 const sidebarListeners = new Set<() => void>();
 
 const notifySidebarCollapsed = () => {
@@ -21,6 +23,18 @@ const readSidebarCollapsed = (): boolean => {
     return JSON.parse(saved) as boolean;
   } catch {
     localStorage.removeItem(SIDEBAR_STORAGE_KEY);
+    return false;
+  }
+};
+
+const readDebugEnabled = (): boolean => {
+  if (typeof window === 'undefined') return false;
+  const saved = localStorage.getItem(DEBUG_STORAGE_KEY);
+  if (!saved) return false;
+  try {
+    return JSON.parse(saved) as boolean;
+  } catch {
+    localStorage.removeItem(DEBUG_STORAGE_KEY);
     return false;
   }
 };
@@ -48,8 +62,16 @@ const subscribeSidebarCollapsed = (listener: () => void) => {
 
 export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [debugEnabled, setDebugEnabled] = useState(() => readDebugEnabled());
   const isCanvasOpen = useCanvasStore((state) => state.isOpen);
   const createSession = useChatStore((state) => state.createSession);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const setTTSAutoPlay = useSettingsStore((state) => state.setTTSAutoPlay);
+  const [sharePayload, setSharePayload] = useState<{
+    initial: string;
+    autoSubmit: boolean;
+  } | null>(null);
 
   const sidebarCollapsed = useSyncExternalStore(
     subscribeSidebarCollapsed,
@@ -68,9 +90,33 @@ export default function ChatPage() {
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const handleNewChat = useCallback(() => createSession(), [createSession]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(DEBUG_STORAGE_KEY, JSON.stringify(debugEnabled));
+  }, [debugEnabled]);
+
+  useEffect(() => {
+    const initial = searchParams.get('initial');
+    if (!initial) return;
+
+    const autoSubmit = searchParams.get('autoSubmit') === 'true';
+    const enableTTS = searchParams.get('tts') === 'true';
+
+    setSharePayload({ initial, autoSubmit });
+    if (enableTTS) {
+      setTTSAutoPlay(true);
+    }
+
+    const url = new URL(window.location.href);
+    url.searchParams.delete('initial');
+    url.searchParams.delete('autoSubmit');
+    url.searchParams.delete('tts');
+    const query = url.searchParams.toString();
+    router.replace(query ? `${url.pathname}?${query}` : url.pathname);
+  }, [router, searchParams, setTTSAutoPlay]);
+
   return (
-    <div className="h-screen max-h-screen overflow-hidden chat-aurora-bg flex flex-col">
-      <Header />
+    <div className="chat-page chat-aurora-bg overflow-hidden flex flex-col">
       <main className={`chat-shell ${isCanvasOpen ? 'canvas-open' : ''}`} aria-label="Chat">
         <h1 className="sr-only">Janus Chat</h1>
         {sidebarOpen && (
@@ -88,8 +134,11 @@ export default function ChatPage() {
         />
         <ChatArea
           onMenuClick={openSidebar}
-          isSidebarCollapsed={sidebarCollapsed}
           onNewChat={handleNewChat}
+          debugEnabled={debugEnabled}
+          onDebugChange={setDebugEnabled}
+          initialMessage={sharePayload?.initial}
+          autoSubmit={sharePayload?.autoSubmit}
         />
       </main>
     </div>

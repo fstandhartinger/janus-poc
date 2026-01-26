@@ -1,6 +1,6 @@
 # Spec 88: Chat UI Improvements
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -972,4 +972,4 @@ ui/src/
 - `specs/85_pwa_mobile_install.md` - PWA/mobile considerations
 - `specs/87_api_documentation_page.md` - API docs page
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

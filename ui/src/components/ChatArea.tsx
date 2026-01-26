@@ -2,23 +2,29 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
 import { useCanvasStore } from '@/store/canvas';
+import { useSettingsStore } from '@/store/settings';
 import { RateLimitError, fetchModels, streamChatCompletion } from '@/lib/api';
 import { isMemoryEnabled, setMemoryEnabled } from '@/lib/memory';
 import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFreeChats, setFreeChatCount } from '@/lib/freeChat';
 import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
+import { useDebug } from '@/hooks/useDebug';
+import { useSmartScroll } from '@/hooks/useSmartScroll';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
 import { MemoryToggle } from './MemoryToggle';
+import { DebugPanel } from './debug/DebugPanel';
+import { DebugToggle } from './debug/DebugToggle';
 import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
+import { ShareModal } from './ShareModal';
 import { useAuth } from '@/hooks/useAuth';
 import type { ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { GenerationFlags } from '@/types/generation';
@@ -26,11 +32,31 @@ import type { AttachedFile } from '@/lib/file-types';
 
 interface ChatAreaProps {
   onMenuClick?: () => void;
-  isSidebarCollapsed?: boolean;
   onNewChat?: () => void;
+  debugEnabled: boolean;
+  onDebugChange: (enabled: boolean) => void;
+  initialMessage?: string;
+  autoSubmit?: boolean;
 }
 
-export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAreaProps) {
+const getMessageText = (content: MessageContent) => {
+  if (typeof content === 'string') {
+    return content;
+  }
+  return (content || [])
+    .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
+    .map((part) => part.text)
+    .join('\n');
+};
+
+export function ChatArea({
+  onMenuClick,
+  onNewChat,
+  debugEnabled,
+  onDebugChange,
+  initialMessage,
+  autoSubmit,
+}: ChatAreaProps) {
   const {
     currentSessionId,
     isStreaming,
@@ -50,6 +76,7 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   const abortControllerRef = useRef<AbortController | null>(null);
   const processedCanvasMessagesRef = useRef<Set<string>>(new Set());
   const pendingSendRef = useRef<string | null>(null);
+  const shareHandledRef = useRef<string | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('baseline-cli-agent');
   const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
@@ -61,10 +88,36 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   const [toast, setToast] = useState<{ message: string; action?: string; onAction?: () => void } | null>(null);
   const [memorySheetOpen, setMemorySheetOpen] = useState(false);
   const [memoryEnabled, setMemoryEnabledState] = useState(() => isMemoryEnabled());
+  const [debugRequestId, setDebugRequestId] = useState<string | null>(null);
+  const [prefillMessage, setPrefillMessage] = useState<string | undefined>();
+  const [shareOpen, setShareOpen] = useState(false);
+  const ttsAutoPlay = useSettingsStore((state) => state.ttsAutoPlay);
+  const setTTSAutoPlay = useSettingsStore((state) => state.setTTSAutoPlay);
 
   const session = getCurrentSession();
   const messages = session?.messages || [];
+  const lastMessageContent = messages.length
+    ? getMessageText(messages[messages.length - 1].content)
+    : '';
+  const { resetUserScroll } = useSmartScroll(messagesContainerRef, [lastMessageContent, isStreaming]);
+  const lastAssistantIndex = messages.reduce(
+    (lastIndex, message, index) => (message.role === 'assistant' ? index : lastIndex),
+    -1
+  );
   const pendingQuery = searchParams.get('q')?.trim();
+  const debugBaseline =
+    selectedModel === 'baseline-langchain'
+      ? 'baseline-langchain'
+      : selectedModel === 'baseline-cli-agent'
+      ? 'baseline-cli-agent'
+      : selectedModel || 'baseline-cli-agent';
+  const debugLabel =
+    debugBaseline === 'baseline-langchain'
+      ? 'langchain'
+      : debugBaseline === 'baseline-cli-agent'
+      ? 'agent-cli'
+      : debugBaseline;
+  const debugState = useDebug(debugEnabled, debugRequestId, debugBaseline);
 
   const syncFreeChatState = () => {
     const state = readFreeChatState();
@@ -79,6 +132,13 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   useEffect(() => {
     syncFreeChatState();
   }, []);
+
+
+  useEffect(() => {
+    if (!debugEnabled) {
+      setDebugRequestId(null);
+    }
+  }, [debugEnabled]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -96,13 +156,16 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     return () => window.clearTimeout(timeout);
   }, [toast]);
 
-  // Auto-scroll to bottom - use scrollTop on container to avoid propagating to parent
+  const handleAutoPlayHandled = useCallback(() => {
+    setTTSAutoPlay(false);
+  }, [setTTSAutoPlay]);
+  const openShare = useCallback(() => setShareOpen(true), []);
+  const closeShare = useCallback(() => setShareOpen(false), []);
   useEffect(() => {
-    const container = messagesContainerRef.current;
-    if (container) {
-      container.scrollTop = container.scrollHeight;
+    if (isStreaming) {
+      resetUserScroll();
     }
-  }, [messages]);
+  }, [isStreaming, resetUserScroll]);
 
   useEffect(() => {
     let isMounted = true;
@@ -223,9 +286,13 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     });
 
     // Start streaming
+    resetUserScroll();
     setStreaming(true);
     setScreenshots([]);
     setScreenshotsLive(true);
+    if (debugEnabled) {
+      setDebugRequestId(null);
+    }
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
     const flagsPayload =
@@ -254,8 +321,16 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
           user_id: userId,
           enable_memory: memoryEnabledSetting,
           generation_flags: flagsPayload,
+          debug: debugEnabled,
         },
-        signal
+        signal,
+        (response) => {
+          if (!debugEnabled) return;
+          const debugId = response.headers.get('X-Debug-Request-Id');
+          if (debugId) {
+            setDebugRequestId(debugId);
+          }
+        }
       )) {
         if ('type' in chunk && chunk.type === 'screenshot') {
           pushScreenshot(chunk.data);
@@ -309,6 +384,46 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     }
   };
 
+  const getPreviousUserMessageText = useCallback(
+    (fromIndex: number) => {
+      for (let i = fromIndex - 1; i >= 0; i -= 1) {
+        if (messages[i]?.role === 'user') {
+          return getMessageText(messages[i].content).trim();
+        }
+      }
+      return '';
+    },
+    [messages]
+  );
+
+  const handleRegenerate = useCallback(
+    (prompt: string) => {
+      if (isStreaming) return;
+      const text = prompt.trim();
+      if (!text) return;
+      handleSend(text, []);
+    },
+    [handleSend, isStreaming]
+  );
+
+  useEffect(() => {
+    if (!initialMessage) return;
+    if (autoSubmit && isStreaming) return;
+    if (shareHandledRef.current === initialMessage) return;
+
+    shareHandledRef.current = initialMessage;
+    setPrefillMessage(initialMessage);
+
+    if (autoSubmit) {
+      const timeout = window.setTimeout(() => {
+        handleSend(initialMessage, []);
+        setPrefillMessage('');
+      }, 500);
+
+      return () => window.clearTimeout(timeout);
+    }
+  }, [autoSubmit, handleSend, initialMessage, isStreaming]);
+
   const handleCancel = () => {
     abortControllerRef.current?.abort();
   };
@@ -324,16 +439,6 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
     url.searchParams.delete('q');
     router.replace(`${url.pathname}${url.search}`);
   }, [handleSend, isAuthenticated, isStreaming, pendingQuery, router]);
-
-  const getMessageText = (content: MessageContent) => {
-    if (typeof content === 'string') {
-      return content;
-    }
-    return (content || [])
-      .filter((part): part is { type: 'text'; text: string } => part.type === 'text')
-      .map((part) => part.text)
-      .join('\n');
-  };
 
   useEffect(() => {
     if (isStreaming) return;
@@ -362,155 +467,186 @@ export function ChatArea({ onMenuClick, isSidebarCollapsed, onNewChat }: ChatAre
   return (
     <div className="chat-area">
       <CanvasPanel onAIEdit={handleAIEdit} disabled={isStreaming} />
-      <div className="chat-topbar shrink-0">
-        <div className="chat-topbar-left">
-          {/* Menu button - visible on mobile OR on desktop when sidebar is collapsed */}
-          <button
-            type="button"
-            onClick={onMenuClick}
-            className={`chat-menu-btn ${isSidebarCollapsed ? 'lg:flex' : 'lg:hidden'}`}
-            aria-label="Open sidebar"
-          >
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-          {/* New chat button - visible on desktop when sidebar is collapsed */}
-          {isSidebarCollapsed && onNewChat && (
-            <button
-              type="button"
-              onClick={onNewChat}
-              className="chat-new-chat-btn hidden lg:flex"
-              aria-label="New chat"
-              title="New chat"
-            >
-              <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-              </svg>
-            </button>
-          )}
-          <Link href="/" className="chat-home-btn" title="Go to home" aria-label="Go to home">
-            <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
-            </svg>
-          </Link>
-          <span className="chat-context">Session</span>
-          <span className="chat-session-title">{session?.title || 'New chat'}</span>
-        </div>
-
-        <div className="chat-topbar-right">
-          <div className="chat-auth">
-            {!authLoading && !isAuthenticated && (
-              <>
-                <button type="button" className="chat-signin-btn" onClick={() => signIn()}>
-                  Sign in
-                </button>
-                <div className="chat-free-count">
-                  {freeChatsRemaining}/{FREE_CHAT_LIMIT} free chats remaining
-                </div>
-              </>
-            )}
-            {isAuthenticated && user && (
-              <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
-            )}
-          </div>
-          <MemoryToggle
-            enabled={memoryEnabled}
-            onOpen={() => setMemorySheetOpen(true)}
-            open={memorySheetOpen}
-          />
-          <ModelSelector
-            models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
-            selectedModel={selectedModel}
-            onSelect={setSelectedModel}
-          />
-        </div>
-      </div>
-
-      <MemorySheet
-        open={memorySheetOpen}
-        onOpenChange={setMemorySheetOpen}
-        memoryEnabled={memoryEnabled}
-        onMemoryEnabledChange={(enabled) => {
-          setMemoryEnabledState(enabled);
-          setMemoryEnabled(enabled);
-        }}
-      />
-
-      <SignInGateDialog
-        open={signInGateOpen}
-        onOpenChange={setSignInGateOpen}
-        usedCount={freeChatsUsed}
-        limit={FREE_CHAT_LIMIT}
-        pendingMessage={pendingMessage}
-      />
-
-      {toast && (
-        <div className="chat-toast" role="status" aria-live="polite">
-          <div className="toast toast-error">
-            <span>{toast.message}</span>
-            {toast.action && toast.onAction && (
+      <div className={`chat-body${debugEnabled ? ' debug-open' : ''}`}>
+        <div className="chat-main">
+          <div className="chat-topbar shrink-0">
+            <div className="chat-topbar-left">
               <button
                 type="button"
-                onClick={() => {
-                  toast.onAction?.();
-                  setToast(null);
-                }}
-                className="chat-toast-action"
+                onClick={onMenuClick}
+                className="chat-menu-btn lg:hidden"
+                aria-label="Open sidebar"
               >
-                {toast.action}
+                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
               </button>
-            )}
-          </div>
-        </div>
-      )}
-
-      {messages.length === 0 ? (
-        /* Empty state: center everything vertically */
-        <div className="chat-empty-container flex-1 flex flex-col items-center justify-center px-6 py-6">
-          <div className="w-full max-w-2xl">
-            <div className="text-center mb-8">
-              <p className="chat-empty-title">Where should we begin?</p>
-              <p className="chat-empty-subtitle">
-                Powered by Chutes. The world&apos;s open-source decentralized AI compute platform.
-              </p>
+              <Link href="/" className="chat-brand" title="Go to home" aria-label="Go to home">
+                JANUS
+              </Link>
             </div>
-            <ChatInput onSend={handleSend} disabled={isStreaming} />
-          </div>
-        </div>
-      ) : (
-        /* Chat mode: messages scroll, input fixed at bottom */
-        <>
-          <div ref={messagesContainerRef} className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
-            <div className="max-w-4xl mx-auto">
-              <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
-              {messages.map((message) => (
-                <MessageBubble
-                  key={message.id}
-                  message={message}
-                  showReasoning={showReasoning}
-                />
-              ))}
 
-              {isStreaming && (
-                <div className="chat-streaming" role="status" aria-live="polite">
-                  <span className="chat-streaming-dot" />
-                  <span>Generating response</span>
-                  <button onClick={handleCancel} className="chat-cancel">
-                    Stop
+            <div className="chat-topbar-center">
+              <div className="chat-session-info">
+                <span className="chat-context">Session</span>
+                <span className="chat-session-title">{session?.title || 'New chat'}</span>
+              </div>
+              <div className="chat-header-actions">
+                {onNewChat && (
+                  <button
+                    type="button"
+                    onClick={onNewChat}
+                    className="chat-new-chat-btn hidden sm:flex"
+                    aria-label="New chat"
+                    title="New chat"
+                  >
+                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                    </svg>
                   </button>
+                )}
+                <ModelSelector
+                  models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
+                  selectedModel={selectedModel}
+                  onSelect={setSelectedModel}
+                />
+              </div>
+            </div>
+
+            <div className="chat-topbar-right">
+              <div className="chat-auth">
+                {!authLoading && !isAuthenticated && (
+                  <>
+                    <button type="button" className="chat-signin-btn" onClick={() => signIn()}>
+                      Sign in
+                    </button>
+                    <div className="chat-free-count">
+                      {freeChatsRemaining}/{FREE_CHAT_LIMIT} free chats remaining
+                    </div>
+                  </>
+                )}
+                {isAuthenticated && user && (
+                  <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
+                )}
+              </div>
+              <DebugToggle enabled={debugEnabled} onToggle={onDebugChange} />
+              <MemoryToggle
+                enabled={memoryEnabled}
+                onOpen={() => setMemorySheetOpen(true)}
+                open={memorySheetOpen}
+              />
+            </div>
+          </div>
+
+          <MemorySheet
+            open={memorySheetOpen}
+            onOpenChange={setMemorySheetOpen}
+            memoryEnabled={memoryEnabled}
+            onMemoryEnabledChange={(enabled) => {
+              setMemoryEnabledState(enabled);
+              setMemoryEnabled(enabled);
+            }}
+          />
+
+          <SignInGateDialog
+            open={signInGateOpen}
+            onOpenChange={setSignInGateOpen}
+            usedCount={freeChatsUsed}
+            limit={FREE_CHAT_LIMIT}
+            pendingMessage={pendingMessage}
+          />
+          <ShareModal
+            isOpen={shareOpen}
+            onClose={closeShare}
+            conversationId={session?.id || ''}
+            messages={messages}
+          />
+
+          {toast && (
+            <div className="chat-toast" role="status" aria-live="polite">
+              <div className="toast toast-error">
+                <span>{toast.message}</span>
+                {toast.action && toast.onAction && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      toast.onAction?.();
+                      setToast(null);
+                    }}
+                    className="chat-toast-action"
+                  >
+                    {toast.action}
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          <div ref={messagesContainerRef} className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
+            <div className="max-w-4xl mx-auto flex min-h-full flex-col">
+              <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
+              {messages.length === 0 ? (
+                <div className="chat-empty flex-1">
+                  <div className="text-center">
+                    <p className="chat-empty-title">Where should we begin?</p>
+                    <p className="chat-empty-subtitle">
+                      Powered by Chutes. The world&apos;s open-source decentralized AI compute platform.
+                    </p>
+                  </div>
                 </div>
+              ) : (
+                <>
+                  {messages.map((message, index) => {
+                    const isLastMessage = index === messages.length - 1;
+                    const isStreamingMessage = isStreaming && isLastMessage && message.role === 'assistant';
+                    const isLastAssistantMessage = index === lastAssistantIndex;
+                    const shouldAutoPlay = ttsAutoPlay && isLastAssistantMessage;
+                    const regeneratePrompt =
+                      message.role === 'assistant' ? getPreviousUserMessageText(index) : '';
+                    const canRegenerate = message.role === 'assistant' && regeneratePrompt.length > 0;
+                    return (
+                      <MessageBubble
+                        key={message.id}
+                        message={message}
+                        showReasoning={showReasoning}
+                        isStreaming={isStreamingMessage}
+                        autoPlay={shouldAutoPlay}
+                        onAutoPlayHandled={shouldAutoPlay ? handleAutoPlayHandled : undefined}
+                        onRegenerate={canRegenerate ? () => handleRegenerate(regeneratePrompt) : undefined}
+                        onShare={openShare}
+                      />
+                    );
+                  })}
+
+                  {isStreaming && (
+                    <div className="chat-streaming" role="status" aria-live="polite">
+                      <span className="chat-streaming-dot" />
+                      <span>Generating response</span>
+                      <button onClick={handleCancel} className="chat-cancel">
+                        Stop
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
 
           <div className="chat-input-bottom px-6">
             <div className="max-w-4xl mx-auto">
-              <ChatInput onSend={handleSend} disabled={isStreaming} />
+              <ChatInput onSend={handleSend} disabled={isStreaming} initialInput={prefillMessage} />
             </div>
           </div>
-        </>
-      )}
+        </div>
+
+        {debugEnabled && (
+          <DebugPanel
+            baseline={debugLabel}
+            debugState={debugState}
+            onClose={() => onDebugChange(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }
