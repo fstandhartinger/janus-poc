@@ -265,7 +265,7 @@ export default function ApiDocsPage() {
             </header>
 
             <div className="grid gap-10 lg:grid-cols-[220px,1fr]">
-              <aside className="lg:sticky lg:top-24 h-fit">
+              <aside className="lg:sticky lg:top-24 h-fit bg-[#0B0F14]/95 backdrop-blur-sm lg:py-4 lg:-my-4 lg:pr-4 z-10">
                 <TableOfContents />
               </aside>
 
