@@ -138,10 +138,23 @@ export const useChatStore = create<ChatState>()(
                 typeof lastMessage.content === 'string' ? lastMessage.content : '';
               const currentReasoning = lastMessage.reasoning_content || '';
 
+              // Clean "(no content)" from both new and accumulated content
+              const cleanContent = (currentContent + content)
+                .replace(/\(no content\)/gi, '')
+                .replace(/\s*\n\s*\n\s*\n+/g, '\n\n'); // Collapse multiple newlines
+
+              // Deduplicate heartbeat messages in reasoning (keep only latest)
+              let newReasoning = currentReasoning + (reasoning || '');
+              // Replace consecutive "Agent working..." lines with just the latest
+              newReasoning = newReasoning.replace(
+                /(⏳ Agent working\.\.\. \(\d+s\)\n)+⏳ Agent working/g,
+                '⏳ Agent working'
+              );
+
               messages[lastIndex] = {
                 ...lastMessage,
-                content: currentContent + content,
-                reasoning_content: currentReasoning + (reasoning || ''),
+                content: cleanContent,
+                reasoning_content: newReasoning,
               };
               return { ...session, messages, updated_at: new Date() };
             }

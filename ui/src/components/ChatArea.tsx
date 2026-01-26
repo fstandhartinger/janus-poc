@@ -24,6 +24,7 @@ import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress
 import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
+import { AgentStatusIndicator } from './chat/AgentStatusIndicator';
 import { MemoryToggle } from './MemoryToggle';
 import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
@@ -450,7 +451,8 @@ export function ChatArea({
           continue;
         }
         if (delta) {
-          const contentDelta = delta.content || '';
+          // Filter out "(no content)" placeholder messages from Claude Code CLI
+          const contentDelta = (delta.content || '').replace(/\(no content\)/g, '');
           const reasoningDelta = delta.reasoning_content || '';
           if (contentDelta || reasoningDelta) {
             appendToLastMessage(contentDelta, reasoningDelta);
@@ -609,6 +611,7 @@ export function ChatArea({
                     </svg>
                   </button>
                 )}
+                <AgentStatusIndicator />
                 <ModelSelector
                   models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
                   selectedModel={selectedModel}

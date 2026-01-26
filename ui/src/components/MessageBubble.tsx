@@ -72,11 +72,58 @@ const USELESS_REASONING_PATTERNS = [
   /^loading(\.{2,})?$/i,
 ];
 
+// Status messages that shouldn't trigger thinking collapse
+const STATUS_MESSAGE_PATTERNS = [
+  /^\[Agent\]/i,
+  /^⏳/,
+  /^🔄/,
+  /^💭/,
+  /^🔧/,
+  /^\[Tool/i,
+  /^\[Thinking/i,
+  /^\[System/i,
+  /^Heartbeat/i,
+  /^\(no content\)/i,
+  /^Using tool:/i,
+  /^Starting/i,
+  /^Sandbox created/i,
+  /^Running/i,
+  /^Agent working/i,
+  /^Files changed/i,
+  /^Tool output/i,
+  /^Agent completed/i,
+  /^Terminating sandbox/i,
+  /^Uploading/i,
+  /^Selecting/i,
+  /^Launching/i,
+  /^Creating/i,
+  /^\s*$/,  // Empty lines
+];
+
 function isUsefulReasoning(content?: string): boolean {
   if (!content) return false;
   const trimmed = content.trim();
   if (trimmed.length < 20) return false;
   return !USELESS_REASONING_PATTERNS.some((pattern) => pattern.test(trimmed));
+}
+
+/**
+ * Check if content is just status/progress messages (not real AI output).
+ * Used to keep thinking expanded until actual content arrives.
+ */
+function isOnlyStatusMessages(content?: string): boolean {
+  if (!content) return true;
+  const trimmed = content.trim();
+  if (!trimmed) return true;
+
+  // Split into lines and check each
+  const lines = trimmed.split('\n').filter(line => line.trim());
+  if (lines.length === 0) return true;
+
+  // If every line matches a status pattern, it's only status messages
+  return lines.every(line =>
+    STATUS_MESSAGE_PATTERNS.some(pattern => pattern.test(line.trim()))
+  );
 }
 
 const AUDIO_BLOCK_REGEX = /:::audio\[([^\]]*)\]\s*\r?\n(data:audio\/[^;]+;base64,[A-Za-z0-9+/=]+)\s*\r?\n:::/g;
@@ -187,22 +234,47 @@ export function MessageBubble({
   const displayText = useStreamingBuffer(cleanedText, isStreaming && !isUser);
   const canShowActions = hasRenderableContent && !shouldShowPlaceholder;
 
-  // Auto-collapse thinking when actual content starts streaming
-  // Start expanded (true), then collapse when content arrives
-  const [isThinkingExpanded, setIsThinkingExpanded] = useState(!hasText);
-  const hasAutoCollapsedRef = useRef(false);
+  // Check if we have real content (not just status messages or empty)
+  const hasRealContent = hasText && cleanedText.trim().length > 10 && !isOnlyStatusMessages(cleanedText);
 
-  // Auto-collapse ONCE when content starts appearing, then let user control
+  // Auto-collapse thinking when streaming finishes and real content exists
+  // Start expanded (true), then collapse only when done streaming with real content
+  const [isThinkingExpanded, setIsThinkingExpanded] = useState(true);
+  const hasAutoCollapsedRef = useRef(false);
+  const thinkingContentRef = useRef<HTMLDivElement>(null);
+  const prevReasoningLengthRef = useRef(0);
+
+  // Auto-collapse ONCE when streaming is done AND we have real content
   useEffect(() => {
     if (!hasUsefulReasoning) {
       return;
     }
-    // Only auto-collapse once - after that, user controls the state
-    if (hasText && !hasAutoCollapsedRef.current) {
+    // Only auto-collapse once, when streaming finishes and we have real content
+    // This keeps the thinking section open while the agent is working
+    if (!isStreaming && hasRealContent && !hasAutoCollapsedRef.current) {
       hasAutoCollapsedRef.current = true;
       setIsThinkingExpanded(false);
     }
-  }, [hasText, hasUsefulReasoning]);
+  }, [hasRealContent, hasUsefulReasoning, isStreaming]);
+
+  // Auto-scroll thinking section as new content comes in
+  useEffect(() => {
+    if (!isThinkingExpanded || !thinkingContentRef.current) {
+      return;
+    }
+
+    const currentLength = cleanedReasoning.length;
+    // Only scroll when content is actually added
+    if (currentLength > prevReasoningLengthRef.current) {
+      prevReasoningLengthRef.current = currentLength;
+      // Use requestAnimationFrame for smoother scrolling
+      requestAnimationFrame(() => {
+        if (thinkingContentRef.current) {
+          thinkingContentRef.current.scrollTop = thinkingContentRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [cleanedReasoning, isThinkingExpanded]);
 
   if (!hasRenderableContent) {
     return null;
@@ -241,7 +313,10 @@ export function MessageBubble({
               </svg>
             </button>
             {isThinkingExpanded && (
-              <div className="px-3 pb-3 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-[#374151] scrollbar-track-transparent">
+              <div
+                ref={thinkingContentRef}
+                className="px-3 pb-3 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-[#374151] scrollbar-track-transparent"
+              >
                 <div className="text-[#D1D5DB] whitespace-pre-wrap text-xs leading-relaxed">
                   {cleanedReasoning}
                 </div>
