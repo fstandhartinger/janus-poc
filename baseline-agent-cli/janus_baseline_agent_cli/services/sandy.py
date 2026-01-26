@@ -2114,11 +2114,22 @@ class SandyService:
                                                     )
                                             elif block.get("type") == "tool_use":
                                                 tool_name = block.get("name", "")
+                                                tool_input = block.get("input", {})
+                                                # Extract useful info from tool input
+                                                tool_detail = ""
+                                                if tool_name == "Bash":
+                                                    cmd = tool_input.get("command", "")[:100]
+                                                    if cmd:
+                                                        tool_detail = f": {cmd}"
+                                                elif tool_name in ("Read", "Write", "Edit", "Glob", "Grep"):
+                                                    path = tool_input.get("file_path", "") or tool_input.get("path", "") or tool_input.get("pattern", "")
+                                                    if path:
+                                                        tool_detail = f": {path[:80]}"
                                                 if debug_emitter:
                                                     await debug_emitter.emit(
                                                         DebugEventType.TOOL_CALL_START,
                                                         _debug_step_for_tool(tool_name),
-                                                        f"Using tool: {tool_name}",
+                                                        f"Using tool: {tool_name}{tool_detail}",
                                                         data={"tool": tool_name},
                                                     )
                                                 yield ChatCompletionChunk(
@@ -2127,11 +2138,65 @@ class SandyService:
                                                     choices=[
                                                         ChunkChoice(
                                                             delta=Delta(
-                                                                reasoning_content=f"Using tool: {tool_name}\n"
+                                                                reasoning_content=f"Using tool: {tool_name}{tool_detail}\n"
                                                             )
                                                         )
                                                     ],
                                                 )
+                                            elif block.get("type") == "thinking":
+                                                # Extended thinking content
+                                                thinking_text = block.get("thinking", "")
+                                                if thinking_text:
+                                                    yield ChatCompletionChunk(
+                                                        id=request_id,
+                                                        model=model,
+                                                        choices=[
+                                                            ChunkChoice(
+                                                                delta=Delta(
+                                                                    reasoning_content=thinking_text
+                                                                )
+                                                            )
+                                                        ],
+                                                    )
+                            elif msg_type == "user":
+                                # Tool result - stream useful output
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "tool_result":
+                                            tool_content = block.get("content", "")
+                                            if isinstance(tool_content, str) and tool_content.strip():
+                                                # Truncate very long outputs
+                                                truncated = tool_content[:500]
+                                                if len(tool_content) > 500:
+                                                    truncated += "... (truncated)"
+                                                yield ChatCompletionChunk(
+                                                    id=request_id,
+                                                    model=model,
+                                                    choices=[
+                                                        ChunkChoice(
+                                                            delta=Delta(
+                                                                reasoning_content=f"Tool output:\n{truncated}\n"
+                                                            )
+                                                        )
+                                                    ],
+                                                )
+                            elif msg_type == "system":
+                                # System messages - often contain warnings or status
+                                message = data.get("message", "")
+                                if isinstance(message, str) and message.strip():
+                                    yield ChatCompletionChunk(
+                                        id=request_id,
+                                        model=model,
+                                        choices=[
+                                            ChunkChoice(
+                                                delta=Delta(
+                                                    reasoning_content=f"{message}\n"
+                                                )
+                                            )
+                                        ],
+                                    )
 
                     elif event_type == "files-update":
                         # File changes detected
@@ -2169,8 +2234,22 @@ class SandyService:
                             )
 
                     elif event_type == "heartbeat":
-                        # Keep-alive, just continue
-                        pass
+                        # Keep-alive - send progress indicator if no content yet
+                        elapsed = event.get("elapsed", 0)
+                        if not content_streamed and elapsed > 10:
+                            # Show progress every 15 seconds when no output yet
+                            elapsed_int = int(elapsed)
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(
+                                            reasoning_content=f"⏳ Agent working... ({elapsed_int}s)\n"
+                                        )
+                                    )
+                                ],
+                            )
 
                     elif event_type == "complete":
                         # Agent execution complete
