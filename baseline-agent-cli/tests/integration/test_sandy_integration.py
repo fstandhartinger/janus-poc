@@ -64,7 +64,7 @@ class FakeAsyncClient:
 
         if "command -v" in command:
             if "aider" in command:
-                return FakeResponse({"stdout": "/agent-pack/bin/aider\n", "stderr": "", "exit_code": 0})
+                return FakeResponse({"stdout": "/workspace/agent-pack/bin/aider\n", "stderr": "", "exit_code": 0})
             return FakeResponse({"stdout": "", "stderr": "", "exit_code": 1})
 
         if "find" in command and self.artifact_dir in command:
@@ -145,7 +145,7 @@ class StubLLMService:
 class StubSandyService:
     is_available = True
 
-    async def execute_complex(self, request: ChatCompletionRequest):
+    async def execute_complex(self, request: ChatCompletionRequest, debug_emitter=None):
         raise AssertionError("Sandy path should not be used")
 
 

@@ -139,7 +139,9 @@ def test_system_prompt_content() -> None:
 def test_bootstrap_script_content() -> None:
     """Bootstrap should copy docs into workspace."""
     content = (AGENT_PACK_ROOT / "bootstrap.sh").read_text(encoding="utf-8")
-    assert "cp /agent-pack/models/*.md /workspace/docs/models/" in content
+    assert "AGENT_PACK_ROOT" in content
+    assert "DOCS_ROOT" in content
+    assert 'cp "${AGENT_PACK_ROOT}/models/"*.md "$DOCS_ROOT/"' in content
 
 
 def test_settings_support_capability_flags() -> None:
@@ -182,7 +184,7 @@ async def test_agent_answers_image_question_with_docs() -> None:
     assert "https://image.chutes.ai/generate" in combined
     assert "docs/models/text-to-image.md" in combined
     assert any("bootstrap.sh" in command for command in fake_client.exec_commands)
-    assert "/agent-pack/models/text-to-image.md" in fake_client.written_files
+    assert "/workspace/agent-pack/models/text-to-image.md" in fake_client.written_files
 
 
 @pytest.mark.asyncio

@@ -177,7 +177,7 @@ def main() -> int:
         return 0
 
     docs_root = Path(os.environ.get("JANUS_DOCS_ROOT", "/workspace/docs/models"))
-    agent_pack_root = Path(os.environ.get("JANUS_AGENT_PACK", "/agent-pack"))
+    agent_pack_root = Path(os.environ.get("JANUS_AGENT_PACK", "/workspace/agent-pack"))
     doc_name = _select_doc(task)
     doc_text = _load_doc(doc_name, docs_root, agent_pack_root)
     endpoints = _extract_endpoints(doc_text)

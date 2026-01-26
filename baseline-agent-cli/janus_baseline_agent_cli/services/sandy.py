@@ -150,7 +150,7 @@ class SandyService:
     _default_path = (
         "/root/.local/bin:"  # pip --user for root
         "/usr/local/bin:"  # system-wide pip installs
-        "/agent-pack/bin:"  # agent pack binaries
+        "/workspace/agent-pack/bin:"  # agent pack binaries inside sandbox workdir
         "/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
     )
 
@@ -237,7 +237,7 @@ class SandyService:
 
     def _agent_pack_dest_root(self) -> str:
         """Get the agent pack destination path inside the sandbox."""
-        return "/agent-pack"
+        return "/workspace/agent-pack"
 
     def _iter_agent_pack_files(self) -> list[Path]:
         """Collect agent pack files to upload."""
@@ -283,7 +283,7 @@ class SandyService:
             "JANUS_WORKSPACE": "/workspace",
             "JANUS_AGENT_PACK": self._agent_pack_dest_root(),
             "JANUS_DOCS_ROOT": "/workspace/docs/models",
-            "JANUS_SYSTEM_PROMPT_PATH": "/agent-pack/prompts/system.md",
+            "JANUS_SYSTEM_PROMPT_PATH": f"{self._agent_pack_dest_root()}/prompts/system.md",
             "JANUS_ENABLE_WEB_SEARCH": str(self._settings.enable_web_search).lower(),
             "JANUS_ENABLE_CODE_EXECUTION": str(self._settings.enable_code_execution).lower(),
             "JANUS_ENABLE_FILE_TOOLS": str(self._settings.enable_file_tools).lower(),

@@ -6,18 +6,24 @@ set -e  # Exit on error
 echo "=== Janus Agent Pack Bootstrap ==="
 echo "Starting at: $(date)"
 
+# Resolve paths (defaults align with sandbox workdir)
+WORKSPACE_ROOT="${JANUS_WORKSPACE:-/workspace}"
+AGENT_PACK_ROOT="${JANUS_AGENT_PACK:-/workspace/agent-pack}"
+DOCS_ROOT="${JANUS_DOCS_ROOT:-${WORKSPACE_ROOT}/docs/models}"
+SYSTEM_PROMPT_PATH="${JANUS_SYSTEM_PROMPT_PATH:-${AGENT_PACK_ROOT}/prompts/system.md}"
+
 # Create docs directory structure
-mkdir -p /workspace/docs/models
+mkdir -p "$DOCS_ROOT"
 
 # Copy reference documentation
-cp /agent-pack/models/*.md /workspace/docs/models/
+cp "${AGENT_PACK_ROOT}/models/"*.md "$DOCS_ROOT/"
 
 # Create CLAUDE.md for Claude Code context
 # Claude Code automatically reads CLAUDE.md from the working directory
 # This tells Claude Code about Janus capabilities (image gen, TTS, research, etc.)
 echo "=== Setting up CLAUDE.md for Claude Code ==="
-if [ -f /agent-pack/prompts/system.md ]; then
-  cp /agent-pack/prompts/system.md /workspace/CLAUDE.md
+if [ -f "$SYSTEM_PROMPT_PATH" ]; then
+  cp "$SYSTEM_PROMPT_PATH" "${WORKSPACE_ROOT}/CLAUDE.md"
   echo "CLAUDE.md created from system prompt"
   # Also ensure the docs path is mentioned and media API is emphasized
   cat >> /workspace/CLAUDE.md <<'EOF'
@@ -51,7 +57,7 @@ Full API docs at `/workspace/docs/models/`:
 **⚠️ READ these docs and USE THE REAL APIs - do NOT create placeholder images!**
 EOF
 else
-  echo "WARNING: System prompt not found at /agent-pack/prompts/system.md"
+  echo "WARNING: System prompt not found at ${SYSTEM_PROMPT_PATH}"
 fi
 
 # Export critical system prompt for Claude Code --append-system-prompt flag
@@ -59,14 +65,14 @@ fi
 export JANUS_SYSTEM_PROMPT='You are a Janus agent with FULL sandbox access. CRITICAL: For image generation, use the Chutes API: requests.post("https://image.chutes.ai/generate", json={"prompt": "...", "width": 1024, "height": 1024, "steps": 30}). Return image as ![Image](data:image/png;base64,{response.json()["b64_json"]}). DO NOT create SVG/ASCII art. Read /workspace/docs/models/ for full API docs.'
 
 # Copy helper libraries
-if [ -d /agent-pack/lib ]; then
-  mkdir -p /workspace/lib
-  cp -r /agent-pack/lib/* /workspace/lib/ 2>/dev/null || true
+if [ -d "${AGENT_PACK_ROOT}/lib" ]; then
+  mkdir -p "${WORKSPACE_ROOT}/lib"
+  cp -r "${AGENT_PACK_ROOT}/lib/"* "${WORKSPACE_ROOT}/lib/" 2>/dev/null || true
 fi
 
 # Ensure agent binaries are executable
-if [ -d /agent-pack/bin ]; then
-  chmod +x /agent-pack/bin/* 2>/dev/null || true
+if [ -d "${AGENT_PACK_ROOT}/bin" ]; then
+  chmod +x "${AGENT_PACK_ROOT}/bin/"* 2>/dev/null || true
 fi
 
 # Start artifact server
@@ -182,7 +188,7 @@ python3 -c "import httpx, structlog, fastapi, uvicorn, pydantic" 2>/dev/null || 
 
 # Start the model router in the background
 echo "=== Starting Janus Model Router ==="
-cd /agent-pack/router
+cd "${AGENT_PACK_ROOT}/router"
 
 # Test imports first
 echo "Testing router imports..."
@@ -257,7 +263,7 @@ export PYTHONPATH="/workspace/lib:${PYTHONPATH:-}"
 
 echo "=== Bootstrap Complete ==="
 echo "Workspace: /workspace"
-echo "Agent pack: /agent-pack"
+echo "Agent pack: ${AGENT_PACK_ROOT}"
 echo "Reference docs: /workspace/docs/"
 echo "Available agents:"
 ls -la /root/.local/bin/ 2>/dev/null | head -10 || echo "  (none in /root/.local/bin)"
