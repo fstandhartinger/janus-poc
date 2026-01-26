@@ -2,12 +2,46 @@
 
 ## Status: COMPLETE
 
+### Update 5 (2026-01-26): Comprehensive Agent Testing - All Agents Evaluated
+
+Performed comprehensive testing of all supported Sandy agents. Results:
+
+**Test Results (Simple echo command via X-Baseline-Agent header)**:
+
+| Agent | Response Time | Shell Execution | Output Captured | Notes |
+|-------|--------------|-----------------|-----------------|-------|
+| Claude Code | Timeout (90s+) | Intermittent | N/A | Hangs on OpenAI-compatible APIs with MiniMax model |
+| Codex | 15.2s | NO | "Agent completed without output" | Completes but doesn't execute commands |
+| OpenCode | 6.5s | NO | Only plugin installation msgs | TUI initialization only, no command exec |
+| OpenHands | 12.8s | NO | "terminal completed" | Agent initialized but no command output |
+| Droid | 2.7s | NO | "Agent completed without output" | Fastest but no actual execution |
+| Aider | 6-8s | NO | Code suggestions only | Writes code, doesn't execute |
+
+**Conclusion**: Claude Code remains the only agent capable of actual shell execution for tasks like:
+- Web searches
+- File downloads (curl/wget)
+- Running arbitrary commands
+- Code execution
+
+However, Claude Code has intermittent timeout issues when using OpenAI-compatible APIs (MiniMax-M2.1-TEE). This appears to be a compatibility issue between Claude Code's expected API format and the OpenAI Chat Completions format.
+
+**Agent Architecture Differences**:
+- **Claude Code / Codex**: Designed for Anthropic/OpenAI native APIs, has full shell access
+- **OpenCode**: Go-based TUI app, needs interactive terminal environment
+- **OpenHands**: Python SDK-based, runs in Docker isolation, async architecture
+- **Aider**: Python-based code editor, only modifies files, no shell execution
+- **Droid**: Minimal agent, likely requires specific Sandy configuration
+
+**Recommendation**: Keep Claude Code as default. Investigate Sandy's agent API to understand why non-Claude agents don't produce command output. May need to look at how Sandy streams agent output events.
+
+---
+
 ### Update 4 (2026-01-26): Reverted to Claude Code - Aider Cannot Execute Commands
 
 **Issue Discovered**: Testing revealed that Aider is fundamentally unsuited for the user's use cases:
-- ❌ **Web search**: Aider wrote a React weather component instead of searching the web
-- ❌ **GitHub download**: Aider cannot execute shell commands (curl, wget)
-- ❌ **Command execution**: Aider is a code EDITING assistant, not a task EXECUTION agent
+- Web search: Aider wrote a React weather component instead of searching the web
+- GitHub download: Aider cannot execute shell commands (curl, wget)
+- Command execution: Aider is a code EDITING assistant, not a task EXECUTION agent
 
 **Root Cause**: Aider is designed to edit files, not to execute arbitrary commands. When asked to "search the web for weather", it tried to write code that would fetch weather data, rather than actually performing a web search.
 
@@ -16,12 +50,17 @@
 2. `sandy.py`: Updated fallback agent selection back to `"claude-code"`
 3. `test_agent_selection.py`: Updated test to expect `"claude-code"` as default
 
-**Agent Capabilities Matrix**:
-| Agent | Shell Execution | Web Search | File Download | Code Editing |
-|-------|----------------|------------|---------------|--------------|
-| Claude Code | ✅ | ✅ | ✅ | ✅ |
-| Codex | ✅ | ✅ | ✅ | ✅ |
-| Aider | ❌ | ❌ | ❌ | ✅ |
+**Agent Capabilities Matrix (Updated)**:
+| Agent | Shell Exec | Web Search | Downloads | Code Edit | Reliability |
+|-------|-----------|------------|-----------|-----------|-------------|
+| Claude Code | YES | YES | YES | YES | Intermittent timeouts |
+| Codex | NO* | NO* | NO* | YES | Fast but no output |
+| OpenCode | NO | NO | NO | YES | TUI only |
+| OpenHands | NO | NO | NO | YES | Docker isolated |
+| Aider | NO | NO | NO | YES | Reliable for editing |
+| Droid | NO | NO | NO | ? | No output |
+
+*Codex may support these but output is not captured by Sandy's agent streaming
 
 **Improvements Made**:
 - Added `_clean_aider_output()` function to strip Aider-specific noise from output
