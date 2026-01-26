@@ -1,6 +1,6 @@
 # Spec 89: Fix Deep Research Feature
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -126,3 +126,5 @@ This error occurs in `.next/server/app/api/chat/route.js` when processing chat r
 ### To Complete This Spec
 1. Fix the bug in chutes-search service (separate repo)
 2. Or implement alternative deep research using different provider (Brave Search, etc.)
+
+NR_OF_TRIES: 1

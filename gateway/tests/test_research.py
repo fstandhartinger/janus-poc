@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, Iterable
 
 import httpx
+from janus_gateway.routers.research import UpstreamError
 
 
 class FakeStreamResponse:
@@ -89,3 +90,24 @@ def test_research_proxy_fallback_on_timeout(client, monkeypatch) -> None:
     lines = [line for line in result.iter_lines() if line.startswith("data:")]
     assert any("Fallback" in line for line in lines)
     assert "deepResearchMode" not in clients[1].calls[0]["json"]
+
+
+def test_research_proxy_firecrawl_fallback(client, monkeypatch) -> None:
+    async def fake_stream(*args, **kwargs):
+        raise UpstreamError(500, b"boom")
+        yield ""  # pragma: no cover - makes this an async generator
+
+    async def fake_firecrawl_stream(request, settings):
+        yield 'data: {"type":"response","data":"Fallback"}\n\n'
+        yield "data: [DONE]\n\n"
+
+    monkeypatch.setattr("janus_gateway.routers.research._stream_chutes_search", fake_stream)
+    monkeypatch.setattr(
+        "janus_gateway.routers.research._stream_firecrawl_research",
+        fake_firecrawl_stream,
+    )
+
+    result = client.post("/api/research", json={"query": "Hello"})
+    assert result.status_code == 200
+    lines = [line for line in result.iter_lines() if line.startswith("data:")]
+    assert any("Fallback" in line for line in lines)

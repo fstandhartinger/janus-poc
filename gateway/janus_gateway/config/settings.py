@@ -79,6 +79,20 @@ class Settings(BaseSettings):
         description="Chutes search base URL",
         validation_alias=AliasChoices("CHUTES_SEARCH_URL", "JANUS_CHUTES_SEARCH_URL"),
     )
+    firecrawl_api_key: Optional[str] = Field(
+        default=None,
+        description="Firecrawl API key",
+        validation_alias=AliasChoices("FIRECRAWL_API_KEY", "JANUS_FIRECRAWL_API_KEY"),
+    )
+    firecrawl_base_url: str = Field(
+        default="https://api.firecrawl.dev/v1",
+        description="Firecrawl API base URL",
+        validation_alias=AliasChoices("FIRECRAWL_BASE_URL", "JANUS_FIRECRAWL_BASE_URL"),
+    )
+    firecrawl_timeout: int = Field(
+        default=30,
+        description="Firecrawl request timeout in seconds",
+    )
     whisper_endpoint: str = Field(
         default="https://chutes-whisper-large-v3.chutes.ai/transcribe",
         description="Whisper transcription endpoint URL",

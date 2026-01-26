@@ -69,3 +69,4 @@
 - Completed spec 86_generative_ui_responses.md with html-gen-ui rendering, sandboxed iframe UI blocks, markdown renderer integration, prompt updates, and unit coverage.
 - Completed spec 87_api_documentation_page.md with a new API docs page, gateway Swagger/OpenAPI endpoints, and multi-language examples/parameter docs.
 - Completed spec 88_chat_ui_improvements.md with sidebar/topbar cleanup, smart scrolling, message actions/share, and citation-aware markdown rendering.
+- Completed spec 89_fix_deep_research.md with Firecrawl search fallback, UI deep research streaming, progress stages, and source attribution.

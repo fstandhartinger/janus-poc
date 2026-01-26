@@ -6,7 +6,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
 import { useCanvasStore } from '@/store/canvas';
 import { useSettingsStore } from '@/store/settings';
-import { RateLimitError, fetchModels, streamChatCompletion } from '@/lib/api';
+import {
+  RateLimitError,
+  fetchModels,
+  streamChatCompletion,
+  streamDeepResearch,
+  type DeepResearchProgressPayload,
+} from '@/lib/api';
 import { isMemoryEnabled, setMemoryEnabled } from '@/lib/memory';
 import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFreeChats, setFreeChatCount } from '@/lib/freeChat';
 import { getUserId } from '@/lib/userId';
@@ -14,6 +20,7 @@ import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
 import { useSmartScroll } from '@/hooks/useSmartScroll';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
+import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress';
 import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
@@ -33,6 +40,12 @@ interface ChatAreaProps {
   initialMessage?: string;
   autoSubmit?: boolean;
 }
+
+type ResearchSource = {
+  title: string;
+  url: string;
+  snippet: string;
+};
 
 const getMessageText = (content: MessageContent) => {
   if (typeof content === 'string') {
@@ -83,6 +96,10 @@ export function ChatArea({
   const [memoryEnabled, setMemoryEnabledState] = useState(() => isMemoryEnabled());
   const [prefillMessage, setPrefillMessage] = useState<string | undefined>();
   const [shareOpen, setShareOpen] = useState(false);
+  const [deepResearchStages, setDeepResearchStages] = useState<ResearchStage[]>([]);
+  const [deepResearchActive, setDeepResearchActive] = useState(false);
+  const deepResearchSourcesRef = useRef<ResearchSource[]>([]);
+  const deepResearchSeenRef = useRef<Set<string>>(new Set());
   const ttsAutoPlay = useSettingsStore((state) => state.ttsAutoPlay);
   const setTTSAutoPlay = useSettingsStore((state) => state.setTTSAutoPlay);
 
@@ -211,6 +228,126 @@ export function ChatArea({
     };
   };
 
+  const normalizeResearchStatus = (
+    status?: DeepResearchProgressPayload['status']
+  ): ResearchStage['status'] => {
+    if (status === 'pending' || status === 'running' || status === 'complete' || status === 'error') {
+      return status;
+    }
+    return 'running';
+  };
+
+  const upsertResearchStage = (payload: DeepResearchProgressPayload) => {
+    const label = payload.label?.trim();
+    if (!label) return;
+    const status = normalizeResearchStatus(payload.status);
+    const detail = payload.detail?.trim();
+    setDeepResearchStages((prev) => {
+      const next = [...prev];
+      const index = next.findIndex((item) => item.label === label);
+      const stage: ResearchStage = {
+        id: label,
+        label,
+        status,
+        detail: detail || undefined,
+      };
+      if (index >= 0) {
+        next[index] = { ...next[index], ...stage };
+      } else {
+        next.push(stage);
+      }
+      return next;
+    });
+  };
+
+  const collectResearchSources = (raw: unknown) => {
+    const queue = Array.isArray(raw) ? [...raw] : [raw];
+    const sources = deepResearchSourcesRef.current;
+    const seen = deepResearchSeenRef.current;
+
+    const addSource = (entry: Record<string, unknown>) => {
+      const metadata = entry.metadata;
+      const meta =
+        metadata && typeof metadata === 'object' ? (metadata as Record<string, unknown>) : {};
+      const title = String(meta.title || entry.title || entry.name || '').trim();
+      const url = String(meta.url || entry.url || entry.link || '').trim();
+      const snippet = String(entry.pageContent || entry.snippet || entry.description || '').trim();
+      const key = url || title;
+      if (key && seen.has(key)) return;
+      if (key) {
+        seen.add(key);
+      }
+      sources.push({ title, url, snippet });
+    };
+
+    while (queue.length > 0) {
+      const item = queue.shift();
+      if (!item) continue;
+      if (Array.isArray(item)) {
+        queue.push(...item);
+        continue;
+      }
+      if (typeof item === 'object') {
+        addSource(item as Record<string, unknown>);
+      }
+    }
+  };
+
+  const formatResearchSources = (sources: ResearchSource[]) => {
+    if (!sources.length) return '';
+    const lines = ['\n\n---\n\n## Sources\n'];
+    sources.forEach((source, index) => {
+      const label = source.title || source.url || `Source ${index + 1}`;
+      if (source.url) {
+        lines.push(`${index + 1}. [${label}](${source.url})`);
+      } else {
+        lines.push(`${index + 1}. ${label}`);
+      }
+    });
+    return lines.join('\n');
+  };
+
+  const streamResearch = async (
+    query: string,
+    mode: 'light' | 'max',
+    signal: AbortSignal
+  ) => {
+    setDeepResearchActive(true);
+    setDeepResearchStages([]);
+    deepResearchSourcesRef.current = [];
+    deepResearchSeenRef.current = new Set();
+
+    try {
+      for await (const event of streamDeepResearch(
+        { query, mode, optimization: 'balanced' },
+        signal
+      )) {
+        if (event.type === 'progress') {
+          upsertResearchStage(event.data as DeepResearchProgressPayload);
+          continue;
+        }
+        if (event.type === 'sources') {
+          collectResearchSources(event.data);
+          continue;
+        }
+        if (event.type === 'response') {
+          appendToLastMessage(event.data || '', '');
+          continue;
+        }
+        if (event.type === 'error') {
+          const detail = event.data?.detail || 'Deep research failed.';
+          appendToLastMessage(`\n\n*${detail}*`, '');
+        }
+      }
+    } finally {
+      const sources = deepResearchSourcesRef.current;
+      if (sources.length) {
+        appendToLastMessage(formatResearchSources(sources), '');
+      }
+      setDeepResearchActive(false);
+    }
+  };
+
   const handleSend = async (
     content: string,
     files: AttachedFile[],
@@ -261,15 +398,21 @@ export function ChatArea({
     resetUserScroll();
     setStreaming(true);
     setScreenshots([]);
-    setScreenshotsLive(true);
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
     const flagsPayload =
       generationFlags && Object.values(generationFlags).some(Boolean)
         ? generationFlags
         : undefined;
+    const isResearchRequest = Boolean(flagsPayload?.deep_research || flagsPayload?.web_search);
+    const researchMode: 'light' | 'max' = flagsPayload?.deep_research ? 'max' : 'light';
+    setScreenshotsLive(!isResearchRequest);
+    abortControllerRef.current = new AbortController();
+    const signal = abortControllerRef.current.signal;
 
     try {
+      if (isResearchRequest) {
+        await streamResearch(trimmedContent, researchMode, signal);
+        return;
+      }
       // Build request messages from current session
       const currentSession = getCurrentSession();
       const requestMessages = (currentSession?.messages || [])
@@ -544,6 +687,7 @@ export function ChatArea({
 
           <div ref={messagesContainerRef} className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
             <div className="max-w-4xl mx-auto flex min-h-full flex-col">
+              <DeepResearchProgress stages={deepResearchStages} isActive={deepResearchActive} />
               <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
               {messages.length === 0 ? (
                 <div className="chat-empty flex-1">
