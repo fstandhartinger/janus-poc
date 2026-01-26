@@ -54,6 +54,10 @@ else
   echo "WARNING: System prompt not found at /agent-pack/prompts/system.md"
 fi
 
+# Export critical system prompt for Claude Code --append-system-prompt flag
+# This is a fallback in case CLAUDE.md is not automatically loaded
+export JANUS_SYSTEM_PROMPT='You are a Janus agent with FULL sandbox access. CRITICAL: For image generation, use the Chutes API: requests.post("https://image.chutes.ai/generate", json={"prompt": "...", "width": 1024, "height": 1024, "steps": 30}). Return image as ![Image](data:image/png;base64,{response.json()["b64_json"]}). DO NOT create SVG/ASCII art. Read /workspace/docs/models/ for full API docs.'
+
 # Copy helper libraries
 if [ -d /agent-pack/lib ]; then
   mkdir -p /workspace/lib

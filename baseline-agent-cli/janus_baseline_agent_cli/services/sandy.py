@@ -395,15 +395,15 @@ class SandyService:
             # --output-format stream-json: Structured JSONL output
             # --no-session-persistence: Fresh context each run (no session contamination)
             # --dangerously-skip-permissions: YOLO mode for automation
-            # --setting-sources project: Enable CLAUDE.md loading in print mode
-            # Must run from /workspace where CLAUDE.md is located for auto-discovery
-            # Use bash -c to change directory before executing claude
+            # --append-system-prompt: Inject Janus capabilities (image gen via Chutes API)
+            # Must run from /workspace for file access
+            # Use bash -c to change directory and pass system prompt from env var
             command = [
                 "bash", "-c",
                 (
                     f"cd /workspace && claude -p --verbose --output-format stream-json "
                     f"--no-session-persistence --dangerously-skip-permissions "
-                    f"--setting-sources project "
+                    f'--append-system-prompt "$JANUS_SYSTEM_PROMPT" '
                     f"--allowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch "
                     f"{quoted_task}"
                 ),
