@@ -10,17 +10,26 @@ import pytest
 pytestmark = pytest.mark.e2e
 
 
+def _with_token(payload: dict, token: str | None) -> dict:
+    if token:
+        payload["chutes_access_token"] = token
+    return payload
+
+
 @pytest.mark.asyncio
-async def test_sse_format(e2e_settings) -> None:
+async def test_sse_format(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=60.0) as client:
         async with client.stream(
             "POST",
             f"{e2e_settings.baseline_cli_url}/v1/chat/completions",
-            json={
-                "model": "baseline-cli-agent",
-                "messages": [{"role": "user", "content": "Count from 1 to 5"}],
-                "stream": True,
-            },
+            json=_with_token(
+                {
+                    "model": "baseline-cli-agent",
+                    "messages": [{"role": "user", "content": "Count from 1 to 5"}],
+                    "stream": True,
+                },
+                chutes_access_token,
+            ),
         ) as response:
             assert response.status_code == 200
             events: list[str] = []
@@ -38,21 +47,26 @@ async def test_sse_format(e2e_settings) -> None:
 
 
 @pytest.mark.asyncio
-async def test_reasoning_content_streaming(e2e_settings) -> None:
+async def test_reasoning_content_streaming(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=120.0) as client:
         async with client.stream(
             "POST",
             f"{e2e_settings.baseline_cli_url}/v1/chat/completions",
-            json={
-                "model": "baseline-cli-agent",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": "Execute the command 'echo Paris' and then answer what the output was.",
-                    }
-                ],
-                "stream": True,
-            },
+            json=_with_token(
+                {
+                    "model": "baseline-cli-agent",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": (
+                                "Execute the command 'echo Paris' and then answer what the output was."
+                            ),
+                        }
+                    ],
+                    "stream": True,
+                },
+                chutes_access_token,
+            ),
         ) as response:
             assert response.status_code == 200
             saw_content = False

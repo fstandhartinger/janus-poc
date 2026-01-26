@@ -17,17 +17,26 @@ MODELS_TO_TEST = [
 ]
 
 
+def _with_token(payload: dict, token: str | None) -> dict:
+    if token:
+        payload["chutes_access_token"] = token
+    return payload
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize("model", MODELS_TO_TEST)
-async def test_model_simple_task(model: str, e2e_settings) -> None:
+async def test_model_simple_task(model: str, e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=120.0) as client:
         response = await client.post(
             f"{e2e_settings.baseline_cli_url}/v1/chat/completions",
-            json={
-                "model": model,
-                "messages": [{"role": "user", "content": "Say hello in exactly 5 words."}],
-                "stream": False,
-            },
+            json=_with_token(
+                {
+                    "model": model,
+                    "messages": [{"role": "user", "content": "Say hello in exactly 5 words."}],
+                    "stream": False,
+                },
+                chutes_access_token,
+            ),
         )
 
     if response.status_code != 200:
@@ -39,23 +48,26 @@ async def test_model_simple_task(model: str, e2e_settings) -> None:
 
 
 @pytest.mark.asyncio
-async def test_vision_model_with_image(e2e_settings) -> None:
+async def test_vision_model_with_image(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=120.0) as client:
         response = await client.post(
             f"{e2e_settings.baseline_cli_url}/v1/chat/completions",
-            json={
-                "model": "Qwen/Qwen2.5-VL-72B-Instruct",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": [
-                            {"type": "text", "text": "Describe this image"},
-                            {"type": "image_url", "image_url": {"url": "https://picsum.photos/200"}},
-                        ],
-                    }
-                ],
-                "stream": False,
-            },
+            json=_with_token(
+                {
+                    "model": "Qwen/Qwen2.5-VL-72B-Instruct",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": "Describe this image"},
+                                {"type": "image_url", "image_url": {"url": "https://picsum.photos/200"}},
+                            ],
+                        }
+                    ],
+                    "stream": False,
+                },
+                chutes_access_token,
+            ),
         )
 
     if response.status_code != 200:

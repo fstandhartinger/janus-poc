@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import os
 from pathlib import Path
 
 import pytest
@@ -17,6 +18,7 @@ class E2ESettings:
     gateway_url: str
     baseline_cli_url: str
     enabled: bool
+    chutes_access_token: str | None
 
 
 def _load_e2e_settings() -> E2ESettings:
@@ -25,6 +27,10 @@ def _load_e2e_settings() -> E2ESettings:
         gateway_url=settings.e2e_gateway_url.rstrip("/"),
         baseline_cli_url=settings.e2e_baseline_cli_url.rstrip("/"),
         enabled=settings.e2e_enabled,
+        chutes_access_token=(
+            os.getenv("BASELINE_AGENT_CLI_E2E_CHUTES_API_KEY")
+            or os.getenv("CHUTES_API_KEY")
+        ),
     )
 
 
@@ -54,3 +60,8 @@ def pytest_collection_modifyitems(
 @pytest.fixture(scope="session")
 def e2e_settings() -> E2ESettings:
     return E2E_SETTINGS
+
+
+@pytest.fixture(scope="session")
+def chutes_access_token(e2e_settings: E2ESettings) -> str | None:
+    return e2e_settings.chutes_access_token

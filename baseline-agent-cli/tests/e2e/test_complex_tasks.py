@@ -28,26 +28,35 @@ def _extract_artifacts(data: dict) -> list[dict]:
     return message.get("artifacts") or []
 
 
+def _with_token(payload: dict, token: str | None) -> dict:
+    if token:
+        payload["chutes_access_token"] = token
+    return payload
+
+
 @pytest.mark.asyncio
 @pytest.mark.timeout(600)
-async def test_git_clone_and_summarize(e2e_settings) -> None:
+async def test_git_clone_and_summarize(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=httpx.Timeout(30.0, read=700.0)) as client:
         async with client.stream(
             "POST",
             f"{e2e_settings.gateway_url}/v1/chat/completions",
-            json={
-                "model": "baseline-cli-agent",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": (
-                            "Use git clone to download the chutes-api repo from GitHub, read the "
-                            "README, and summarize what it does in 3 bullet points."
-                        ),
-                    }
-                ],
-                "stream": True,
-            },
+            json=_with_token(
+                {
+                    "model": "baseline-cli-agent",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": (
+                                "Use git clone to download the chutes-api repo from GitHub, read the "
+                                "README, and summarize what it does in 3 bullet points."
+                            ),
+                        }
+                    ],
+                    "stream": True,
+                },
+                chutes_access_token,
+            ),
         ) as response:
             assert response.status_code == 200
             content = ""
@@ -73,20 +82,25 @@ async def test_git_clone_and_summarize(e2e_settings) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.timeout(300)
-async def test_web_search_task(e2e_settings) -> None:
+async def test_web_search_task(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=300.0) as client:
         response = await client.post(
             f"{e2e_settings.gateway_url}/v1/chat/completions",
-            json={
-                "model": "baseline-cli-agent",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": "Search the web for the latest news about AI agents and summarize the top 3 findings",
-                    }
-                ],
-                "stream": False,
-            },
+            json=_with_token(
+                {
+                    "model": "baseline-cli-agent",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": (
+                                "Search the web for the latest news about AI agents and summarize the top 3 findings"
+                            ),
+                        }
+                    ],
+                    "stream": False,
+                },
+                chutes_access_token,
+            ),
         )
 
     assert response.status_code == 200
@@ -99,23 +113,26 @@ async def test_web_search_task(e2e_settings) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.timeout(300)
-async def test_coding_task(e2e_settings) -> None:
+async def test_coding_task(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=300.0) as client:
         response = await client.post(
             f"{e2e_settings.gateway_url}/v1/chat/completions",
-            json={
-                "model": "baseline-cli-agent",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": (
-                            "Write a Python script that fetches the current Bitcoin price from "
-                            "an API and prints it. Execute the script and show me the output."
-                        ),
-                    }
-                ],
-                "stream": False,
-            },
+            json=_with_token(
+                {
+                    "model": "baseline-cli-agent",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": (
+                                "Write a Python script that fetches the current Bitcoin price from "
+                                "an API and prints it. Execute the script and show me the output."
+                            ),
+                        }
+                    ],
+                    "stream": False,
+                },
+                chutes_access_token,
+            ),
         )
 
     assert response.status_code == 200
@@ -127,20 +144,23 @@ async def test_coding_task(e2e_settings) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.timeout(300)
-async def test_multimodal_image_generation(e2e_settings) -> None:
+async def test_multimodal_image_generation(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=300.0) as client:
         response = await client.post(
             f"{e2e_settings.gateway_url}/v1/chat/completions",
-            json={
-                "model": "baseline-cli-agent",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": "Generate an image of a futuristic city with flying cars",
-                    }
-                ],
-                "stream": False,
-            },
+            json=_with_token(
+                {
+                    "model": "baseline-cli-agent",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "Generate an image of a futuristic city with flying cars",
+                        }
+                    ],
+                    "stream": False,
+                },
+                chutes_access_token,
+            ),
         )
 
     assert response.status_code == 200
@@ -157,20 +177,23 @@ async def test_multimodal_image_generation(e2e_settings) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.timeout(300)
-async def test_text_to_speech(e2e_settings) -> None:
+async def test_text_to_speech(e2e_settings, chutes_access_token) -> None:
     async with httpx.AsyncClient(timeout=300.0) as client:
         response = await client.post(
             f"{e2e_settings.gateway_url}/v1/chat/completions",
-            json={
-                "model": "baseline-cli-agent",
-                "messages": [
-                    {
-                        "role": "user",
-                        "content": "Convert this text to speech: Hello, welcome to Janus!",
-                    }
-                ],
-                "stream": False,
-            },
+            json=_with_token(
+                {
+                    "model": "baseline-cli-agent",
+                    "messages": [
+                        {
+                            "role": "user",
+                            "content": "Convert this text to speech: Hello, welcome to Janus!",
+                        }
+                    ],
+                    "stream": False,
+                },
+                chutes_access_token,
+            ),
         )
 
     assert response.status_code == 200

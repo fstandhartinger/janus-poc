@@ -123,6 +123,9 @@ E2E tests exercise deployed gateway + baseline services and are disabled by defa
 BASELINE_AGENT_CLI_E2E_ENABLED=true pytest tests/e2e
 ```
 
+For tasks that require Chutes API access (image generation, TTS), set either
+`BASELINE_AGENT_CLI_E2E_CHUTES_API_KEY` or `CHUTES_API_KEY` in the environment.
+
 Optional overrides for deployed URLs:
 
 ```bash
@@ -197,6 +200,7 @@ For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
 | `BASELINE_AGENT_CLI_E2E_ENABLED` | `false` | Enable E2E tests against deployed services |
 | `BASELINE_AGENT_CLI_E2E_GATEWAY_URL` | `https://janus-gateway-bqou.onrender.com` | Gateway base URL for E2E tests |
 | `BASELINE_AGENT_CLI_E2E_BASELINE_CLI_URL` | `https://janus-baseline-agent.onrender.com` | Baseline CLI base URL for E2E tests |
+| `BASELINE_AGENT_CLI_E2E_CHUTES_API_KEY` | - | Chutes API key for E2E tasks that hit multimodal endpoints |
 
 ### Routing Configuration
 

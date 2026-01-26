@@ -252,7 +252,8 @@ async def chat_completions(
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
     request_id = generate_request_id()
-    debug_request_id = generate_debug_request_id() if request.debug else None
+    debug_enabled = getattr(request, "debug", False)
+    debug_request_id = generate_debug_request_id() if debug_enabled else None
     baseline_agent = http_request.headers.get("X-Baseline-Agent")
     start_time = time.time()
 
