@@ -397,13 +397,20 @@ class SandyService:
             # --dangerously-skip-permissions: YOLO mode for automation
             # --append-system-prompt: Inject Janus capabilities (image gen via Chutes API)
             # Must run from /workspace for file access
-            # Use bash -c to change directory and pass system prompt from env var
+            # Embed the critical system prompt directly to ensure it's passed
+            janus_prompt = (
+                "You are a Janus agent with FULL sandbox access and REAL image generation. "
+                "CRITICAL: For image requests, use Chutes API - POST to https://image.chutes.ai/generate "
+                "with JSON body: {prompt, width: 1024, height: 1024, steps: 30}. "
+                "Response has b64_json field. Return as: ![Image](data:image/png;base64,{b64_json}). "
+                "NEVER create SVG or ASCII art. Read /workspace/docs/models/ for all API docs."
+            )
             command = [
                 "bash", "-c",
                 (
                     f"cd /workspace && claude -p --verbose --output-format stream-json "
                     f"--no-session-persistence --dangerously-skip-permissions "
-                    f'--append-system-prompt "$JANUS_SYSTEM_PROMPT" '
+                    f"--append-system-prompt '{janus_prompt}' "
                     f"--allowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch "
                     f"{quoted_task}"
                 ),
