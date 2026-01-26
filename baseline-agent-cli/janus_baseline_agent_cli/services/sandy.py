@@ -553,11 +553,11 @@ class SandyService:
     ) -> bool:
         """Write a file into the sandbox via Sandy file API."""
         try:
-            payload = {
-                "path": dest_path,
-                "content": base64.b64encode(content).decode("utf-8"),
-                "encoding": "base64",
-            }
+            try:
+                decoded = content.decode("utf-8")
+            except UnicodeDecodeError:
+                return False
+            payload = {"path": dest_path, "content": decoded}
             response = await client.post(
                 f"{self._base_url}/api/sandboxes/{sandbox_id}/files/write",
                 json=payload,

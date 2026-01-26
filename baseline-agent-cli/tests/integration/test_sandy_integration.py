@@ -105,9 +105,16 @@ class FakeAsyncClient:
 
         if "/files/write" in url:
             path = json.get("path") if json else None
-            encoded = json.get("content") if json else None
-            if path and encoded:
-                self.files[path] = base64.b64decode(encoded)
+            content = json.get("content") if json else None
+            encoding = json.get("encoding") if json else None
+            if path and content is not None:
+                if encoding == "base64":
+                    self.files[path] = base64.b64decode(content)
+                else:
+                    if isinstance(content, str):
+                        self.files[path] = content.encode("utf-8")
+                    else:
+                        self.files[path] = b""
             return FakeResponse({"ok": True})
 
         if "/exec" in url:
