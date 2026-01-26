@@ -33,11 +33,14 @@ From researching Claude Code's open source repository:
 - The `shlex.quote()` wrapping was over-escaping the entire command string
 
 ### The Real Solution
-Claude Code CLI supports explicit system prompt injection:
-- `--system-prompt-file <path>` - Replace default system prompt with file contents
-- `--append-system-prompt-file <path>` - **APPEND** file to default system prompt
+Claude Code CLI flags (from `claude --help`):
+- `--system-prompt <prompt>` - Takes prompt TEXT directly (not file path)
+- `--append-system-prompt <prompt>` - Takes prompt TEXT directly (not file path)
+- `--setting-sources <sources>` - Comma-separated list: user, project, local
 
-The correct fix is to use `--append-system-prompt-file /workspace/CLAUDE.md` to explicitly pass our capabilities prompt.
+**Key insight**: There is NO `--append-system-prompt-file` flag. To use CLAUDE.md:
+1. Run Claude Code from /workspace directory (where CLAUDE.md is located)
+2. Use `--setting-sources project` to enable CLAUDE.md loading in print mode
 
 ## Implementation
 
@@ -46,18 +49,18 @@ The correct fix is to use `--append-system-prompt-file /workspace/CLAUDE.md` to 
 ```python
 elif agent == "claude" or agent == "claude-code":
     # Claude Code CLI agent
-    # Use --append-system-prompt-file to inject Janus capabilities
-    # This is more reliable than relying on CLAUDE.md discovery
+    # --setting-sources project: Enable CLAUDE.md loading in print mode
+    # Must run from /workspace where CLAUDE.md is located for auto-discovery
+    # Use bash -c to change directory before executing claude
     command = [
-        "claude",
-        "-p",
-        "--verbose",
-        "--output-format", "stream-json",
-        "--no-session-persistence",
-        "--dangerously-skip-permissions",
-        "--append-system-prompt-file", "/workspace/CLAUDE.md",
-        "--allowedTools", "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
-        quoted_task,
+        "bash", "-c",
+        (
+            f"cd /workspace && claude -p --verbose --output-format stream-json "
+            f"--no-session-persistence --dangerously-skip-permissions "
+            f"--setting-sources project "
+            f"--allowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch "
+            f"{quoted_task}"
+        ),
     ]
 ```
 
@@ -75,15 +78,16 @@ elif agent == "claude" or agent == "claude-code":
 6. ❌ Second test: Claude Code said "I don't have ability to generate images"
 7. 🔧 Root cause: bash -c + shlex.quote over-escapes command
 8. ❌ Third test: Still not working with cd /workspace approach
-9. 🔧 **NEW FIX**: Use --append-system-prompt-file flag instead of CLAUDE.md discovery
-10. 🔄 Implementing the proper fix now
+9. ❌ Fourth test: --append-system-prompt-file doesn't exist!
+10. 🔧 **CORRECT FIX**: Use `bash -c "cd /workspace && claude --setting-sources project ..."`
 
 ## Key Research Findings
 
-From Claude Code open source repo analysis:
-- CLI flag `--append-system-prompt-file <path>` appends file to system prompt
+From `claude --help` output:
+- `--append-system-prompt <prompt>` takes TEXT, not file path
+- `--setting-sources project` enables loading CLAUDE.md from project directory
+- Must run from /workspace where CLAUDE.md is located
 - Stream-json format outputs newline-delimited JSON events
-- Event types: system, assistant, user, result
 - `-p` mode is required for non-interactive execution
 - `--verbose` is needed with stream-json for real-time progress
 

@@ -395,19 +395,18 @@ class SandyService:
             # --output-format stream-json: Structured JSONL output
             # --no-session-persistence: Fresh context each run (no session contamination)
             # --dangerously-skip-permissions: YOLO mode for automation
-            # --append-system-prompt-file: Inject Janus capabilities prompt (image gen, TTS, etc.)
-            # NOTE: We use --append-system-prompt-file instead of relying on CLAUDE.md discovery
-            # because -p mode may bypass automatic CLAUDE.md loading.
+            # --setting-sources project: Enable CLAUDE.md loading in print mode
+            # Must run from /workspace where CLAUDE.md is located for auto-discovery
+            # Use bash -c to change directory before executing claude
             command = [
-                "claude",
-                "-p",
-                "--verbose",
-                "--output-format", "stream-json",
-                "--no-session-persistence",
-                "--dangerously-skip-permissions",
-                "--append-system-prompt-file", "/workspace/CLAUDE.md",
-                "--allowedTools", "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
-                quoted_task,
+                "bash", "-c",
+                (
+                    f"cd /workspace && claude -p --verbose --output-format stream-json "
+                    f"--no-session-persistence --dangerously-skip-permissions "
+                    f"--setting-sources project "
+                    f"--allowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch "
+                    f"{quoted_task}"
+                ),
             ]
         elif agent == "aider":
             # Aider needs specific flags for non-interactive mode
