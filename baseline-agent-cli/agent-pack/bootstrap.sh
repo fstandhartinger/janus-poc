@@ -130,24 +130,47 @@ PY
   done
 ) >/workspace/artifact_server.log 2>&1 &
 
-# Install router dependencies
+# Install router dependencies (only if not already installed)
 echo "=== Installing Router Dependencies ==="
-pip_install httpx structlog fastapi uvicorn pydantic
+python3 -c "import httpx, structlog, fastapi, uvicorn, pydantic" 2>/dev/null || pip_install httpx structlog fastapi uvicorn pydantic
 
 # Start the model router in the background
 echo "=== Starting Janus Model Router ==="
-cd /agent-pack/router && python3 -c "import uvicorn; uvicorn.run('server:app', host='0.0.0.0', port=8000, log_level='info')" >/workspace/router.log 2>&1 &
+cd /agent-pack/router
+
+# Test imports first
+echo "Testing router imports..."
+python3 -c "from server import app; print('Router imports OK')" 2>&1 | head -5
+
+# Start the router
+python3 -c "import uvicorn; uvicorn.run('server:app', host='0.0.0.0', port=8000, log_level='info')" >/workspace/router.log 2>&1 &
 ROUTER_PID=$!
 cd /workspace
 
-# Wait for router to be ready
-for i in {1..30}; do
+# Wait for router to be ready (increased timeout to 60 iterations = 30 seconds)
+echo "Waiting for router to start (PID: $ROUTER_PID)..."
+ROUTER_READY=false
+for i in {1..60}; do
   if curl -s http://127.0.0.1:8000/health >/dev/null 2>&1; then
-    echo "Router ready!"
+    echo "Router ready after $((i/2)) seconds!"
+    ROUTER_READY=true
     break
   fi
   sleep 0.5
 done
+
+# Check if router failed to start
+if [ "$ROUTER_READY" != "true" ]; then
+  echo "WARNING: Router may not have started. Checking logs..."
+  if [ -f /workspace/router.log ]; then
+    echo "Router log:"
+    tail -20 /workspace/router.log
+  fi
+  # Check if process is still running
+  if ! kill -0 $ROUTER_PID 2>/dev/null; then
+    echo "ERROR: Router process died!"
+  fi
+fi
 
 # Configure agents to use local router
 # OpenAI-compatible agents (Aider, Codex, etc.)
