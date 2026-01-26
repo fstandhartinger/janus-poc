@@ -7,11 +7,18 @@ import { useSettingsStore } from '@/store/settings';
 interface TTSPlayerProps {
   text: string;
   className?: string;
+  autoPlay?: boolean;
+  onAutoPlayHandled?: () => void;
 }
 
 type PlaybackState = 'idle' | 'loading' | 'playing' | 'paused';
 
-export function TTSPlayer({ text, className = '' }: TTSPlayerProps) {
+export function TTSPlayer({
+  text,
+  className = '',
+  autoPlay = false,
+  onAutoPlayHandled,
+}: TTSPlayerProps) {
   const [state, setState] = useState<PlaybackState>('idle');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -175,6 +182,22 @@ export function TTSPlayer({ text, className = '' }: TTSPlayerProps) {
     }
   };
 
+  useEffect(() => {
+    if (!autoPlay || !hasText) return;
+    if (state !== 'idle') return;
+
+    let cancelled = false;
+    handlePlay().finally(() => {
+      if (!cancelled) {
+        onAutoPlayHandled?.();
+      }
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [autoPlay, handlePlay, hasText, onAutoPlayHandled, state]);
+
   const handlePause = () => {
     if (audioRef.current) {
       audioRef.current.pause();
@@ -334,12 +357,14 @@ function VoiceIcon() {
       fill="none"
       stroke="currentColor"
       strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
       className="w-4 h-4"
     >
-      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-      <line x1="12" y1="19" x2="12" y2="23" />
-      <line x1="8" y1="23" x2="16" y2="23" />
+      <circle cx="9" cy="7" r="4" />
+      <path d="M3 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2" />
+      <path d="M17 8l2 2-2 2" />
+      <path d="M20 6l2 2-2 2" />
     </svg>
   );
 }
