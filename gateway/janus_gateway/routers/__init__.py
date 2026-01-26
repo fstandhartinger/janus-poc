@@ -8,6 +8,7 @@ from .transcription import router as transcription_router
 from .research import router as research_router
 from .tts import router as tts_router
 from .memories import router as memories_router
+from .debug import router as debug_router
 
 __all__ = [
     "health_router",
@@ -18,4 +19,5 @@ __all__ = [
     "research_router",
     "tts_router",
     "memories_router",
+    "debug_router",
 ]
