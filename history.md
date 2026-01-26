@@ -72,3 +72,4 @@
 - Completed spec 89_fix_deep_research.md with Firecrawl search fallback, UI deep research streaming, progress stages, and source attribution.
 - Completed spec 90_complexity_detection_improvements.md with multilingual/git keyword routing, separable verb matching, Sandy unavailability messaging, health sandbox status, and UI availability indicator.
 - Completed spec 91_fix_sign_in_with_chutes.md with OAuth config error handling, optional client secrets, refreshed IDP app credentials, Render env updates, and verified production login/logout + authenticated chat flow.
+- Completed spec 92_baseline_agent_cli_e2e_verification.md with comprehensive E2E tests for agent selection (Claude Code, Codex, Aider), complex tasks (git clone, web search, coding, image gen, TTS), model compatibility tests, SSE streaming verification, and yolo mode validation. Added retry logic for transient 5xx errors and flexible assertions for task engagement detection.
