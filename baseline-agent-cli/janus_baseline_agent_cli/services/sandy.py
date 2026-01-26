@@ -1940,6 +1940,7 @@ class SandyService:
 
         sandbox_start = time.perf_counter()
         output_parts: list[str] = []
+        content_streamed = False  # Track if we've streamed any content
         has_error = False
         exit_code = 0
 
@@ -2049,7 +2050,23 @@ class SandyService:
                                             if block.get("type") == "text":
                                                 text = block.get("text", "")
                                                 if text:
-                                                    output_parts.append(text)
+                                                    # Stream text content immediately so it appears in chat
+                                                    content_streamed = True
+                                                    if debug_emitter:
+                                                        await debug_emitter.emit(
+                                                            DebugEventType.RESPONSE_CHUNK,
+                                                            "AGENT",
+                                                            text[:200],
+                                                        )
+                                                    yield ChatCompletionChunk(
+                                                        id=request_id,
+                                                        model=model,
+                                                        choices=[
+                                                            ChunkChoice(
+                                                                delta=Delta(content=text)
+                                                            )
+                                                        ],
+                                                    )
                                             elif block.get("type") == "tool_use":
                                                 tool_name = block.get("name", "")
                                                 if debug_emitter:
@@ -2164,15 +2181,16 @@ class SandyService:
                             ],
                         )
 
-                # Emit final content
-                result = "\n".join(output_parts) if output_parts else "Agent completed without output."
-                result = process_agent_response(result, sandbox_url)
-
-                yield ChatCompletionChunk(
-                    id=request_id,
-                    model=model,
-                    choices=[ChunkChoice(delta=Delta(content=result))],
-                )
+                # Only emit final content if we haven't streamed any content yet
+                # (content was already streamed from agent-output events)
+                if not content_streamed:
+                    result = "\n".join(output_parts) if output_parts else "Agent completed without output."
+                    result = process_agent_response(result, sandbox_url)
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[ChunkChoice(delta=Delta(content=result))],
+                    )
 
                 # Collect artifacts
                 artifacts = await self._collect_artifacts(client, sandbox_id, public_url)

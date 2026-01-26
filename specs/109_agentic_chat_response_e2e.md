@@ -1,6 +1,18 @@
 # Spec 109: Agentic Chat Response E2E Verification
 
-## Status: NOT STARTED
+## Status: FIXED
+
+### Root Cause Found & Fixed (2026-01-26):
+The issue was in `baseline-agent-cli/janus_baseline_agent_cli/services/sandy.py` in the `execute_via_agent_api` function:
+
+**Problem**: When `agent-output` events came in with text content (from Claude Code), the text was being collected in `output_parts` but **NOT** yielded as `content` during streaming. All agent output was going to `reasoning_content` (thinking panel) and the actual `content` was only emitted once at the very end.
+
+**Fix**: Modified the `agent-output` handler to yield text content immediately as `content` (so it appears in the chat in real-time), rather than only collecting it for final emission.
+
+**Changes made**:
+1. Added `content_streamed` flag to track if content was streamed
+2. When `agent-output` event has text content, yield it immediately as `content`
+3. Only emit final content if no content was streamed (fallback for edge cases)
 
 ## Context / Why
 
