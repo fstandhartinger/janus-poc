@@ -397,14 +397,16 @@ class SandyService:
             # --dangerously-skip-permissions: YOLO mode for automation
             # Prepend Janus capabilities directly to the task (simplest approach)
             janus_context = (
-                "[CONTEXT: You are a Janus agent with REAL image generation. "
-                "For image requests, use Python: import requests; "
+                "[INSTRUCTION: To generate images, you MUST use the Chutes API. "
+                "Write and run this Python code: "
+                "import requests; "
                 "r = requests.post('https://image.chutes.ai/generate', "
-                "json={'prompt': 'description', 'width': 1024, 'height': 1024, 'steps': 30}); "
-                "Return image as ![Image](data:image/png;base64,{r.json()['b64_json']}). "
-                "NEVER create SVG. Read /workspace/docs/models/ for API docs.]\n\n"
+                "json={'prompt': '<your description>', 'width': 1024, 'height': 1024, 'steps': 30}); "
+                "print(f'![Image](data:image/png;base64,{r.json()[\"b64_json\"]})'); "
+                "DO NOT create SVG or ASCII art. The API is available and works.]\n\n"
             )
-            enhanced_task = shlex.quote(janus_context + task)
+            # Don't use shlex.quote for list commands - subprocess handles escaping
+            enhanced_task = janus_context + task
             command = [
                 "claude",
                 "-p",
