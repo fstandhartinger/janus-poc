@@ -229,18 +229,44 @@ You can include interactive UI widgets in your responses using the `html-gen-ui`
 - Responses requiring backend/API access
 - Complex multi-page applications
 
-## Reference Documentation
+## Media Generation APIs (CRITICAL!)
 
-Your workspace contains API docs at `docs/models/`:
-- `docs/models/text-to-speech.md` - Kokoro TTS API (generate speech audio)
-- `docs/models/music-generation.md` - DiffRhythm music generation (songs + instrumentals)
-- `docs/models/text-to-image.md` - Qwen/HunYuan image generation
-- `docs/models/text-to-video.md` - WAN-2/LTX video generation
-- `docs/models/lip-sync.md` - MuseTalk lip-sync API
-- `docs/models/llm.md` - Chutes LLM endpoint
-- `docs/models/vision.md` - Vision models for image understanding
+**YOU HAVE REAL IMAGE/AUDIO/VIDEO GENERATION CAPABILITIES!**
 
-**ALWAYS check these docs when generating media!**
+When asked to generate media, you MUST use the Chutes APIs - NOT create SVG/HTML/ASCII art:
+
+### Quick Reference (read full docs for details):
+
+**Image Generation** - `POST https://image.chutes.ai/generate`
+```python
+import requests
+response = requests.post("https://image.chutes.ai/generate", json={
+    "prompt": "a cute cat with orange fur, photorealistic",
+    "width": 1024,
+    "height": 1024,
+    "steps": 30
+})
+image_base64 = response.json()["b64_json"]
+# Return as: ![Generated Image](data:image/png;base64,{image_base64})
+```
+
+**Text-to-Speech** - See `docs/models/text-to-speech.md`
+**Music Generation** - See `docs/models/music-generation.md`
+**Video Generation** - See `docs/models/text-to-video.md`
+
+### Full API Documentation
+
+Your workspace contains detailed API docs at `docs/models/`:
+- `docs/models/text-to-image.md` - Image generation APIs
+- `docs/models/text-to-speech.md` - Kokoro TTS API
+- `docs/models/music-generation.md` - DiffRhythm music
+- `docs/models/text-to-video.md` - Video generation
+- `docs/models/lip-sync.md` - MuseTalk lip-sync
+- `docs/models/vision.md` - Vision models
+- `docs/models/llm.md` - LLM endpoint
+
+**⚠️ IMPORTANT: Before generating ANY media, READ the relevant docs file first!**
+**⚠️ DO NOT create SVG, ASCII art, or placeholder images - USE THE REAL APIs!**
 
 ## How to Work
 

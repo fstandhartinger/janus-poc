@@ -19,21 +19,36 @@ echo "=== Setting up CLAUDE.md for Claude Code ==="
 if [ -f /agent-pack/prompts/system.md ]; then
   cp /agent-pack/prompts/system.md /workspace/CLAUDE.md
   echo "CLAUDE.md created from system prompt"
-  # Also ensure the docs path is mentioned
+  # Also ensure the docs path is mentioned and media API is emphasized
   cat >> /workspace/CLAUDE.md <<'EOF'
 
-## Important: Documentation Location
+## CRITICAL: You Have REAL Media Generation APIs!
 
-Model documentation is available at `/workspace/docs/models/`:
-- `text-to-image.md` - Image generation APIs
-- `text-to-speech.md` - TTS (Kokoro) API
-- `music-generation.md` - DiffRhythm music API
-- `text-to-video.md` - Video generation APIs
-- `lip-sync.md` - MuseTalk lip-sync API
+**For image generation requests, use the Chutes API (NOT SVG/ASCII art):**
+
+```python
+import requests
+response = requests.post("https://image.chutes.ai/generate", json={
+    "prompt": "your image description here",
+    "width": 1024,
+    "height": 1024,
+    "steps": 30
+})
+image_base64 = response.json()["b64_json"]
+# Return to user as: ![Image](data:image/png;base64,{image_base64})
+```
+
+## Documentation Location
+
+Full API docs at `/workspace/docs/models/`:
+- `text-to-image.md` - Image generation
+- `text-to-speech.md` - TTS (Kokoro)
+- `music-generation.md` - DiffRhythm
+- `text-to-video.md` - Video generation
+- `lip-sync.md` - MuseTalk lip-sync
 - `vision.md` - Vision models
-- `llm.md` - LLM endpoints
 
-**ALWAYS read these docs before generating media!**
+**⚠️ READ these docs and USE THE REAL APIs - do NOT create placeholder images!**
 EOF
 else
   echo "WARNING: System prompt not found at /agent-pack/prompts/system.md"

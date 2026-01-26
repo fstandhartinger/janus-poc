@@ -51,9 +51,14 @@ Claude Code reads `CLAUDE.md` automatically from the working directory. The fix:
 1. **Create `/workspace/CLAUDE.md`** during bootstrap that contains:
    - Full system prompt with Janus capabilities
    - Links to model documentation files
-   - Instructions on how to generate media
+   - **Explicit instructions** on using the Chutes API for media generation (not SVG/ASCII)
 
 2. The bootstrap.sh should copy `agent-pack/prompts/system.md` to `/workspace/CLAUDE.md`
+
+3. **Additional fix needed**: The system prompt must be VERY explicit that:
+   - Claude Code has access to REAL image generation APIs
+   - It must use `https://image.chutes.ai/generate` - NOT create SVG/PNG files manually
+   - Include code example directly in the prompt
 
 ## Implementation
 
@@ -66,16 +71,54 @@ echo "=== Setting up CLAUDE.md for Claude Code ==="
 if [ -f /agent-pack/prompts/system.md ]; then
   cp /agent-pack/prompts/system.md /workspace/CLAUDE.md
   echo "CLAUDE.md created from system prompt"
+  # Add explicit API instructions
+  cat >> /workspace/CLAUDE.md <<'EOF'
+
+## CRITICAL: You Have REAL Media Generation APIs!
+
+**For image generation requests, use the Chutes API (NOT SVG/ASCII art):**
+
+```python
+import requests
+response = requests.post("https://image.chutes.ai/generate", json={
+    "prompt": "your image description here",
+    "width": 1024,
+    "height": 1024,
+    "steps": 30
+})
+image_base64 = response.json()["b64_json"]
+# Return to user as: ![Image](data:image/png;base64,{image_base64})
+```
+
+**⚠️ DO NOT create SVG, ASCII art, or placeholder images - USE THE REAL APIs!**
+EOF
 fi
 ```
+
+### system.md changes
+
+Added "Media Generation APIs (CRITICAL!)" section with:
+- Explicit Python code example for image generation
+- Warning NOT to create SVG/ASCII art
+- Quick reference for all media APIs
+
+## Progress
+
+1. ✅ CLAUDE.md creation added to bootstrap.sh
+2. ✅ First test: Claude Code now attempts to generate image (progress!)
+3. ❌ BUT: Created SVG instead of using Chutes API
+4. ✅ System prompt updated with explicit API instructions
+5. ✅ bootstrap.sh updated with inline API example
+6. 🔄 Need to redeploy and test again
 
 ## Acceptance Criteria
 
 - [x] Spec written
-- [ ] CLAUDE.md created in /workspace during bootstrap
-- [ ] Claude Code can see its capabilities when running
-- [ ] "generate an image of a cute cat" produces an actual image
-- [ ] All agent pack model docs are referenced
+- [x] CLAUDE.md created in /workspace during bootstrap
+- [x] Claude Code can see its capabilities when running
+- [ ] "generate an image of a cute cat" produces an actual image (via Chutes API)
+- [x] All agent pack model docs are referenced
+- [x] Explicit API code examples in system prompt
 
 ## Test Cases
 
