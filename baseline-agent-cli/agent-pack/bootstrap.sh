@@ -12,6 +12,33 @@ mkdir -p /workspace/docs/models
 # Copy reference documentation
 cp /agent-pack/models/*.md /workspace/docs/models/
 
+# Create CLAUDE.md for Claude Code context
+# Claude Code automatically reads CLAUDE.md from the working directory
+# This tells Claude Code about Janus capabilities (image gen, TTS, research, etc.)
+echo "=== Setting up CLAUDE.md for Claude Code ==="
+if [ -f /agent-pack/prompts/system.md ]; then
+  cp /agent-pack/prompts/system.md /workspace/CLAUDE.md
+  echo "CLAUDE.md created from system prompt"
+  # Also ensure the docs path is mentioned
+  cat >> /workspace/CLAUDE.md <<'EOF'
+
+## Important: Documentation Location
+
+Model documentation is available at `/workspace/docs/models/`:
+- `text-to-image.md` - Image generation APIs
+- `text-to-speech.md` - TTS (Kokoro) API
+- `music-generation.md` - DiffRhythm music API
+- `text-to-video.md` - Video generation APIs
+- `lip-sync.md` - MuseTalk lip-sync API
+- `vision.md` - Vision models
+- `llm.md` - LLM endpoints
+
+**ALWAYS read these docs before generating media!**
+EOF
+else
+  echo "WARNING: System prompt not found at /agent-pack/prompts/system.md"
+fi
+
 # Copy helper libraries
 if [ -d /agent-pack/lib ]; then
   mkdir -p /workspace/lib
