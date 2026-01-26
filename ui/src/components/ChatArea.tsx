@@ -11,7 +11,6 @@ import { isMemoryEnabled, setMemoryEnabled } from '@/lib/memory';
 import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFreeChats, setFreeChatCount } from '@/lib/freeChat';
 import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
-import { useDebug } from '@/hooks/useDebug';
 import { useSmartScroll } from '@/hooks/useSmartScroll';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
@@ -19,8 +18,6 @@ import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
 import { MemoryToggle } from './MemoryToggle';
-import { DebugPanel } from './debug/DebugPanel';
-import { DebugToggle } from './debug/DebugToggle';
 import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
@@ -33,8 +30,6 @@ import type { AttachedFile } from '@/lib/file-types';
 interface ChatAreaProps {
   onMenuClick?: () => void;
   onNewChat?: () => void;
-  debugEnabled: boolean;
-  onDebugChange: (enabled: boolean) => void;
   initialMessage?: string;
   autoSubmit?: boolean;
 }
@@ -52,8 +47,6 @@ const getMessageText = (content: MessageContent) => {
 export function ChatArea({
   onMenuClick,
   onNewChat,
-  debugEnabled,
-  onDebugChange,
   initialMessage,
   autoSubmit,
 }: ChatAreaProps) {
@@ -88,7 +81,6 @@ export function ChatArea({
   const [toast, setToast] = useState<{ message: string; action?: string; onAction?: () => void } | null>(null);
   const [memorySheetOpen, setMemorySheetOpen] = useState(false);
   const [memoryEnabled, setMemoryEnabledState] = useState(() => isMemoryEnabled());
-  const [debugRequestId, setDebugRequestId] = useState<string | null>(null);
   const [prefillMessage, setPrefillMessage] = useState<string | undefined>();
   const [shareOpen, setShareOpen] = useState(false);
   const ttsAutoPlay = useSettingsStore((state) => state.ttsAutoPlay);
@@ -105,20 +97,6 @@ export function ChatArea({
     -1
   );
   const pendingQuery = searchParams.get('q')?.trim();
-  const debugBaseline =
-    selectedModel === 'baseline-langchain'
-      ? 'baseline-langchain'
-      : selectedModel === 'baseline-cli-agent'
-      ? 'baseline-cli-agent'
-      : selectedModel || 'baseline-cli-agent';
-  const debugLabel =
-    debugBaseline === 'baseline-langchain'
-      ? 'langchain'
-      : debugBaseline === 'baseline-cli-agent'
-      ? 'agent-cli'
-      : debugBaseline;
-  const debugState = useDebug(debugEnabled, debugRequestId, debugBaseline);
-
   const syncFreeChatState = () => {
     const state = readFreeChatState();
     setFreeChatsUsed(state.count);
@@ -133,12 +111,6 @@ export function ChatArea({
     syncFreeChatState();
   }, []);
 
-
-  useEffect(() => {
-    if (!debugEnabled) {
-      setDebugRequestId(null);
-    }
-  }, [debugEnabled]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -290,9 +262,6 @@ export function ChatArea({
     setStreaming(true);
     setScreenshots([]);
     setScreenshotsLive(true);
-    if (debugEnabled) {
-      setDebugRequestId(null);
-    }
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
     const flagsPayload =
@@ -321,16 +290,8 @@ export function ChatArea({
           user_id: userId,
           enable_memory: memoryEnabledSetting,
           generation_flags: flagsPayload,
-          debug: debugEnabled,
         },
-        signal,
-        (response) => {
-          if (!debugEnabled) return;
-          const debugId = response.headers.get('X-Debug-Request-Id');
-          if (debugId) {
-            setDebugRequestId(debugId);
-          }
-        }
+        signal
       )) {
         if ('type' in chunk && chunk.type === 'screenshot') {
           pushScreenshot(chunk.data);
@@ -467,7 +428,7 @@ export function ChatArea({
   return (
     <div className="chat-area">
       <CanvasPanel onAIEdit={handleAIEdit} disabled={isStreaming} />
-      <div className={`chat-body${debugEnabled ? ' debug-open' : ''}`}>
+      <div className="chat-body">
         <div className="chat-main">
           <div className="chat-topbar shrink-0">
             <div className="chat-topbar-left">
@@ -529,7 +490,6 @@ export function ChatArea({
                   <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
                 )}
               </div>
-              <DebugToggle enabled={debugEnabled} onToggle={onDebugChange} />
               <MemoryToggle
                 enabled={memoryEnabled}
                 onOpen={() => setMemorySheetOpen(true)}
@@ -639,13 +599,6 @@ export function ChatArea({
           </div>
         </div>
 
-        {debugEnabled && (
-          <DebugPanel
-            baseline={debugLabel}
-            debugState={debugState}
-            onClose={() => onDebugChange(false)}
-          />
-        )}
       </div>
     </div>
   );

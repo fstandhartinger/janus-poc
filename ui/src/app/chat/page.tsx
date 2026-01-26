@@ -8,7 +8,6 @@ import { useChatStore } from '@/store/chat';
 import { useSettingsStore } from '@/store/settings';
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
-const DEBUG_STORAGE_KEY = 'chat-debug-enabled';
 const sidebarListeners = new Set<() => void>();
 
 const notifySidebarCollapsed = () => {
@@ -23,18 +22,6 @@ const readSidebarCollapsed = (): boolean => {
     return JSON.parse(saved) as boolean;
   } catch {
     localStorage.removeItem(SIDEBAR_STORAGE_KEY);
-    return false;
-  }
-};
-
-const readDebugEnabled = (): boolean => {
-  if (typeof window === 'undefined') return false;
-  const saved = localStorage.getItem(DEBUG_STORAGE_KEY);
-  if (!saved) return false;
-  try {
-    return JSON.parse(saved) as boolean;
-  } catch {
-    localStorage.removeItem(DEBUG_STORAGE_KEY);
     return false;
   }
 };
@@ -62,7 +49,6 @@ const subscribeSidebarCollapsed = (listener: () => void) => {
 
 export default function ChatPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [debugEnabled, setDebugEnabled] = useState(() => readDebugEnabled());
   const isCanvasOpen = useCanvasStore((state) => state.isOpen);
   const createSession = useChatStore((state) => state.createSession);
   const router = useRouter();
@@ -89,11 +75,6 @@ export default function ChatPage() {
   const openSidebar = useCallback(() => setSidebarOpen(true), []);
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const handleNewChat = useCallback(() => createSession(), [createSession]);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem(DEBUG_STORAGE_KEY, JSON.stringify(debugEnabled));
-  }, [debugEnabled]);
 
   useEffect(() => {
     const initial = searchParams.get('initial');
@@ -135,8 +116,6 @@ export default function ChatPage() {
         <ChatArea
           onMenuClick={openSidebar}
           onNewChat={handleNewChat}
-          debugEnabled={debugEnabled}
-          onDebugChange={setDebugEnabled}
           initialMessage={sharePayload?.initial}
           autoSubmit={sharePayload?.autoSubmit}
         />
