@@ -20,9 +20,10 @@ import type { GenerationFlags, GenerationTag } from '@/types/generation';
 interface ChatInputProps {
   onSend: (content: string, files: AttachedFile[], generationFlags?: GenerationFlags) => void;
   disabled?: boolean;
+  initialInput?: string;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, initialInput }: ChatInputProps) {
   const [input, setInput] = useState('');
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
   const [selectedTags, setSelectedTags] = useState<GenerationTag[]>([]);
@@ -32,6 +33,11 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [processingFiles, setProcessingFiles] = useState<string[]>([]);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const voiceInputEnabled = process.env.NEXT_PUBLIC_ENABLE_VOICE_INPUT === 'true';
+
+  useEffect(() => {
+    if (typeof initialInput !== 'string') return;
+    setInput(initialInput);
+  }, [initialInput]);
 
   const handleTranscription = useCallback((text: string) => {
     setInput((prev) => {
