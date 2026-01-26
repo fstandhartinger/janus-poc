@@ -100,6 +100,7 @@ def client(request: pytest.FixtureRequest, cli_client, langchain_client):
 def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
     config.addinivalue_line("markers", "smoke: smoke tests")
+    config.addinivalue_line("markers", "smoke_baseline: baseline smoke tests")
     config.addinivalue_line("markers", "integration: integration tests")
     config.addinivalue_line("markers", "slow: slow tests")
     config.addinivalue_line("markers", "visual: visual tests")

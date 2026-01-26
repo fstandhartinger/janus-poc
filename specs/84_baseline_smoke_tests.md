@@ -1,6 +1,6 @@
 # Spec 84: Baseline Smoke Tests via Gateway
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 

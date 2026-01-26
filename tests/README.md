@@ -27,6 +27,13 @@ Legacy variables (`BASELINE_*`) are still supported.
 pytest tests/smoke -v -m smoke
 ```
 
+## Run Baseline Smoke Tests (Gateway)
+
+```bash
+./scripts/smoke-baselines.sh
+pytest tests/smoke/test_baseline_gateway.py -v -m smoke_baseline
+```
+
 ## Run Integration Tests
 
 ```bash
