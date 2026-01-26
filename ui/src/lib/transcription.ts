@@ -79,12 +79,7 @@ export async function transcribeAudio(
   }
 
   const result = await response.json();
-
-  return {
-    text: result.text || result.transcription || '',
-    language: result.language,
-    duration: result.duration,
-  };
+  return normalizeTranscriptionResult(result);
 }
 
 export async function transcribeViaGateway(
@@ -128,7 +123,8 @@ export async function transcribeViaGateway(
     );
   }
 
-  return response.json();
+  const result = await response.json();
+  return normalizeTranscriptionResult(result);
 }
 
 export interface TranscriptionHealthStatus {
@@ -171,6 +167,28 @@ async function blobToBase64(blob: Blob): Promise<string> {
     reader.onerror = reject;
     reader.readAsDataURL(blob);
   });
+}
+
+function normalizeTranscriptionResult(result: unknown): TranscriptionResult {
+  if (Array.isArray(result)) {
+    const text = result
+      .map((segment) => (segment && typeof segment === 'object' ? (segment as { text?: string }).text : ''))
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return { text };
+  }
+
+  if (result && typeof result === 'object') {
+    const data = result as { text?: string; transcription?: string; language?: string; duration?: number };
+    return {
+      text: data.text || data.transcription || '',
+      language: data.language,
+      duration: data.duration,
+    };
+  }
+
+  return { text: '' };
 }
 
 export type { TranscriptionOptions, TranscriptionResult, TranscriptionErrorDetail };

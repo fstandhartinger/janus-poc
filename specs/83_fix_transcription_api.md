@@ -318,5 +318,6 @@ const handleTranscribe = async (audioBlob: Blob) => {
 - Browser MediaRecorder produces different formats per browser
 - Consider adding audio format conversion on gateway if needed
 - The current Chutes whisper endpoint accepts JSON base64 payloads; do not include a null language field
+- The Chutes whisper endpoint may return a list of segment objects; assemble text when needed
 
 NR_OF_TRIES: 1

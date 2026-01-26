@@ -47,6 +47,21 @@ describe('transcription', () => {
     expect(result.text).toBe('hello');
   });
 
+  it('handles list responses from gateway', async () => {
+    process.env.NEXT_PUBLIC_GATEWAY_URL = 'http://localhost:9999';
+
+    const { transcribeViaGateway } = await import('./transcription');
+
+    mockFetch.mockResolvedValueOnce({
+      ok: true,
+      json: () => Promise.resolve([{ text: 'Hello' }, { text: 'world' }]),
+    });
+
+    const result = await transcribeViaGateway(new Blob(['test'], { type: 'audio/webm' }));
+
+    expect(result.text).toBe('Hello world');
+  });
+
   it('requires a public api key for direct transcription', async () => {
     process.env.NEXT_PUBLIC_CHUTES_API_KEY = '';
 

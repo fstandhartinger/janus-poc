@@ -62,4 +62,4 @@
 ## 2026-01-26
 - Completed spec 81_baseline_documentation_pages.md with a new baselines section on the competition page plus dedicated CLI agent and LangChain documentation pages.
 - Completed spec 82_chat_ui_polish.md with streaming message indicators, reasoning filtering, TTS icon update, and input layout fixes.
-- Completed spec 83_fix_transcription_api.md with JSON base64 transcription payloads (omitting null language), refreshed UI/tests/error logging, and verified the Chutes whisper endpoint behavior.
+- Completed spec 83_fix_transcription_api.md with JSON base64 transcription payloads (omitting null language), list-response parsing for Chutes segments, refreshed UI/tests/error logging, and verified the whisper endpoint behavior.

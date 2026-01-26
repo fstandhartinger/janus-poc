@@ -198,7 +198,25 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
                 )
 
             result = response.json()
-            text = result.get("text", result.get("transcription", ""))
+            text = ""
+            language: Optional[str] = None
+            duration: Optional[float] = None
+
+            if isinstance(result, list):
+                text = " ".join(
+                    segment.get("text", "").strip()
+                    for segment in result
+                    if isinstance(segment, dict) and segment.get("text")
+                ).strip()
+            elif isinstance(result, dict):
+                text = result.get("text") or result.get("transcription") or ""
+                language = result.get("language")
+                duration = result.get("duration")
+            else:
+                logger.warning(
+                    "transcription_unexpected_response",
+                    response_type=type(result).__name__,
+                )
 
             if not text:
                 logger.warning("transcription_empty_text")
@@ -207,8 +225,8 @@ async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionRespon
 
             return TranscriptionResponse(
                 text=text,
-                language=result.get("language"),
-                duration=result.get("duration"),
+                language=language,
+                duration=duration,
             )
 
         except httpx.TimeoutException as exc:

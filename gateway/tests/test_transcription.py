@@ -12,13 +12,13 @@ from janus_gateway.config import get_settings
 
 class DummyResponse:
     def __init__(
-        self, status_code: int, json_data: Optional[Dict[str, Any]] = None, text: str = ""
+        self, status_code: int, json_data: Any = None, text: str = ""
     ) -> None:
         self.status_code = status_code
-        self._json_data = json_data or {}
+        self._json_data = json_data if json_data is not None else {}
         self.text = text
 
-    def json(self) -> Dict[str, Any]:
+    def json(self) -> Any:
         return self._json_data
 
 
@@ -81,6 +81,28 @@ def test_transcribe_audio_omits_null_language(client, monkeypatch) -> None:
     result = client.post("/api/transcribe", json={"audio_b64": "Zm9v"})
     assert result.status_code == 200
     assert "language" not in (client_instance.request or {}).get("json", {})
+
+
+def test_transcribe_audio_list_response(client, monkeypatch) -> None:
+    monkeypatch.setenv("CHUTES_API_KEY", "test-key")
+    get_settings.cache_clear()
+
+    response = DummyResponse(
+        status_code=200,
+        json_data=[{"start": 0.0, "end": 1.0, "text": "Hello"}, {"text": "world"}],
+    )
+    client_instance = MockAsyncClient(response)
+
+    def mock_client(*args, **kwargs) -> MockAsyncClient:
+        return client_instance
+
+    monkeypatch.setattr(
+        "janus_gateway.routers.transcription.httpx.AsyncClient", mock_client
+    )
+
+    result = client.post("/api/transcribe", json={"audio_b64": "Zm9v"})
+    assert result.status_code == 200
+    assert result.json()["text"] == "Hello world"
 
 
 def test_transcribe_audio_missing_api_key(client, monkeypatch) -> None:
