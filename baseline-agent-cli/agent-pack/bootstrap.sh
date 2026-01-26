@@ -253,9 +253,6 @@ EOF
   echo "Claude Code configured to use local router"
 fi
 
-# Cleanup on exit
-trap "kill $ROUTER_PID 2>/dev/null" EXIT
-
 # Set up environment
 export PYTHONDONTWRITEBYTECODE=1
 export NODE_NO_WARNINGS=1
