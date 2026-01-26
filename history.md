@@ -64,3 +64,5 @@
 - Completed spec 82_chat_ui_polish.md with streaming message indicators, reasoning filtering, TTS icon update, and input layout fixes.
 - Completed spec 83_fix_transcription_api.md with JSON base64 transcription payloads (omitting null language), list-response parsing for Chutes segments, refreshed UI/tests/error logging, and verified the whisper endpoint behavior.
 - Completed spec 84_baseline_smoke_tests.md with gateway baseline smoke scripts, pytest marker coverage, and gateway-routed baseline smoke tests.
+- Completed spec 85_pwa_mobile_install.md with PWA manifest/service worker auto-update, mobile install/update toast, share-target handling, and read-to-me TTS auto-play wiring.
+- Re-verified spec 83_fix_transcription_api.md status formatting for Ralph detection and bumped NR_OF_TRIES after validation.

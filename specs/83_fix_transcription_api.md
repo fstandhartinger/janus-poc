@@ -1,6 +1,6 @@
 # Spec 83: Fix Transcription API
 
-**Status:** COMPLETE
+## Status: COMPLETE
 **Priority:** High
 **Complexity:** Medium
 **Prerequisites:** None
@@ -320,4 +320,4 @@ const handleTranscribe = async (audioBlob: Blob) => {
 - The current Chutes whisper endpoint accepts JSON base64 payloads; do not include a null language field
 - The Chutes whisper endpoint may return a list of segment objects; assemble text when needed
 
-NR_OF_TRIES: 1
+NR_OF_TRIES: 2
