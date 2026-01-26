@@ -148,9 +148,9 @@ class SandyService:
     # Include common pip --user install paths and standard paths
     # Note: Using actual paths instead of unexpanded shell variables
     _default_path = (
+        "/workspace/agent-pack/bin:"  # agent pack binaries inside sandbox workdir
         "/root/.local/bin:"  # pip --user for root
         "/usr/local/bin:"  # system-wide pip installs
-        "/workspace/agent-pack/bin:"  # agent pack binaries inside sandbox workdir
         "/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin"
     )
 
