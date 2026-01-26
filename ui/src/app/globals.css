@@ -1273,6 +1273,77 @@ html {
   gap: 12px;
 }
 
+.agent-status-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(31, 41, 55, 0.8);
+  background: rgba(17, 24, 39, 0.4);
+  color: #9CA3AF;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.agent-status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #6B7280;
+}
+
+.agent-status-indicator.is-available {
+  border-color: rgba(99, 210, 151, 0.4);
+  color: #63D297;
+  background: rgba(99, 210, 151, 0.08);
+}
+
+.agent-status-indicator.is-available .agent-status-dot {
+  background: #63D297;
+  box-shadow: 0 0 6px rgba(99, 210, 151, 0.6);
+}
+
+.agent-status-indicator.is-limited {
+  border-color: rgba(251, 191, 36, 0.4);
+  color: #FBBF24;
+  background: rgba(251, 191, 36, 0.08);
+}
+
+.agent-status-indicator.is-limited .agent-status-dot {
+  background: #FBBF24;
+  box-shadow: 0 0 6px rgba(251, 191, 36, 0.5);
+}
+
+.agent-status-indicator.is-unknown {
+  border-color: rgba(75, 85, 99, 0.6);
+  color: #9CA3AF;
+  background: rgba(31, 41, 55, 0.4);
+}
+
+.agent-status-indicator.is-unknown .agent-status-dot {
+  background: #6B7280;
+}
+
+.agent-status-indicator.is-loading .agent-status-dot {
+  background: #9CA3AF;
+  animation: agent-status-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes agent-status-pulse {
+  0% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.45;
+  }
+}
+
 .chat-menu-btn {
   width: 36px;
   height: 36px;
@@ -2869,6 +2940,9 @@ html {
 
   .chat-sidebar-shell {
     width: 0;
+    height: 0 !important;
+    max-height: 0;
+    overflow: hidden;
   }
 
   .chat-sidebar {
@@ -2893,6 +2967,10 @@ html {
   }
 
   .chat-header-actions .model-selector {
+    display: none;
+  }
+
+  .agent-status-indicator {
     display: none;
   }
 
