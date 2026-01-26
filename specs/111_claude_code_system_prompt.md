@@ -60,6 +60,12 @@ from `/workspace`, while keeping the minimal non-interactive system prompt in pl
 - Claude Code runs from `/workspace`, so it auto-loads `CLAUDE.md`.
 - Keep `--append-system-prompt` for minimal non-interactive guidance.
 
+### 2b) Enforce Claude Code prompt flags via wrapper
+- Add an agent-pack `bin/claude` wrapper so Sandy agent/run always:
+  - uses `--output-format stream-json` + `--include-partial-messages`
+  - appends the system prompt from `JANUS_SYSTEM_PROMPT_PATH`
+  - avoids noisy `--verbose` logs that break JSON parsing
+
 ### 3) Router base normalization
 - When `apiBaseUrl` is provided to Sandy agent-run:
   - Use `/v1` for OpenAI-compatible clients

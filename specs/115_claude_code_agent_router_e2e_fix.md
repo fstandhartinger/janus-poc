@@ -73,6 +73,8 @@ streams useful output in the UI.
 ### D) Streaming reliability
 - Parse `stream_event` and `result` payloads from Claude Code output.
 - Emit content as it arrives in `ChatCompletionChunk.delta.content`.
+- Ensure Claude Code is invoked with `--include-partial-messages` and without
+  `--verbose` noise by using an agent-pack wrapper.
 
 ## Implementation Steps
 
@@ -80,6 +82,8 @@ streams useful output in the UI.
    - Upload agent pack + run bootstrap in `execute_via_agent_api` and `complete_via_agent_api`.
    - Default `apiBaseUrl` to local router when `use_model_router` is enabled.
    - Add `stream_event` + `result` parsing for agent-run streaming.
+   - Add agent-pack `bin/claude` wrapper to enforce CLI flags and append prompt.
+   - Clamp Anthropic `max_tokens` to model limits in the local router.
 
 2. **sandy**
    - Normalize router base URLs for OpenAI vs Anthropic.

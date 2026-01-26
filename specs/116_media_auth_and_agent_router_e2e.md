@@ -40,6 +40,10 @@ configuration rather than model behavior.
      stream responses, but the missing Authorization still prevented media output
      (so UI looked stalled or “thinking”).
 
+4. **CHUTES_API_KEY missing inside Sandy agent/run**
+   - Claude Code reports `CHUTES_API_KEY` unset in the sandbox.
+   - This blocks media calls even when prompts are correct.
+
 ## Goals
 
 - Image generation prompts include **Authorization headers** everywhere they can
@@ -76,6 +80,11 @@ configuration rather than model behavior.
 
 - Include `env` in the `agent/run` payload so Claude Code inherits
   `CHUTES_API_KEY` and related sandbox variables for media calls.
+
+### D) Ensure CHUTES_API_KEY is set on Render baseline agent
+
+- Set `CHUTES_API_KEY` on the baseline agent Render service so the sandbox env
+  can be populated during agent/run.
 
 ## Acceptance Criteria
 

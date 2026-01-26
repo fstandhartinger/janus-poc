@@ -1,0 +1,86 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REAL_CLAUDE="/usr/local/bin/claude"
+if [ ! -x "$REAL_CLAUDE" ]; then
+  REAL_CLAUDE="$(command -v claude || true)"
+fi
+
+if [ -z "${REAL_CLAUDE}" ] || [ "${REAL_CLAUDE}" = "$0" ]; then
+  echo "Claude CLI not found." >&2
+  exit 127
+fi
+
+args=()
+has_output_format=false
+has_include_partial=false
+has_append_prompt=false
+has_max_turns=false
+has_print=false
+
+while [ "$#" -gt 0 ]; do
+  case "$1" in
+    -p|--print)
+      has_print=true
+      args+=("$1")
+      shift
+      ;;
+    --output-format)
+      has_output_format=true
+      args+=("$1" "$2")
+      shift 2
+      ;;
+    --include-partial-messages)
+      has_include_partial=true
+      args+=("$1")
+      shift
+      ;;
+    --append-system-prompt|--system-prompt|--system-prompt-file)
+      has_append_prompt=true
+      args+=("$1" "$2")
+      shift 2
+      ;;
+    --max-turns)
+      has_max_turns=true
+      args+=("$1" "$2")
+      shift 2
+      ;;
+    --verbose)
+      # Drop verbose logs to keep JSON output clean.
+      shift
+      ;;
+    *)
+      args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if $has_print && ! $has_output_format; then
+  args+=("--output-format" "stream-json")
+fi
+
+if $has_print && ! $has_include_partial; then
+  args+=("--include-partial-messages")
+fi
+
+if $has_print && ! $has_append_prompt; then
+  prompt_file="${JANUS_SYSTEM_PROMPT_PATH:-/workspace/agent-pack/prompts/system.md}"
+  if [ -f "$prompt_file" ]; then
+    append_prompt="$(cat "$prompt_file")"
+    if [ -n "$append_prompt" ]; then
+      args+=("--append-system-prompt" "$append_prompt")
+    fi
+  elif [ -f "/workspace/CLAUDE.md" ]; then
+    append_prompt="$(cat /workspace/CLAUDE.md)"
+    if [ -n "$append_prompt" ]; then
+      args+=("--append-system-prompt" "$append_prompt")
+    fi
+  fi
+fi
+
+if $has_print && ! $has_max_turns; then
+  args+=("--max-turns" "8")
+fi
+
+exec "$REAL_CLAUDE" "${args[@]}"

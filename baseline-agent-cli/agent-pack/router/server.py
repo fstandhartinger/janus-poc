@@ -561,10 +561,13 @@ async def _anthropic_stream_response(
         yield 'event: message_stop\ndata: {"type": "message_stop"}\n\n'
 
     async def stream_generator():
+        max_tokens = anthropic_request.max_tokens or model_config.max_tokens
+        if max_tokens > model_config.max_tokens:
+            max_tokens = model_config.max_tokens
         payload = {
             "model": model_config.model_id,
             "messages": openai_messages,
-            "max_tokens": anthropic_request.max_tokens or model_config.max_tokens,
+            "max_tokens": max_tokens,
         }
         if anthropic_request.temperature is not None:
             payload["temperature"] = anthropic_request.temperature
@@ -683,10 +686,13 @@ async def _anthropic_non_stream_response(
     model_config: ModelConfig,
 ) -> dict:
     """Return non-streaming Anthropic format response."""
+    max_tokens = anthropic_request.max_tokens or model_config.max_tokens
+    if max_tokens > model_config.max_tokens:
+        max_tokens = model_config.max_tokens
     payload = {
         "model": model_config.model_id,
         "messages": openai_messages,
-        "max_tokens": anthropic_request.max_tokens or model_config.max_tokens,
+        "max_tokens": max_tokens,
         "stream": False,
     }
     if anthropic_request.temperature is not None:
