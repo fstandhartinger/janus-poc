@@ -1020,8 +1020,8 @@ class SandyService:
         elif requested == "droid":
             agent = "droid"
         else:
-            # Default to claude-code for best results
-            agent = "claude-code"
+            # Default to aider - more reliable with OpenAI-compatible APIs
+            agent = "aider"
 
         logger.info(
             "agent_selection",

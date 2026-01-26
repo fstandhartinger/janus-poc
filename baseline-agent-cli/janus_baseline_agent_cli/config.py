@@ -250,7 +250,7 @@ class Settings(BaseSettings):
     )
     enable_file_tools: bool = Field(default=True, description="Enable file tooling")
     baseline_agent: str = Field(
-        default="claude-code",
+        default="aider",
         validation_alias="JANUS_BASELINE_AGENT",
         description="CLI agent command to run inside the sandbox",
     )
