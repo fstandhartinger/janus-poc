@@ -77,6 +77,48 @@ def _strip_ansi(text: str) -> str:
     return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
 
 
+def _clean_aider_output(text: str) -> str:
+    """Clean up Aider-specific output formatting.
+
+    Removes:
+    - "Added X to the chat." messages
+    - "► **THINKING**" / "► **ANSWER**" markers
+    - "Applied edit to X" messages
+    - Sandy web dev context noise
+    """
+    lines = text.split("\n")
+    cleaned_lines = []
+    skip_until_answer = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        # Skip common Aider noise
+        if stripped.startswith("Added ") and " to the chat" in stripped:
+            continue
+        if stripped.startswith("Applied edit to "):
+            continue
+        if stripped == "► **THINKING**":
+            skip_until_answer = True
+            continue
+        if stripped == "► **ANSWER**":
+            skip_until_answer = False
+            continue
+
+        # Skip thinking content between markers
+        if skip_until_answer:
+            continue
+
+        cleaned_lines.append(line)
+
+    result = "\n".join(cleaned_lines).strip()
+
+    # Remove excessive blank lines
+    result = re.sub(r"\n{3,}", "\n\n", result)
+
+    return result
+
+
 def _debug_step_for_tool(tool_name: str) -> str:
     normalized = tool_name.lower()
     if "search" in normalized:
@@ -1812,6 +1854,8 @@ class SandyService:
                         output_parts.append(f"Error: {error_msg}")
 
                 result = "\n".join(output_parts) if output_parts else "Agent completed without output."
+                # Clean up Aider-specific output formatting
+                result = _clean_aider_output(result)
                 result = process_agent_response(result, sandbox_url)
 
                 artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
@@ -2185,12 +2229,15 @@ class SandyService:
                 # (content was already streamed from agent-output events)
                 if not content_streamed:
                     result = "\n".join(output_parts) if output_parts else "Agent completed without output."
+                    # Clean up Aider-specific output formatting
+                    result = _clean_aider_output(result)
                     result = process_agent_response(result, sandbox_url)
-                    yield ChatCompletionChunk(
-                        id=request_id,
-                        model=model,
-                        choices=[ChunkChoice(delta=Delta(content=result))],
-                    )
+                    if result:  # Only emit if there's content after cleaning
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[ChunkChoice(delta=Delta(content=result))],
+                        )
 
                 # Collect artifacts
                 artifacts = await self._collect_artifacts(client, sandbox_id, public_url)

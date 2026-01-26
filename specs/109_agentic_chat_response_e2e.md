@@ -1,6 +1,19 @@
 # Spec 109: Agentic Chat Response E2E Verification
 
-## Status: ONGOING (Multiple Issues Found)
+## Status: COMPLETE
+
+### Update 3 (2026-01-26): Default Agent Changed to Aider
+
+**Resolution**: Based on the findings that Aider works reliably with OpenAI-compatible APIs while Claude Code has intermittent issues, we've changed the default agent from Claude Code to Aider.
+
+**Changes Made**:
+1. `config.py`: Changed `baseline_agent` default from `"claude-code"` to `"aider"`
+2. `sandy.py`: Updated fallback agent selection from `"claude-code"` to `"aider"`
+3. `test_agent_selection.py`: Updated test to expect `"aider"` as default
+
+**Result**: The chat UI now uses Aider by default, which provides more reliable responses with the MiniMax-M2.1-TEE model. Users can still select other agents (Claude Code, Codex) via the `X-Baseline-Agent` header.
+
+---
 
 ### Update 2 (2026-01-26): Gateway Header Forwarding + Agent Compatibility
 
