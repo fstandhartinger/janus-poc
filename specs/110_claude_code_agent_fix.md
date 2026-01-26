@@ -119,20 +119,52 @@ curl -X POST https://janus-baseline-agent.onrender.com/v1/chat/completions \
 
 Expected: Claude Code executes command and returns output.
 
+### 4. Router in Agent-Pack (Additional Fix)
+
+The original fix put the router code only in the installed package, but the Sandy sandbox doesn't have the package installed. Added standalone router to agent-pack:
+
+```bash
+baseline-agent-cli/agent-pack/router/
+├── server.py      # Main FastAPI server with /v1/messages
+├── classifier.py  # Task classification
+├── models.py      # Model configuration
+├── metrics.py     # Metrics collection
+└── debug.py       # Debug utilities
+```
+
+Updated bootstrap.sh to run router from agent-pack:
+```bash
+# Test imports first
+python3 -c "from server import app; print('Router imports OK')"
+
+# Start the router
+cd /agent-pack/router
+python3 -c "import uvicorn; uvicorn.run('server:app', host='0.0.0.0', port=8000)" &
+```
+
 ## Test Results (2026-01-26)
 
-**Test: Claude Code Shell Execution**
+**Test 1: Simple Shell Execution**
 ```bash
 curl -X POST https://janus-baseline-agent.onrender.com/v1/chat/completions \
   -H "X-Baseline-Agent: claude-code" \
-  -d '{"model": "baseline-cli-agent", "messages": [{"role": "user", "content": "Run: echo ANTHROPIC_TEST_SUCCESS"}], "stream": true}'
+  -d '{"model": "baseline-cli-agent", "messages": [{"role": "user", "content": "Run: echo TEST_SUCCESS && date"}], "stream": true}'
 ```
 
 **Result: SUCCESS**
 - Claude Code started with MiniMax-M2.1-TEE model
 - Used Bash tool to execute command
-- Output captured: `ANTHROPIC_TEST_SUCCESS`
-- Completion time: **6.3 seconds** (no timeout!)
+- Output captured:
+  ```
+  TEST_SUCCESS
+  Mon Jan 26 12:19:18 UTC 2026
+  ```
+- Completion time: **6.6 seconds**
+
+**Test 2: Complex Tasks (Web Download)**
+- Simple commands work reliably
+- Complex multi-step tasks may still timeout due to model response times
+- This is not a router issue but a model latency issue
 
 ## Acceptance Criteria
 
@@ -144,7 +176,8 @@ curl -X POST https://janus-baseline-agent.onrender.com/v1/chat/completions \
 
 ## Related Files
 
-- `baseline-agent-cli/janus_baseline_agent_cli/router/server.py` - Router with dual API support
+- `baseline-agent-cli/janus_baseline_agent_cli/router/server.py` - Router with dual API support (package version)
+- `baseline-agent-cli/agent-pack/router/` - Standalone router for Sandy sandbox
 - `baseline-agent-cli/agent-pack/bootstrap.sh` - Agent environment configuration
 - `baseline-agent-cli/janus_baseline_agent_cli/config.py` - PUBLIC_ROUTER_URL setting
 - `baseline-agent-cli/janus_baseline_agent_cli/services/sandy.py` - Sandy agent integration
