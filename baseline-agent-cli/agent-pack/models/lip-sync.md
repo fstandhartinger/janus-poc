@@ -2,6 +2,7 @@
 
 ## Endpoint
 POST https://chutes-musetalk.chutes.ai/generate
+Header: Authorization: Bearer $CHUTES_API_KEY
 
 ## Request
 {

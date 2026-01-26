@@ -2,6 +2,7 @@
 
 ## WAN-2.1 Image-to-Video
 POST https://chutes-wan2-1-14b.chutes.ai/image2video
+Header: Authorization: Bearer $CHUTES_API_KEY
 {
   "image": "base64_or_url",
   "prompt": "motion description",
@@ -14,10 +15,12 @@ Response: { "video": "base64_video_data", "mime_type": "video/mp4" }
 
 ## WAN-2.2 Fast Generation
 POST https://chutes-wan-2-2-i2v-14b-fast.chutes.ai/generate
+Header: Authorization: Bearer $CHUTES_API_KEY
 (similar parameters, optimized for speed)
 
 ## LTX-2 Video
 POST https://chutes-ltx-video-2.chutes.ai/generate
+Header: Authorization: Bearer $CHUTES_API_KEY
 {
   "prompt": "video description",
   "negative_prompt": "blur, low quality",

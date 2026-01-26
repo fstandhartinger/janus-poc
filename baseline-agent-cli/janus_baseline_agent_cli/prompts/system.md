@@ -206,7 +206,12 @@ I've created your file. Download it here:
 **For generated media - Use Chutes APIs:**
 ```python
 # Generate image
-response = requests.post("https://image.chutes.ai/generate", ...)
+import os
+response = requests.post(
+    "https://image.chutes.ai/generate",
+    headers={"Authorization": f"Bearer {os.environ['CHUTES_API_KEY']}"},
+    json={"prompt": "...", "width": 1024, "height": 1024, "steps": 30},
+)
 # Return the URL directly
 ```
 

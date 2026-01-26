@@ -397,10 +397,12 @@ class SandyService:
             # --dangerously-skip-permissions: YOLO mode for automation
             # Prepend Janus capabilities directly to the task (simplest approach)
             janus_context = (
-                "[INSTRUCTION: To generate images, you MUST use the Chutes API. "
+                "[INSTRUCTION: To generate images, you MUST use the Chutes API with "
+                "Authorization: Bearer $CHUTES_API_KEY. "
                 "Write and run this Python code: "
-                "import requests; "
-                "r = requests.post('https://image.chutes.ai/generate', "
+                "import os; import requests; "
+                "headers = {'Authorization': f\"Bearer {os.environ['CHUTES_API_KEY']}\"}; "
+                "r = requests.post('https://image.chutes.ai/generate', headers=headers, "
                 "json={'prompt': '<your description>', 'width': 1024, 'height': 1024, 'steps': 30}); "
                 "print(f'![Image](data:image/png;base64,{r.json()[\"b64_json\"]})'); "
                 "DO NOT create SVG or ASCII art. The API is available and works.]\n\n"

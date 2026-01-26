@@ -239,13 +239,18 @@ When asked to generate media, you MUST use the Chutes APIs - NOT create SVG/HTML
 
 **Image Generation** - `POST https://image.chutes.ai/generate`
 ```python
+import os
 import requests
-response = requests.post("https://image.chutes.ai/generate", json={
-    "prompt": "a cute cat with orange fur, photorealistic",
-    "width": 1024,
-    "height": 1024,
-    "steps": 30
-})
+response = requests.post(
+    "https://image.chutes.ai/generate",
+    headers={"Authorization": f"Bearer {os.environ['CHUTES_API_KEY']}"},
+    json={
+        "prompt": "a cute cat with orange fur, photorealistic",
+        "width": 1024,
+        "height": 1024,
+        "steps": 30,
+    },
+)
 image_base64 = response.json()["b64_json"]
 # Return as: ![Generated Image](data:image/png;base64,{image_base64})
 ```

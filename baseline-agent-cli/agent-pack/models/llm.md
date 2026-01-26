@@ -3,6 +3,9 @@
 ## Endpoint
 POST https://llm.chutes.ai/v1/chat/completions
 
+## Authentication
+Header: Authorization: Bearer $CHUTES_API_KEY
+
 ## OpenAI-Compatible Request
 {
   "model": "deepseek-ai/DeepSeek-V3-0324",
