@@ -1,0 +1,626 @@
+"""FastAPI server for composite model routing.
+
+Supports both OpenAI Chat Completions and Anthropic Messages API formats.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import time
+import uuid
+from typing import Any, Literal, Optional
+
+import httpx
+import structlog
+from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ConfigDict, Field
+
+from classifier import TaskClassifier
+from metrics import metrics
+from models import ModelConfig, TaskType, get_fallback_models, get_model_for_task
+
+logger = structlog.get_logger()
+
+app = FastAPI(title="Janus Composite Model Router", version="1.1.0")
+
+classifier: Optional[TaskClassifier] = None
+api_key: str = ""
+api_base: str = "https://llm.chutes.ai/v1"
+
+
+class ChatCompletionRequest(BaseModel):
+    """Minimal OpenAI-compatible chat request for routing."""
+
+    model: str
+    messages: list[dict]
+    temperature: Optional[float] = 0.7
+    max_tokens: Optional[int] = None
+    stream: Optional[bool] = False
+    tools: Optional[list[dict]] = None
+    tool_choice: Optional[Any] = None
+
+    model_config = ConfigDict(extra="allow")
+
+
+# --- Anthropic Messages API Models ---
+
+
+class AnthropicContentBlock(BaseModel):
+    """Anthropic content block."""
+
+    type: Literal["text", "image", "tool_use", "tool_result"] = "text"
+    text: Optional[str] = None
+    source: Optional[dict] = None
+    id: Optional[str] = None
+    name: Optional[str] = None
+    input: Optional[dict] = None
+    tool_use_id: Optional[str] = None
+    content: Optional[str | list[dict]] = None
+
+
+class AnthropicMessage(BaseModel):
+    """Anthropic message."""
+
+    role: Literal["user", "assistant"]
+    content: str | list[AnthropicContentBlock | dict]
+
+
+class AnthropicMessagesRequest(BaseModel):
+    """Anthropic Messages API request."""
+
+    model: str
+    messages: list[AnthropicMessage]
+    max_tokens: int = Field(default=4096)
+    system: Optional[str | list[dict]] = None
+    stop_sequences: Optional[list[str]] = None
+    stream: Optional[bool] = False
+    temperature: Optional[float] = None
+    top_p: Optional[float] = None
+    top_k: Optional[int] = None
+    metadata: Optional[dict] = None
+    tools: Optional[list[dict]] = None
+    tool_choice: Optional[dict] = None
+
+    model_config = ConfigDict(extra="allow")
+
+
+class AnthropicUsage(BaseModel):
+    """Anthropic token usage."""
+
+    input_tokens: int = 0
+    output_tokens: int = 0
+
+
+class AnthropicResponse(BaseModel):
+    """Anthropic Messages API response."""
+
+    id: str
+    type: str = "message"
+    role: str = "assistant"
+    content: list[dict]
+    model: str
+    stop_reason: Optional[str] = None
+    stop_sequence: Optional[str] = None
+    usage: AnthropicUsage
+
+
+# --- Anthropic Format Conversion Helpers ---
+
+
+def _extract_system_text(system: Optional[str | list[dict]]) -> Optional[str]:
+    """Extract system text from Anthropic system field."""
+    if isinstance(system, str):
+        return system
+    if isinstance(system, list):
+        parts = []
+        for block in system:
+            text = block.get("text") or block.get("content")
+            if isinstance(text, str):
+                parts.append(text)
+        return "\n".join(parts) if parts else None
+    return None
+
+
+def _extract_anthropic_content_text(
+    content: str | list[AnthropicContentBlock | dict],
+) -> str:
+    """Extract text from Anthropic content blocks."""
+    if isinstance(content, str):
+        return content
+    parts = []
+    for block in content:
+        if isinstance(block, dict):
+            if block.get("type") == "text":
+                parts.append(block.get("text", ""))
+            elif "text" in block:
+                parts.append(block.get("text", ""))
+        elif isinstance(block, AnthropicContentBlock):
+            if block.type == "text" and block.text:
+                parts.append(block.text)
+    return " ".join(parts).strip()
+
+
+def _anthropic_to_openai_messages(
+    anthropic_request: AnthropicMessagesRequest,
+) -> list[dict]:
+    """Convert Anthropic messages to OpenAI format."""
+    openai_messages = []
+
+    # Add system message if present
+    system_text = _extract_system_text(anthropic_request.system)
+    if system_text:
+        openai_messages.append({"role": "system", "content": system_text})
+
+    # Convert each message
+    for msg in anthropic_request.messages:
+        text_content = _extract_anthropic_content_text(msg.content)
+        openai_messages.append({"role": msg.role, "content": text_content})
+
+    return openai_messages
+
+
+def _openai_to_anthropic_response(
+    openai_response: dict,
+    requested_model: str,
+) -> dict:
+    """Convert OpenAI response to Anthropic format."""
+    choice = (openai_response.get("choices") or [{}])[0]
+    message = choice.get("message") or {}
+    text = message.get("content") or ""
+    finish_reason = choice.get("finish_reason")
+
+    # Map OpenAI finish reasons to Anthropic stop reasons
+    stop_reason_map = {
+        "stop": "end_turn",
+        "length": "max_tokens",
+        "tool_calls": "tool_use",
+        "content_filter": "end_turn",
+    }
+    stop_reason = stop_reason_map.get(finish_reason, "end_turn")
+
+    usage = openai_response.get("usage", {})
+
+    return AnthropicResponse(
+        id=f"msg_{uuid.uuid4().hex[:24]}",
+        type="message",
+        role="assistant",
+        content=[{"type": "text", "text": text}],
+        model=requested_model,
+        stop_reason=stop_reason,
+        stop_sequence=None,
+        usage=AnthropicUsage(
+            input_tokens=usage.get("prompt_tokens", 0),
+            output_tokens=usage.get("completion_tokens", 0),
+        ),
+    ).model_dump()
+
+
+@app.on_event("startup")
+async def startup() -> None:
+    global classifier, api_key, api_base
+    api_key = os.environ.get("CHUTES_API_KEY", "")
+    api_base = (
+        os.environ.get("CHUTES_API_BASE")
+        or os.environ.get("CHUTES_API_URL")
+        or "https://llm.chutes.ai/v1"
+    )
+    classifier = TaskClassifier(api_key, api_base)
+
+
+@app.on_event("shutdown")
+async def shutdown() -> None:
+    if classifier:
+        await classifier.close()
+
+
+@app.get("/health")
+async def health() -> dict:
+    return {"status": "healthy", "service": "janus-router"}
+
+
+@app.get("/v1/models")
+async def list_models() -> dict:
+    return {
+        "object": "list",
+        "data": [
+            {
+                "id": "janus-router",
+                "object": "model",
+                "created": int(time.time()),
+                "owned_by": "janus",
+            }
+        ],
+    }
+
+
+@app.get("/v1/router/metrics")
+async def get_metrics() -> dict:
+    """Return routing metrics."""
+    return metrics.to_dict()
+
+
+# --- Anthropic Messages API Endpoint ---
+
+
+@app.post("/v1/messages")
+async def anthropic_messages(
+    request: AnthropicMessagesRequest,
+    raw_request: Request,
+    x_api_key: Optional[str] = Header(None, alias="x-api-key"),
+    anthropic_version: Optional[str] = Header(None, alias="anthropic-version"),
+    anthropic_beta: Optional[str] = Header(None, alias="anthropic-beta"),
+) -> Any:
+    """Anthropic Messages API compatible endpoint.
+
+    Claude Code and other Anthropic SDK clients use this endpoint.
+    Converts requests to OpenAI format, routes to Chutes, converts response back.
+    """
+    start_time = time.perf_counter()
+    requested_model = request.model
+
+    # Convert Anthropic messages to OpenAI format
+    openai_messages = _anthropic_to_openai_messages(request)
+    has_images = _detect_images(openai_messages)
+
+    # Classify the task
+    if classifier is None:
+        task_type, confidence = TaskType.GENERAL_TEXT, 0.5
+    else:
+        task_type, confidence = await classifier.classify(openai_messages, has_images)
+
+    classification_time_ms = (time.perf_counter() - start_time) * 1000
+
+    primary_model = get_model_for_task(task_type)
+    fallbacks = get_fallback_models(primary_model.model_id)
+
+    logger.info(
+        "anthropic_router_decision",
+        task_type=task_type.value,
+        confidence=confidence,
+        model=primary_model.model_id,
+        requested_model=requested_model,
+        classification_time_ms=round(classification_time_ms, 2),
+    )
+
+    models_to_try = [primary_model] + fallbacks
+    last_error: Exception | None = None
+
+    for index, model_config in enumerate(models_to_try):
+        used_fallback = index > 0
+        try:
+            if request.stream:
+                response = await _anthropic_stream_response(
+                    request, openai_messages, model_config
+                )
+            else:
+                response = await _anthropic_non_stream_response(
+                    request, openai_messages, model_config
+                )
+
+            metrics.record_request(
+                task_type=task_type.value,
+                model_id=model_config.model_id,
+                classification_time_ms=classification_time_ms,
+                used_fallback=used_fallback,
+            )
+            return response
+        except httpx.HTTPStatusError as exc:
+            last_error = exc
+            metrics.record_error(model_config.model_id)
+            status = exc.response.status_code
+            if status == 429:
+                logger.warning("anthropic_router_rate_limited", model=model_config.model_id)
+                continue
+            if status >= 500:
+                logger.warning(
+                    "anthropic_router_model_error", model=model_config.model_id, status=status
+                )
+                continue
+            raise HTTPException(status_code=status, detail=str(exc)) from exc
+        except Exception as exc:
+            last_error = exc
+            metrics.record_error(model_config.model_id)
+            logger.warning(
+                "anthropic_router_model_exception", model=model_config.model_id, error=str(exc)
+            )
+            continue
+
+    raise HTTPException(status_code=503, detail=f"All models failed. Last error: {last_error}")
+
+
+async def _anthropic_stream_response(
+    anthropic_request: AnthropicMessagesRequest,
+    openai_messages: list[dict],
+    model_config: ModelConfig,
+) -> StreamingResponse:
+    """Stream response in Anthropic SSE format."""
+    msg_id = f"msg_{uuid.uuid4().hex[:24]}"
+
+    async def stream_generator():
+        # Send message_start event
+        message_start = {
+            "type": "message_start",
+            "message": {
+                "id": msg_id,
+                "type": "message",
+                "role": "assistant",
+                "content": [],
+                "model": anthropic_request.model,
+                "stop_reason": None,
+                "stop_sequence": None,
+                "usage": {"input_tokens": 0, "output_tokens": 0},
+            },
+        }
+        yield f"event: message_start\ndata: {json.dumps(message_start)}\n\n"
+
+        # Send content_block_start
+        content_block_start = {
+            "type": "content_block_start",
+            "index": 0,
+            "content_block": {"type": "text", "text": ""},
+        }
+        yield f"event: content_block_start\ndata: {json.dumps(content_block_start)}\n\n"
+
+        # Stream from OpenAI endpoint and convert to Anthropic deltas
+        payload = {
+            "model": model_config.model_id,
+            "messages": openai_messages,
+            "max_tokens": anthropic_request.max_tokens or model_config.max_tokens,
+            "stream": True,
+        }
+        if anthropic_request.temperature is not None:
+            payload["temperature"] = anthropic_request.temperature
+        if anthropic_request.stop_sequences:
+            payload["stop"] = anthropic_request.stop_sequences
+
+        async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
+            async with client.stream(
+                "POST",
+                f"{api_base}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if not line or not line.startswith("data: "):
+                        continue
+                    data_str = line[6:]
+                    if data_str.strip() == "[DONE]":
+                        break
+                    try:
+                        data = json.loads(data_str)
+                        delta = (data.get("choices") or [{}])[0].get("delta", {})
+                        content = delta.get("content")
+                        if content:
+                            # Send content_block_delta
+                            content_delta = {
+                                "type": "content_block_delta",
+                                "index": 0,
+                                "delta": {"type": "text_delta", "text": content},
+                            }
+                            yield f"event: content_block_delta\ndata: {json.dumps(content_delta)}\n\n"
+                    except json.JSONDecodeError:
+                        continue
+
+        # Send content_block_stop
+        content_block_stop = {"type": "content_block_stop", "index": 0}
+        yield f"event: content_block_stop\ndata: {json.dumps(content_block_stop)}\n\n"
+
+        # Send message_delta
+        message_delta = {
+            "type": "message_delta",
+            "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+            "usage": {"output_tokens": 0},
+        }
+        yield f"event: message_delta\ndata: {json.dumps(message_delta)}\n\n"
+
+        # Send message_stop
+        yield 'event: message_stop\ndata: {"type": "message_stop"}\n\n'
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Janus-Model": model_config.model_id,
+        },
+    )
+
+
+async def _anthropic_non_stream_response(
+    anthropic_request: AnthropicMessagesRequest,
+    openai_messages: list[dict],
+    model_config: ModelConfig,
+) -> dict:
+    """Return non-streaming Anthropic format response."""
+    payload = {
+        "model": model_config.model_id,
+        "messages": openai_messages,
+        "max_tokens": anthropic_request.max_tokens or model_config.max_tokens,
+        "stream": False,
+    }
+    if anthropic_request.temperature is not None:
+        payload["temperature"] = anthropic_request.temperature
+    if anthropic_request.stop_sequences:
+        payload["stop"] = anthropic_request.stop_sequences
+
+    async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
+        response = await client.post(
+            f"{api_base}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=payload,
+        )
+        response.raise_for_status()
+        openai_data = response.json()
+        return _openai_to_anthropic_response(openai_data, anthropic_request.model)
+
+
+@app.post("/v1/chat/completions")
+async def chat_completions(request: ChatCompletionRequest, raw_request: Request) -> Any:
+    """Classify and route chat completion requests."""
+    start_time = time.perf_counter()
+    has_images = _detect_images(request.messages)
+
+    if classifier is None:
+        task_type, confidence = TaskType.GENERAL_TEXT, 0.5
+    else:
+        task_type, confidence = await classifier.classify(request.messages, has_images)
+
+    classification_time_ms = (time.perf_counter() - start_time) * 1000
+
+    primary_model = get_model_for_task(task_type)
+    fallbacks = get_fallback_models(primary_model.model_id)
+
+    logger.info(
+        "router_decision",
+        task_type=task_type.value,
+        confidence=confidence,
+        model=primary_model.model_id,
+        classification_time_ms=round(classification_time_ms, 2),
+    )
+
+    models_to_try = [primary_model] + fallbacks
+    last_error: Exception | None = None
+
+    for index, model_config in enumerate(models_to_try):
+        used_fallback = index > 0
+        try:
+            if request.stream:
+                response = await _stream_response(request, model_config)
+            else:
+                response = await _non_stream_response(request, model_config)
+
+            metrics.record_request(
+                task_type=task_type.value,
+                model_id=model_config.model_id,
+                classification_time_ms=classification_time_ms,
+                used_fallback=used_fallback,
+            )
+            return response
+        except httpx.HTTPStatusError as exc:
+            last_error = exc
+            metrics.record_error(model_config.model_id)
+            status = exc.response.status_code
+            if status == 429:
+                logger.warning("router_rate_limited", model=model_config.model_id)
+                continue
+            if status >= 500:
+                logger.warning("router_model_error", model=model_config.model_id, status=status)
+                continue
+            raise HTTPException(status_code=status, detail=str(exc)) from exc
+        except Exception as exc:
+            last_error = exc
+            metrics.record_error(model_config.model_id)
+            logger.warning("router_model_exception", model=model_config.model_id, error=str(exc))
+            continue
+
+    raise HTTPException(status_code=503, detail=f"All models failed. Last error: {last_error}")
+
+
+async def _stream_response(
+    request: ChatCompletionRequest,
+    model_config: ModelConfig,
+) -> StreamingResponse:
+    """Stream response from the backend model."""
+
+    async def stream_generator():
+        async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
+            async with client.stream(
+                "POST",
+                f"{api_base}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json=_build_payload(request, model_config, stream=True),
+            ) as response:
+                response.raise_for_status()
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+                    if line.startswith("data: "):
+                        payload = line[6:]
+                        if payload.strip() == "[DONE]":
+                            yield "data: [DONE]\n\n"
+                            continue
+                        try:
+                            data = json.loads(payload)
+                            data["model"] = "janus-router"
+                            yield f"data: {json.dumps(data)}\n\n"
+                        except json.JSONDecodeError:
+                            yield f"{line}\n\n"
+                    else:
+                        yield f"{line}\n\n"
+
+    return StreamingResponse(
+        stream_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Janus-Model": model_config.model_id,
+        },
+    )
+
+
+async def _non_stream_response(
+    request: ChatCompletionRequest,
+    model_config: ModelConfig,
+) -> dict:
+    """Return non-streaming response from backend model."""
+    async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
+        response = await client.post(
+            f"{api_base}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json",
+            },
+            json=_build_payload(request, model_config, stream=False),
+        )
+        response.raise_for_status()
+        data = response.json()
+        data["model"] = "janus-router"
+        return data
+
+
+def _build_payload(
+    request: ChatCompletionRequest,
+    model_config: ModelConfig,
+    stream: bool,
+) -> dict:
+    payload = request.model_dump(exclude_none=True)
+    payload["model"] = model_config.model_id
+    payload["stream"] = stream
+    payload["max_tokens"] = request.max_tokens or model_config.max_tokens
+    return payload
+
+
+def _detect_images(messages: list[dict]) -> bool:
+    """Detect if message payload contains image content."""
+    for message in messages:
+        content = message.get("content")
+        if isinstance(content, list):
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "image_url":
+                    return True
+    return False
+
+
+def run_router(host: str = "127.0.0.1", port: int = 8000) -> None:
+    """Run the router server."""
+    import uvicorn
+
+    uvicorn.run(app, host=host, port=port)
+
+
+if __name__ == "__main__":
+    run_router()

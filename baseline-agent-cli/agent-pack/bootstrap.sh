@@ -130,10 +130,15 @@ PY
   done
 ) >/workspace/artifact_server.log 2>&1 &
 
+# Install router dependencies
+echo "=== Installing Router Dependencies ==="
+pip_install httpx structlog fastapi uvicorn pydantic
+
 # Start the model router in the background
 echo "=== Starting Janus Model Router ==="
-python3 -m janus_baseline_agent_cli.router.server >/workspace/router.log 2>&1 &
+cd /agent-pack/router && python3 -c "import uvicorn; uvicorn.run('server:app', host='0.0.0.0', port=8000, log_level='info')" >/workspace/router.log 2>&1 &
 ROUTER_PID=$!
+cd /workspace
 
 # Wait for router to be ready
 for i in {1..30}; do
