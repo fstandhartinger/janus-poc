@@ -34,6 +34,28 @@ However, Claude Code has intermittent timeout issues when using OpenAI-compatibl
 
 **Recommendation**: Keep Claude Code as default. Investigate Sandy's agent API to understand why non-Claude agents don't produce command output. May need to look at how Sandy streams agent output events.
 
+### Update 6 (2026-01-26): Claude Code Fix Implemented - SPEC COMPLETE
+
+**Root Cause Identified**: Claude Code requires Anthropic Messages API format (`/v1/messages`), but the router only provided OpenAI Chat Completions format (`/v1/chat/completions`).
+
+**Fix Implemented**:
+1. Added `/v1/messages` endpoint to the router with full Anthropic format support
+2. Updated bootstrap.sh to configure Claude Code with `ANTHROPIC_BASE_URL`
+3. Set `PUBLIC_ROUTER_URL` environment variable on Render
+
+**Test Result**:
+```
+curl -X POST .../v1/chat/completions -H "X-Baseline-Agent: claude-code" \
+  -d '{"messages": [{"role": "user", "content": "Run: echo ANTHROPIC_TEST_SUCCESS"}]}'
+
+Result:
+- "Using tool: Bash"
+- "Command executed successfully - output: ANTHROPIC_TEST_SUCCESS"
+- "Agent completed (success) in 6.3s"
+```
+
+Claude Code is now fully functional with fast response times and reliable shell execution.
+
 ---
 
 ### Update 4 (2026-01-26): Reverted to Claude Code - Aider Cannot Execute Commands
