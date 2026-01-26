@@ -140,6 +140,7 @@ class ChatCompletionRequest(BaseModel):
     enable_memory: bool = False
     chutes_access_token: Optional[str] = None
     generation_flags: Optional[GenerationFlags] = None
+    debug: bool = False
 
     # Janus extension: select competitor
     competitor_id: Optional[str] = None
