@@ -144,10 +144,34 @@ for i in {1..30}; do
   sleep 0.5
 done
 
-# Configure agent to use local router
+# Configure agents to use local router
+# OpenAI-compatible agents (Aider, Codex, etc.)
 export OPENAI_API_BASE="http://127.0.0.1:8000/v1"
 export OPENAI_API_KEY="${CHUTES_API_KEY}"
 export OPENAI_MODEL="janus-router"
+
+# Anthropic-compatible agents (Claude Code)
+export ANTHROPIC_BASE_URL="http://127.0.0.1:8000"
+export ANTHROPIC_API_KEY="${CHUTES_API_KEY}"
+
+# Configure Claude Code settings for model router
+if command -v claude >/dev/null 2>&1; then
+  echo "=== Configuring Claude Code ==="
+  mkdir -p ~/.claude
+  cat > ~/.claude/settings.json <<EOF
+{
+  "apiBaseUrl": "http://127.0.0.1:8000",
+  "defaultModel": "janus-router",
+  "alwaysThinkingEnabled": true,
+  "API_TIMEOUT_MS": 600000,
+  "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+}
+EOF
+  # Also set environment variables for Claude Code CLI
+  export CLAUDE_API_BASE_URL="http://127.0.0.1:8000"
+  export CLAUDE_MODEL="janus-router"
+  echo "Claude Code configured to use local router"
+fi
 
 # Cleanup on exit
 trap "kill $ROUTER_PID 2>/dev/null" EXIT
