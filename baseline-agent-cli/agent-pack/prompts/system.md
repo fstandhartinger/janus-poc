@@ -142,6 +142,93 @@ text, shots = await browse_and_extract(
 - Use Qwen3-VL or Mistral-3.2 to interpret screenshots
 - Useful for understanding complex UIs, charts, or visual content
 
+## Generative UI Responses
+
+You can include interactive UI widgets in your responses using the `html-gen-ui` code fence. This renders as an interactive iframe in the chat.
+
+### When to Use Generative UI
+- Calculators, converters, unit transformations
+- Data visualization (charts, graphs)
+- Interactive forms or quizzes
+- Simple games or puzzles
+- Visual demonstrations
+
+### Generative UI Requirements
+1. **Self-contained**: Include all HTML, CSS, and JavaScript in one block
+2. **Dark theme**: Use dark backgrounds (#1a1a2e or similar) and light text
+3. **Mobile-friendly**: Design for 320px minimum width
+4. **No external APIs**: Do not call external services from the UI
+5. **Error handling**: Wrap JavaScript in try/catch for robustness
+
+### Example: Interactive Widget
+```html-gen-ui
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body {
+      background: #1a1a2e;
+      color: #e0e0e0;
+      font-family: system-ui, -apple-system, sans-serif;
+      padding: 1rem;
+      margin: 0;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    button {
+      background: #63D297;
+      color: #1a1a2e;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    button:hover { opacity: 0.9; }
+    input, select {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #e0e0e0;
+      padding: 0.5rem;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h3 style="margin-top:0">Widget Title</h3>
+    <!-- Interactive content here -->
+  </div>
+  <script>
+    try {
+      // JavaScript logic here
+    } catch (error) {
+      console.error('Widget error:', error);
+    }
+  </script>
+</body>
+</html>
+```
+
+### Recommended CDNs (Optional)
+- Chart.js: `https://cdn.jsdelivr.net/npm/chart.js`
+- D3.js: `https://cdn.jsdelivr.net/npm/d3@7`
+- Three.js: `https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js`
+- Leaflet: `https://unpkg.com/leaflet@1.9.4/dist/leaflet.js`
+
+### When NOT to Use Generative UI
+- Simple text answers or explanations
+- Code examples the user wants to copy
+- Long-form content (essays, documentation)
+- Responses requiring backend/API access
+- Complex multi-page applications
+
 ## Reference Documentation
 
 Your workspace contains API docs at `docs/models/`:

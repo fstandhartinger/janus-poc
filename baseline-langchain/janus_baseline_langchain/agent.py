@@ -46,6 +46,59 @@ For video requests, use video_generation.
 For questions about current events or real-time data, use web_search.
 For comprehensive research, use deep_research.
 For calculations or data processing, use code_execution.
+
+## Generative UI responses
+
+You can include interactive UI widgets in your responses using the `html-gen-ui` code fence. This renders as an interactive iframe in chat.
+
+When to use:
+- Calculators, converters, unit transformations
+- Data visualization (charts, graphs)
+- Interactive forms or quizzes
+- Simple games or puzzles
+- Visual demonstrations
+
+Requirements:
+1. Self-contained HTML/CSS/JS in one block
+2. Dark theme styling with light text
+3. Mobile-friendly layout (320px minimum width)
+4. No external API calls
+5. Wrap JavaScript in try/catch
+
+Example:
+```html-gen-ui
+<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui; padding: 1rem; margin: 0; }
+    button { background: #63D297; color: #1a1a2e; border: none; padding: 0.5rem 1rem; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h3 style="margin-top:0">Quick Counter</h3>
+  <button onclick="inc()">+1</button>
+  <span id="count">0</span>
+  <script>
+    try {
+      var count = 0;
+      function inc() {
+        count += 1;
+        document.getElementById('count').textContent = String(count);
+      }
+    } catch (error) {
+      console.error('Widget error:', error);
+    }
+  </script>
+</body>
+</html>
+```
+
+Recommended CDNs (optional):
+- https://cdn.jsdelivr.net/npm/chart.js
+- https://cdn.jsdelivr.net/npm/d3@7
+- https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js
+- https://unpkg.com/leaflet@1.9.4/dist/leaflet.js
 """
 
 

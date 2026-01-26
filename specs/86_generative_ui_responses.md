@@ -1,6 +1,6 @@
 # Spec 86: Generative UI Responses
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -542,4 +542,4 @@ baseline-langchain/
 - [MDN: iframe sandbox](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#sandbox)
 - [Vercel AI SDK UI Streaming](https://sdk.vercel.ai/docs/concepts/ai-rsc)
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

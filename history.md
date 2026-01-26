@@ -66,3 +66,4 @@
 - Completed spec 84_baseline_smoke_tests.md with gateway baseline smoke scripts, pytest marker coverage, and gateway-routed baseline smoke tests.
 - Completed spec 85_pwa_mobile_install.md with PWA manifest/service worker auto-update, mobile install/update toast, share-target handling, and read-to-me TTS auto-play wiring.
 - Re-verified spec 83_fix_transcription_api.md status formatting for Ralph detection and bumped NR_OF_TRIES after validation.
+- Completed spec 86_generative_ui_responses.md with html-gen-ui rendering, sandboxed iframe UI blocks, markdown renderer integration, prompt updates, and unit coverage.

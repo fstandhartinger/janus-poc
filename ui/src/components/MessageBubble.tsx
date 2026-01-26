@@ -3,10 +3,10 @@ import { useState, useEffect } from 'react';
 import type { Message } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { parseAudioContent } from '@/lib/audio-parser';
+import { MarkdownContent } from '@/lib/markdown-renderer';
 import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
 import { AudioResponse } from './audio/AudioResponse';
-import { RichContent } from './viz/RichContent';
 
 interface MessageBubbleProps {
   message: Message;
@@ -164,9 +164,7 @@ export function MessageBubble({ message, showReasoning }: MessageBubbleProps) {
         )}
 
         {/* Message content */}
-        {hasText && (
-          <RichContent content={cleanedText} />
-        )}
+        {hasText && <MarkdownContent content={cleanedText} />}
 
         {parsedAudio.length > 0 && (
           <div className="mt-3 space-y-2">
