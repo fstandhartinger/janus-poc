@@ -80,7 +80,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("CHUTES_SEARCH_URL", "JANUS_CHUTES_SEARCH_URL"),
     )
     whisper_endpoint: str = Field(
-        default="https://api.chutes.ai/v1/audio/transcriptions",
+        default="https://chutes-whisper-large-v3.chutes.ai/transcribe",
         description="Whisper transcription endpoint URL",
         validation_alias=AliasChoices("WHISPER_ENDPOINT", "JANUS_WHISPER_ENDPOINT"),
     )

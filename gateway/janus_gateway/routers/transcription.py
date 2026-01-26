@@ -4,7 +4,7 @@ from typing import Any, Optional
 
 import httpx
 import structlog
-from fastapi import APIRouter, File, Form, HTTPException, UploadFile, status
+from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel
 
 from janus_gateway.config import get_settings
@@ -12,6 +12,13 @@ from janus_gateway.config import get_settings
 logger = structlog.get_logger(__name__)
 
 router = APIRouter(prefix="/api", tags=["transcription"])
+
+
+class TranscriptionRequest(BaseModel):
+    """Request payload for transcription."""
+
+    audio_b64: str
+    language: Optional[str] = None
 
 
 class TranscriptionResponse(BaseModel):
@@ -100,11 +107,7 @@ async def transcription_health() -> TranscriptionHealthResponse:
 
 
 @router.post("/transcribe", response_model=TranscriptionResponse)
-async def transcribe_audio(
-    file: UploadFile | None = File(default=None),
-    model: str = Form(default="whisper-1"),
-    language: Optional[str] = Form(default=None),
-) -> TranscriptionResponse:
+async def transcribe_audio(request: TranscriptionRequest) -> TranscriptionResponse:
     """Proxy transcription requests to Chutes Whisper API."""
 
     settings = get_settings()
@@ -124,7 +127,7 @@ async def transcribe_audio(
         )
 
     # Validate audio data
-    if file is None:
+    if not request.audio_b64:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=create_error_response(
@@ -134,33 +137,22 @@ async def transcribe_audio(
                 suggestion="Please record audio before submitting",
             ),
         )
-
-    content = await file.read()
-    if not content:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=create_error_response(
-                error="No audio data provided",
-                code="MISSING_AUDIO",
-                recoverable=True,
-                suggestion="Please record audio before submitting",
-            ),
-        )
-
-    content_type = file.content_type or "application/octet-stream"
-    filename = file.filename or "recording.webm"
 
     async with httpx.AsyncClient(timeout=60.0) as client:
         try:
             logger.info("transcription_request_sent", endpoint=whisper_endpoint)
 
+            payload = {"audio_b64": request.audio_b64}
+            if request.language:
+                payload["language"] = request.language
+
             response = await client.post(
                 whisper_endpoint,
                 headers={
+                    "Content-Type": "application/json",
                     "Authorization": f"Bearer {api_key}",
                 },
-                files={"file": (filename, content, content_type)},
-                data={k: v for k, v in {"model": model, "language": language}.items() if v},
+                json=payload,
             )
 
             logger.info("transcription_response", status_code=response.status_code)

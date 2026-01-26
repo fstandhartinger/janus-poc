@@ -1,9 +1,21 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+class MockFileReader {
+  result: string | null = null;
+  onloadend: ((ev: ProgressEvent<FileReader>) => void) | null = null;
+  onerror: ((ev: ProgressEvent<FileReader>) => void) | null = null;
+
+  readAsDataURL(_blob: Blob) {
+    this.result = 'data:audio/webm;base64,Zm9v';
+    this.onloadend?.(new Event('loadend') as ProgressEvent<FileReader>);
+  }
+}
+
 describe('transcription', () => {
   const mockFetch = vi.fn();
 
   beforeEach(() => {
+    vi.stubGlobal('FileReader', MockFileReader as unknown as typeof FileReader);
     vi.stubGlobal('fetch', mockFetch);
   });
 
@@ -31,9 +43,7 @@ describe('transcription', () => {
     );
 
     const [, init] = mockFetch.mock.calls[0];
-    expect(init?.body).toBeInstanceOf(FormData);
-    const formData = init?.body as FormData;
-    expect(formData.get('model')).toBe('whisper-1');
+    expect(init?.body).toContain('"audio_b64":"Zm9v"');
     expect(result.text).toBe('hello');
   });
 
@@ -58,13 +68,13 @@ describe('transcription', () => {
     const result = await transcribeAudio(new Blob(['test'], { type: 'audio/webm' }));
 
     expect(mockFetch).toHaveBeenCalledWith(
-      'https://api.chutes.ai/v1/audio/transcriptions',
+      'https://chutes-whisper-large-v3.chutes.ai/transcribe',
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: 'Bearer test-key' }),
       })
     );
     const [, init] = mockFetch.mock.calls[0];
-    expect(init?.body).toBeInstanceOf(FormData);
+    expect(init?.body).toContain('"audio_b64":"Zm9v"');
     expect(result.text).toBe('hello');
   });
 });

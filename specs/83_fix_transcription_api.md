@@ -77,6 +77,9 @@ The Whisper API requires:
 ### PC-4: Base64 vs File Upload
 The UI might be sending base64 encoded audio when the API expects a file upload, or vice versa.
 
+### PC-5: Null Language Field
+Sending `"language": null` can cause the upstream service to reject the request as invalid input parameters. Omit the field when it is not set.
+
 ---
 
 ## Functional Requirements
@@ -314,5 +317,6 @@ const handleTranscribe = async (audioBlob: Blob) => {
 - Audio format compatibility is often the issue
 - Browser MediaRecorder produces different formats per browser
 - Consider adding audio format conversion on gateway if needed
+- The current Chutes whisper endpoint accepts JSON base64 payloads; do not include a null language field
 
 NR_OF_TRIES: 1

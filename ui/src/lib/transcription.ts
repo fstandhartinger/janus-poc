@@ -1,7 +1,6 @@
 import { GATEWAY_URL } from './api';
 
-const WHISPER_ENDPOINT = 'https://api.chutes.ai/v1/audio/transcriptions';
-const DEFAULT_MODEL = 'whisper-1';
+const WHISPER_ENDPOINT = 'https://chutes-whisper-large-v3.chutes.ai/transcribe';
 
 interface TranscriptionOptions {
   language?: string | null;
@@ -43,6 +42,8 @@ export async function transcribeAudio(
   audioBlob: Blob,
   options: TranscriptionOptions = {}
 ): Promise<TranscriptionResult> {
+  const base64 = await blobToBase64(audioBlob);
+
   const apiKey = process.env.NEXT_PUBLIC_CHUTES_API_KEY;
   if (!apiKey) {
     throw new TranscriptionFailedError(
@@ -53,14 +54,18 @@ export async function transcribeAudio(
     );
   }
 
-  const formData = buildTranscriptionFormData(audioBlob, options);
+  const payload: Record<string, string> = { audio_b64: base64 };
+  if (options.language) {
+    payload.language = options.language;
+  }
 
   const response = await fetch(WHISPER_ENDPOINT, {
     method: 'POST',
     headers: {
+      'Content-Type': 'application/json',
       Authorization: `Bearer ${apiKey}`,
     },
-    body: formData,
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -86,11 +91,18 @@ export async function transcribeViaGateway(
   audioBlob: Blob,
   options: TranscriptionOptions = {}
 ): Promise<TranscriptionResult> {
-  const formData = buildTranscriptionFormData(audioBlob, options);
+  const base64 = await blobToBase64(audioBlob);
+  const payload: Record<string, string> = { audio_b64: base64 };
+  if (options.language) {
+    payload.language = options.language;
+  }
 
   const response = await fetch(`${GATEWAY_URL}/api/transcribe`, {
     method: 'POST',
-    body: formData,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
   });
 
   if (!response.ok) {
@@ -148,37 +160,17 @@ export async function checkTranscriptionHealth(): Promise<TranscriptionHealthSta
   }
 }
 
-function buildTranscriptionFormData(audioBlob: Blob, options: TranscriptionOptions): FormData {
-  const formData = new FormData();
-  const extension = resolveAudioExtension(audioBlob.type);
-
-  formData.append('file', audioBlob, `recording.${extension}`);
-  formData.append('model', DEFAULT_MODEL);
-
-  if (options.language) {
-    formData.append('language', options.language);
-  }
-
-  return formData;
-}
-
-function resolveAudioExtension(mimeType: string | null | undefined): string {
-  if (!mimeType) {
-    return 'webm';
-  }
-  if (mimeType.includes('webm')) {
-    return 'webm';
-  }
-  if (mimeType.includes('mp4')) {
-    return 'm4a';
-  }
-  if (mimeType.includes('ogg')) {
-    return 'ogg';
-  }
-  if (mimeType.includes('wav')) {
-    return 'wav';
-  }
-  return 'webm';
+async function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      const base64Data = base64.split(',')[1];
+      resolve(base64Data || '');
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 export type { TranscriptionOptions, TranscriptionResult, TranscriptionErrorDetail };
