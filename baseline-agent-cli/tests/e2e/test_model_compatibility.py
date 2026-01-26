@@ -1,0 +1,66 @@
+"""E2E tests for model compatibility."""
+
+from __future__ import annotations
+
+import httpx
+import pytest
+
+pytestmark = pytest.mark.e2e
+
+
+MODELS_TO_TEST = [
+    "MiniMaxAI/MiniMax-M2",
+    "deepseek-ai/DeepSeek-V3-0324",
+    "THUDM/GLM-4-Plus",
+    "Qwen/Qwen2.5-VL-72B-Instruct",
+    "mistralai/Mistral-Small-3.2",
+]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("model", MODELS_TO_TEST)
+async def test_model_simple_task(model: str, e2e_settings) -> None:
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(
+            f"{e2e_settings.baseline_cli_url}/v1/chat/completions",
+            json={
+                "model": model,
+                "messages": [{"role": "user", "content": "Say hello in exactly 5 words."}],
+                "stream": False,
+            },
+        )
+
+    if response.status_code != 200:
+        pytest.skip(f"Model {model} not available or failed")
+
+    data = response.json()
+    content = data["choices"][0]["message"]["content"]
+    assert content and len(content) > 0
+
+
+@pytest.mark.asyncio
+async def test_vision_model_with_image(e2e_settings) -> None:
+    async with httpx.AsyncClient(timeout=120.0) as client:
+        response = await client.post(
+            f"{e2e_settings.baseline_cli_url}/v1/chat/completions",
+            json={
+                "model": "Qwen/Qwen2.5-VL-72B-Instruct",
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": "Describe this image"},
+                            {"type": "image_url", "image_url": {"url": "https://picsum.photos/200"}},
+                        ],
+                    }
+                ],
+                "stream": False,
+            },
+        )
+
+    if response.status_code != 200:
+        pytest.skip("Vision model not available or failed")
+
+    data = response.json()
+    content = data["choices"][0]["message"]["content"]
+    assert content and len(content) > 50

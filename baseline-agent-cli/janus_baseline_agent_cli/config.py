@@ -288,6 +288,35 @@ class Settings(BaseSettings):
         ),
     )
 
+    # E2E testing
+    e2e_enabled: bool = Field(
+        default=False,
+        description="Enable end-to-end tests that hit deployed services",
+        validation_alias=AliasChoices(
+            "E2E_ENABLED",
+            "BASELINE_AGENT_CLI_E2E_ENABLED",
+            "BASELINE_E2E_ENABLED",
+        ),
+    )
+    e2e_gateway_url: str = Field(
+        default="https://janus-gateway-bqou.onrender.com",
+        description="Gateway base URL for E2E tests",
+        validation_alias=AliasChoices(
+            "E2E_GATEWAY_URL",
+            "BASELINE_AGENT_CLI_E2E_GATEWAY_URL",
+            "BASELINE_E2E_GATEWAY_URL",
+        ),
+    )
+    e2e_baseline_cli_url: str = Field(
+        default="https://janus-baseline-agent.onrender.com",
+        description="Baseline agent CLI base URL for E2E tests",
+        validation_alias=AliasChoices(
+            "E2E_BASELINE_CLI_URL",
+            "BASELINE_AGENT_CLI_E2E_BASELINE_CLI_URL",
+            "BASELINE_E2E_BASELINE_CLI_URL",
+        ),
+    )
+
     @property
     def effective_api_key(self) -> Optional[str]:
         """Get the API key for OpenAI-compatible calls."""

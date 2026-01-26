@@ -937,6 +937,21 @@ class SandyService:
                                         event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
                                         event_preview=str(parsed)[:500],
                                     )
+                                    logger.info(
+                                        "agent_api_sse_event",
+                                        event_count=event_count,
+                                        event_type=event_type,
+                                        event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
+                                        event_preview=str(parsed)[:500],
+                                    )
+                                    if event_type == "complete":
+                                        logger.info(
+                                            "agent_api_complete",
+                                            event_count=event_count,
+                                            success=parsed.get("success"),
+                                            exit_code=parsed.get("exitCode"),
+                                            duration=parsed.get("duration"),
+                                        )
                                     yield parsed
                                 except json.JSONDecodeError:
                                     # Not JSON, yield as raw output
@@ -951,6 +966,23 @@ class SandyService:
                             data = line[6:]
                             try:
                                 parsed = json.loads(data)
+                                event_count += 1
+                                event_type = parsed.get("type", "unknown")
+                                logger.info(
+                                    "agent_api_sse_event",
+                                    event_count=event_count,
+                                    event_type=event_type,
+                                    event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
+                                    event_preview=str(parsed)[:500],
+                                )
+                                if event_type == "complete":
+                                    logger.info(
+                                        "agent_api_complete",
+                                        event_count=event_count,
+                                        success=parsed.get("success"),
+                                        exit_code=parsed.get("exitCode"),
+                                        duration=parsed.get("duration"),
+                                    )
                                 yield parsed
                             except json.JSONDecodeError:
                                 if data.strip():
@@ -963,7 +995,7 @@ class SandyService:
             logger.error("agent_api_exception", error=str(e))
             yield {"type": "error", "error": f"Agent execution failed: {e}"}
 
-    def _select_agent_for_api(self) -> str:
+    def _select_agent_for_api(self, requested_agent: str | None = None) -> str:
         """Select agent for Sandy's agent/run API.
 
         Sandy supports these agents:
@@ -974,7 +1006,7 @@ class SandyService:
         - openhands: OpenHands devin-like agent
         - droid: Droid agent
         """
-        requested = self._baseline_agent.strip().lower()
+        requested = (requested_agent or self._baseline_agent).strip().lower()
         if requested in {"claude", "claude-code"}:
             agent = "claude-code"
         elif requested == "codex":
@@ -996,6 +1028,7 @@ class SandyService:
             requested=requested,
             selected=agent,
             config_baseline_agent=self._baseline_agent,
+            requested_override=requested_agent,
         )
         return agent
 
@@ -1659,6 +1692,7 @@ class SandyService:
         self,
         request: ChatCompletionRequest,
         debug_emitter: DebugEmitter | None = None,
+        baseline_agent_override: str | None = None,
     ) -> ChatCompletionResponse:
         """
         Execute a task using Sandy's agent/run API and return a non-streaming response.
@@ -1704,7 +1738,7 @@ class SandyService:
                 ],
             )
 
-        agent = self._select_agent_for_api()
+        agent = self._select_agent_for_api(baseline_agent_override)
         api_model = self._select_model_for_api(request)
         if debug_emitter:
             await debug_emitter.emit(
@@ -1822,6 +1856,7 @@ class SandyService:
         self,
         request: ChatCompletionRequest,
         debug_emitter: DebugEmitter | None = None,
+        baseline_agent_override: str | None = None,
     ) -> AsyncGenerator[ChatCompletionChunk, None]:
         """
         Execute a task using Sandy's built-in agent/run API.
@@ -1880,7 +1915,7 @@ class SandyService:
             return
 
         # Select agent and model for Sandy's API
-        agent = self._select_agent_for_api()
+        agent = self._select_agent_for_api(baseline_agent_override)
         api_model = self._select_model_for_api(request)
 
         if debug_emitter:

@@ -115,6 +115,21 @@ uvicorn janus_baseline_agent_cli.main:app --port 8080 --reload
 pytest
 ```
 
+### E2E Tests
+
+E2E tests exercise deployed gateway + baseline services and are disabled by default.
+
+```bash
+BASELINE_AGENT_CLI_E2E_ENABLED=true pytest tests/e2e
+```
+
+Optional overrides for deployed URLs:
+
+```bash
+BASELINE_AGENT_CLI_E2E_GATEWAY_URL=https://janus-gateway-bqou.onrender.com
+BASELINE_AGENT_CLI_E2E_BASELINE_CLI_URL=https://janus-baseline-agent.onrender.com
+```
+
 ## Environment Variables
 
 Legacy `BASELINE_` prefixed environment variables are still accepted.
@@ -174,6 +189,14 @@ For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
 | `BASELINE_AGENT_CLI_ENABLE_CODE_EXECUTION` | `true` | Enable code execution tools |
 | `BASELINE_AGENT_CLI_ENABLE_FILE_TOOLS` | `true` | Enable file tooling |
 | `JANUS_BASELINE_AGENT` | `aider` | CLI agent command to run in the sandbox |
+
+### E2E Testing Configuration
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `BASELINE_AGENT_CLI_E2E_ENABLED` | `false` | Enable E2E tests against deployed services |
+| `BASELINE_AGENT_CLI_E2E_GATEWAY_URL` | `https://janus-gateway-bqou.onrender.com` | Gateway base URL for E2E tests |
+| `BASELINE_AGENT_CLI_E2E_BASELINE_CLI_URL` | `https://janus-baseline-agent.onrender.com` | Baseline CLI base URL for E2E tests |
 
 ### Routing Configuration
 

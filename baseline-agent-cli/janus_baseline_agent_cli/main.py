@@ -17,6 +17,10 @@ from janus_baseline_agent_cli.models import (
     ChatCompletionRequest,
     ChatCompletionChunk,
     ChatCompletionResponse,
+    Choice,
+    ChunkChoice,
+    Delta,
+    FinishReason,
     GenerationFlags,
     ImageUrlContent,
     Message,
@@ -43,6 +47,12 @@ from janus_baseline_agent_cli.router.debug import router as debug_router
 from janus_baseline_agent_cli.router.server import app as router_app
 
 settings = get_settings()
+
+AGENT_UNAVAILABLE_MESSAGE = (
+    "Agent sandbox is currently unavailable. "
+    "This request requires agent capabilities (code execution, web search, etc.) "
+    "which are not available at this time. Please try again later."
+)
 
 # Configure structured logging
 structlog.configure(
@@ -108,6 +118,40 @@ def _extract_response_content(response: ChatCompletionResponse) -> str:
     message = response.choices[0].message
     content = getattr(message, "content", None)
     return content or ""
+
+
+def _build_unavailable_response(request: ChatCompletionRequest) -> ChatCompletionResponse:
+    return ChatCompletionResponse(
+        id=f"chatcmpl-{uuid.uuid4().hex}",
+        model=request.model,
+        choices=[
+            Choice(
+                message=Message(role=MessageRole.ASSISTANT, content=AGENT_UNAVAILABLE_MESSAGE),
+                finish_reason=FinishReason.STOP,
+            )
+        ],
+    )
+
+
+def _build_unavailable_chunks(request: ChatCompletionRequest) -> list[ChatCompletionChunk]:
+    request_id = f"chatcmpl-{uuid.uuid4().hex}"
+    return [
+        ChatCompletionChunk(
+            id=request_id,
+            model=request.model,
+            choices=[ChunkChoice(delta=Delta(role=MessageRole.ASSISTANT))],
+        ),
+        ChatCompletionChunk(
+            id=request_id,
+            model=request.model,
+            choices=[ChunkChoice(delta=Delta(content=AGENT_UNAVAILABLE_MESSAGE))],
+        ),
+        ChatCompletionChunk(
+            id=request_id,
+            model=request.model,
+            choices=[ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)],
+        ),
+    ]
 
 
 def _tool_name(tool: object) -> str | None:
@@ -231,12 +275,25 @@ class HealthResponse(BaseModel):
 
     status: str = "ok"
     version: str
+    sandbox_available: bool
+    features: dict[str, bool]
 
 
 @app.get("/health", response_model=HealthResponse)
-async def health_check() -> HealthResponse:
+async def health_check(
+    sandy_service: SandyService = Depends(get_sandy_service),
+) -> HealthResponse:
     """Health check endpoint."""
-    return HealthResponse(status="ok", version=__version__)
+    return HealthResponse(
+        status="ok",
+        version=__version__,
+        sandbox_available=sandy_service.is_available,
+        features={
+            "agent_sandbox": sandy_service.is_available,
+            "memory": settings.enable_memory_feature,
+            "vision": True,
+        },
+    )
 
 
 async def stream_response(
@@ -248,6 +305,7 @@ async def stream_response(
     memory_user_id: str | None = None,
     conversation_base: list[dict[str, str]] | None = None,
     debug_emitter: DebugEmitter | None = None,
+    baseline_agent_override: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """Generate streaming response based on complexity."""
     if debug_emitter:
@@ -262,6 +320,7 @@ async def stream_response(
     )
     is_complex = analysis.is_complex
     reason = analysis.reason
+    sandy_unavailable = is_complex and not sandy_service.is_available
     using_agent = settings.always_use_agent or (is_complex and sandy_service.is_available)
     flags_payload = _generation_flags_payload(request.generation_flags)
     metadata_payload = (
@@ -295,12 +354,20 @@ async def stream_response(
             f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
             data={"is_complex": analysis.is_complex, "reason": analysis.reason},
         )
-        await debug_emitter.emit(
-            DebugEventType.AGENT_PATH_START if using_agent else DebugEventType.FAST_PATH_START,
-            "SANDY" if using_agent else "FAST_LLM",
-            "Routing to agent path" if using_agent else "Routing to fast path",
-            data={"using_agent": using_agent, "reason": analysis.reason},
-        )
+        if sandy_unavailable:
+            await debug_emitter.emit(
+                DebugEventType.ERROR,
+                "SANDY",
+                "Agent sandbox unavailable for complex request",
+                data={"reason": analysis.reason},
+            )
+        else:
+            await debug_emitter.emit(
+                DebugEventType.AGENT_PATH_START if using_agent else DebugEventType.FAST_PATH_START,
+                "SANDY" if using_agent else "FAST_LLM",
+                "Routing to agent path" if using_agent else "Routing to fast path",
+                data={"using_agent": using_agent, "reason": analysis.reason},
+            )
 
     logger.info(
         "complexity_check",
@@ -314,6 +381,22 @@ async def stream_response(
         text_preview=analysis.text_preview,
         always_use_agent=settings.always_use_agent,
     )
+
+    if sandy_unavailable:
+        logger.warning(
+            "sandy_unavailable_for_complex_request",
+            reason=reason,
+            text_preview=analysis.text_preview,
+        )
+
+        async def error_stream() -> AsyncGenerator[str, None]:
+            for chunk in _build_unavailable_chunks(request):
+                yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+            yield "data: [DONE]\n\n"
+
+        async for payload in optimized_stream_response(error_stream()):
+            yield payload
+        return
 
     logger.info(
         "chat_completion_request",
@@ -336,6 +419,7 @@ async def stream_response(
                     async for chunk in sandy_service.execute_via_agent_api(
                         request,
                         debug_emitter=debug_emitter,
+                        baseline_agent_override=baseline_agent_override,
                     ):
                         chunk_text = _extract_chunk_content(chunk)
                         if chunk_text:
@@ -407,6 +491,7 @@ async def chat_completions(
     memory_service: MemoryService = Depends(get_memory_service),
     authorization: str | None = Header(default=None, alias="Authorization"),
     debug_request_id_header: str | None = Header(default=None, alias="X-Debug-Request-Id"),
+    baseline_agent_header: str | None = Header(default=None, alias="X-Baseline-Agent"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
 
@@ -468,6 +553,7 @@ async def chat_completions(
                 request.user_id if memory_enabled else None,
                 conversation_base if memory_enabled else None,
                 debug_emitter,
+                baseline_agent_header,
             ),
             media_type="text/event-stream",
             headers=headers,
@@ -486,6 +572,7 @@ async def chat_completions(
         )
         is_complex = analysis.is_complex
         reason = analysis.reason
+        sandy_unavailable = is_complex and not sandy_service.is_available
         logger.info(
             "complexity_check",
             is_complex=is_complex,
@@ -526,18 +613,34 @@ async def chat_completions(
                 f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
                 data={"is_complex": analysis.is_complex, "reason": analysis.reason},
             )
-            await debug_emitter.emit(
-                DebugEventType.AGENT_PATH_START if is_complex else DebugEventType.FAST_PATH_START,
-                "SANDY" if is_complex else "FAST_LLM",
-                "Routing to agent path" if is_complex else "Routing to fast path",
-                data={"using_agent": is_complex, "reason": analysis.reason},
+            if sandy_unavailable:
+                await debug_emitter.emit(
+                    DebugEventType.ERROR,
+                    "SANDY",
+                    "Agent sandbox unavailable for complex request",
+                    data={"reason": analysis.reason},
+                )
+            else:
+                await debug_emitter.emit(
+                    DebugEventType.AGENT_PATH_START if is_complex else DebugEventType.FAST_PATH_START,
+                    "SANDY" if is_complex else "FAST_LLM",
+                    "Routing to agent path" if is_complex else "Routing to fast path",
+                    data={"using_agent": is_complex, "reason": analysis.reason},
+                )
+        if sandy_unavailable:
+            logger.warning(
+                "sandy_unavailable_for_complex_request",
+                reason=reason,
+                text_preview=analysis.text_preview,
             )
+            return _build_unavailable_response(request)
         if settings.always_use_agent or (is_complex and sandy_service.is_available):
             # Use Sandy's agent/run API if enabled (faster, better configured)
             if settings.use_sandy_agent_api:
                 response = await sandy_service.complete_via_agent_api(
                     request,
                     debug_emitter=debug_emitter,
+                    baseline_agent_override=baseline_agent_header,
                 )
             else:
                 response = await sandy_service.complete(
