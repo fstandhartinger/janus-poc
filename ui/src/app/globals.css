@@ -2975,11 +2975,36 @@ html {
   }
 
   .chat-session-title {
-    max-width: 140px;
+    max-width: 100px;
+    font-size: 12px;
+  }
+
+  .chat-session-info {
+    display: none;
   }
 
   .chat-model-select {
     display: none;
+  }
+
+  /* Hide free chat count on narrow mobile */
+  .chat-free-count {
+    display: none;
+  }
+
+  /* Make sign-in button more compact on mobile */
+  .chat-signin-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  /* Compact the right side */
+  .chat-topbar-right {
+    gap: 8px;
+  }
+
+  .chat-auth {
+    gap: 6px;
   }
 
   /* Mobile keyboard handling - ensure input stays visible */
