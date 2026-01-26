@@ -109,7 +109,13 @@ Added "Media Generation APIs (CRITICAL!)" section with:
 3. ❌ BUT: Created SVG instead of using Chutes API
 4. ✅ System prompt updated with explicit API instructions
 5. ✅ bootstrap.sh updated with inline API example
-6. 🔄 Need to redeploy and test again
+6. ❌ Second test: Claude Code said "I don't have ability to generate images"
+7. 🔧 Root cause found: Claude Code runs from wrong directory!
+   - CLAUDE.md is at `/workspace/CLAUDE.md`
+   - But Claude Code runs from `/` or `/root`, not `/workspace`
+   - Claude Code only reads CLAUDE.md from the **current working directory**
+8. ✅ Fixed sandy.py to `cd /workspace &&` before running Claude Code
+9. 🔄 Need to redeploy and test again
 
 ## Acceptance Criteria
 

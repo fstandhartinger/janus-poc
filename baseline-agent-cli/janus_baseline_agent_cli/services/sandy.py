@@ -395,7 +395,10 @@ class SandyService:
             # --output-format stream-json: Structured JSONL output
             # --no-session-persistence: Fresh context each run (no session contamination)
             # --dangerously-skip-permissions: YOLO mode for automation
+            # IMPORTANT: Must run from /workspace where CLAUDE.md is located!
+            # Claude Code automatically reads CLAUDE.md from cwd for project context.
             command = [
+                "cd", "/workspace", "&&",
                 "claude",
                 "-p",  # Print mode (non-interactive)
                 "--verbose",  # Required for stream-json progress events
