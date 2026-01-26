@@ -897,6 +897,9 @@ class SandyService:
         agent: str,
         model: str,
         prompt: str,
+        request: ChatCompletionRequest | None = None,
+        public_url: str | None = None,
+        has_images: bool = False,
         max_duration: int = 600,
     ) -> AsyncGenerator[dict[str, Any], None]:
         """
@@ -925,6 +928,9 @@ class SandyService:
             "maxDuration": max_duration,
             "rawPrompt": True,  # Skip web dev context wrapping (camelCase for Sandy API)
         }
+        env = self._build_agent_env(sandbox_id, public_url, request, has_images)
+        if env:
+            payload["env"] = env
 
         # Pass the public router URL if configured - enables smart model switching,
         # 429 fallbacks, and multimodal routing for Sandy agents
@@ -1908,6 +1914,9 @@ class SandyService:
                     agent,
                     api_model,
                     task,
+                    request=request,
+                    public_url=public_url,
+                    has_images=has_images,
                     max_duration=self._timeout,
                 ):
                     event_type = event.get("type", "")
@@ -2237,6 +2246,9 @@ class SandyService:
                     agent,
                     api_model,
                     task,
+                    request=request,
+                    public_url=public_url,
+                    has_images=has_images,
                     max_duration=self._timeout,
                 ):
                     event_type = event.get("type", "")

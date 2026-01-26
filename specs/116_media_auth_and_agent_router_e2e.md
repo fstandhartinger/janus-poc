@@ -72,6 +72,11 @@ configuration rather than model behavior.
 - Update `agent-pack/run_agent.py` example snippets to include the
   `Authorization` header across media and LLM requests.
 
+### C) Pass CHUTES_API_KEY into Sandy agent/run
+
+- Include `env` in the `agent/run` payload so Claude Code inherits
+  `CHUTES_API_KEY` and related sandbox variables for media calls.
+
 ## Acceptance Criteria
 
 - [ ] Claude Code uses authenticated Chutes API calls for image generation

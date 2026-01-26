@@ -35,7 +35,17 @@ async def test_agent_api_stream_event_yields_content(monkeypatch: pytest.MonkeyP
         calls.append("bootstrap")
         return "Bootstrap ok", "", 0
 
-    async def fake_run_agent(_client, _sandbox_id, _agent, _model, _prompt, max_duration=600):
+    async def fake_run_agent(
+        _client,
+        _sandbox_id,
+        _agent,
+        _model,
+        _prompt,
+        request=None,
+        public_url=None,
+        has_images=False,
+        max_duration=600,
+    ):
         calls.append("run")
         yield {"type": "status", "message": "Starting"}
         yield {
