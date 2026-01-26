@@ -20,9 +20,9 @@ ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
 
 # Routing models in order of preference (with fallbacks)
 ROUTING_MODELS = [
-    "XiaomiMiMo/MiMo-V2-Flash",  # Fast, reliable
-    "deepseek-ai/DeepSeek-V3",    # Fallback
-    "zai-org/GLM-4.7-TEE",        # Second fallback
+    "tngtech/TNG-R1T-Chimera-Turbo",  # Fast, smart, reliable
+    "XiaomiMiMo/MiMo-V2-Flash",       # Fallback
+    "deepseek-ai/DeepSeek-V3",        # Second fallback
 ]
 ROUTING_MODEL = ROUTING_MODELS[0]  # Default for settings
 ROUTING_PROMPT = """Analyze this user request and decide if it needs agent sandbox capabilities.
@@ -115,18 +115,9 @@ TRIVIAL_GREETINGS = {
     "ciao",
 }
 
-# Patterns for simple conversational requests that don't need agent
-SIMPLE_CONVERSATION_PATTERNS = [
-    r"^(say|just say|respond with)\s+(hi|hello|hey)\s*$",
-    r"^(tell me|say)\s+a\s+(joke|riddle)\s*$",
-    r"^what\s+is\s+\d+\s*[\+\-\*\/]\s*\d+\s*\??$",  # Simple math
-    r"^how\s+are\s+you\s*\??$",
-    r"^what\s+do\s+you\s+think\s*\??$",
-    r"^who\s+are\s+you\s*\??$",
-    r"^what\s+is\s+your\s+name\s*\??$",
-    r"^(can|could)\s+you\s+help\s+me\s*\??$",
-    r"^(please\s+)?(explain|define|what\s+is)\s+[a-z\s]+\s*\??$",
-]
+# NOTE: Pattern-based detection removed in favor of LLM verifier
+# Only trivial greetings bypass LLM check - all other messages go through
+# the smart TNG-R1T-Chimera-Turbo model for routing decisions
 
 URL_PATTERN = re.compile(r'https?://[^\s<>"\']+|www\.[^\s<>"\']+', re.IGNORECASE)
 
@@ -350,15 +341,13 @@ class ComplexityDetector:
         return " ".join(cleaned.split())
 
     def _should_skip_llm_check(self, text: str) -> bool:
+        """Only skip LLM check for trivial greetings - all other messages go through LLM verifier."""
         normalized = self._normalize_text(text)
         if not normalized:
             return True
         if normalized in TRIVIAL_GREETINGS:
             return True
-        # Check simple conversation patterns
-        for pattern in SIMPLE_CONVERSATION_PATTERNS:
-            if re.match(pattern, normalized, re.IGNORECASE):
-                return True
+        # All other messages go through the LLM verifier for smart routing
         return False
 
     def _extract_text(self, content: Optional[MessageContent]) -> str:

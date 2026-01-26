@@ -390,12 +390,18 @@ class SandyService:
             ]
         elif agent == "claude" or agent == "claude-code":
             # Claude Code CLI agent
-            # Uses -p for print mode (non-interactive)
-            # --output-format stream-json for structured output
+            # -p: Print mode (non-interactive)
+            # --verbose: REQUIRED with stream-json for real-time progress events
+            # --output-format stream-json: Structured JSONL output
+            # --no-session-persistence: Fresh context each run (no session contamination)
+            # --dangerously-skip-permissions: YOLO mode for automation
             command = [
                 "claude",
                 "-p",  # Print mode (non-interactive)
+                "--verbose",  # Required for stream-json progress events
                 "--output-format", "stream-json",
+                "--no-session-persistence",  # Fresh context each run
+                "--dangerously-skip-permissions",  # YOLO mode
                 "--allowedTools", "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
                 quoted_task,
             ]
@@ -956,6 +962,7 @@ class SandyService:
                 # Process SSE stream
                 buffer = ""
                 event_count = 0
+                stop_stream = False
                 async for chunk in response.aiter_text():
                     buffer += chunk
                     # Process complete events (lines ending with double newline)
@@ -965,51 +972,21 @@ class SandyService:
                         buffer = buffer[event_end + 2:]
 
                         for line in event_data.split("\n"):
-                            if line.startswith("data: "):
-                                data = line[6:]
-                                try:
-                                    parsed = json.loads(data)
-                                    event_count += 1
-                                    event_type = parsed.get("type", "unknown")
-                                    # Log detailed event info for debugging
-                                    logger.info(
-                                        "agent_api_event",
-                                        event_count=event_count,
-                                        event_type=event_type,
-                                        event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
-                                        event_preview=str(parsed)[:500],
-                                    )
-                                    logger.info(
-                                        "agent_api_sse_event",
-                                        event_count=event_count,
-                                        event_type=event_type,
-                                        event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
-                                        event_preview=str(parsed)[:500],
-                                    )
-                                    if event_type == "complete":
-                                        logger.info(
-                                            "agent_api_complete",
-                                            event_count=event_count,
-                                            success=parsed.get("success"),
-                                            exit_code=parsed.get("exitCode"),
-                                            duration=parsed.get("duration"),
-                                        )
-                                    yield parsed
-                                except json.JSONDecodeError:
-                                    # Not JSON, yield as raw output
-                                    if data.strip():
-                                        logger.debug("agent_api_raw_data", data_preview=data[:200])
-                                        yield {"type": "output", "text": data}
-
-                # Process any remaining buffer
-                if buffer.strip():
-                    for line in buffer.split("\n"):
-                        if line.startswith("data: "):
+                            if not line.startswith("data: "):
+                                continue
                             data = line[6:]
                             try:
                                 parsed = json.loads(data)
                                 event_count += 1
                                 event_type = parsed.get("type", "unknown")
+                                # Log detailed event info for debugging
+                                logger.info(
+                                    "agent_api_event",
+                                    event_count=event_count,
+                                    event_type=event_type,
+                                    event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
+                                    event_preview=str(parsed)[:500],
+                                )
                                 logger.info(
                                     "agent_api_sse_event",
                                     event_count=event_count,
@@ -1025,10 +1002,52 @@ class SandyService:
                                         exit_code=parsed.get("exitCode"),
                                         duration=parsed.get("duration"),
                                     )
+                                    stop_stream = True
                                 yield parsed
                             except json.JSONDecodeError:
+                                # Not JSON, yield as raw output
                                 if data.strip():
+                                    logger.debug("agent_api_raw_data", data_preview=data[:200])
                                     yield {"type": "output", "text": data}
+
+                        if stop_stream:
+                            break
+
+                    if stop_stream:
+                        break
+
+                if stop_stream:
+                    return
+
+                # Process any remaining buffer
+                if buffer.strip():
+                    for line in buffer.split("\n"):
+                        if not line.startswith("data: "):
+                            continue
+                        data = line[6:]
+                        try:
+                            parsed = json.loads(data)
+                            event_count += 1
+                            event_type = parsed.get("type", "unknown")
+                            logger.info(
+                                "agent_api_sse_event",
+                                event_count=event_count,
+                                event_type=event_type,
+                                event_keys=list(parsed.keys()) if isinstance(parsed, dict) else None,
+                                event_preview=str(parsed)[:500],
+                            )
+                            if event_type == "complete":
+                                logger.info(
+                                    "agent_api_complete",
+                                    event_count=event_count,
+                                    success=parsed.get("success"),
+                                    exit_code=parsed.get("exitCode"),
+                                    duration=parsed.get("duration"),
+                                )
+                            yield parsed
+                        except json.JSONDecodeError:
+                            if data.strip():
+                                yield {"type": "output", "text": data}
 
         except httpx.TimeoutException as e:
             logger.error("agent_api_timeout", error=str(e))

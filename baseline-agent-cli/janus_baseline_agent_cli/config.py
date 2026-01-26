@@ -269,7 +269,7 @@ class Settings(BaseSettings):
         description="Always route to agent sandbox, bypass complexity detection",
     )
     llm_routing_model: str = Field(
-        default="XiaomiMiMo/MiMo-V2-Flash",
+        default="tngtech/TNG-R1T-Chimera-Turbo",
         description="Fast model to use for routing decisions",
     )
     llm_routing_timeout: float = Field(
