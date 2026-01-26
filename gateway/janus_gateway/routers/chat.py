@@ -12,6 +12,10 @@ from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import StreamingResponse
 
 from janus_gateway.config import Settings, get_settings
+from janus_gateway.middleware.logging import (
+    CORRELATION_ID_HEADER,
+    get_correlation_id,
+)
 from janus_gateway.models import (
     ChatCompletionChunk,
     ChatCompletionRequest,
@@ -50,15 +54,27 @@ async def stream_from_competitor(
     settings: Settings,
     debug_request_id: str | None = None,
     baseline_agent: str | None = None,
+    correlation_id: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """Stream responses from a competitor, adding keep-alives."""
     keep_alive_interval = settings.keep_alive_interval
     done_sent = False
+    chunk_count = 0
+    start_time = time.time()
 
     # Prepare request for competitor (exclude janus-specific fields)
     competitor_request = request.model_dump(
         exclude_none=True,
         exclude={"competitor_id"},
+    )
+
+    # Log baseline request
+    logger.info(
+        "baseline_request",
+        baseline_url=competitor_url,
+        timeout=settings.request_timeout,
+        model=request.model,
+        message_count=len(request.messages),
     )
 
     try:
@@ -67,6 +83,9 @@ async def stream_from_competitor(
             headers["X-Debug-Request-Id"] = debug_request_id
         if baseline_agent:
             headers["X-Baseline-Agent"] = baseline_agent
+        # Propagate correlation ID to baseline
+        if correlation_id:
+            headers[CORRELATION_ID_HEADER] = correlation_id
         async with client.stream(
             "POST",
             f"{competitor_url}/v1/chat/completions",
@@ -74,6 +93,13 @@ async def stream_from_competitor(
             timeout=settings.request_timeout,
             headers=headers or None,
         ) as response:
+            # Log baseline response status
+            logger.info(
+                "baseline_response",
+                status_code=response.status_code,
+                duration_ms=round((time.time() - start_time) * 1000, 2),
+            )
+
             if response.status_code != 200:
                 error_body = await response.aread()
                 try:
@@ -81,9 +107,9 @@ async def stream_from_competitor(
                 except Exception:
                     error_text = "<binary data>"
                 logger.error(
-                    "competitor_error",
+                    "baseline_error",
                     status_code=response.status_code,
-                    body=error_text,
+                    body=error_text[:500],  # Truncate for logging
                 )
                 # Yield error as SSE
                 error_chunk = ChatCompletionChunk(
@@ -132,9 +158,37 @@ async def stream_from_competitor(
 
                     line = cast(str, item)
                     if line.startswith("data:") or line.startswith(":"):
+                        chunk_count += 1
+                        # Determine chunk type for logging
+                        chunk_type = "ping" if line.startswith(":") else "data"
+                        if line.startswith("data:"):
+                            data_content = line[5:].strip()
+                            if data_content == "[DONE]":
+                                chunk_type = "done"
+                            elif '"reasoning_content"' in data_content:
+                                chunk_type = "reasoning"
+                            elif '"content"' in data_content:
+                                chunk_type = "content"
+                            elif '"artifact"' in data_content:
+                                chunk_type = "artifact"
+
+                        # Log every Nth chunk to avoid log bloat (or important events)
+                        if chunk_count <= 3 or chunk_count % 50 == 0 or chunk_type in ("done", "artifact"):
+                            logger.debug(
+                                "sse_chunk_forwarded",
+                                chunk_type=chunk_type,
+                                chunk_number=chunk_count,
+                                chunk_preview=line[:100] if len(line) > 100 else line,
+                            )
+
                         yield f"{line}\n\n"
                         if line.startswith("data:") and line[5:].strip() == "[DONE]":
                             done_sent = True
+                            logger.info(
+                                "sse_stream_complete",
+                                total_chunks=chunk_count,
+                                duration_ms=round((time.time() - start_time) * 1000, 2),
+                            )
                             break
             finally:
                 if not reader_task.done():
@@ -252,18 +306,34 @@ async def chat_completions(
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
     request_id = generate_request_id()
+    correlation_id = get_correlation_id()
     debug_enabled = getattr(request, "debug", False)
     debug_request_id = generate_debug_request_id() if debug_enabled else None
     baseline_agent = http_request.headers.get("X-Baseline-Agent")
     start_time = time.time()
 
+    # Get message preview for logging (truncate long messages)
+    last_message = request.messages[-1] if request.messages else None
+    message_preview = ""
+    if last_message and hasattr(last_message, "content"):
+        content = last_message.content
+        if isinstance(content, str):
+            message_preview = content[:100] if len(content) > 100 else content
+        elif isinstance(content, list) and content:
+            first_part = content[0]
+            if hasattr(first_part, "text"):
+                text = first_part.text or ""
+                message_preview = text[:100] if len(text) > 100 else text
+
     logger.info(
         "chat_completion_request",
         request_id=request_id,
+        correlation_id=correlation_id,
         model=request.model,
         stream=request.stream,
         competitor_id=request.competitor_id,
         message_count=len(request.messages),
+        message_preview=message_preview,
     )
 
     processed_messages = [
@@ -274,8 +344,22 @@ async def chat_completions(
     # Resolve competitor: explicit competitor_id overrides model-based selection.
     competitor = registry.get(request.competitor_id) if request.competitor_id else None
     default_competitor = registry.get_default()
+    routing_reason = "explicit_competitor_id" if competitor else None
+
     if competitor is None and request.competitor_id is None:
         competitor = registry.get(request.model) or default_competitor
+        if registry.get(request.model):
+            routing_reason = "model_based"
+        else:
+            routing_reason = "default_fallback"
+
+    # Log routing decision
+    logger.info(
+        "routing_decision",
+        target_baseline=competitor.id if competitor else "mock",
+        reason=routing_reason,
+        baseline_url=competitor.url if competitor else None,
+    )
 
     if debug_request_id:
         baseline_id = competitor.id if competitor else (default_competitor.id if default_competitor else "")
@@ -297,6 +381,7 @@ async def chat_completions(
                         settings,
                         debug_request_id,
                         baseline_agent,
+                        correlation_id,
                     ):
                         yield chunk
                 logger.info(

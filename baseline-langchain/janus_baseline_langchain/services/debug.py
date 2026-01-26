@@ -8,7 +8,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Any, AsyncGenerator
 
-from janus_baseline_agent_cli.models.debug import DebugEvent, DebugEventType
+from janus_baseline_langchain.models.debug import DebugEvent, DebugEventType
 
 logger = structlog.get_logger()
 

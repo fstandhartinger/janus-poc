@@ -9,6 +9,7 @@ from .research import router as research_router
 from .tts import router as tts_router
 from .memories import router as memories_router
 from .debug import router as debug_router
+from .logs import router as logs_router
 
 __all__ = [
     "health_router",
@@ -20,4 +21,5 @@ __all__ = [
     "tts_router",
     "memories_router",
     "debug_router",
+    "logs_router",
 ]

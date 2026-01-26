@@ -15,6 +15,7 @@ from janus_gateway.routers import (
     chat_router,
     debug_router,
     health_router,
+    logs_router,
     memories_router,
     models_router,
     transcription_router,
@@ -135,6 +136,7 @@ app.include_router(chat_router)
 app.include_router(models_router)
 app.include_router(artifacts_router)
 app.include_router(debug_router)
+app.include_router(logs_router)
 app.include_router(transcription_router)
 app.include_router(research_router)
 app.include_router(tts_router)

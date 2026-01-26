@@ -1,15 +1,18 @@
 """Janus Baseline Competitor - FastAPI application entry point."""
 
 import asyncio
+import time
 import uuid
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
 from typing import AsyncGenerator, Union
 
 import structlog
-from fastapi import Depends, FastAPI, Header, Response
+from fastapi import Depends, FastAPI, Header, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from janus_baseline_agent_cli import __version__
 from janus_baseline_agent_cli.config import get_settings
@@ -54,9 +57,21 @@ AGENT_UNAVAILABLE_MESSAGE = (
     "which are not available at this time. Please try again later."
 )
 
-# Configure structured logging
+# Correlation ID context variable for request tracing
+CORRELATION_ID_HEADER = "X-Correlation-ID"
+REQUEST_ID_HEADER = "X-Request-ID"
+correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
+
+
+def get_correlation_id() -> str:
+    """Get current correlation ID from context."""
+    return correlation_id_var.get() or ""
+
+
+# Configure structured logging with contextvars for correlation
 structlog.configure(
     processors=[
+        structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -65,7 +80,8 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.dev.ConsoleRenderer(),
+        structlog.processors.JSONRenderer() if not settings.debug
+        else structlog.dev.ConsoleRenderer(),
     ],
     wrapper_class=structlog.stdlib.BoundLogger,
     context_class=dict,
@@ -74,6 +90,53 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+
+
+class CorrelationMiddleware(BaseHTTPMiddleware):
+    """Middleware to extract correlation ID from headers and bind to context."""
+
+    async def dispatch(self, request: Request, call_next):
+        # Get or create correlation ID
+        correlation_id = request.headers.get(CORRELATION_ID_HEADER) or f"corr-{uuid.uuid4().hex[:16]}"
+        request_id = str(uuid.uuid4())[:8]
+        start_time = time.time()
+
+        # Set correlation ID in context var
+        correlation_id_var.set(correlation_id)
+
+        # Bind to structlog context
+        structlog.contextvars.bind_contextvars(
+            correlation_id=correlation_id,
+            request_id=request_id,
+            method=request.method,
+            path=request.url.path,
+        )
+
+        try:
+            logger.info("request_received")
+            response = await call_next(request)
+            duration_ms = (time.time() - start_time) * 1000
+            logger.info(
+                "request_complete",
+                status_code=response.status_code,
+                duration_ms=round(duration_ms, 2),
+            )
+            # Add correlation ID to response headers
+            response.headers[CORRELATION_ID_HEADER] = correlation_id
+            response.headers[REQUEST_ID_HEADER] = request_id
+            return response
+        except Exception as exc:
+            duration_ms = (time.time() - start_time) * 1000
+            logger.error(
+                "request_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+                duration_ms=round(duration_ms, 2),
+            )
+            raise
+        finally:
+            structlog.contextvars.clear_contextvars()
+            correlation_id_var.set("")
 
 
 def _latest_user_message_index(messages: list[Message]) -> int | None:
@@ -262,6 +325,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add correlation ID middleware for request tracing
+app.add_middleware(CorrelationMiddleware)
 
 app.include_router(debug_router)
 
@@ -492,8 +558,12 @@ async def chat_completions(
     authorization: str | None = Header(default=None, alias="Authorization"),
     debug_request_id_header: str | None = Header(default=None, alias="X-Debug-Request-Id"),
     baseline_agent_header: str | None = Header(default=None, alias="X-Baseline-Agent"),
+    correlation_id_header: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
+
+    # Get correlation ID from header or context
+    correlation_id = correlation_id_header or get_correlation_id()
 
     auth_token = _extract_auth_token(authorization)
     if auth_token:
@@ -501,7 +571,7 @@ async def chat_completions(
 
     debug_enabled = bool(request.debug)
     debug_request_id = _resolve_debug_request_id(debug_request_id_header, debug_enabled)
-    debug_emitter = DebugEmitter(debug_request_id, debug_enabled)
+    debug_emitter = DebugEmitter(debug_request_id, debug_enabled, correlation_id)
 
     if debug_request_id and not request.stream:
         response.headers["X-Debug-Request-Id"] = debug_request_id

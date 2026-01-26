@@ -1,18 +1,22 @@
 """Janus Baseline LangChain - FastAPI application entry point."""
 
 import asyncio
+import time
+import uuid
 from contextlib import asynccontextmanager
+from contextvars import ContextVar
 import json
 import re
 from typing import Any, AsyncGenerator, Iterable, Union
 
 import structlog
-from fastapi import Depends, FastAPI, Header, HTTPException
+from fastapi import Depends, FastAPI, Header, HTTPException, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, SecretStr
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from janus_baseline_langchain import __version__
 from janus_baseline_langchain.agent import create_agent
@@ -36,8 +40,10 @@ from janus_baseline_langchain.models import (
     ToolCall,
     Usage,
 )
+from janus_baseline_langchain.models.debug import DebugEventType
 from janus_baseline_langchain.streaming import optimized_stream_response
 from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel
+from janus_baseline_langchain.router.debug import router as debug_router
 from janus_baseline_langchain.services import (
     MemoryService,
     clear_artifact_collection,
@@ -49,6 +55,7 @@ from janus_baseline_langchain.services import (
     start_artifact_collection,
     ComplexityDetector,
 )
+from janus_baseline_langchain.services.debug import DebugEmitter
 from janus_baseline_langchain.services.vision import (
     contains_images,
     convert_to_langchain_messages,
@@ -60,8 +67,21 @@ _router_instance: CompositeRoutingChatModel | None = None
 
 settings = get_settings()
 
+# Correlation ID context variable for request tracing
+CORRELATION_ID_HEADER = "X-Correlation-ID"
+REQUEST_ID_HEADER = "X-Request-ID"
+correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
+
+
+def get_correlation_id() -> str:
+    """Get current correlation ID from context."""
+    return correlation_id_var.get() or ""
+
+
+# Configure structured logging with contextvars for correlation
 structlog.configure(
     processors=[
+        structlog.contextvars.merge_contextvars,
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -70,7 +90,8 @@ structlog.configure(
         structlog.processors.StackInfoRenderer(),
         structlog.processors.format_exc_info,
         structlog.processors.UnicodeDecoder(),
-        structlog.dev.ConsoleRenderer(),
+        structlog.processors.JSONRenderer() if not settings.debug
+        else structlog.dev.ConsoleRenderer(),
     ],
     wrapper_class=structlog.stdlib.BoundLogger,
     context_class=dict,
@@ -79,6 +100,53 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+
+
+class CorrelationMiddleware(BaseHTTPMiddleware):
+    """Middleware to extract correlation ID from headers and bind to context."""
+
+    async def dispatch(self, request: Request, call_next):
+        # Get or create correlation ID
+        correlation_id = request.headers.get(CORRELATION_ID_HEADER) or f"corr-{uuid.uuid4().hex[:16]}"
+        request_id = str(uuid.uuid4())[:8]
+        start_time = time.time()
+
+        # Set correlation ID in context var
+        correlation_id_var.set(correlation_id)
+
+        # Bind to structlog context
+        structlog.contextvars.bind_contextvars(
+            correlation_id=correlation_id,
+            request_id=request_id,
+            method=request.method,
+            path=request.url.path,
+        )
+
+        try:
+            logger.info("request_received")
+            response = await call_next(request)
+            duration_ms = (time.time() - start_time) * 1000
+            logger.info(
+                "request_complete",
+                status_code=response.status_code,
+                duration_ms=round(duration_ms, 2),
+            )
+            # Add correlation ID to response headers
+            response.headers[CORRELATION_ID_HEADER] = correlation_id
+            response.headers[REQUEST_ID_HEADER] = request_id
+            return response
+        except Exception as exc:
+            duration_ms = (time.time() - start_time) * 1000
+            logger.error(
+                "request_failed",
+                error=str(exc),
+                error_type=type(exc).__name__,
+                duration_ms=round(duration_ms, 2),
+            )
+            raise
+        finally:
+            structlog.contextvars.clear_contextvars()
+            correlation_id_var.set("")
 
 
 def _split_stream_content(content: str, max_chars: int = 40) -> list[str]:
@@ -116,6 +184,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add correlation ID middleware for request tracing
+app.add_middleware(CorrelationMiddleware)
+
+app.include_router(debug_router)
 
 
 class HealthResponse(BaseModel):
@@ -246,6 +319,16 @@ def _generate_request_id() -> str:
     return f"chatcmpl-baseline-langchain-{uuid.uuid4().hex[:12]}"
 
 
+def _resolve_debug_request_id(header_value: str | None, enabled: bool) -> str | None:
+    if not enabled:
+        return None
+    if header_value:
+        return header_value
+    import uuid
+
+    return f"debug-{uuid.uuid4().hex[:16]}"
+
+
 def _format_response(
     request_id: str,
     model: str,
@@ -312,6 +395,19 @@ def _tool_event_message(event: dict[str, Any]) -> str:
     return tool_name
 
 
+def _debug_step_for_tool(tool_name: str) -> str:
+    normalized = tool_name.lower()
+    if "search" in normalized:
+        return "TOOL_SEARCH"
+    if "image" in normalized or "vision" in normalized:
+        return "TOOL_IMG"
+    if "file" in normalized or "read" in normalized or "write" in normalized:
+        return "TOOL_FILES"
+    if "code" in normalized or "exec" in normalized or "python" in normalized:
+        return "TOOL_CODE"
+    return "TOOL_CODE"
+
+
 def _get_router(
     settings: Settings,
     api_key_override: str | None = None,
@@ -368,7 +464,18 @@ def _resolve_request_auth(
     token = request.chutes_access_token or getattr(request, "_auth_token", None)
     if token:
         return token, settings.chutes_api_base
-    return settings.openai_api_key, settings.openai_base_url
+    openai_base = settings.openai_base_url
+    chutes_base = settings.chutes_api_base
+    if (
+        settings.chutes_api_key
+        and openai_base.rstrip("/") == chutes_base.rstrip("/")
+    ):
+        return settings.chutes_api_key, chutes_base
+    if settings.openai_api_key:
+        return settings.openai_api_key, openai_base
+    if settings.chutes_api_key:
+        return settings.chutes_api_key, chutes_base
+    return None, openai_base
 
 
 def _generation_flags_payload(flags: GenerationFlags | None) -> dict[str, bool] | None:
@@ -544,7 +651,16 @@ async def _stream_tool_call_response(
     tool_call: ToolCall,
     include_usage: bool,
     metadata: dict[str, Any] | None = None,
+    debug_emitter: DebugEmitter | None = None,
 ) -> AsyncGenerator[str, None]:
+    if debug_emitter:
+        tool_name = tool_call.function.name
+        await debug_emitter.emit(
+            DebugEventType.TOOL_CALL_START,
+            _debug_step_for_tool(tool_name),
+            f"Running tool: {tool_name}",
+            data={"tool": tool_name},
+        )
     yield _chunk_payload(
         request_id,
         model,
@@ -570,6 +686,19 @@ async def _stream_tool_call_response(
         Delta(),
         finish_reason=FinishReason.STOP,
     )
+    if debug_emitter:
+        tool_name = tool_call.function.name
+        await debug_emitter.emit(
+            DebugEventType.TOOL_CALL_COMPLETE,
+            _debug_step_for_tool(tool_name),
+            f"Tool finished: {tool_name}",
+            data={"tool": tool_name},
+        )
+        await debug_emitter.emit(
+            DebugEventType.RESPONSE_COMPLETE,
+            "SSE",
+            "Response complete",
+        )
     yield "data: [DONE]\n\n"
 
 
@@ -582,6 +711,7 @@ async def _stream_basic_response(
     api_key_override: str | None = None,
     base_url_override: str | None = None,
     metadata: dict[str, Any] | None = None,
+    debug_emitter: DebugEmitter | None = None,
 ) -> AsyncGenerator[str, None]:
     use_router = settings.use_model_router and not api_key_override
     if use_router:
@@ -609,6 +739,13 @@ async def _stream_basic_response(
             continue
         content_parts = _split_stream_content(str(content))
         if not started:
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.FAST_PATH_STREAM,
+                    "FAST_LLM",
+                    "Streaming fast-path response",
+                    data={"model": model_name},
+                )
             yield _chunk_payload(
                 request_id,
                 model_name,
@@ -649,6 +786,12 @@ async def _stream_basic_response(
         Delta(),
         finish_reason=FinishReason.STOP,
     )
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.RESPONSE_COMPLETE,
+            "SSE",
+            "Response complete",
+        )
     yield "data: [DONE]\n\n"
 
 
@@ -687,9 +830,17 @@ async def stream_agent_response(
     include_usage: bool,
     response_collector: list[str] | None = None,
     metadata: dict[str, Any] | None = None,
+    debug_emitter: DebugEmitter | None = None,
 ) -> AsyncGenerator[str, None]:
     async def raw_stream() -> AsyncGenerator[str, None]:
         tool_index = 0
+        agent_stream_started = False
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.AGENT_THINKING,
+                "AGENT",
+                "Starting agent execution",
+            )
         yield _chunk_payload(
             request_id,
             model,
@@ -707,6 +858,13 @@ async def stream_agent_response(
                     chunk = event.get("data", {}).get("chunk")
                     content = getattr(chunk, "content", None)
                     if content:
+                        if debug_emitter and not agent_stream_started:
+                            await debug_emitter.emit(
+                                DebugEventType.RESPONSE_CHUNK,
+                                "AGENT",
+                                "Streaming agent response",
+                            )
+                            agent_stream_started = True
                         if response_collector is not None:
                             response_collector.append(str(content))
                         yield _chunk_payload(
@@ -727,6 +885,13 @@ async def stream_agent_response(
                             arguments=json.dumps(tool_input),
                         ),
                     )
+                    if debug_emitter:
+                        await debug_emitter.emit(
+                            DebugEventType.TOOL_CALL_START,
+                            _debug_step_for_tool(tool_name),
+                            f"Running tool: {tool_name}",
+                            data={"tool": tool_name},
+                        )
                     yield _chunk_payload(
                         request_id,
                         model,
@@ -738,12 +903,25 @@ async def stream_agent_response(
                     tool_index += 1
                 elif event_type == "on_tool_end":
                     tool_name = _tool_event_message(event)
+                    if debug_emitter:
+                        await debug_emitter.emit(
+                            DebugEventType.TOOL_CALL_COMPLETE,
+                            _debug_step_for_tool(tool_name),
+                            f"Tool finished: {tool_name}",
+                            data={"tool": tool_name},
+                        )
                     yield _chunk_payload(
                         request_id,
                         model,
                         Delta(reasoning_content=f"Tool finished: {tool_name}."),
                     )
                 elif event_type == "on_chain_error":
+                    if debug_emitter:
+                        await debug_emitter.emit(
+                            DebugEventType.ERROR,
+                            "AGENT",
+                            "Agent chain failed",
+                        )
                     yield _chunk_payload(
                         request_id,
                         model,
@@ -754,6 +932,12 @@ async def stream_agent_response(
                     return
         except Exception as exc:
             logger.error("agent_stream_error", error=str(exc))
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.ERROR,
+                    "AGENT",
+                    f"Agent stream error: {exc}",
+                )
             yield _chunk_payload(
                 request_id,
                 model,
@@ -765,6 +949,17 @@ async def stream_agent_response(
 
         artifacts = get_collected_artifacts()
         if artifacts:
+            if debug_emitter:
+                for artifact in artifacts:
+                    await debug_emitter.emit(
+                        DebugEventType.FILE_CREATED,
+                        "TOOL_FILES",
+                        f"Artifact created: {artifact.display_name}",
+                        data={
+                            "filename": artifact.display_name,
+                            "artifact_id": artifact.id,
+                        },
+                    )
             yield _chunk_payload(
                 request_id,
                 model,
@@ -794,6 +989,12 @@ async def stream_agent_response(
             Delta(),
             finish_reason=FinishReason.STOP,
         )
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.RESPONSE_COMPLETE,
+                "SSE",
+                "Response complete",
+            )
         yield "data: [DONE]\n\n"
 
     async for payload in optimized_stream_response(raw_stream()):
@@ -809,6 +1010,7 @@ async def _stream_vision_response(
     api_key_override: str | None = None,
     base_url_override: str | None = None,
     metadata: dict[str, Any] | None = None,
+    debug_emitter: DebugEmitter | None = None,
 ) -> AsyncGenerator[str, None]:
     async def raw_stream() -> AsyncGenerator[str, None]:
         primary = settings.vision_model_primary
@@ -831,6 +1033,13 @@ async def _stream_vision_response(
                         continue
                     content_parts = _split_stream_content(str(content))
                     if not started:
+                        if debug_emitter:
+                            await debug_emitter.emit(
+                                DebugEventType.FAST_PATH_STREAM,
+                                "FAST_LLM",
+                                "Streaming vision response",
+                                data={"model": attempt_model},
+                            )
                         yield _chunk_payload(
                             request_id,
                             attempt_model,
@@ -876,6 +1085,12 @@ async def _stream_vision_response(
                     Delta(),
                     finish_reason=FinishReason.STOP,
                 )
+                if debug_emitter:
+                    await debug_emitter.emit(
+                        DebugEventType.RESPONSE_COMPLETE,
+                        "SSE",
+                        "Response complete",
+                    )
                 yield "data: [DONE]\n\n"
                 return
             except Exception as exc:
@@ -933,19 +1148,45 @@ async def _run_vision_completion(
 @app.post("/v1/chat/completions", response_model=None)
 async def chat_completions(
     request: ChatCompletionRequest,
+    response: Response,
     settings: Settings = Depends(get_settings),
     complexity_detector: ComplexityDetector = Depends(get_complexity_detector),
     memory_service: MemoryService = Depends(get_memory_service),
     authorization: str | None = Header(default=None, alias="Authorization"),
+    debug_request_id_header: str | None = Header(default=None, alias="X-Debug-Request-Id"),
+    correlation_id_header: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
     request_id = _generate_request_id()
+
+    # Get correlation ID from header or context
+    correlation_id = correlation_id_header or get_correlation_id()
+
     auth_token = _extract_auth_token(authorization) or request.chutes_access_token
     if auth_token:
         request._auth_token = auth_token
     set_request_auth_token(auth_token)
     start_artifact_collection()
     api_key_override, base_url_override = _resolve_request_auth(request, settings)
+
+    debug_enabled = bool(request.debug)
+    debug_request_id = _resolve_debug_request_id(debug_request_id_header, debug_enabled)
+    debug_emitter = DebugEmitter(debug_request_id, debug_enabled, correlation_id)
+
+    if debug_request_id and not request.stream:
+        response.headers["X-Debug-Request-Id"] = debug_request_id
+
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.REQUEST_RECEIVED,
+            "REQ",
+            "Request received",
+            data={
+                "model": request.model,
+                "message_count": len(request.messages),
+                "debug": debug_enabled,
+            },
+        )
 
     memory_enabled = bool(
         settings.enable_memory_feature and request.enable_memory and request.user_id
@@ -963,6 +1204,12 @@ async def chat_completions(
             _inject_memory_context(messages_for_processing, memory_context)
             request.messages = messages_for_processing
 
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.COMPLEXITY_CHECK_START,
+            "DETECT",
+            "Starting complexity analysis",
+        )
     analysis = await complexity_detector.analyze_async(
         request.messages,
         request.generation_flags,
@@ -994,6 +1241,34 @@ async def chat_completions(
         image_count=analysis.image_count,
     )
 
+    if debug_emitter:
+        if analysis.keywords_matched:
+            await debug_emitter.emit(
+                DebugEventType.COMPLEXITY_CHECK_KEYWORD,
+                "KEYWORDS",
+                f"Keyword match: {', '.join(analysis.keywords_matched)}",
+                data={"keywords": analysis.keywords_matched},
+            )
+        if analysis.reason.startswith("llm_verification"):
+            await debug_emitter.emit(
+                DebugEventType.COMPLEXITY_CHECK_LLM,
+                "LLM_VERIFY",
+                f"LLM verification: {analysis.reason}",
+                data={"reason": analysis.reason},
+            )
+        await debug_emitter.emit(
+            DebugEventType.COMPLEXITY_CHECK_COMPLETE,
+            "DETECT",
+            f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
+            data={"is_complex": analysis.is_complex, "reason": analysis.reason},
+        )
+        await debug_emitter.emit(
+            DebugEventType.AGENT_PATH_START if use_generation_agent else DebugEventType.FAST_PATH_START,
+            "SANDY" if use_generation_agent else "FAST_LLM",
+            "Routing to agent path" if use_generation_agent else "Routing to fast path",
+            data={"using_agent": use_generation_agent, "reason": analysis.reason},
+        )
+
     use_vision = settings.enable_vision_routing and contains_images(request.messages)
     model = settings.vision_model_primary if use_vision else (request.model or settings.model)
 
@@ -1010,6 +1285,12 @@ async def chat_completions(
 
     if request.stream:
         full_response_parts: list[str] = []
+        response_headers = {
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
+        if debug_request_id:
+            response_headers["X-Debug-Request-Id"] = debug_request_id
 
         async def stream_with_memory(
             stream: AsyncGenerator[str, None],
@@ -1052,15 +1333,13 @@ async def chat_completions(
                 include_usage,
                 response_collector=full_response_parts,
                 metadata=metadata_payload,
+                debug_emitter=debug_emitter,
             )
             wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
                 wrapped_stream,
                 media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                },
+                headers=response_headers,
             )
         if tool_call and not use_vision:
             stream = _stream_tool_call_response(
@@ -1069,15 +1348,13 @@ async def chat_completions(
                 tool_call,
                 include_usage,
                 metadata=metadata_payload,
+                debug_emitter=debug_emitter,
             )
             wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
                 wrapped_stream,
                 media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                },
+                headers=response_headers,
             )
         if use_vision:
             vision_messages = convert_to_langchain_messages(request.messages)
@@ -1090,15 +1367,13 @@ async def chat_completions(
                 api_key_override=api_key_override,
                 base_url_override=base_url_override,
                 metadata=metadata_payload,
+                debug_emitter=debug_emitter,
             )
             wrapped_stream = stream_with_memory(optimized_stream_response(stream))
             return StreamingResponse(
                 wrapped_stream,
                 media_type="text/event-stream",
-                headers={
-                    "Cache-Control": "no-cache",
-                    "Connection": "keep-alive",
-                },
+                headers=response_headers,
             )
         base_messages = convert_to_langchain_messages(request.messages)
         stream = _stream_basic_response(
@@ -1110,16 +1385,14 @@ async def chat_completions(
             api_key_override=api_key_override,
             base_url_override=base_url_override,
             metadata=metadata_payload,
+            debug_emitter=debug_emitter,
         )
         wrapped_stream = stream_with_memory(optimized_stream_response(stream))
         return StreamingResponse(
             wrapped_stream,
             media_type="text/event-stream",
-            headers={
-                "Cache-Control": "no-cache",
-                "Connection": "keep-alive",
-                },
-            )
+            headers=response_headers,
+        )
 
     if use_generation_agent:
         user_input, history = _build_agent_context(request.messages)
@@ -1150,6 +1423,17 @@ async def chat_completions(
             output,
             artifacts=artifacts or None,
         )
+        if debug_emitter and artifacts:
+            for artifact in artifacts:
+                await debug_emitter.emit(
+                    DebugEventType.FILE_CREATED,
+                    "TOOL_FILES",
+                    f"Artifact created: {artifact.display_name}",
+                    data={
+                        "filename": artifact.display_name,
+                        "artifact_id": artifact.id,
+                    },
+                )
         if memory_enabled and request.user_id:
             conversation = conversation_base + [
                 {"role": "assistant", "content": output}
@@ -1161,6 +1445,12 @@ async def chat_completions(
                 )
             )
         clear_artifact_collection()
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.RESPONSE_COMPLETE,
+                "SSE",
+                "Response complete",
+            )
         return response
 
     if tool_call and not use_vision:
@@ -1176,6 +1466,25 @@ async def chat_completions(
                 )
             )
         clear_artifact_collection()
+        if debug_emitter:
+            tool_name = tool_call.function.name
+            await debug_emitter.emit(
+                DebugEventType.TOOL_CALL_START,
+                _debug_step_for_tool(tool_name),
+                f"Running tool: {tool_name}",
+                data={"tool": tool_name},
+            )
+            await debug_emitter.emit(
+                DebugEventType.TOOL_CALL_COMPLETE,
+                _debug_step_for_tool(tool_name),
+                f"Tool finished: {tool_name}",
+                data={"tool": tool_name},
+            )
+            await debug_emitter.emit(
+                DebugEventType.RESPONSE_COMPLETE,
+                "SSE",
+                "Response complete",
+            )
         return response
 
     if use_vision:
@@ -1203,6 +1512,12 @@ async def chat_completions(
                 )
             )
         clear_artifact_collection()
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.RESPONSE_COMPLETE,
+                "SSE",
+                "Response complete",
+            )
         return response
 
     try:
@@ -1216,6 +1531,7 @@ async def chat_completions(
     except Exception as exc:
         logger.error("agent_invoke_error", error=str(exc))
         output = "Error: failed to generate response."
+        model_name = model
 
     response = _format_response(request_id, model_name, output)
     if memory_enabled and request.user_id:
@@ -1229,6 +1545,12 @@ async def chat_completions(
             )
         )
     clear_artifact_collection()
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.RESPONSE_COMPLETE,
+            "SSE",
+            "Response complete",
+        )
     return response
 
 
