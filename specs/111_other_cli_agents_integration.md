@@ -1,6 +1,6 @@
 # Spec 111: Other CLI Agents Integration
 
-## Status: RESEARCH COMPLETE - IMPLEMENTATION DEFERRED
+## Status: IN PROGRESS - Additional agents identified
 
 ## Context / Background
 
@@ -200,6 +200,100 @@ Add agent selection to chat UI with capability badges:
 - `baseline-agent-cli/agent-pack/bootstrap.sh` - Agent environment setup
 - `specs/109_agentic_chat_response_e2e.md` - Original testing spec
 
+## Additional Agents to Investigate (2026-01-26)
+
+### Roo Code CLI
+
+**Project**: https://github.com/rightson/Roo-Code-CLI (or https://github.com/drumnation/roo-code-cli)
+
+**What It Is**: An open fork of Roo-Code, reimagined for the terminal. Provides AI-agent workflow for building, debugging, and managing code from the command line.
+
+**Key Features**:
+- Shell command execution via `execute_command` tool
+- Multiple modes: Architect, Code, Debug, Ask, Custom
+- Approval modes: Manual, Autonomous, Hybrid
+- Model-agnostic (works with any LLM provider)
+
+**Potential**:
+- HIGH - Has explicit shell execution capability
+- Supports OpenAI-compatible APIs
+- Designed for terminal workflows
+
+**Integration Requirements**:
+```bash
+# Install
+npm install -g roo-code-cli  # or pip install roo-code-cli
+
+# Configure for Janus router
+export OPENAI_API_BASE="http://127.0.0.1:8000/v1"
+export OPENAI_API_KEY="${CHUTES_API_KEY}"
+
+# Run in autonomous mode
+roo-code-cli --auto-approve "task prompt"
+```
+
+**Status**: NOT TESTED - Needs Sandy integration
+
+---
+
+### Cline CLI
+
+**Project**: https://github.com/cline/cline
+
+**What It Is**: Autonomous coding agent that can create/edit files, execute commands, use the browser. Has both VS Code extension and CLI mode.
+
+**Key Features**:
+- File creation and editing
+- Terminal command execution
+- Browser automation
+- Snapshot checkpoints for recovery
+- CI/CD integration (GitHub Actions, GitLab pipelines)
+
+**Potential**:
+- HIGH - Full shell execution and file editing
+- Supports multiple LLM providers
+- Well-documented CLI interface
+
+**Integration Requirements**:
+```bash
+# Install
+npm install -g @anthropic/cline-cli  # or pip install cline
+
+# Configure for Janus router
+export ANTHROPIC_BASE_URL="http://127.0.0.1:8000"
+export ANTHROPIC_API_KEY="${CHUTES_API_KEY}"
+# OR for OpenAI-compatible
+export OPENAI_API_BASE="http://127.0.0.1:8000/v1"
+export OPENAI_API_KEY="${CHUTES_API_KEY}"
+
+# Run
+cline "task prompt" --auto-approve
+```
+
+**Status**: NOT TESTED - Needs Sandy integration
+
+---
+
+## Updated Priority List
+
+| Priority | Agent | Potential | Effort | Status |
+|----------|-------|-----------|--------|--------|
+| 1 | Claude Code | HIGH (working) | DONE | **COMPLETE** |
+| 2 | Roo Code CLI | HIGH | Medium | NOT STARTED |
+| 3 | Cline CLI | HIGH | Medium | NOT STARTED |
+| 4 | OpenCode | Medium | Low | Needs TUI fix |
+| 5 | Codex | Medium | Medium | Needs investigation |
+| 6 | Aider | Low (editor only) | N/A | Working but limited |
+| 7 | OpenHands | Low (Docker conflict) | High | Deferred |
+
+## Next Steps
+
+1. **Install and test Roo Code CLI** in Sandy sandbox
+2. **Install and test Cline CLI** in Sandy sandbox
+3. **Update sandy.py** with proper command building for each agent
+4. **Update bootstrap.sh** with installation and configuration
+5. **Document which agents support which capabilities**
+
 ## References
 
 - OpenCode CLI: https://opencode.ai/docs/cli/
@@ -207,5 +301,10 @@ Add agent selection to chat UI with capability badges:
 - OpenHands: https://github.com/All-Hands-AI/OpenHands
 - Aider: https://github.com/paul-gauthier/aider
 - Codex: https://github.com/openai/codex
+- Roo Code CLI: https://github.com/rightson/Roo-Code-CLI
+- Roo Code CLI (drumnation): https://github.com/drumnation/roo-code-cli
+- Roo Code Docs: https://docs.roocode.com/
+- Cline: https://github.com/cline/cline
+- Cline Docs: https://docs.cline.bot/cline-cli/overview
 
 NR_OF_TRIES: 0
