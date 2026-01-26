@@ -242,7 +242,6 @@ export function MessageBubble({
   const [isThinkingExpanded, setIsThinkingExpanded] = useState(true);
   const hasAutoCollapsedRef = useRef(false);
   const thinkingContentRef = useRef<HTMLDivElement>(null);
-  const prevReasoningLengthRef = useRef(0);
 
   // Auto-collapse ONCE when streaming is done AND we have real content
   useEffect(() => {
@@ -259,22 +258,20 @@ export function MessageBubble({
 
   // Auto-scroll thinking section as new content comes in
   useEffect(() => {
-    if (!isThinkingExpanded || !thinkingContentRef.current) {
+    if (!isThinkingExpanded || !thinkingContentRef.current || !isStreaming) {
       return;
     }
 
-    const currentLength = cleanedReasoning.length;
-    // Only scroll when content is actually added
-    if (currentLength > prevReasoningLengthRef.current) {
-      prevReasoningLengthRef.current = currentLength;
-      // Use requestAnimationFrame for smoother scrolling
-      requestAnimationFrame(() => {
-        if (thinkingContentRef.current) {
-          thinkingContentRef.current.scrollTop = thinkingContentRef.current.scrollHeight;
-        }
-      });
-    }
-  }, [cleanedReasoning, isThinkingExpanded]);
+    // Always scroll to bottom when streaming and thinking is expanded
+    // Use setTimeout to ensure DOM has updated after content change
+    const timeoutId = setTimeout(() => {
+      if (thinkingContentRef.current) {
+        thinkingContentRef.current.scrollTop = thinkingContentRef.current.scrollHeight;
+      }
+    }, 50);
+
+    return () => clearTimeout(timeoutId);
+  }, [cleanedReasoning, isThinkingExpanded, isStreaming]);
 
   if (!hasRenderableContent) {
     return null;
