@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, description="Enable debug mode")
 
     # Gateway settings
-    request_timeout: int = Field(default=600, description="Request timeout in seconds")
+    request_timeout: int = Field(default=300, description="Request timeout in seconds")
     max_request_size: int = Field(default=10_485_760, description="Max request size in bytes (10MB)")
     keep_alive_interval: float = Field(default=1.5, description="SSE keep-alive interval in seconds")
     deep_research_timeout: int = Field(
@@ -80,7 +80,7 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("CHUTES_SEARCH_URL", "JANUS_CHUTES_SEARCH_URL"),
     )
     whisper_endpoint: str = Field(
-        default="https://chutes-whisper-large-v3.chutes.ai/transcribe",
+        default="https://api.chutes.ai/v1/audio/transcriptions",
         description="Whisper transcription endpoint URL",
         validation_alias=AliasChoices("WHISPER_ENDPOINT", "JANUS_WHISPER_ENDPOINT"),
     )

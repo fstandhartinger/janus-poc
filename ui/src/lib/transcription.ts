@@ -1,6 +1,6 @@
 import { GATEWAY_URL } from './api';
 
-const WHISPER_ENDPOINT = 'https://chutes-whisper-large-v3.chutes.ai/transcribe';
+const WHISPER_ENDPOINT = 'https://api.chutes.ai/v1/audio/transcriptions';
 const DEFAULT_MODEL = 'whisper-1';
 
 interface TranscriptionOptions {
