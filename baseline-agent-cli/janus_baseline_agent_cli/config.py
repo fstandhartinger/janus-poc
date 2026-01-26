@@ -94,7 +94,7 @@ class Settings(BaseSettings):
     )
     model: str = Field(default="janus-router", description="Default model for fast path")
     direct_model: str = Field(
-        default="zai-org/GLM-4.7-TEE",
+        default="tngtech/TNG-R1T-Chimera-Turbo",
         description="Direct model when router is disabled",
         validation_alias=AliasChoices(
             "DIRECT_MODEL",

@@ -91,7 +91,42 @@ TRIVIAL_GREETINGS = {
     "good evening",
     "thanks",
     "thank you",
+    "ok",
+    "okay",
+    "yes",
+    "no",
+    "sure",
+    "bye",
+    "goodbye",
+    "see you",
+    "later",
+    "whats up",
+    "what up",
+    "howdy",
+    "yo",
+    "hola",
+    "hallo",
+    "guten tag",
+    "guten morgen",
+    "guten abend",
+    "danke",
+    "bitte",
+    "tschuss",
+    "ciao",
 }
+
+# Patterns for simple conversational requests that don't need agent
+SIMPLE_CONVERSATION_PATTERNS = [
+    r"^(say|just say|respond with)\s+(hi|hello|hey)\s*$",
+    r"^(tell me|say)\s+a\s+(joke|riddle)\s*$",
+    r"^what\s+is\s+\d+\s*[\+\-\*\/]\s*\d+\s*\??$",  # Simple math
+    r"^how\s+are\s+you\s*\??$",
+    r"^what\s+do\s+you\s+think\s*\??$",
+    r"^who\s+are\s+you\s*\??$",
+    r"^what\s+is\s+your\s+name\s*\??$",
+    r"^(can|could)\s+you\s+help\s+me\s*\??$",
+    r"^(please\s+)?(explain|define|what\s+is)\s+[a-z\s]+\s*\??$",
+]
 
 URL_PATTERN = re.compile(r'https?://[^\s<>"\']+|www\.[^\s<>"\']+', re.IGNORECASE)
 
@@ -111,6 +146,43 @@ class ComplexityAnalysis:
 
 class ComplexityDetector:
     """Detects whether a request should use the fast path or complex path."""
+
+    COMPLEX_KEYWORDS_DE = [
+        # Download/Fetch
+        "herunterladen",
+        "lade herunter",
+        "downloaden",
+        "holen",
+        # Search
+        "suche",
+        "such nach",
+        "recherchiere",
+        "finde",
+        "finde heraus",
+        # Code execution
+        "führe aus",
+        "ausführen",
+        "starte",
+        "kompiliere",
+        "teste",
+        "debugge",
+        # File operations
+        "speichere",
+        "schreibe",
+        "erstelle datei",
+        "lösche",
+        # Web/Browser
+        "öffne",
+        "besuche",
+        "navigiere",
+        "screenshot",
+        # Generation
+        "generiere",
+        "erstelle bild",
+        "erzeuge",
+        "zusammenfassung",
+        "analysiere",
+    ]
 
     # Keywords that suggest a complex task requiring sandbox
     COMPLEX_KEYWORDS = [
@@ -236,31 +308,7 @@ class ComplexityDetector:
         "pull the repo",
         "clone repo",
         # German keywords
-        "herunterladen",
-        "lade herunter",
-        "downloaden",
-        "suche",
-        "such nach",
-        "recherchiere",
-        "finde heraus",
-        "führe aus",
-        "ausführen",
-        "starte",
-        "kompiliere",
-        "teste",
-        "debugge",
-        "speichere",
-        "schreibe",
-        "erstelle datei",
-        "lösche",
-        "öffne",
-        "besuche",
-        "navigiere",
-        "generiere",
-        "erstelle bild",
-        "erzeuge",
-        "zusammenfassung",
-        "analysiere",
+        *COMPLEX_KEYWORDS_DE,
     ]
 
     MULTIMODAL_KEYWORDS = [
@@ -303,7 +351,15 @@ class ComplexityDetector:
 
     def _should_skip_llm_check(self, text: str) -> bool:
         normalized = self._normalize_text(text)
-        return not normalized or normalized in TRIVIAL_GREETINGS
+        if not normalized:
+            return True
+        if normalized in TRIVIAL_GREETINGS:
+            return True
+        # Check simple conversation patterns
+        for pattern in SIMPLE_CONVERSATION_PATTERNS:
+            if re.match(pattern, normalized, re.IGNORECASE):
+                return True
+        return False
 
     def _extract_text(self, content: Optional[MessageContent]) -> str:
         """Extract text from message content."""
@@ -327,8 +383,9 @@ class ComplexityDetector:
     # German separable verb patterns: "lade ... herunter" -> "herunterladen"
     GERMAN_SEPARABLE_VERBS = [
         (r"lade\s+.+\s+herunter", "herunterladen"),
-        (r"such\s+.+\s+nach", "suchen nach"),
-        (r"führ\s+.+\s+aus", "ausführen"),
+        (r"such(e)?\s+.+\s+nach", "suchen nach"),
+        (r"führ(e)?\s+.+\s+aus", "ausführen"),
+        (r"stell(e)?\s+.+\s+ein", "einstellen"),
         (r"gib\s+.+\s+zusammenfassung", "zusammenfassung"),
         (r"fass\s+.+\s+zusammen", "zusammenfassung"),
     ]

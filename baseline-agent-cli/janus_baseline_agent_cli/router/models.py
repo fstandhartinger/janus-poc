@@ -51,8 +51,8 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         timeout_seconds=30.0,
     ),
     "general": ModelConfig(
-        model_id="zai-org/GLM-4.7-TEE",
-        display_name="GLM 4.7",
+        model_id="tngtech/TNG-R1T-Chimera-Turbo",
+        display_name="TNG R1T Chimera Turbo",
         task_types=[TaskType.GENERAL_TEXT, TaskType.UNKNOWN],
         priority=2,
         max_tokens=8192,
@@ -75,7 +75,7 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         timeout_seconds=90.0,
     ),
     "creative": ModelConfig(
-        model_id="deepseek-ai/DeepSeek-TNG-R1T2-Chimera",
+        model_id="tngtech/DeepSeek-TNG-R1T2-Chimera",  # Fixed namespace
         display_name="TNG R1T2 Chimera",
         task_types=[TaskType.CREATIVE],
         priority=5,
@@ -92,8 +92,8 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         timeout_seconds=90.0,
     ),
     "vision_fallback": ModelConfig(
-        model_id="zai-org/GLM-4.6V",
-        display_name="GLM 4.6V",
+        model_id="chutesai/Mistral-Small-3.2-24B-Instruct-2506",  # Updated to working model
+        display_name="Mistral Small 3.2 (Vision Fallback)",
         task_types=[TaskType.VISION],
         priority=7,
         max_tokens=8192,
@@ -107,6 +107,23 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         priority=8,
         max_tokens=4096,
         timeout_seconds=30.0,
+    ),
+    # Additional fallbacks for programming
+    "programming_fallback": ModelConfig(
+        model_id="deepseek-ai/DeepSeek-V3.2-TEE",
+        display_name="DeepSeek V3.2 (Programming Fallback)",
+        task_types=[TaskType.PROGRAMMING],
+        priority=9,
+        max_tokens=16384,
+        timeout_seconds=90.0,
+    ),
+    "programming_fallback2": ModelConfig(
+        model_id="Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
+        display_name="Qwen3 235B (Programming Fallback 2)",
+        task_types=[TaskType.PROGRAMMING],
+        priority=10,
+        max_tokens=16384,
+        timeout_seconds=90.0,
     ),
 }
 
