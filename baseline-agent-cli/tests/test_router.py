@@ -135,3 +135,30 @@ async def test_streaming_rewrites_model(monkeypatch: pytest.MonkeyPatch) -> None
     combined = "".join(chunks)
     assert "janus-router" in combined
     assert "data: [DONE]" in combined
+
+
+def test_openai_tool_calls_convert_to_anthropic_tool_use() -> None:
+    openai_response = {
+        "choices": [
+            {
+                "message": {
+                    "content": "",
+                    "tool_calls": [
+                        {
+                            "id": "call_1",
+                            "type": "function",
+                            "function": {"name": "Bash", "arguments": "{\"command\": \"ls\"}"},
+                        }
+                    ],
+                },
+                "finish_reason": "tool_calls",
+            }
+        ],
+        "usage": {"prompt_tokens": 5, "completion_tokens": 3},
+    }
+    anthropic = router_server._openai_to_anthropic_response(openai_response, "janus-router")
+    content_blocks = anthropic.get("content", [])
+    assert any(block.get("type") == "tool_use" for block in content_blocks)
+    tool_block = next(block for block in content_blocks if block.get("type") == "tool_use")
+    assert tool_block["name"] == "Bash"
+    assert tool_block["input"]["command"] == "ls"

@@ -9,7 +9,7 @@ import json
 import os
 import time
 import uuid
-from typing import Any, Literal, Optional
+from typing import Any, AsyncIterator, Literal, Optional
 
 import httpx
 import structlog
@@ -142,6 +142,66 @@ def _extract_anthropic_content_text(
     return " ".join(parts).strip()
 
 
+def _anthropic_tools_to_openai(tools: Optional[list[dict]]) -> Optional[list[dict]]:
+    """Convert Anthropic tool definitions to OpenAI tool format."""
+    if not tools:
+        return None
+    openai_tools: list[dict] = []
+    for tool in tools:
+        if not isinstance(tool, dict):
+            continue
+        name = tool.get("name")
+        if not name:
+            continue
+        function = {"name": name}
+        description = tool.get("description")
+        if description:
+            function["description"] = description
+        parameters = tool.get("input_schema") or tool.get("parameters")
+        if parameters:
+            function["parameters"] = parameters
+        openai_tools.append({"type": "function", "function": function})
+    return openai_tools or None
+
+
+def _anthropic_tool_choice_to_openai(tool_choice: Any) -> Any:
+    """Convert Anthropic tool_choice to OpenAI tool_choice."""
+    if tool_choice is None:
+        return None
+    if isinstance(tool_choice, str):
+        choice = tool_choice.lower()
+        if choice == "auto":
+            return "auto"
+        if choice == "any":
+            return "required"
+        if choice == "none":
+            return "none"
+        return None
+    if isinstance(tool_choice, dict):
+        choice_type = tool_choice.get("type")
+        if choice_type == "tool":
+            name = tool_choice.get("name")
+            if name:
+                return {"type": "function", "function": {"name": name}}
+            return "required"
+        if choice_type == "auto":
+            return "auto"
+        if choice_type == "any":
+            return "required"
+        if choice_type == "none":
+            return "none"
+    return None
+
+
+def _coerce_tool_content(content: Any) -> str:
+    """Normalize tool result content to string."""
+    if content is None:
+        return ""
+    if isinstance(content, (dict, list)):
+        return json.dumps(content)
+    return str(content)
+
+
 def _anthropic_to_openai_messages(
     anthropic_request: AnthropicMessagesRequest,
 ) -> list[dict]:
@@ -155,8 +215,74 @@ def _anthropic_to_openai_messages(
 
     # Convert each message
     for msg in anthropic_request.messages:
-        text_content = _extract_anthropic_content_text(msg.content)
-        openai_messages.append({"role": msg.role, "content": text_content})
+        if isinstance(msg.content, str):
+            openai_messages.append({"role": msg.role, "content": msg.content})
+            continue
+
+        text_parts: list[str] = []
+        tool_calls: list[dict] = []
+        tool_results: list[dict] = []
+
+        for block in msg.content:
+            block_dict: dict[str, Any]
+            if isinstance(block, AnthropicContentBlock):
+                block_dict = block.model_dump()
+            elif isinstance(block, dict):
+                block_dict = block
+            else:
+                continue
+
+            block_type = block_dict.get("type")
+            if block_type == "text":
+                text = block_dict.get("text") or ""
+                if text:
+                    text_parts.append(text)
+            elif block_type == "tool_use" and msg.role == "assistant":
+                tool_id = block_dict.get("id") or f"tool_{uuid.uuid4().hex[:8]}"
+                name = block_dict.get("name") or ""
+                input_obj = block_dict.get("input") or {}
+                tool_calls.append(
+                    {
+                        "id": tool_id,
+                        "type": "function",
+                        "function": {
+                            "name": name,
+                            "arguments": json.dumps(input_obj),
+                        },
+                    }
+                )
+            elif block_type == "tool_result" and msg.role == "user":
+                tool_use_id = block_dict.get("tool_use_id") or block_dict.get("id")
+                tool_results.append(
+                    {
+                        "tool_call_id": tool_use_id,
+                        "content": _coerce_tool_content(block_dict.get("content")),
+                    }
+                )
+
+        text_content = "\n".join(text_parts).strip()
+
+        if msg.role == "assistant":
+            if text_content or tool_calls:
+                openai_message: dict[str, Any] = {
+                    "role": "assistant",
+                    "content": text_content,
+                }
+                if tool_calls:
+                    openai_message["tool_calls"] = tool_calls
+                openai_messages.append(openai_message)
+        else:
+            if text_content:
+                openai_messages.append({"role": msg.role, "content": text_content})
+            for tool_result in tool_results:
+                if tool_result.get("tool_call_id"):
+                    openai_messages.append(
+                        {
+                            "role": "tool",
+                            "tool_call_id": tool_result["tool_call_id"],
+                            "content": tool_result["content"],
+                        }
+                    )
 
     return openai_messages
 
@@ -169,6 +295,7 @@ def _openai_to_anthropic_response(
     choice = (openai_response.get("choices") or [{}])[0]
     message = choice.get("message") or {}
     text = message.get("content") or ""
+    tool_calls = message.get("tool_calls") or []
     finish_reason = choice.get("finish_reason")
 
     # Map OpenAI finish reasons to Anthropic stop reasons
@@ -178,15 +305,46 @@ def _openai_to_anthropic_response(
         "tool_calls": "tool_use",
         "content_filter": "end_turn",
     }
-    stop_reason = stop_reason_map.get(finish_reason, "end_turn")
+    stop_reason = "tool_use" if tool_calls else stop_reason_map.get(finish_reason, "end_turn")
 
     usage = openai_response.get("usage", {})
+
+    content_blocks: list[dict] = []
+    if text:
+        content_blocks.append({"type": "text", "text": text})
+    for tool_call in tool_calls:
+        function = tool_call.get("function") or {}
+        name = function.get("name") or tool_call.get("name") or ""
+        args = function.get("arguments") or {}
+        input_obj: dict[str, Any]
+        if isinstance(args, str):
+            if args.strip():
+                try:
+                    input_obj = json.loads(args)
+                except Exception:
+                    input_obj = {"_raw": args}
+            else:
+                input_obj = {}
+        elif isinstance(args, dict):
+            input_obj = args
+        else:
+            input_obj = {}
+        content_blocks.append(
+            {
+                "type": "tool_use",
+                "id": tool_call.get("id") or f"toolu_{uuid.uuid4().hex[:8]}",
+                "name": name,
+                "input": input_obj,
+            }
+        )
+    if not content_blocks:
+        content_blocks.append({"type": "text", "text": ""})
 
     return AnthropicResponse(
         id=f"msg_{uuid.uuid4().hex[:24]}",
         type="message",
         role="assistant",
-        content=[{"type": "text", "text": text}],
+        content=content_blocks,
         model=requested_model,
         stop_reason=stop_reason,
         stop_sequence=None,
@@ -337,44 +495,105 @@ async def _anthropic_stream_response(
 ) -> StreamingResponse:
     """Stream response in Anthropic SSE format."""
     msg_id = f"msg_{uuid.uuid4().hex[:24]}"
+    openai_tools = _anthropic_tools_to_openai(anthropic_request.tools)
+    openai_tool_choice = _anthropic_tool_choice_to_openai(anthropic_request.tool_choice)
 
-    async def stream_generator():
-        # Send message_start event
+    async def stream_from_message(message: dict) -> AsyncIterator[str]:
         message_start = {
             "type": "message_start",
             "message": {
-                "id": msg_id,
+                "id": message.get("id", msg_id),
                 "type": "message",
                 "role": "assistant",
                 "content": [],
-                "model": anthropic_request.model,
+                "model": message.get("model", anthropic_request.model),
                 "stop_reason": None,
                 "stop_sequence": None,
-                "usage": {"input_tokens": 0, "output_tokens": 0},
+                "usage": {
+                    "input_tokens": (message.get("usage") or {}).get("input_tokens", 0),
+                    "output_tokens": 0,
+                },
             },
         }
         yield f"event: message_start\ndata: {json.dumps(message_start)}\n\n"
 
-        # Send content_block_start
-        content_block_start = {
-            "type": "content_block_start",
-            "index": 0,
-            "content_block": {"type": "text", "text": ""},
-        }
-        yield f"event: content_block_start\ndata: {json.dumps(content_block_start)}\n\n"
+        content_blocks = message.get("content") or []
+        for index, block in enumerate(content_blocks):
+            content_block_start = {
+                "type": "content_block_start",
+                "index": index,
+                "content_block": block,
+            }
+            yield f"event: content_block_start\ndata: {json.dumps(content_block_start)}\n\n"
+            if block.get("type") == "text":
+                text = block.get("text") or ""
+                if text:
+                    content_delta = {
+                        "type": "content_block_delta",
+                        "index": index,
+                        "delta": {"type": "text_delta", "text": text},
+                    }
+                    yield f"event: content_block_delta\ndata: {json.dumps(content_delta)}\n\n"
+            elif block.get("type") == "tool_use":
+                input_obj = block.get("input") or {}
+                partial_json = json.dumps(input_obj)
+                if partial_json:
+                    content_delta = {
+                        "type": "content_block_delta",
+                        "index": index,
+                        "delta": {"type": "input_json_delta", "partial_json": partial_json},
+                    }
+                    yield f"event: content_block_delta\ndata: {json.dumps(content_delta)}\n\n"
+            content_block_stop = {"type": "content_block_stop", "index": index}
+            yield f"event: content_block_stop\ndata: {json.dumps(content_block_stop)}\n\n"
 
-        # Stream from OpenAI endpoint and convert to Anthropic deltas
+        message_delta = {
+            "type": "message_delta",
+            "delta": {
+                "stop_reason": message.get("stop_reason"),
+                "stop_sequence": message.get("stop_sequence"),
+            },
+            "usage": {
+                "output_tokens": (message.get("usage") or {}).get("output_tokens", 0)
+            },
+        }
+        yield f"event: message_delta\ndata: {json.dumps(message_delta)}\n\n"
+        yield 'event: message_stop\ndata: {"type": "message_stop"}\n\n'
+
+    async def stream_generator():
         payload = {
             "model": model_config.model_id,
             "messages": openai_messages,
             "max_tokens": anthropic_request.max_tokens or model_config.max_tokens,
-            "stream": True,
         }
         if anthropic_request.temperature is not None:
             payload["temperature"] = anthropic_request.temperature
         if anthropic_request.stop_sequences:
             payload["stop"] = anthropic_request.stop_sequences
+        if openai_tools:
+            payload["tools"] = openai_tools
+        if openai_tool_choice is not None:
+            payload["tool_choice"] = openai_tool_choice
 
+        # If tools are present, use non-streaming OpenAI call and stream the Anthropic response.
+        if openai_tools or openai_tool_choice is not None:
+            async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
+                response = await client.post(
+                    f"{api_base}/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
+                    json={**payload, "stream": False},
+                )
+                response.raise_for_status()
+                openai_data = response.json()
+            anthropic_message = _openai_to_anthropic_response(openai_data, anthropic_request.model)
+            async for chunk in stream_from_message(anthropic_message):
+                yield chunk
+            return
+
+        # Stream from OpenAI endpoint and convert to Anthropic deltas
         async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
             async with client.stream(
                 "POST",
@@ -383,9 +602,34 @@ async def _anthropic_stream_response(
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
-                json=payload,
+                json={**payload, "stream": True},
             ) as response:
                 response.raise_for_status()
+
+                # Send message_start event
+                message_start = {
+                    "type": "message_start",
+                    "message": {
+                        "id": msg_id,
+                        "type": "message",
+                        "role": "assistant",
+                        "content": [],
+                        "model": anthropic_request.model,
+                        "stop_reason": None,
+                        "stop_sequence": None,
+                        "usage": {"input_tokens": 0, "output_tokens": 0},
+                    },
+                }
+                yield f"event: message_start\ndata: {json.dumps(message_start)}\n\n"
+
+                # Send content_block_start
+                content_block_start = {
+                    "type": "content_block_start",
+                    "index": 0,
+                    "content_block": {"type": "text", "text": ""},
+                }
+                yield f"event: content_block_start\ndata: {json.dumps(content_block_start)}\n\n"
+
                 async for line in response.aiter_lines():
                     if not line or not line.startswith("data: "):
                         continue
@@ -407,20 +651,20 @@ async def _anthropic_stream_response(
                     except json.JSONDecodeError:
                         continue
 
-        # Send content_block_stop
-        content_block_stop = {"type": "content_block_stop", "index": 0}
-        yield f"event: content_block_stop\ndata: {json.dumps(content_block_stop)}\n\n"
+                # Send content_block_stop
+                content_block_stop = {"type": "content_block_stop", "index": 0}
+                yield f"event: content_block_stop\ndata: {json.dumps(content_block_stop)}\n\n"
 
-        # Send message_delta
-        message_delta = {
-            "type": "message_delta",
-            "delta": {"stop_reason": "end_turn", "stop_sequence": None},
-            "usage": {"output_tokens": 0},
-        }
-        yield f"event: message_delta\ndata: {json.dumps(message_delta)}\n\n"
+                # Send message_delta
+                message_delta = {
+                    "type": "message_delta",
+                    "delta": {"stop_reason": "end_turn", "stop_sequence": None},
+                    "usage": {"output_tokens": 0},
+                }
+                yield f"event: message_delta\ndata: {json.dumps(message_delta)}\n\n"
 
-        # Send message_stop
-        yield 'event: message_stop\ndata: {"type": "message_stop"}\n\n'
+                # Send message_stop
+                yield 'event: message_stop\ndata: {"type": "message_stop"}\n\n'
 
     return StreamingResponse(
         stream_generator(),
@@ -449,6 +693,12 @@ async def _anthropic_non_stream_response(
         payload["temperature"] = anthropic_request.temperature
     if anthropic_request.stop_sequences:
         payload["stop"] = anthropic_request.stop_sequences
+    openai_tools = _anthropic_tools_to_openai(anthropic_request.tools)
+    openai_tool_choice = _anthropic_tool_choice_to_openai(anthropic_request.tool_choice)
+    if openai_tools:
+        payload["tools"] = openai_tools
+    if openai_tool_choice is not None:
+        payload["tool_choice"] = openai_tool_choice
 
     async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
         response = await client.post(
