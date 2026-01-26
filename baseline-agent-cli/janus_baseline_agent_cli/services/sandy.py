@@ -397,17 +397,14 @@ class SandyService:
             # --dangerously-skip-permissions: YOLO mode for automation
             # IMPORTANT: Must run from /workspace where CLAUDE.md is located!
             # Claude Code automatically reads CLAUDE.md from cwd for project context.
-            command = [
-                "cd", "/workspace", "&&",
-                "claude",
-                "-p",  # Print mode (non-interactive)
-                "--verbose",  # Required for stream-json progress events
-                "--output-format", "stream-json",
-                "--no-session-persistence",  # Fresh context each run
-                "--dangerously-skip-permissions",  # YOLO mode
-                "--allowedTools", "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
-                quoted_task,
-            ]
+            # Use bash -c to properly handle cd + command chain.
+            claude_cmd = (
+                f"cd /workspace && claude -p --verbose --output-format stream-json "
+                f"--no-session-persistence --dangerously-skip-permissions "
+                f"--allowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch "
+                f"{quoted_task}"
+            )
+            command = ["bash", "-c", shlex.quote(claude_cmd)]
         elif agent == "aider":
             # Aider needs specific flags for non-interactive mode
             # --yes-always: auto-confirm all changes
