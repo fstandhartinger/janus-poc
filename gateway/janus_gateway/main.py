@@ -13,6 +13,7 @@ from janus_gateway.middleware.logging import RequestLoggingMiddleware
 from janus_gateway.routers import (
     artifacts_router,
     chat_router,
+    debug_router,
     health_router,
     memories_router,
     models_router,
@@ -94,11 +95,25 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
 # Create FastAPI app
 app = FastAPI(
-    title="Janus Gateway",
-    description="OpenAI-compatible AI agent gateway for the Janus competitive network",
+    title="Janus Gateway API",
+    description="""
+OpenAI-compatible AI agent gateway for the Janus competitive network.
+
+## Features
+- Chat completions with streaming support
+- Multimodal inputs (text, images)
+- Artifact generation (images, files, data)
+- Generative UI responses
+- Memory and personalization
+- Intelligent agent routing
+
+## Authentication
+Currently open access. API keys coming soon.
+""".strip(),
     version=__version__,
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
+    docs_url="/api/docs",
+    redoc_url="/api/redoc",
+    openapi_url="/api/openapi.json",
     lifespan=lifespan,
 )
 
@@ -119,6 +134,7 @@ app.include_router(health_router)
 app.include_router(chat_router)
 app.include_router(models_router)
 app.include_router(artifacts_router)
+app.include_router(debug_router)
 app.include_router(transcription_router)
 app.include_router(research_router)
 app.include_router(tts_router)

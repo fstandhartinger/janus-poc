@@ -89,6 +89,8 @@ janus-bench run --target http://localhost:8000 --suite public/dev
 
 - [Architecture](docs/architecture.md) - System design and data flows
 - [Runbook](docs/runbook.md) - Operations guide and troubleshooting
+- [API Docs](https://janus-ui.onrender.com/api-docs) - Janus API reference, examples, and extensions
+- [Swagger UI](https://janus-gateway-bqou.onrender.com/api/docs) - Interactive OpenAPI explorer
 
 ## Specifications
 

@@ -1,6 +1,6 @@
 # Spec 87: API Documentation Page
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -925,4 +925,4 @@ main();
 - `specs/78_generation_flags.md` - Generation flags (planned)
 - `specs/80_debug_mode.md` - Debug streaming (planned)
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1
