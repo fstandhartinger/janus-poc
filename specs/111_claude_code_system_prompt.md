@@ -114,8 +114,24 @@ Added "Media Generation APIs (CRITICAL!)" section with:
    - CLAUDE.md is at `/workspace/CLAUDE.md`
    - But Claude Code runs from `/` or `/root`, not `/workspace`
    - Claude Code only reads CLAUDE.md from the **current working directory**
-8. ✅ Fixed sandy.py to `cd /workspace &&` before running Claude Code
-9. 🔄 Need to redeploy and test again
+8. ✅ Fixed sandy.py to use `bash -c 'cd /workspace && claude ...'`
+9. ❌ Third test: Still not picking up CLAUDE.md context
+   - Deployment may not have fully propagated
+   - Or there's still an issue with the command execution
+10. 🔄 Need to verify deployment and investigate further
+
+## Known Issues
+
+- The `bash -c` command may have quoting issues with the task parameter
+- Render deployment can take 3-5 minutes to fully propagate
+- Sandy sandbox may need to pull updated agent-pack from baseline-agent-cli
+
+## Next Steps
+
+1. Wait longer for Render deployment to propagate
+2. Check baseline-agent-cli logs for command execution details
+3. Verify bootstrap.sh creates CLAUDE.md correctly in sandbox
+4. Consider alternative approach: pass system prompt via Claude CLI flag instead of CLAUDE.md
 
 ## Acceptance Criteria
 
