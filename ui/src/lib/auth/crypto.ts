@@ -1,4 +1,5 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'crypto';
+import { OAuthConfigError } from './errors';
 
 const TOKEN_VERSION = 'v1';
 
@@ -24,7 +25,10 @@ export const getAuthSecret = (): string => {
     process.env.CHUTES_OAUTH_CLIENT_SECRET ||
     '';
   if (!secret) {
-    throw new Error('OAuth cookie secret is not configured');
+    throw new OAuthConfigError(
+      'CHUTES_OAUTH_COOKIE_SECRET',
+      'OAuth cookie secret is not configured'
+    );
   }
   return secret;
 };

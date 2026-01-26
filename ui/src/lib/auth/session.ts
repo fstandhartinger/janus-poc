@@ -46,17 +46,25 @@ const refreshSession = async (session: AuthSession): Promise<AuthSession | null>
     return null;
   }
 
-  assertOAuthConfig();
+  try {
+    assertOAuthConfig({ requireRedirectUri: false });
+  } catch {
+    return null;
+  }
+
+  const body = new URLSearchParams({
+    grant_type: 'refresh_token',
+    refresh_token: session.refreshToken,
+    client_id: OAUTH_CONFIG.clientId,
+  });
+  if (OAUTH_CONFIG.clientSecret) {
+    body.set('client_secret', OAUTH_CONFIG.clientSecret);
+  }
 
   const response = await fetch(OAUTH_CONFIG.tokenEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'refresh_token',
-      refresh_token: session.refreshToken,
-      client_id: OAUTH_CONFIG.clientId,
-      client_secret: OAUTH_CONFIG.clientSecret,
-    }),
+    body,
   });
 
   if (!response.ok) {

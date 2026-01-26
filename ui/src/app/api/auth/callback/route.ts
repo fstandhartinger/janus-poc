@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { OAUTH_CONFIG, assertOAuthConfig } from '@/lib/auth/config';
 import { unsealState } from '@/lib/auth/pkce';
+import { isOAuthConfigError, toOAuthConfigErrorResponse } from '@/lib/auth/errors';
 import { createAuthSession, getSessionCookieOptions } from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
@@ -21,7 +22,17 @@ const redirectToError = (request: NextRequest, error: string) =>
   NextResponse.redirect(new URL(`/auth/error?error=${encodeURIComponent(error)}`, request.nextUrl.origin));
 
 export async function GET(request: NextRequest) {
-  assertOAuthConfig();
+  try {
+    assertOAuthConfig();
+  } catch (error) {
+    if (isOAuthConfigError(error)) {
+      return NextResponse.json(toOAuthConfigErrorResponse(error), { status: 500 });
+    }
+    return NextResponse.json(
+      { error: 'OAUTH_CALLBACK_FAILED', message: 'OAuth configuration is invalid' },
+      { status: 500 }
+    );
+  }
 
   const { searchParams } = request.nextUrl;
   const code = searchParams.get('code');
@@ -41,7 +52,10 @@ export async function GET(request: NextRequest) {
   let storedState: Awaited<ReturnType<typeof unsealState>>;
   try {
     storedState = await unsealState(sealedState);
-  } catch {
+  } catch (error) {
+    if (isOAuthConfigError(error)) {
+      return NextResponse.json(toOAuthConfigErrorResponse(error), { status: 500 });
+    }
     return redirectToError(request, 'invalid_state');
   }
 
@@ -49,17 +63,21 @@ export async function GET(request: NextRequest) {
     return redirectToError(request, 'invalid_state');
   }
 
+  const tokenBody = new URLSearchParams({
+    grant_type: 'authorization_code',
+    code,
+    redirect_uri: OAUTH_CONFIG.redirectUri,
+    client_id: OAUTH_CONFIG.clientId,
+    code_verifier: storedState.codeVerifier,
+  });
+  if (OAUTH_CONFIG.clientSecret) {
+    tokenBody.set('client_secret', OAUTH_CONFIG.clientSecret);
+  }
+
   const tokenResponse = await fetch(OAUTH_CONFIG.tokenEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'authorization_code',
-      code,
-      redirect_uri: OAUTH_CONFIG.redirectUri,
-      client_id: OAUTH_CONFIG.clientId,
-      client_secret: OAUTH_CONFIG.clientSecret,
-      code_verifier: storedState.codeVerifier,
-    }),
+    body: tokenBody,
   });
 
   if (!tokenResponse.ok) {
@@ -84,13 +102,21 @@ export async function GET(request: NextRequest) {
     return redirectToError(request, 'userinfo_invalid');
   }
 
-  const { cookieValue } = createAuthSession({
-    userId: userInfo.sub,
-    username: userInfo.username || userInfo.preferred_username,
-    accessToken: tokens.access_token,
-    refreshToken: tokens.refresh_token,
-    expiresAt: Date.now() + tokens.expires_in * 1000,
-  });
+  let cookieValue: string;
+  try {
+    ({ cookieValue } = createAuthSession({
+      userId: userInfo.sub,
+      username: userInfo.username || userInfo.preferred_username,
+      accessToken: tokens.access_token,
+      refreshToken: tokens.refresh_token,
+      expiresAt: Date.now() + tokens.expires_in * 1000,
+    }));
+  } catch (error) {
+    if (isOAuthConfigError(error)) {
+      return NextResponse.json(toOAuthConfigErrorResponse(error), { status: 500 });
+    }
+    return redirectToError(request, 'session_failed');
+  }
 
   const response = NextResponse.redirect(storedState.returnTo || '/chat');
   response.cookies.delete('oauth_state');
