@@ -2,16 +2,36 @@
 
 ## Status: COMPLETE
 
-### Update 3 (2026-01-26): Default Agent Changed to Aider
+### Update 4 (2026-01-26): Reverted to Claude Code - Aider Cannot Execute Commands
 
-**Resolution**: Based on the findings that Aider works reliably with OpenAI-compatible APIs while Claude Code has intermittent issues, we've changed the default agent from Claude Code to Aider.
+**Issue Discovered**: Testing revealed that Aider is fundamentally unsuited for the user's use cases:
+- ❌ **Web search**: Aider wrote a React weather component instead of searching the web
+- ❌ **GitHub download**: Aider cannot execute shell commands (curl, wget)
+- ❌ **Command execution**: Aider is a code EDITING assistant, not a task EXECUTION agent
 
-**Changes Made**:
-1. `config.py`: Changed `baseline_agent` default from `"claude-code"` to `"aider"`
-2. `sandy.py`: Updated fallback agent selection from `"claude-code"` to `"aider"`
-3. `test_agent_selection.py`: Updated test to expect `"aider"` as default
+**Root Cause**: Aider is designed to edit files, not to execute arbitrary commands. When asked to "search the web for weather", it tried to write code that would fetch weather data, rather than actually performing a web search.
 
-**Result**: The chat UI now uses Aider by default, which provides more reliable responses with the MiniMax-M2.1-TEE model. Users can still select other agents (Claude Code, Codex) via the `X-Baseline-Agent` header.
+**Resolution**: Reverted default agent back to Claude Code:
+1. `config.py`: Changed `baseline_agent` default back to `"claude-code"`
+2. `sandy.py`: Updated fallback agent selection back to `"claude-code"`
+3. `test_agent_selection.py`: Updated test to expect `"claude-code"` as default
+
+**Agent Capabilities Matrix**:
+| Agent | Shell Execution | Web Search | File Download | Code Editing |
+|-------|----------------|------------|---------------|--------------|
+| Claude Code | ✅ | ✅ | ✅ | ✅ |
+| Codex | ✅ | ✅ | ✅ | ✅ |
+| Aider | ❌ | ❌ | ❌ | ✅ |
+
+**Improvements Made**:
+- Added `_clean_aider_output()` function to strip Aider-specific noise from output
+- Users can still select Aider via `X-Baseline-Agent: aider` for code editing tasks
+
+---
+
+### Update 3 (2026-01-26): Attempted Default Agent Change to Aider (Reverted)
+
+Temporarily changed default to Aider due to Claude Code's intermittent issues, but testing revealed Aider cannot perform command execution tasks. See Update 4.
 
 ---
 

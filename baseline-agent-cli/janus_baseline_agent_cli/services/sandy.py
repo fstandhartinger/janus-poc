@@ -1062,8 +1062,9 @@ class SandyService:
         elif requested == "droid":
             agent = "droid"
         else:
-            # Default to aider - more reliable with OpenAI-compatible APIs
-            agent = "aider"
+            # Default to claude-code - has shell execution for web search, downloads, etc.
+            # Note: Aider can only edit files, it cannot execute commands
+            agent = "claude-code"
 
         logger.info(
             "agent_selection",

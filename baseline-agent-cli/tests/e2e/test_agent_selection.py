@@ -72,7 +72,7 @@ async def test_agent_responds(agent: str, e2e_settings, chutes_access_token) -> 
 
 
 @pytest.mark.asyncio
-async def test_default_agent_is_aider(e2e_settings, chutes_access_token) -> None:
+async def test_default_agent_is_claude_code(e2e_settings, chutes_access_token) -> None:
     debug_request_id = f"e2e-{uuid.uuid4().hex}"
     payload = {
         "model": "baseline-cli-agent",
@@ -103,4 +103,4 @@ async def test_default_agent_is_aider(e2e_settings, chutes_access_token) -> None
         )
 
     assert agent_message is not None
-    assert "aider" in agent_message
+    assert "claude-code" in agent_message
