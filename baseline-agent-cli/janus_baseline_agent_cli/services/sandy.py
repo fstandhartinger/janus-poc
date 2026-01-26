@@ -926,8 +926,11 @@ class SandyService:
 
         # Pass the public router URL if configured - enables smart model switching,
         # 429 fallbacks, and multimodal routing for Sandy agents
-        if self._settings.public_router_url:
-            payload["apiBaseUrl"] = self._settings.public_router_url
+        router_url = self._settings.public_router_url
+        if not router_url and self._settings.use_model_router:
+            router_url = f"http://{self._settings.router_host}:{self._settings.router_port}"
+        if router_url:
+            payload["apiBaseUrl"] = router_url
 
         logger.info(
             "agent_api_request",
@@ -936,7 +939,7 @@ class SandyService:
             model=model,
             prompt_length=len(prompt),
             max_duration=max_duration,
-            router_url=self._settings.public_router_url,
+            router_url=router_url,
         )
 
         try:
@@ -1852,6 +1855,51 @@ class SandyService:
             artifacts: list[Artifact] = []
 
             try:
+                if not self._system_prompt_path.exists():
+                    logger.warning(
+                        "system_prompt_missing", path=str(self._system_prompt_path)
+                    )
+
+                if not await self._upload_agent_pack(client, sandbox_id):
+                    return ChatCompletionResponse(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            Choice(
+                                message=AssistantMessage(
+                                    role="assistant",
+                                    content="Error: Failed to upload agent pack to sandbox.",
+                                ),
+                                finish_reason=FinishReason.STOP,
+                            )
+                        ],
+                    )
+
+                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
+                    client, sandbox_id, public_url, request, has_images
+                )
+                if bootstrap_exit != 0:
+                    error_detail = bootstrap_stderr or "Bootstrap failed."
+                    return ChatCompletionResponse(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            Choice(
+                                message=AssistantMessage(
+                                    role="assistant",
+                                    content=error_detail,
+                                ),
+                                finish_reason=FinishReason.STOP,
+                            )
+                        ],
+                    )
+
+                if bootstrap_stdout:
+                    logger.info(
+                        "sandy_bootstrap_output",
+                        stdout=bootstrap_stdout,
+                    )
+
                 async for event in self._run_agent_via_api(
                     client,
                     sandbox_id,
@@ -1871,7 +1919,27 @@ class SandyService:
                         data = event.get("data", {})
                         if isinstance(data, dict):
                             msg_type = data.get("type", "")
-                            if msg_type == "assistant":
+                            if msg_type == "stream_event":
+                                event_payload = data.get("event", {})
+                                delta = {}
+                                if isinstance(event_payload, dict):
+                                    delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                                if not delta and isinstance(data.get("delta"), dict):
+                                    delta = data.get("delta", {})
+                                text = None
+                                if isinstance(delta, dict):
+                                    text = delta.get("text") or delta.get("content")
+                                if not text and isinstance(event_payload, dict):
+                                    text = event_payload.get("text") or event_payload.get("content")
+                                if not text:
+                                    text = data.get("text")
+                                if isinstance(text, str) and text:
+                                    output_parts.append(text)
+                            elif msg_type == "result":
+                                result_text = data.get("result") or data.get("text")
+                                if isinstance(result_text, str) and result_text:
+                                    output_parts.append(result_text)
+                            elif msg_type == "assistant":
                                 message = data.get("message", {})
                                 content = message.get("content", [])
                                 if isinstance(content, list):
@@ -1880,6 +1948,28 @@ class SandyService:
                                             text = block.get("text", "")
                                             if text:
                                                 output_parts.append(text)
+
+                    elif event_type == "stream_event":
+                        event_payload = event.get("event", {})
+                        delta = {}
+                        if isinstance(event_payload, dict):
+                            delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                        if not delta and isinstance(event.get("delta"), dict):
+                            delta = event.get("delta", {})
+                        text = None
+                        if isinstance(delta, dict):
+                            text = delta.get("text") or delta.get("content")
+                        if not text and isinstance(event_payload, dict):
+                            text = event_payload.get("text") or event_payload.get("content")
+                        if not text:
+                            text = event.get("text")
+                        if isinstance(text, str) and text:
+                            output_parts.append(text)
+
+                    elif event_type == "result":
+                        result_text = event.get("result") or event.get("text")
+                        if isinstance(result_text, str) and result_text:
+                            output_parts.append(result_text)
 
                     elif event_type == "error":
                         error_msg = event.get("error", "Unknown error")
@@ -1946,6 +2036,7 @@ class SandyService:
         request_id = self._generate_id()
         model = request.model
         task = self._extract_task(request)
+        has_images = contains_images(request.messages)
 
         if debug_emitter:
             await debug_emitter.emit(
@@ -2059,6 +2150,84 @@ class SandyService:
             )
 
             try:
+                if not self._system_prompt_path.exists():
+                    logger.warning(
+                        "system_prompt_missing", path=str(self._system_prompt_path)
+                    )
+
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(
+                            delta=Delta(reasoning_content="Uploading agent pack...\n")
+                        )
+                    ],
+                )
+
+                if not await self._upload_agent_pack(client, sandbox_id):
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    content="Error: Failed to upload agent pack to sandbox."
+                                )
+                            )
+                        ],
+                    )
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)
+                        ],
+                    )
+                    return
+
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(
+                            delta=Delta(reasoning_content="Running agent pack bootstrap...\n")
+                        )
+                    ],
+                )
+
+                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
+                    client, sandbox_id, public_url, request, has_images
+                )
+                if bootstrap_exit != 0:
+                    error_detail = bootstrap_stderr or "Bootstrap failed."
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[ChunkChoice(delta=Delta(content=error_detail))],
+                    )
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)
+                        ],
+                    )
+                    return
+
+                if bootstrap_stdout:
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    reasoning_content=f"{bootstrap_stdout.rstrip()}\n"
+                                )
+                            )
+                        ],
+                    )
+
                 # Run agent via Sandy's API
                 async for event in self._run_agent_via_api(
                     client,
@@ -2117,7 +2286,55 @@ class SandyService:
                         if isinstance(data, dict):
                             # Extract content from Claude Code stream-json output
                             msg_type = data.get("type", "")
-                            if msg_type == "assistant":
+                            if msg_type == "stream_event":
+                                event_payload = data.get("event", {})
+                                delta = {}
+                                if isinstance(event_payload, dict):
+                                    delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                                if not delta and isinstance(data.get("delta"), dict):
+                                    delta = data.get("delta", {})
+                                text = None
+                                if isinstance(delta, dict):
+                                    text = delta.get("text") or delta.get("content")
+                                if not text and isinstance(event_payload, dict):
+                                    text = event_payload.get("text") or event_payload.get("content")
+                                if not text:
+                                    text = data.get("text")
+                                if isinstance(text, str) and text:
+                                    content_streamed = True
+                                    output_parts.append(text)
+                                    if debug_emitter:
+                                        await debug_emitter.emit(
+                                            DebugEventType.RESPONSE_CHUNK,
+                                            "AGENT",
+                                            text[:200],
+                                        )
+                                    yield ChatCompletionChunk(
+                                        id=request_id,
+                                        model=model,
+                                        choices=[
+                                            ChunkChoice(delta=Delta(content=text))
+                                        ],
+                                    )
+                            elif msg_type == "result":
+                                result_text = data.get("result") or data.get("text")
+                                if isinstance(result_text, str) and result_text:
+                                    content_streamed = True
+                                    output_parts.append(result_text)
+                                    if debug_emitter:
+                                        await debug_emitter.emit(
+                                            DebugEventType.RESPONSE_CHUNK,
+                                            "AGENT",
+                                            result_text[:200],
+                                        )
+                                    yield ChatCompletionChunk(
+                                        id=request_id,
+                                        model=model,
+                                        choices=[
+                                            ChunkChoice(delta=Delta(content=result_text))
+                                        ],
+                                    )
+                            elif msg_type == "assistant":
                                 message = data.get("message", {})
                                 content = message.get("content", [])
                                 if isinstance(content, list):
@@ -2228,6 +2445,56 @@ class SandyService:
                                             )
                                         ],
                                     )
+
+                    elif event_type == "stream_event":
+                        event_payload = event.get("event", {})
+                        delta = {}
+                        if isinstance(event_payload, dict):
+                            delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                        if not delta and isinstance(event.get("delta"), dict):
+                            delta = event.get("delta", {})
+                        text = None
+                        if isinstance(delta, dict):
+                            text = delta.get("text") or delta.get("content")
+                        if not text and isinstance(event_payload, dict):
+                            text = event_payload.get("text") or event_payload.get("content")
+                        if not text:
+                            text = event.get("text")
+                        if isinstance(text, str) and text:
+                            content_streamed = True
+                            output_parts.append(text)
+                            if debug_emitter:
+                                await debug_emitter.emit(
+                                    DebugEventType.RESPONSE_CHUNK,
+                                    "AGENT",
+                                    text[:200],
+                                )
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(delta=Delta(content=text))
+                                ],
+                            )
+
+                    elif event_type == "result":
+                        result_text = event.get("result") or event.get("text")
+                        if isinstance(result_text, str) and result_text:
+                            content_streamed = True
+                            output_parts.append(result_text)
+                            if debug_emitter:
+                                await debug_emitter.emit(
+                                    DebugEventType.RESPONSE_CHUNK,
+                                    "AGENT",
+                                    result_text[:200],
+                                )
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(delta=Delta(content=result_text))
+                                ],
+                            )
 
                     elif event_type == "files-update":
                         # File changes detected

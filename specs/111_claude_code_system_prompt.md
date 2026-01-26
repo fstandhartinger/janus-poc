@@ -4,7 +4,8 @@
 
 ## Problem
 
-When Claude Code runs in the Sandy sandbox, it doesn't know about Janus capabilities like:
+When Claude Code runs in the Sandy sandbox, it does not reliably know about Janus
+capabilities like:
 - Image generation via Chutes APIs
 - Text-to-speech, video generation
 - Deep research capabilities
@@ -17,91 +18,73 @@ User: "generate an image of a cute cat"
 Claude Code: "I can't generate images directly - I'm a text-based AI assistant..."
 ```
 
-This happens because the system prompt (`agent-pack/prompts/system.md`) is never passed to Claude Code.
+This happens because the system prompt (`agent-pack/prompts/system.md`) and docs are
+not consistently loaded in the Sandy agent-run flow.
 
 ## Root Cause Analysis
 
-### Original Approach (Failed)
-1. CLAUDE.md created in /workspace during bootstrap
-2. Claude Code runs with `bash -c 'cd /workspace && claude ...'`
-3. **Problem**: Claude Code still doesn't pick up CLAUDE.md reliably
+1. **Agent pack not loaded for agent/run**
+   - `execute_via_agent_api()` did not upload the agent pack or run bootstrap.
+   - Result: `/workspace/CLAUDE.md` never exists and the local router never starts.
 
-### Why CLAUDE.md Approach Failed
-From researching Claude Code's open source repository:
-- CLAUDE.md is loaded based on `settingSources` configuration
-- In CLI mode with `-p` (print mode), CLAUDE.md discovery may be bypassed
-- The `shlex.quote()` wrapping was over-escaping the entire command string
+2. **Sandy agent-run bypasses CLAUDE.md**
+   - Sandy’s `AgentRunner` uses hard-coded `CLAUDE_RAW_PROMPT` / `CLAUDE_TOOL_PROMPT`.
+   - It never appends `/workspace/CLAUDE.md`, so Claude Code misses Janus capabilities.
 
-### The Real Solution
-Claude Code CLI flags (from `claude --help`):
-- `--system-prompt <prompt>` - Takes prompt TEXT directly (not file path)
-- `--append-system-prompt <prompt>` - Takes prompt TEXT directly (not file path)
-- `--setting-sources <sources>` - Comma-separated list: user, project, local
+3. **Router base URL mismatch**
+   - Claude Code is configured to call an Anthropic Messages API endpoint.
+   - When `PUBLIC_ROUTER_URL` is `http://127.0.0.1:8000` but the router is not started,
+     the agent hangs waiting for a model response.
 
-**Key insight**: There is NO `--append-system-prompt-file` flag. To use CLAUDE.md:
-1. Run Claude Code from /workspace directory (where CLAUDE.md is located)
-2. Use `--setting-sources project` to enable CLAUDE.md loading in print mode
+## Research Findings
 
-## Implementation
+From Claude Code docs:
+- `--system-prompt-file` and `--append-system-prompt` are supported in print mode.
+- `CLAUDE.md` memory files are automatically loaded from the working directory tree.
 
-### sandy.py Fix (The Real Fix)
+**Key insight:** `CLAUDE.md` is the supported, auto-loaded mechanism for persistent
+instructions. The fix is to ensure `/workspace/CLAUDE.md` exists and Claude Code runs
+from `/workspace`, while keeping the minimal non-interactive system prompt in place.
 
-```python
-elif agent == "claude" or agent == "claude-code":
-    # Claude Code CLI agent
-    # --setting-sources project: Enable CLAUDE.md loading in print mode
-    # Must run from /workspace where CLAUDE.md is located for auto-discovery
-    # Use bash -c to change directory before executing claude
-    command = [
-        "bash", "-c",
-        (
-            f"cd /workspace && claude -p --verbose --output-format stream-json "
-            f"--no-session-persistence --dangerously-skip-permissions "
-            f"--setting-sources project "
-            f"--allowedTools Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch "
-            f"{quoted_task}"
-        ),
-    ]
-```
+## Solution
 
-### bootstrap.sh (Already Done)
-- ✅ Creates `/workspace/CLAUDE.md` from system.md
-- ✅ Adds explicit Chutes API instructions
+### 1) Baseline: always prep the sandbox before agent/run
+- Upload the agent pack for `execute_via_agent_api()` and `complete_via_agent_api()`.
+- Run `agent-pack/bootstrap.sh` to:
+  - Create `/workspace/CLAUDE.md` from `system.md`
+  - Copy docs into `/workspace/docs/models`
+  - Start the local router on `127.0.0.1:8000`
 
-## Progress
+### 2) Sandy agent-run: rely on CLAUDE.md auto-loading
+- Ensure `/workspace/CLAUDE.md` exists (from bootstrap).
+- Claude Code runs from `/workspace`, so it auto-loads `CLAUDE.md`.
+- Keep `--append-system-prompt` for minimal non-interactive guidance.
 
-1. ✅ CLAUDE.md creation added to bootstrap.sh
-2. ✅ First test: Claude Code attempted to generate image
-3. ❌ BUT: Created SVG instead of using Chutes API
-4. ✅ System prompt updated with explicit API instructions
-5. ✅ bootstrap.sh updated with inline API example
-6. ❌ Second test: Claude Code said "I don't have ability to generate images"
-7. 🔧 Root cause: bash -c + shlex.quote over-escapes command
-8. ❌ Third test: Still not working with cd /workspace approach
-9. ❌ Fourth test: --append-system-prompt-file doesn't exist!
-10. 🔧 **CORRECT FIX**: Use `bash -c "cd /workspace && claude --setting-sources project ..."`
+### 3) Router base normalization
+- When `apiBaseUrl` is provided to Sandy agent-run:
+  - Use `/v1` for OpenAI-compatible clients
+  - Use root base for Anthropic (`/v1/messages` is appended by Claude Code)
 
-## Key Research Findings
-
-From `claude --help` output:
-- `--append-system-prompt <prompt>` takes TEXT, not file path
-- `--setting-sources project` enables loading CLAUDE.md from project directory
-- Must run from /workspace where CLAUDE.md is located
-- Stream-json format outputs newline-delimited JSON events
-- `-p` mode is required for non-interactive execution
-- `--verbose` is needed with stream-json for real-time progress
+### 4) Streaming content reliability
+- Handle Claude Code `stream_event` and `result` payloads so content streams to UI.
 
 ## Acceptance Criteria
 
-- [x] Spec written
-- [x] CLAUDE.md created in /workspace during bootstrap
-- [x] Claude Code can see its capabilities when running
-- [ ] "generate an image of a cute cat" produces an actual image (via Chutes API)
-- [x] All agent pack model docs are referenced
-- [x] Explicit API code examples in system prompt
+- [ ] Claude Code sees Janus capabilities (from CLAUDE.md) in Sandy agent-run
+- [ ] `generate an image of a cute cat` produces a real image via Chutes API
+- [ ] `download https://github.com/chutesai/chutes-api/blob/main/api/chute/util.py and explain it` succeeds
+- [ ] Claude Code uses the Anthropic Messages router (not a single fixed model)
+- [ ] Streaming shows actual response content (not just “Thinking...”)
 
 ## Test Cases
 
-1. Simple image gen: `generate an image of a cute cat`
-2. TTS: `say hello world with text to speech`
-3. Deep research: `research the latest developments in quantum computing`
+1. **Image generation**
+   - Prompt: `generate an image of a cute cat`
+   - Expect: PNG artifact or inline base64 image
+
+2. **Repo file analysis**
+   - Prompt: `download https://github.com/chutesai/chutes-api/blob/main/api/chute/util.py and explain it`
+   - Expect: file downloaded + explanation
+
+3. **Streaming smoke**
+   - Confirm `stream_event` deltas appear in UI while agent is working
