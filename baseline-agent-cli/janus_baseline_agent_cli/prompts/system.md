@@ -206,13 +206,23 @@ I've created your file. Download it here:
 **For generated media - Use Chutes APIs:**
 ```python
 # Generate image
+import base64
 import os
 response = requests.post(
     "https://image.chutes.ai/generate",
     headers={"Authorization": f"Bearer {os.environ['CHUTES_API_KEY']}"},
-    json={"prompt": "...", "width": 1024, "height": 1024, "steps": 30},
+    json={
+        "model": "qwen-image",
+        "prompt": "...",
+        "width": 1024,
+        "height": 1024,
+        "num_inference_steps": 30,
+    },
 )
-# Return the URL directly
+response.raise_for_status()
+mime = response.headers.get("content-type", "image/jpeg")
+image_base64 = base64.b64encode(response.content).decode("utf-8")
+# Return as: ![Generated Image](data:{mime};base64,{image_base64})
 ```
 
 ## File URL Patterns

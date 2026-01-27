@@ -400,11 +400,15 @@ class SandyService:
                 "[INSTRUCTION: To generate images, you MUST use the Chutes API with "
                 "Authorization: Bearer $CHUTES_API_KEY. "
                 "Write and run this Python code: "
-                "import os; import requests; "
+                "import base64, os, requests; "
                 "headers = {'Authorization': f\"Bearer {os.environ['CHUTES_API_KEY']}\"}; "
                 "r = requests.post('https://image.chutes.ai/generate', headers=headers, "
-                "json={'prompt': '<your description>', 'width': 1024, 'height': 1024, 'steps': 30}); "
-                "print(f'![Image](data:image/png;base64,{r.json()[\"b64_json\"]})'); "
+                "json={'model': 'qwen-image', 'prompt': '<your description>', "
+                "'width': 1024, 'height': 1024, 'num_inference_steps': 30}); "
+                "r.raise_for_status(); "
+                "mime = r.headers.get('content-type', 'image/jpeg'); "
+                "b64 = base64.b64encode(r.content).decode('utf-8'); "
+                "print(f'![Image](data:{mime};base64,{b64})'); "
                 "DO NOT create SVG or ASCII art. The API is available and works.]\n\n"
             )
             # Don't use shlex.quote for list commands - subprocess handles escaping

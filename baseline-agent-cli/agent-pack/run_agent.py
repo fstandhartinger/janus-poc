@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import base64
 import os
 import sys
 from pathlib import Path
@@ -48,14 +49,22 @@ def _render_image_response(endpoints: list[str]) -> str:
             f"Endpoint: {endpoint}",
             "Example (Python):",
             "```python",
+            "import base64",
             "import os",
             "import requests",
             "headers = {\"Authorization\": f\"Bearer {os.environ['CHUTES_API_KEY']}\"}",
-            "payload = {\"prompt\": \"a neon cityscape\", "
-            "\"width\": 1024, \"height\": 1024, \"steps\": 30}",
-            f"resp = requests.post(\"{endpoint}\", json=payload, headers=headers, timeout=60)",
+            "payload = {",
+            "    \"model\": \"qwen-image\",",
+            "    \"prompt\": \"a neon cityscape\",",
+            "    \"width\": 1024,",
+            "    \"height\": 1024,",
+            "    \"num_inference_steps\": 30,",
+            "}",
+            f"resp = requests.post(\"{endpoint}\", json=payload, headers=headers, timeout=120)",
             "resp.raise_for_status()",
-            "image_b64 = resp.json()[\"b64_json\"]",
+            "mime = resp.headers.get(\"content-type\", \"image/jpeg\")",
+            "image_b64 = base64.b64encode(resp.content).decode(\"utf-8\")",
+            "print(f\"![Generated Image](data:{mime};base64,{image_b64})\")",
             "```",
         ]
     )

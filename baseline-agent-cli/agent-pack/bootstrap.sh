@@ -33,20 +33,24 @@ if [ -f "$SYSTEM_PROMPT_PATH" ]; then
 **For image generation requests, use the Chutes API (NOT SVG/ASCII art):**
 
 ```python
+import base64
 import os
 import requests
 response = requests.post(
     "https://image.chutes.ai/generate",
     headers={"Authorization": f"Bearer {os.environ['CHUTES_API_KEY']}"},
     json={
+        "model": "qwen-image",
         "prompt": "your image description here",
         "width": 1024,
         "height": 1024,
-        "steps": 30
+        "num_inference_steps": 30
     }
 )
-image_base64 = response.json()["b64_json"]
-# Return to user as: ![Image](data:image/png;base64,{image_base64})
+response.raise_for_status()
+mime = response.headers.get("content-type", "image/jpeg")
+image_base64 = base64.b64encode(response.content).decode("utf-8")
+# Return to user as: ![Image](data:{mime};base64,{image_base64})
 ```
 
 ## Documentation Location
@@ -67,7 +71,7 @@ fi
 
 # Export critical system prompt for Claude Code --append-system-prompt flag
 # This is a fallback in case CLAUDE.md is not automatically loaded
-export JANUS_SYSTEM_PROMPT='You are a Janus agent with FULL sandbox access. CRITICAL: For image generation, use the Chutes API with Authorization: Bearer $CHUTES_API_KEY. Example: import os, requests; requests.post("https://image.chutes.ai/generate", headers={"Authorization": f"Bearer {os.environ[\"CHUTES_API_KEY\"]}"}, json={"prompt": "...", "width": 1024, "height": 1024, "steps": 30}). Return image as ![Image](data:image/png;base64,{response.json()["b64_json"]}). DO NOT create SVG/ASCII art. Read /workspace/docs/models/ for full API docs.'
+export JANUS_SYSTEM_PROMPT='You are a Janus agent with FULL sandbox access. CRITICAL: For image generation, use the Chutes API with Authorization: Bearer $CHUTES_API_KEY. Example: import base64, os, requests; resp = requests.post("https://image.chutes.ai/generate", headers={"Authorization": f"Bearer {os.environ[\"CHUTES_API_KEY\"]}"}, json={"model": "qwen-image", "prompt": "...", "width": 1024, "height": 1024, "num_inference_steps": 30}); resp.raise_for_status(); mime = resp.headers.get("content-type", "image/jpeg"); b64 = base64.b64encode(resp.content).decode("utf-8"); print(f"![Image](data:{mime};base64,{b64})"). DO NOT create SVG/ASCII art. Read /workspace/docs/models/ for full API docs.'
 
 # Copy helper libraries
 if [ -d "${AGENT_PACK_ROOT}/lib" ]; then

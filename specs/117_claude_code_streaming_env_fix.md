@@ -15,6 +15,9 @@ Observed failures:
 - Claude Code streams progress but never runs media calls (claims missing API key).
 - Output is mostly debug noise; the agent finishes without tool usage.
 - Streaming feels stalled despite multiple SSE events.
+- Image requests hit `https://image.chutes.ai/generate` without a `model` and
+  expect JSON `{b64_json}`; the endpoint now requires `model` and returns raw
+  image bytes.
 
 This spec hardens the Claude Code execution path without bypassing the model
 router or Sandy agent/run API.
@@ -37,6 +40,11 @@ router or Sandy agent/run API.
    - Claude Code requests `max_tokens: 32000` by default.
    - Some Chutes models respond slowly to large max_tokens requests with tools,
      causing “pre-flight check” warnings and long waits before first tokens.
+4. **Image API docs and prompts are stale**
+   - `image.chutes.ai/generate` now expects `model` (e.g. `qwen-image`) and
+     returns binary image bytes (Content-Type `image/*`), not JSON `b64_json`.
+   - The agent-pack docs and prompt examples still reference `steps` and
+     `b64_json`, so Claude Code fails or reports 5xx/404 errors.
 
 ## Goals
 
@@ -44,6 +52,8 @@ router or Sandy agent/run API.
 - Claude Code always appends the **Janus system prompt** (system.md / CLAUDE.md).
 - Streaming emits partial message deltas reliably (no “thinking forever”).
 - Router requests are bounded to model `max_tokens` to reduce latency.
+- Image generation uses the updated Chutes image API contract and returns a
+  base64 data URL to the UI.
 - The two demo prompts succeed end-to-end in the UI.
 
 ## Non-goals
@@ -90,6 +100,14 @@ Extend `~/.claude/settings.json` to include an `env` block with
 `CHUTES_API_KEY` and related router variables. Claude Code will load the env
 from settings even when Sandy strips environment variables from the process.
 
+### F) Refresh image API docs + prompts
+
+Update the agent-pack docs and system prompts to reflect the current image API:
+- `model` field required (use `qwen-image`).
+- `num_inference_steps` replaces `steps`.
+- Response is raw bytes; base64-encode `resp.content` and return a data URL.
+- Example snippet included in CLAUDE.md and system prompt.
+
 ## Implementation Steps
 
 1. Add `baseline-agent-cli/agent-pack/bin/claude` wrapper with the guard flags.
@@ -98,6 +116,7 @@ from settings even when Sandy strips environment variables from the process.
 4. Persist env in the agent pack and rehydrate it in the Claude wrapper.
 5. Inject env into `~/.claude/settings.json` during bootstrap.
 6. Redeploy baseline agent and retest the two demo prompts.
+7. Verify image API sample executes successfully with `qwen-image`.
 
 ## Acceptance Criteria
 
@@ -105,6 +124,7 @@ from settings even when Sandy strips environment variables from the process.
 - [ ] Image generation prompt yields a real image via Chutes API.
 - [ ] Repo download + explain prompt returns a summary of file contents.
 - [ ] Streaming shows real content deltas, not only debug/status noise.
+- [ ] Image API examples in docs no longer mention `b64_json` or `steps`.
 
 ## Test Plan
 
