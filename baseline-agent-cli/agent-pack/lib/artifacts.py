@@ -47,10 +47,6 @@ def create_download_link(filename: str, display_name: str | None = None) -> str:
 
 
 def create_image_embed(filename: str, alt_text: str = "Image") -> str:
-    """Create markdown image embed for an artifact."""
-    filepath = ARTIFACTS_DIR / filename
-    if filepath.exists() and filepath.stat().st_size < 500_000:
-        data_url = artifact_to_base64(str(filepath))
-        return f"![{alt_text}]({data_url})"
+    """Create markdown image embed for an artifact (URL-based)."""
     url = f"{ARTIFACT_URL_BASE.rstrip('/')}/{filename}"
     return f"![{alt_text}]({url})"

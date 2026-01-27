@@ -61,7 +61,6 @@ For image generation requests, **use the Chutes image API** (do NOT create SVG/A
 Always save generated images to `/workspace/artifacts/` and avoid printing large base64 blobs.
 
 ```python
-import base64
 import os
 import requests
 
@@ -279,7 +278,6 @@ When asked to generate media, you MUST use the Chutes APIs - NOT create SVG/HTML
 
 **Image Generation** - `POST https://image.chutes.ai/generate`
 ```python
-import base64
 import os
 import requests
 response = requests.post(
@@ -295,8 +293,12 @@ response = requests.post(
 )
 response.raise_for_status()
 mime = response.headers.get("content-type", "image/jpeg")
-image_base64 = base64.b64encode(response.content).decode("utf-8")
-# Return as: ![Generated Image](data:{mime};base64,{image_base64})
+ext = ".jpg" if "jpeg" in mime else ".png"
+output_path = f"/workspace/artifacts/generated-image{ext}"
+with open(output_path, "wb") as f:
+    f.write(response.content)
+print(f"Image saved to {output_path}")
+print("The image will be attached as an artifact for the user.")
 ```
 
 **Text-to-Speech** - See `docs/models/text-to-speech.md`
@@ -364,22 +366,18 @@ python solution.py
 
 ### 5. Create & Serve Files
 
-**For small files (< 500KB) - Use Base64 inline:**
-```markdown
-Here's your generated image:
-![Generated Image](data:image/png;base64,iVBORw0KGgo...)
-```
-
-**For larger files - Save to workspace and provide path:**
+**Always save binaries (images, audio, video, PDFs) to `/workspace/artifacts` and link them:**
 ```markdown
 I've created your file. Download it here:
 [Download report.pdf](/artifacts/report.pdf)
+
+Here is the image:
+![Generated Image](/artifacts/generated-image.png)
 ```
 
 **For generated media - Use Chutes APIs:**
 ```python
 # Generate image
-import base64
 response = requests.post(
     "https://image.chutes.ai/generate",
     headers={"Authorization": f"Bearer {os.environ['CHUTES_API_KEY']}"},
@@ -393,18 +391,22 @@ response = requests.post(
 )
 response.raise_for_status()
 mime = response.headers.get("content-type", "image/jpeg")
-image_base64 = base64.b64encode(response.content).decode("utf-8")
-# Return as: ![Generated Image](data:{mime};base64,{image_base64})
+ext = ".jpg" if "jpeg" in mime else ".png"
+output_path = f"/workspace/artifacts/generated-image{ext}"
+with open(output_path, "wb") as f:
+    f.write(response.content)
+print(f"Image saved to {output_path}")
+print("The image will be attached as an artifact for the user.")
 ```
 
 ## File URL Patterns
 
-### Base64 Data URLs (inline, small files)
+### Base64 Data URLs (avoid for images)
 ```
 data:{mime_type};base64,{base64_encoded_content}
 ```
-- Best for: Images < 500KB, small text files
-- Example: `data:image/png;base64,iVBORw0KGgo...`
+- Use only for tiny text snippets when absolutely necessary.
+- **Do not embed images as data URLs.**
 
 ### Sandbox Artifact URLs (served files)
 ```
@@ -445,7 +447,7 @@ When you create files, include them in your response:
 |------|-------------|
 | [solution.py](/artifacts/solution.py) | Main script |
 | [output.csv](/artifacts/output.csv) | Results data |
-| ![chart.png](data:image/png;base64,...) | Visualization |
+| ![chart.png](/artifacts/chart.png) | Visualization |
 ```
 
 ### Progress Updates
@@ -477,7 +479,7 @@ For long-running tasks, provide status updates:
 1. Research: Find a price API (CoinGecko, etc.)
 2. Code: Write Python script using requests + matplotlib
 3. Execute: Run script to generate chart
-4. Serve: Return chart as base64 image
+4. Serve: Return chart as artifact link
 
 ### "Build a simple web scraper for news headlines"
 1. Install: `pip install beautifulsoup4 requests`

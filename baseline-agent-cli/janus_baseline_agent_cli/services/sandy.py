@@ -796,12 +796,15 @@ class SandyService:
             mime_type = mime_type or "application/octet-stream"
             size_bytes = len(data)
             sha256 = hashlib.sha256(data).hexdigest()
-            max_inline_bytes = self._max_inline_image_bytes if mime_type.startswith("image/") else self._max_inline_bytes
-            if size_bytes <= max_inline_bytes:
-                url = self._build_data_url(data, mime_type)
-            else:
+            if mime_type.startswith("image/"):
                 filename = Path(path).name
                 url = f"{artifact_base.rstrip('/')}/{filename}"
+            else:
+                if size_bytes <= self._max_inline_bytes:
+                    url = self._build_data_url(data, mime_type)
+                else:
+                    filename = Path(path).name
+                    url = f"{artifact_base.rstrip('/')}/{filename}"
 
             artifacts.append(
                 Artifact(

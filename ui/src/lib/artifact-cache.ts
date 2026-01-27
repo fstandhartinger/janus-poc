@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import { createReadStream } from 'node:fs';
 import path from 'node:path';
+import { Readable } from 'node:stream';
 import type { Artifact } from '@/types/chat';
 
 const PRIMARY_ROOT = process.env.JANUS_ARTIFACT_CACHE_DIR || '/var/data/janus-artifacts';

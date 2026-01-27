@@ -191,22 +191,18 @@ python solution.py
 
 ### 5. Create & Serve Files
 
-**For small files (< 500KB) - Use Base64 inline:**
-```markdown
-Here's your generated image:
-![Generated Image](data:image/png;base64,iVBORw0KGgo...)
-```
-
-**For larger files - Save to workspace and provide path:**
+**Always save binaries (images, audio, video, PDFs) to `/workspace/artifacts` and link them:**
 ```markdown
 I've created your file. Download it here:
 [Download report.pdf](/artifacts/report.pdf)
+
+Here is the image:
+![Generated Image](/artifacts/generated-image.png)
 ```
 
 **For generated media - Use Chutes APIs:**
 ```python
 # Generate image
-import base64
 import os
 response = requests.post(
     "https://image.chutes.ai/generate",
@@ -232,14 +228,8 @@ print("The image will be attached as an artifact for the user.")
 ## File URL Patterns
 
 ### Sandbox Artifact Files (preferred)
-Save large or binary outputs into `/workspace/artifacts/{filename}`. The host will collect and attach them for the user. Avoid printing large base64 blobs to stdout.
-
-### Base64 Data URLs (only for small files)
-```
-data:{mime_type};base64,{base64_encoded_content}
-```
-- Use only for very small files (tiny images, short text snippets).
-- Served by sandbox HTTP server on port 8787
+Save large or binary outputs into `/workspace/artifacts/{filename}`. The host will collect and attach them for the user. **Do not embed images as base64 data URLs.**
+- Served by the sandbox artifact server on port 8787
 - Agent writes to: `/workspace/artifacts/{filename}`
 - User accesses: `{sandbox_url}/artifacts/{filename}`
 
@@ -274,7 +264,7 @@ When you create files, include them in your response:
 |------|-------------|
 | [solution.py](/artifacts/solution.py) | Main script |
 | [output.csv](/artifacts/output.csv) | Results data |
-| ![chart.png](data:image/png;base64,...) | Visualization |
+| ![chart.png](/artifacts/chart.png) | Visualization |
 ```
 
 ### Progress Updates
@@ -306,7 +296,7 @@ For long-running tasks, provide status updates:
 1. Research: Find a price API (CoinGecko, etc.)
 2. Code: Write Python script using requests + matplotlib
 3. Execute: Run script to generate chart
-4. Serve: Return chart as base64 image
+4. Serve: Return chart as artifact link
 
 ### "Build a simple web scraper for news headlines"
 1. Install: `pip install beautifulsoup4 requests`

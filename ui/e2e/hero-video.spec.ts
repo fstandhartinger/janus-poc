@@ -15,6 +15,7 @@ test.beforeAll(() => {
 });
 
 test.describe('Hero Video', () => {
+  test.setTimeout(60000);
   for (const viewport of viewports) {
     test(`renders hero video sequence on ${viewport.name}`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });

@@ -32,6 +32,7 @@ Image generation works inside the Sandy sandbox, but the chat UI often shows bro
 - **Cache route**: `POST /api/artifacts/cache` with `{ chatId, artifact }` returns cached URL.
 - **Serve route**: `GET /api/artifacts/[...path]` streams file from `/var/data` with correct content type.
 - **Fallback**: If caching fails, continue to use the original artifact URL.
+- **No inline images**: sandbox artifact collection should always emit URLs for images (avoid `data:` base64) so the UI can cache reliably.
 
 ## Test Plan
 - **API**: Stream `janus-baseline-agent` for image generation; ensure `artifacts` event emitted.

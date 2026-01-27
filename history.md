@@ -80,3 +80,4 @@
 - Hardened Sandy streaming output handling (filter noisy preflight warnings) and ensured Claude-compatible model selection for claude-code agent-run.
 - Refined Claude Code agent-run invocation (append system prompt file, run from /workspace, avoid conflicting flags) and router usage notes in spec 115.
 - De-duplicated Claude Code streamed content so final results are not repeated.
+- Implemented artifact delivery pipeline updates: cache sandbox artifacts server-side, avoid inline image data URLs, and refreshed prompts/docs + cross-project READMEs.
