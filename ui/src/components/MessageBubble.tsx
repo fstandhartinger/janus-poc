@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Message } from '@/types/chat';
+import type { Message, MessageContent } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { parseAudioContent } from '@/lib/audio-parser';
 import { MarkdownContent } from '@/lib/markdown-renderer';
@@ -225,10 +225,10 @@ export function MessageBubble({
     () => (message.artifacts || []).filter((artifact) => artifact.type === 'image' && artifact.url),
     [message.artifacts]
   );
-  const artifactMedia = useMemo(() => {
+  const artifactMedia = useMemo<MessageContent | null>(() => {
     if (imageArtifacts.length === 0) return null;
     return imageArtifacts.map((artifact) => ({
-      type: 'image_url',
+      type: 'image_url' as const,
       image_url: { url: artifact.url },
     }));
   }, [imageArtifacts]);
