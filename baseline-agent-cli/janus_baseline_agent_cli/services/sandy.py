@@ -89,6 +89,23 @@ def _filter_agent_message(text: str) -> Optional[str]:
     return text
 
 
+def _dedupe_result_text(result_text: str, output_parts: list[str]) -> Optional[str]:
+    """Avoid duplicating full result text when streaming deltas already emitted."""
+    if not result_text:
+        return None
+    if not output_parts:
+        return result_text
+    current = "".join(output_parts)
+    if not current:
+        return result_text
+    if result_text == current or result_text in current:
+        return None
+    if result_text.startswith(current):
+        suffix = result_text[len(current):]
+        return suffix or None
+    return result_text
+
+
 def _clean_aider_output(text: str) -> str:
     """Clean up Aider-specific output formatting.
 
@@ -430,8 +447,6 @@ class SandyService:
                 "acceptEdits",
                 "--add-dir",
                 "/workspace",
-                "--cwd",
-                "/workspace",
                 "--allowedTools",
                 "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
             ]
@@ -471,6 +486,8 @@ class SandyService:
             command = [agent, quoted_task]
 
         full_command = " ".join(["env", *env_parts, *command])
+        if agent in {"claude", "claude-code"}:
+            full_command = f"cd /workspace && {full_command}"
         logger.info(
             "agent_command_built",
             agent=agent,
@@ -2362,22 +2379,30 @@ class SandyService:
                             elif msg_type == "result":
                                 result_text = data.get("result") or data.get("text")
                                 if isinstance(result_text, str) and result_text:
-                                    content_streamed = True
-                                    output_parts.append(result_text)
-                                    if debug_emitter:
-                                        await debug_emitter.emit(
-                                            DebugEventType.RESPONSE_CHUNK,
-                                            "AGENT",
-                                            result_text[:200],
-                                        )
-                                    yield ChatCompletionChunk(
-                                        id=request_id,
-                                        model=model,
-                                        choices=[
-                                            ChunkChoice(delta=Delta(content=result_text))
-                                        ],
+                                    text_to_emit = (
+                                        _dedupe_result_text(result_text, output_parts)
+                                        if content_streamed
+                                        else result_text
                                     )
+                                    if text_to_emit:
+                                        content_streamed = True
+                                        output_parts.append(text_to_emit)
+                                        if debug_emitter:
+                                            await debug_emitter.emit(
+                                                DebugEventType.RESPONSE_CHUNK,
+                                                "AGENT",
+                                                text_to_emit[:200],
+                                            )
+                                        yield ChatCompletionChunk(
+                                            id=request_id,
+                                            model=model,
+                                            choices=[
+                                                ChunkChoice(delta=Delta(content=text_to_emit))
+                                            ],
+                                        )
                             elif msg_type == "assistant":
+                                if content_streamed:
+                                    continue
                                 message = data.get("message", {})
                                 content = message.get("content", [])
                                 if isinstance(content, list):
@@ -2527,21 +2552,27 @@ class SandyService:
                     elif event_type == "result":
                         result_text = event.get("result") or event.get("text")
                         if isinstance(result_text, str) and result_text:
-                            content_streamed = True
-                            output_parts.append(result_text)
-                            if debug_emitter:
-                                await debug_emitter.emit(
-                                    DebugEventType.RESPONSE_CHUNK,
-                                    "AGENT",
-                                    result_text[:200],
-                                )
-                            yield ChatCompletionChunk(
-                                id=request_id,
-                                model=model,
-                                choices=[
-                                    ChunkChoice(delta=Delta(content=result_text))
-                                ],
+                            text_to_emit = (
+                                _dedupe_result_text(result_text, output_parts)
+                                if content_streamed
+                                else result_text
                             )
+                            if text_to_emit:
+                                content_streamed = True
+                                output_parts.append(text_to_emit)
+                                if debug_emitter:
+                                    await debug_emitter.emit(
+                                        DebugEventType.RESPONSE_CHUNK,
+                                        "AGENT",
+                                        text_to_emit[:200],
+                                    )
+                                yield ChatCompletionChunk(
+                                    id=request_id,
+                                    model=model,
+                                    choices=[
+                                        ChunkChoice(delta=Delta(content=text_to_emit))
+                                    ],
+                                )
 
                     elif event_type == "files-update":
                         # File changes detected
