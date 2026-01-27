@@ -229,7 +229,7 @@ print("The image will be attached as an artifact for the user.")
 
 ### Sandbox Artifact Files (preferred)
 Save large or binary outputs into `/workspace/artifacts/{filename}`. The host will collect and attach them for the user. **Do not embed images as base64 data URLs.**
-- Served by the sandbox artifact server on port 8787
+- Served by the sandbox artifact server on the Sandy runtime port (default 5173)
 - Agent writes to: `/workspace/artifacts/{filename}`
 - User accesses: `{sandbox_url}/artifacts/{filename}`
 

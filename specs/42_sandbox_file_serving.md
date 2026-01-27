@@ -34,10 +34,10 @@ Each sandbox runs a lightweight HTTP server for file serving:
 # Sandy bootstrap script addition
 # bootstrap.sh or equivalent
 
-# Start artifact server on port 8787
-python3 -m http.server 8787 --directory /workspace/artifacts &
+# Start artifact server on the Sandy runtime port (default 5173)
+python3 -m http.server 5173 --directory /workspace/artifacts &
 ARTIFACT_SERVER_PID=$!
-echo "Artifact server started on port 8787 (PID: $ARTIFACT_SERVER_PID)"
+echo "Artifact server started on port 5173 (PID: $ARTIFACT_SERVER_PID)"
 
 # Or use a more robust server
 cat > /workspace/serve_artifacts.py << 'EOF'
@@ -65,8 +65,8 @@ class ArtifactHandler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     os.makedirs("/workspace/artifacts", exist_ok=True)
-    server = HTTPServer(("0.0.0.0", 8787), ArtifactHandler)
-    print("Artifact server running on port 8787")
+    server = HTTPServer(("0.0.0.0", 5173), ArtifactHandler)
+    print("Artifact server running on port 5173")
     server.serve_forever()
 EOF
 
@@ -75,14 +75,14 @@ python3 /workspace/serve_artifacts.py &
 
 ### FR-2: Sandy Proxy Configuration
 
-Sandy needs to expose sandbox ports via its proxy:
+Sandy proxies only the sandbox runtime port (default 5173) behind the
+`https://{sandbox_id}.sandy...` host. The artifact server must bind to that
+runtime port so `/artifacts/*` is reachable via the public sandbox URL.
 
 ```yaml
 # Sandy configuration (conceptual)
 sandbox:
-  exposed_ports:
-    - 8787  # Artifact server
-
+  runtime_port: 5173  # proxied behind sandbox subdomain
   url_pattern: "https://sandbox-{sandbox_id}.sandy.janus.rodeo"
   artifact_path: "/artifacts/*"
 
@@ -104,7 +104,7 @@ async def _create_sandbox(self, client: httpx.AsyncClient) -> tuple[str, str]:
         json={
             "priority": "NORMAL",
             "ttl_seconds": self._timeout,
-            "expose_ports": [8787],  # Request artifact port exposure
+            # Sandy proxies the runtime port, so the artifact server binds there.
         },
         headers=self._get_headers(),
     )
@@ -240,7 +240,7 @@ echo "🚀 Bootstrapping Janus agent environment..."
 mkdir -p /workspace/artifacts
 
 # Start artifact server in background
-echo "📦 Starting artifact server on port 8787..."
+echo "📦 Starting artifact server on port 5173..."
 python3 << 'ARTIFACT_SERVER' &
 import os
 from http.server import HTTPServer, SimpleHTTPRequestHandler
@@ -257,7 +257,7 @@ class CORSHandler(SimpleHTTPRequestHandler):
         pass  # Suppress logs
 
 os.makedirs("/workspace/artifacts", exist_ok=True)
-HTTPServer(("0.0.0.0", 8787), CORSHandler).serve_forever()
+HTTPServer(("0.0.0.0", 5173), CORSHandler).serve_forever()
 ARTIFACT_SERVER
 
 echo "✅ Artifact server running"
@@ -348,7 +348,7 @@ def process_agent_response(
 
 ## Acceptance Criteria
 
-- [ ] HTTP server runs on port 8787 in sandbox
+- [ ] HTTP server runs on port 5173 in sandbox
 - [ ] Agent can write files to /workspace/artifacts
 - [ ] Files accessible via public URL
 - [ ] CORS enabled for frontend access

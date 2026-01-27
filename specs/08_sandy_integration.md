@@ -22,7 +22,7 @@ Sandy for CLI agent execution and treat it as the PoC stand-in for TEE-like isol
 - Sandbox resources and TTL are enforced via Sandy settings.
 - Sandbox events (create, exec, terminate) are surfaced in `reasoning_content`.
 - Sandboxes run a lightweight HTTP server that exposes `/artifacts/*` from the sandbox filesystem.
- - Artifact server port is configurable via `JANUS_ARTIFACT_PORT` (default 8787).
+ - Artifact server port is configurable via `JANUS_ARTIFACT_PORT` (default 5173, should match Sandy runtime port).
 
 ## Non-functional requirements
 - Sandbox startup time should be < 10s in local dev.

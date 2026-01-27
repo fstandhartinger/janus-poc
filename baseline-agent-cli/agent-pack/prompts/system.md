@@ -412,7 +412,7 @@ data:{mime_type};base64,{base64_encoded_content}
 ```
 /artifacts/{filename}
 ```
-- Served by sandbox HTTP server on port 8787
+- Served by sandbox HTTP server on the Sandy runtime port (default 5173)
 - Agent writes to: `/workspace/artifacts/{filename}`
 - User accesses: `{sandbox_url}/artifacts/{filename}`
 

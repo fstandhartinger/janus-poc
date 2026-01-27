@@ -194,9 +194,9 @@ class Settings(BaseSettings):
     )
     sandy_timeout: int = Field(default=600, description="Sandy sandbox timeout in seconds")
     artifact_port: int = Field(
-        default=8787,
+        default=5173,
         validation_alias="JANUS_ARTIFACT_PORT",
-        description="Sandbox artifact server port",
+        description="Sandbox artifact server port (should match Sandy runtime port)",
     )
     artifact_dir: str = Field(
         default="/workspace/artifacts",

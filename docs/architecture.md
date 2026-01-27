@@ -157,7 +157,7 @@ The gateway and competitors implement the OpenAI Chat Completions API with exten
   "sha256": "abc...",
   "created_at": "2026-01-22T12:00:00Z",
   "ttl_seconds": 3600,
-  "url": "http://sandbox-host:8787/artifacts/artf_123"
+  "url": "http://sandbox-host:5173/artifacts/artf_123"
 }
 ```
 

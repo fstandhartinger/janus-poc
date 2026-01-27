@@ -13,6 +13,20 @@ export default defineConfig({
   use: {
     baseURL,
     trace: 'on-first-retry',
+    storageState: {
+      cookies: [],
+      origins: [
+        {
+          origin: baseURL,
+          localStorage: [
+            {
+              name: 'janusPreReleasePassword',
+              value: process.env.CHUTES_JANUS_PRE_RELEASE_PWD || 'chutesSquad987!!!',
+            },
+          ],
+        },
+      ],
+    },
   },
   projects: [
     {

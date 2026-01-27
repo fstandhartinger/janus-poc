@@ -1,7 +1,9 @@
 import fs from 'node:fs/promises';
-import { createReadStream } from 'node:fs';
+import { createReadStream, createWriteStream } from 'node:fs';
 import path from 'node:path';
 import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
+import type { ReadableStream as WebReadableStream } from 'node:stream/web';
 import type { Artifact } from '@/types/chat';
 
 const PRIMARY_ROOT = process.env.JANUS_ARTIFACT_CACHE_DIR || '/var/data/janus-artifacts';
@@ -77,8 +79,8 @@ export async function cacheArtifactFile(
     throw new Error(`Failed to fetch artifact: ${response.status}`);
   }
 
-  const arrayBuffer = await response.arrayBuffer();
-  await fs.writeFile(filePath, Buffer.from(arrayBuffer));
+  const nodeStream = Readable.fromWeb(response.body as unknown as WebReadableStream<Uint8Array>);
+  await pipeline(nodeStream, createWriteStream(filePath));
   const stats = await fs.stat(filePath);
 
   return { url: `/api/artifacts/${safeChatId}/${fileName}`, path: filePath, size: stats.size };

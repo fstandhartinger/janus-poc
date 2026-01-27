@@ -31,7 +31,7 @@ fi
 
 # Export critical system prompt for Claude Code --append-system-prompt flag
 # This is a fallback in case CLAUDE.md is not automatically loaded
-export JANUS_SYSTEM_PROMPT='You are a Janus agent with FULL sandbox access. CRITICAL: For image generation, use the Chutes API with Authorization: Bearer $CHUTES_API_KEY. Example: import base64, os, requests; resp = requests.post("https://image.chutes.ai/generate", headers={"Authorization": f"Bearer {os.environ[\"CHUTES_API_KEY\"]}"}, json={"model": "qwen-image", "prompt": "...", "width": 1024, "height": 1024, "num_inference_steps": 30}); resp.raise_for_status(); mime = resp.headers.get("content-type", "image/jpeg"); b64 = base64.b64encode(resp.content).decode("utf-8"); print(f"![Image](data:{mime};base64,{b64})"). DO NOT create SVG/ASCII art. Read /workspace/docs/models/ for full API docs.'
+export JANUS_SYSTEM_PROMPT='You are a Janus agent with FULL sandbox access. CRITICAL: For image generation, use the Chutes API with Authorization: Bearer $CHUTES_API_KEY. Example: import os, requests; resp = requests.post("https://image.chutes.ai/generate", headers={"Authorization": f"Bearer {os.environ[\"CHUTES_API_KEY\"]}"}, json={"model": "qwen-image", "prompt": "...", "width": 1024, "height": 1024, "num_inference_steps": 30}); resp.raise_for_status(); mime = resp.headers.get("content-type", "image/jpeg"); ext = ".jpg" if "jpeg" in mime else ".png"; path = f"/workspace/artifacts/generated-image{ext}"; open(path, "wb").write(resp.content); print(f"![Image]({os.environ.get(\"JANUS_ARTIFACT_URL_BASE\", \"/artifacts\")}/{os.path.basename(path)})"). DO NOT embed base64 data URLs. DO NOT create SVG/ASCII art. Read /workspace/docs/models/ for full API docs.'
 
 # Copy helper libraries
 if [ -d "${AGENT_PACK_ROOT}/lib" ]; then
@@ -46,7 +46,7 @@ fi
 
 # Start artifact server
 export JANUS_ARTIFACTS_DIR="${JANUS_ARTIFACTS_DIR:-/workspace/artifacts}"
-export JANUS_ARTIFACT_PORT="${JANUS_ARTIFACT_PORT:-8787}"
+export JANUS_ARTIFACT_PORT="${JANUS_ARTIFACT_PORT:-5173}"
 mkdir -p "$JANUS_ARTIFACTS_DIR"
 mkdir -p "${JANUS_SCREENSHOT_DIR:-/workspace/artifacts/screenshots}"
 
@@ -118,7 +118,7 @@ import os
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 directory = os.environ.get("JANUS_ARTIFACTS_DIR", "/workspace/artifacts")
-port = int(os.environ.get("JANUS_ARTIFACT_PORT", "8787"))
+port = int(os.environ.get("JANUS_ARTIFACT_PORT", "5173"))
 
 
 class CORSHandler(SimpleHTTPRequestHandler):

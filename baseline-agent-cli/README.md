@@ -8,30 +8,57 @@ Reference implementation for the Janus competitive intelligence network. This ba
 flowchart TB
     subgraph Request ["Incoming Request"]
         REQ["POST /v1/chat/completions"]
+        FLAGS["Generation Flags<br/>(image, video, audio, research)"]
     end
 
-    subgraph Routing ["Complexity Detection"]
+    subgraph Routing ["Complexity Detection & Routing"]
         DETECT["Complexity Detector"]
-        KEYWORDS["Keyword Check"]
-        LLM_VERIFY["LLM Verification (GLM-4.7-Flash)"]
+        KEYWORDS["Keyword Check<br/>(100+ patterns, EN/DE)"]
+        URL_CHECK["URL Detection"]
+        LLM_VERIFY["LLM Routing<br/>(Qwen3-Next-80B → MiMo-V2 → DeepSeek-V3)"]
+        TRIVIAL["Trivial Greeting<br/>Bypass"]
+    end
+
+    subgraph VisionPath ["Vision Path"]
+        VISION_CHECK["Image Detection"]
+        VISION_MODEL["Vision Model<br/>(Qwen3-VL-235B)"]
+        VISION_FB["Vision Fallback<br/>(Mistral-Small-3.2)"]
     end
 
     subgraph FastPath ["Fast Path (Simple Requests)"]
-        FAST_LLM["Direct LLM Call"]
+        MODEL_ROUTER["Model Router"]
+        FAST_MODEL["Task-Specific Model"]
         FAST_STREAM["Stream Response"]
+    end
+
+    subgraph ModelRegistry ["Model Registry"]
+        M_FAST["Fast: GLM-4.7-Flash"]
+        M_GEN["General: Qwen3-Next-80B"]
+        M_REASON["Reasoning: DeepSeek-V3.2-Speciale"]
+        M_CODE["Programming: MiniMax-M2.1"]
+        M_CREATE["Creative: TNG-R1T2-Chimera"]
     end
 
     subgraph ComplexPath ["Complex Path (Agent Sandbox)"]
         SANDY["Sandy Sandbox"]
-        AGENT["Claude Code CLI Agent"]
-        TOOLS["Available Tools"]
+        AGENT["CLI Agent<br/>(Claude Code / Aider)"]
+        BOOTSTRAP["Agent Bootstrap<br/>(system prompt, tools)"]
     end
 
     subgraph Tools ["Agent Capabilities"]
-        SEARCH["Web Search"]
-        CODE["Code Execution"]
+        SEARCH["Deep Research<br/>(chutes-search light/max)"]
+        CODE["Code Execution<br/>(Python, Node, etc.)"]
         FILES["File Operations"]
-        CHUTES_API["Chutes API (Images, TTS, LLM)"]
+        IMG_GEN["Image Generation<br/>(FLUX, Recraft)"]
+        TTS["Text-to-Speech<br/>(Dia-1.6B, F5-TTS)"]
+        MUSIC["Music Generation<br/>(DiffRhythm)"]
+        BROWSER["Browser Automation<br/>(Playwright)"]
+        GUI["GUI Automation"]
+    end
+
+    subgraph Memory ["Memory Integration"]
+        MEM_STORE["Memory Store"]
+        MEM_RECALL["Context Recall"]
     end
 
     subgraph Response ["Response"]
@@ -39,54 +66,99 @@ flowchart TB
         REASONING["reasoning_content"]
         CONTENT["content"]
         ARTIFACTS["artifacts (files)"]
+        DEBUG["debug_info (optional)"]
     end
 
-    REQ --> DETECT
-    DETECT --> KEYWORDS
-    KEYWORDS -->|"Complex keywords found"| SANDY
-    KEYWORDS -->|"No keywords match"| LLM_VERIFY
+    REQ --> FLAGS
+    FLAGS -->|"Generation flags set"| SANDY
+    FLAGS -->|"No flags"| DETECT
+    DETECT --> TRIVIAL
+    TRIVIAL -->|"Greeting"| FAST_MODEL
+    TRIVIAL -->|"Not trivial"| KEYWORDS
+    KEYWORDS -->|"Keywords matched"| SANDY
+    KEYWORDS -->|"No match"| URL_CHECK
+    URL_CHECK -->|"URL + interaction"| SANDY
+    URL_CHECK -->|"No URL"| LLM_VERIFY
     LLM_VERIFY -->|"needs_agent: true"| SANDY
-    LLM_VERIFY -->|"needs_agent: false"| FAST_LLM
+    LLM_VERIFY -->|"needs_agent: false"| VISION_CHECK
     LLM_VERIFY -->|"Error/Timeout"| SANDY
 
-    FAST_LLM --> FAST_STREAM
+    VISION_CHECK -->|"Has images"| VISION_MODEL
+    VISION_MODEL -->|"Error"| VISION_FB
+    VISION_FB --> FAST_STREAM
+    VISION_MODEL --> FAST_STREAM
+    VISION_CHECK -->|"No images"| MODEL_ROUTER
+
+    MODEL_ROUTER --> M_FAST
+    MODEL_ROUTER --> M_GEN
+    MODEL_ROUTER --> M_REASON
+    MODEL_ROUTER --> M_CODE
+    MODEL_ROUTER --> M_CREATE
+    M_FAST --> FAST_MODEL
+    M_GEN --> FAST_MODEL
+    M_REASON --> FAST_MODEL
+    M_CODE --> FAST_MODEL
+    M_CREATE --> FAST_MODEL
+    FAST_MODEL --> FAST_STREAM
     FAST_STREAM --> SSE
 
-    SANDY --> AGENT
-    AGENT --> TOOLS
-    TOOLS --> SEARCH
-    TOOLS --> CODE
-    TOOLS --> FILES
-    TOOLS --> CHUTES_API
+    SANDY --> BOOTSTRAP
+    BOOTSTRAP --> AGENT
+    AGENT --> MEM_RECALL
+    MEM_RECALL --> AGENT
+    AGENT --> MEM_STORE
+    AGENT --> SEARCH
+    AGENT --> CODE
+    AGENT --> FILES
+    AGENT --> IMG_GEN
+    AGENT --> TTS
+    AGENT --> MUSIC
+    AGENT --> BROWSER
+    AGENT --> GUI
     AGENT --> SSE
 
     SSE --> REASONING
     SSE --> CONTENT
     SSE --> ARTIFACTS
+    SSE --> DEBUG
 ```
 
 ## How It Works
 
 1. **Request Reception**: Receives OpenAI-compatible chat completion requests
-2. **Complexity Detection**:
-   - First pass: Keyword-based detection (research, code, images, etc.)
-   - Second pass: LLM-based routing using fast model (GLM-4.7-Flash)
-3. **Path Selection**:
-   - **Fast Path**: Simple queries go directly to Chutes LLM
+2. **Generation Flags**: Requests with explicit flags (image, video, audio, research) route directly to agent
+3. **Complexity Detection** (multi-stage):
+   - Trivial greeting bypass (hello, thanks, etc.)
+   - Keyword-based detection (100+ patterns in English/German)
+   - URL detection with interaction hints
+   - LLM-based routing with fallbacks (Qwen3-Next-80B → MiMo-V2 → DeepSeek-V3)
+4. **Vision Path**: Requests with images route to vision models (Qwen3-VL-235B with Mistral fallback)
+5. **Path Selection**:
+   - **Fast Path**: Simple queries go to task-specific models via the model router
    - **Complex Path**: Complex tasks route to Sandy sandbox with CLI agent
-4. **Agent Execution**: Claude Code agent runs with full tool access
-5. **Response Streaming**: SSE stream with reasoning_content and artifacts
+6. **Model Router**: Selects optimal model by task type (fast, general, reasoning, programming, creative)
+7. **Agent Execution**: CLI agent (Claude Code/Aider) runs with full tool access and memory integration
+8. **Response Streaming**: SSE stream with reasoning_content, artifacts, and optional debug_info
 
 ## Features
 
 - OpenAI-compatible `/v1/chat/completions` endpoint
-- Dual-path architecture (fast vs complex)
-- LLM-based intelligent routing
+- Dual-path architecture (fast vs complex) with intelligent routing
+- Multi-stage complexity detection (keywords, URL hints, LLM verification)
+- Task-specific model routing (fast, general, reasoning, programming, creative)
+- Vision model support with automatic fallback
 - Sandy sandbox for secure agent execution
-- SSE streaming with `reasoning_content` field
-- Artifact generation for file outputs
-- Full Chutes API integration (LLM, images, TTS, search)
+- SSE streaming with `reasoning_content` and `debug_info` fields
+- Artifact generation for file outputs with server-side caching
+- Memory integration for context persistence across sessions
+- Full Chutes API integration:
+  - LLM (multiple models with fallbacks)
+  - Image generation (FLUX, Recraft)
+  - Text-to-speech (Dia-1.6B, F5-TTS)
+  - Music generation (DiffRhythm)
 - Deep research via chutes-search with light/max modes and citations
+- Browser automation via Playwright
+- GUI/Desktop automation support
 
 ## Installation
 
@@ -179,7 +251,7 @@ For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
 | `SANDY_BASE_URL` | - | Sandy API base URL for agent execution |
 | `SANDY_API_KEY` | - | Sandy API key |
 | `BASELINE_AGENT_CLI_SANDY_TIMEOUT` | `300` | Sandbox timeout in seconds |
-| `JANUS_ARTIFACT_PORT` | `8787` | Sandbox artifact server port |
+| `JANUS_ARTIFACT_PORT` | `5173` | Sandbox artifact server port (should match Sandy runtime port) |
 | `JANUS_ARTIFACTS_DIR` | `/workspace/artifacts` | Directory for sandbox artifacts |
 | `JANUS_ARTIFACT_GRACE_SECONDS` | `30` | Seconds to keep sandboxes alive after emitting artifacts |
 

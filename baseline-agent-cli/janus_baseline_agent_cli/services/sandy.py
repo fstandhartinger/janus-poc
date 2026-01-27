@@ -88,6 +88,11 @@ def _filter_agent_message(text: str) -> Optional[str]:
         return None
     if trimmed.startswith("Running Claude Code with model"):
         return None
+    lowered = trimmed.lower()
+    if ("claude code" in lowered or "claude-code" in lowered) and "model" in lowered and (
+        "starting" in lowered or "running" in lowered
+    ):
+        return None
     return text
 
 

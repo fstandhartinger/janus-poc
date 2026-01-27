@@ -34,6 +34,7 @@ Image generation works inside the Sandy sandbox, but the chat UI often shows bro
 - **Fallback**: If caching fails, continue to use the original artifact URL.
 - **No inline images**: sandbox artifact collection should always emit URLs for images (avoid `data:` base64) so the UI can cache reliably.
 - **Grace period**: keep the sandbox alive briefly after emitting artifacts so the UI can download before termination.
+- **Port alignment**: artifact server must bind to the Sandy runtime port (default 5173) so the public sandbox URL can serve `/artifacts/*`.
 
 ## Test Plan
 - **API**: Stream `janus-baseline-agent` for image generation; ensure `artifacts` event emitted.
