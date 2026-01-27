@@ -219,6 +219,7 @@ class SandyService:
         self._artifact_port = settings.artifact_port
         self._artifact_dir = settings.artifact_dir
         self._artifact_ttl = settings.artifact_ttl_seconds
+        self._artifact_grace_seconds = settings.artifact_grace_seconds
         self._screenshot_dir = f"{self._artifact_dir.rstrip('/')}/screenshots"
         self._baseline_agent = settings.baseline_agent.strip() if settings.baseline_agent else "aider"
 
@@ -949,6 +950,26 @@ class SandyService:
         except Exception as e:
             logger.warning("sandy_terminate_error", error=str(e))
 
+    async def _terminate_sandbox_after_delay(
+        self, sandbox_id: str, delay_seconds: float
+    ) -> None:
+        """Terminate a sandbox after a delay using a fresh client."""
+        try:
+            if delay_seconds > 0:
+                await asyncio.sleep(delay_seconds)
+            async with self._client_factory() as client:
+                await self._terminate_sandbox(client, sandbox_id)
+        except Exception as e:
+            logger.warning("sandy_terminate_delayed_error", error=str(e))
+
+    def _schedule_sandbox_termination(self, sandbox_id: str, delay_seconds: float) -> None:
+        """Schedule sandbox termination without blocking the response."""
+        if delay_seconds <= 0:
+            return
+        asyncio.create_task(
+            self._terminate_sandbox_after_delay(sandbox_id, delay_seconds)
+        )
+
     async def _run_agent_via_api(
         self,
         client: httpx.AsyncClient,
@@ -1390,7 +1411,11 @@ class SandyService:
 
             sandbox_id, public_url = sandbox_info
             sandbox_url = self._sandbox_url(sandbox_id, public_url)
+            artifacts_present = False
             artifacts: list[Artifact] = []
+            artifacts_present = False
+            artifacts_present = False
+            artifacts_present = False
 
             try:
                 if not await self._upload_agent_pack(client, sandbox_id):
@@ -1449,6 +1474,7 @@ class SandyService:
                 artifacts = await self._collect_artifacts(
                     client, sandbox_id, public_url
                 )
+                artifacts_present = bool(artifacts)
                 if artifacts:
                     links = self._format_artifact_links(artifacts)
                     result = f"{result}\n\nArtifacts available:\n{links}"
@@ -1477,7 +1503,17 @@ class SandyService:
                 )
 
             finally:
-                await self._terminate_sandbox(client, sandbox_id)
+                if artifacts_present and self._artifact_grace_seconds > 0:
+                    logger.info(
+                        "sandy_terminate_delayed",
+                        sandbox_id=sandbox_id,
+                        delay_seconds=self._artifact_grace_seconds,
+                    )
+                    self._schedule_sandbox_termination(
+                        sandbox_id, self._artifact_grace_seconds
+                    )
+                else:
+                    await self._terminate_sandbox(client, sandbox_id)
 
     async def execute_complex(
         self,
@@ -1789,6 +1825,7 @@ class SandyService:
                 artifacts = await self._collect_artifacts(
                     client, sandbox_id, public_url
                 )
+                artifacts_present = bool(artifacts)
                 if artifacts:
                     artifact_payload = [artifact.model_dump(mode="json") for artifact in artifacts]
                     yield ChatCompletionChunk(
@@ -1819,17 +1856,37 @@ class SandyService:
                     )
 
             finally:
-                # Cleanup
-                yield ChatCompletionChunk(
-                    id=request_id,
-                    model=model,
-                    choices=[
-                        ChunkChoice(
-                            delta=Delta(reasoning_content="Terminating sandbox...\n")
-                        )
-                    ],
+                grace_seconds = (
+                    self._artifact_grace_seconds if artifacts_present else 0
                 )
-                await self._terminate_sandbox(client, sandbox_id)
+                if grace_seconds > 0:
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    reasoning_content=(
+                                        "Keeping sandbox alive for artifact downloads "
+                                        f"({grace_seconds}s)...\n"
+                                    )
+                                )
+                            )
+                        ],
+                    )
+                    self._schedule_sandbox_termination(sandbox_id, grace_seconds)
+                else:
+                    # Cleanup immediately
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(reasoning_content="Terminating sandbox...\n")
+                            )
+                        ],
+                    )
+                    await self._terminate_sandbox(client, sandbox_id)
 
                 sandbox_seconds = time.perf_counter() - sandbox_start
 
@@ -2080,6 +2137,7 @@ class SandyService:
                 result = process_agent_response(result, sandbox_url)
 
                 artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
+                artifacts_present = bool(artifacts)
                 if artifacts:
                     links = self._format_artifact_links(artifacts)
                     result = f"{result}\n\nArtifacts available:\n{links}"
@@ -2115,7 +2173,17 @@ class SandyService:
                 return response_payload
 
             finally:
-                await self._terminate_sandbox(client, sandbox_id)
+                if artifacts_present and self._artifact_grace_seconds > 0:
+                    logger.info(
+                        "sandy_terminate_delayed",
+                        sandbox_id=sandbox_id,
+                        delay_seconds=self._artifact_grace_seconds,
+                    )
+                    self._schedule_sandbox_termination(
+                        sandbox_id, self._artifact_grace_seconds
+                    )
+                else:
+                    await self._terminate_sandbox(client, sandbox_id)
 
     async def execute_via_agent_api(
         self,
@@ -2749,6 +2817,7 @@ class SandyService:
 
                 # Collect artifacts
                 artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
+                artifacts_present = bool(artifacts)
                 if artifacts:
                     artifact_payload = [artifact.model_dump(mode="json") for artifact in artifacts]
                     yield ChatCompletionChunk(
@@ -2779,17 +2848,37 @@ class SandyService:
                     )
 
             finally:
-                # Cleanup
-                yield ChatCompletionChunk(
-                    id=request_id,
-                    model=model,
-                    choices=[
-                        ChunkChoice(
-                            delta=Delta(reasoning_content="Terminating sandbox...\n")
-                        )
-                    ],
+                grace_seconds = (
+                    self._artifact_grace_seconds if artifacts_present else 0
                 )
-                await self._terminate_sandbox(client, sandbox_id)
+                if grace_seconds > 0:
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    reasoning_content=(
+                                        "Keeping sandbox alive for artifact downloads "
+                                        f"({grace_seconds}s)...\n"
+                                    )
+                                )
+                            )
+                        ],
+                    )
+                    self._schedule_sandbox_termination(sandbox_id, grace_seconds)
+                else:
+                    # Cleanup immediately
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(reasoning_content="Terminating sandbox...\n")
+                            )
+                        ],
+                    )
+                    await self._terminate_sandbox(client, sandbox_id)
 
                 sandbox_seconds = time.perf_counter() - sandbox_start
 

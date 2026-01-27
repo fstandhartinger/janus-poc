@@ -181,6 +181,7 @@ For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
 | `BASELINE_AGENT_CLI_SANDY_TIMEOUT` | `300` | Sandbox timeout in seconds |
 | `JANUS_ARTIFACT_PORT` | `8787` | Sandbox artifact server port |
 | `JANUS_ARTIFACTS_DIR` | `/workspace/artifacts` | Directory for sandbox artifacts |
+| `JANUS_ARTIFACT_GRACE_SECONDS` | `30` | Seconds to keep sandboxes alive after emitting artifacts |
 
 ### Agent Configuration
 

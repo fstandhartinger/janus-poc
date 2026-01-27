@@ -272,7 +272,10 @@ async def test_streaming_includes_sandbox_events() -> None:
 
     reasoning_text = "".join(reasoning)
     assert "Creating Sandy sandbox" in reasoning_text
-    assert "Terminating sandbox" in reasoning_text
+    assert (
+        "Terminating sandbox" in reasoning_text
+        or "Keeping sandbox alive for artifact downloads" in reasoning_text
+    )
 
 
 @pytest.mark.asyncio

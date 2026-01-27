@@ -206,6 +206,15 @@ class Settings(BaseSettings):
     artifact_ttl_seconds: int = Field(
         default=3600, description="Artifact TTL in seconds"
     )
+    artifact_grace_seconds: int = Field(
+        default=30,
+        description="Seconds to keep sandbox alive after emitting artifacts",
+        validation_alias=AliasChoices(
+            "JANUS_ARTIFACT_GRACE_SECONDS",
+            "BASELINE_AGENT_CLI_ARTIFACT_GRACE_SECONDS",
+            "BASELINE_ARTIFACT_GRACE_SECONDS",
+        ),
+    )
 
     # Memory service configuration
     memory_service_url: str = Field(
