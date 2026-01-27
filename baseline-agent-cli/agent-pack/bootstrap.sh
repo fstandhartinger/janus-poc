@@ -125,6 +125,15 @@ class CORSHandler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, directory=directory, **kwargs)
 
+    def translate_path(self, path):
+        if path == "/artifacts":
+            path = "/"
+        elif path.startswith("/artifacts/"):
+            path = path[len("/artifacts"):]
+            if not path.startswith("/"):
+                path = "/" + path
+        return super().translate_path(path)
+
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, OPTIONS")
