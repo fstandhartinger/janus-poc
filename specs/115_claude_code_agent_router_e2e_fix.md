@@ -1,6 +1,6 @@
 # Spec 115: Claude Code Agent Router + System Prompt E2E Reliability
 
-## Status: IN_PROGRESS
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -51,6 +51,11 @@ streams useful output in the UI.
    - Router only works when bootstrap starts it.
    - Preflight warnings and “working…” lines dominate streaming output.
 
+5. **Claude Code CLI flag conflicts**
+   - Installed CLI version rejects `--cwd`.
+   - `--append-system-prompt` cannot be combined with `--append-system-prompt-file`.
+   - Resulted in immediate CLI errors instead of agent execution.
+
 ## Solution Design
 
 ### A) Baseline: always prep sandboxes for agent/run
@@ -62,8 +67,9 @@ streams useful output in the UI.
 
 ### B) Sandy: ensure system prompt is always loaded
 - Use `--append-system-prompt-file` for `/workspace/agent-pack/prompts/system.md`.
-- Run Claude Code with `--cwd /workspace` so CLAUDE.md memory is picked up.
+- Run Claude Code from `/workspace` (prepend `cd /workspace`) so CLAUDE.md memory is picked up.
 - Keep minimal non-interactive system prompt to enforce tool usage.
+- Fall back to `--append-system-prompt` only when the file is missing.
 
 ### C) Router base normalization
 - If `apiBaseUrl` is provided:
@@ -74,6 +80,7 @@ streams useful output in the UI.
 - Parse `stream_event` and `result` payloads from Claude Code output.
 - Emit content as it arrives in `ChatCompletionChunk.delta.content`.
 - Filter known “preflight” warnings from agent output.
+- De-duplicate final `result` content when stream deltas already emitted.
 
 ## Implementation Steps
 
@@ -86,8 +93,9 @@ streams useful output in the UI.
 
 2. **sandy**
    - Add `--append-system-prompt-file` (system.md) to Claude Code launch.
-   - Add `--cwd /workspace` to ensure CLAUDE.md memory loads.
+   - Replace `--cwd` with `cd /workspace` for CLI compatibility.
    - Keep `--verbose` before `--output-format` for stream-json reliability.
+   - Avoid `--append-system-prompt` + `--append-system-prompt-file` conflicts.
 
 3. **Tests**
    - Unit test for `stream_event` parsing in baseline.
@@ -99,11 +107,12 @@ streams useful output in the UI.
 
 ## Acceptance Criteria
 
-- [ ] Claude Code agent-run sees CLAUDE.md and references `/workspace/docs/models`.
-- [ ] Image generation prompt returns a real image (artifact or inline base64).
-- [ ] Repo file explanation prompt succeeds with downloaded content.
-- [ ] Streaming shows incremental content (not just “Thinking…”).
-- [ ] Router is used via Anthropic Messages API (validated in logs).
+- [x] Claude Code agent-run sees CLAUDE.md and references `/workspace/docs/models`.
+- [x] Image generation prompt returns a real image (artifact or inline base64).
+- [x] Repo file explanation prompt succeeds with downloaded content.
+- [x] Streaming shows incremental content (not just “Thinking…”).
+- [x] Streaming does not duplicate final content.
+- [x] Router is used via Anthropic Messages API (validated in logs).
 
 ## Test Plan
 
@@ -113,9 +122,15 @@ streams useful output in the UI.
    - `POST /v1/chat/completions` with X-Baseline-Agent: claude-code
 4. **UI**: Use Playwright MCP to run both prompts in Janus chat UI.
 
+## Verification (2026-01-27)
+
+- **API image generation**: streamed response contained real JPEG data URL + artifact link (cat image).
+- **API file explanation**: streamed download + structured explanation for `api/chute/util.py`.
+- **UI**: pre-release gate accepted password; chat UI produced image artifact summary and file explanation.
+
 ## Notes
 
 - Claude Code CLI supports `--system-prompt-file` and `--append-system-prompt` in print mode.
 - CLAUDE.md must live in `/workspace` for sandbox execution (auto-loaded).
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

@@ -78,4 +78,5 @@
 - Added pre-release password gate wiring (Render env + constitution guidance) for UI + gateway access.
 - Updated baseline agent system prompt with explicit media API instructions and removed bootstrap duplication.
 - Hardened Sandy streaming output handling (filter noisy preflight warnings) and ensured Claude-compatible model selection for claude-code agent-run.
-- Refined Claude Code agent-run invocation (append system prompt file, set cwd) and router usage notes in spec 115.
+- Refined Claude Code agent-run invocation (append system prompt file, run from /workspace, avoid conflicting flags) and router usage notes in spec 115.
+- De-duplicated Claude Code streamed content so final results are not repeated.
