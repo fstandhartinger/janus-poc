@@ -242,16 +242,39 @@ export ANTHROPIC_API_KEY="${CHUTES_API_KEY}"
 # Configure Claude Code settings for model router
 if command -v claude >/dev/null 2>&1; then
   echo "=== Configuring Claude Code ==="
-  mkdir -p ~/.claude
-  cat > ~/.claude/settings.json <<EOF
-{
-  "apiBaseUrl": "http://127.0.0.1:8000",
-  "defaultModel": "janus-router",
-  "alwaysThinkingEnabled": true,
-  "API_TIMEOUT_MS": 600000,
-  "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1"
+  python3 - <<'PY'
+import json
+import os
+from pathlib import Path
+
+settings = {
+    "apiBaseUrl": "http://127.0.0.1:8000",
+    "defaultModel": "janus-router",
+    "alwaysThinkingEnabled": True,
+    "API_TIMEOUT_MS": 600000,
+    "CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC": "1",
 }
-EOF
+
+env_keys = [
+    "CHUTES_API_KEY",
+    "CHUTES_API_URL",
+    "CHUTES_API_BASE",
+    "OPENAI_API_BASE",
+    "OPENAI_API_KEY",
+    "OPENAI_MODEL",
+    "ANTHROPIC_BASE_URL",
+    "ANTHROPIC_API_KEY",
+    "CLAUDE_API_BASE_URL",
+    "CLAUDE_MODEL",
+]
+env = {key: os.environ[key] for key in env_keys if os.environ.get(key)}
+if env:
+    settings["env"] = env
+
+settings_path = Path.home() / ".claude" / "settings.json"
+settings_path.parent.mkdir(parents=True, exist_ok=True)
+settings_path.write_text(json.dumps(settings, indent=2))
+PY
   # Also set environment variables for Claude Code CLI
   export CLAUDE_API_BASE_URL="http://127.0.0.1:8000"
   export CLAUDE_MODEL="janus-router"

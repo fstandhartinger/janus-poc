@@ -84,13 +84,20 @@ and have the `claude` wrapper source it when `CHUTES_API_KEY` is missing.
 This ensures agent-run processes inherit the sandbox env even if Sandy does not
 propagate `env` payloads.
 
+### E) Inject env into Claude Code settings
+
+Extend `~/.claude/settings.json` to include an `env` block with
+`CHUTES_API_KEY` and related router variables. Claude Code will load the env
+from settings even when Sandy strips environment variables from the process.
+
 ## Implementation Steps
 
 1. Add `baseline-agent-cli/agent-pack/bin/claude` wrapper with the guard flags.
 2. Clamp `max_tokens` in the router’s Anthropic handler.
 3. Set `CHUTES_API_KEY` for the baseline agent service in Render.
 4. Persist env in the agent pack and rehydrate it in the Claude wrapper.
-5. Redeploy baseline agent and retest the two demo prompts.
+5. Inject env into `~/.claude/settings.json` during bootstrap.
+6. Redeploy baseline agent and retest the two demo prompts.
 
 ## Acceptance Criteria
 
