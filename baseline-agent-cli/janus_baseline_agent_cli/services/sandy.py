@@ -86,6 +86,8 @@ def _filter_agent_message(text: str) -> Optional[str]:
         return None
     if "Pre-flight check is taking longer than expected" in trimmed:
         return None
+    if trimmed.startswith("Running Claude Code with model"):
+        return None
     return text
 
 
@@ -146,6 +148,23 @@ def _clean_aider_output(text: str) -> str:
     result = re.sub(r"\n{3,}", "\n\n", result)
 
     return result
+
+
+def _trim_bootstrap_output(text: str, max_lines: int = 40, max_chars: int = 4000) -> str:
+    """Trim verbose bootstrap logs to keep streaming lightweight."""
+    if not text:
+        return text
+    lines = text.splitlines()
+    if len(lines) <= max_lines and len(text) <= max_chars:
+        return text
+    head = lines[:15]
+    tail = lines[-15:] if len(lines) > 20 else []
+    trimmed = "\n".join(
+        head + (["... (bootstrap output trimmed) ..."] if tail else []) + tail
+    )
+    if len(trimmed) > max_chars:
+        trimmed = trimmed[:max_chars] + "\n... (trimmed)"
+    return trimmed
 
 
 def _debug_step_for_tool(tool_name: str) -> str:
@@ -1656,13 +1675,14 @@ class SandyService:
                     return
 
                 if bootstrap_stdout:
+                    trimmed_bootstrap = _trim_bootstrap_output(bootstrap_stdout)
                     yield ChatCompletionChunk(
                         id=request_id,
                         model=model,
                         choices=[
                             ChunkChoice(
                                 delta=Delta(
-                                    reasoning_content=f"{bootstrap_stdout.rstrip()}\n"
+                                    reasoning_content=f"{trimmed_bootstrap.rstrip()}\n"
                                 )
                             )
                         ],
@@ -2425,8 +2445,6 @@ class SandyService:
                                             ],
                                         )
                             elif msg_type == "assistant":
-                                if content_streamed:
-                                    continue
                                 message = data.get("message", {})
                                 content = message.get("content", [])
                                 if isinstance(content, list):
@@ -2435,23 +2453,30 @@ class SandyService:
                                             if block.get("type") == "text":
                                                 text = block.get("text", "")
                                                 if text:
-                                                    # Stream text content immediately so it appears in chat
-                                                    content_streamed = True
-                                                    if debug_emitter:
-                                                        await debug_emitter.emit(
-                                                            DebugEventType.RESPONSE_CHUNK,
-                                                            "AGENT",
-                                                            text[:200],
-                                                        )
-                                                    yield ChatCompletionChunk(
-                                                        id=request_id,
-                                                        model=model,
-                                                        choices=[
-                                                            ChunkChoice(
-                                                                delta=Delta(content=text)
-                                                            )
-                                                        ],
+                                                    text_to_emit = (
+                                                        _dedupe_result_text(text, output_parts)
+                                                        if content_streamed
+                                                        else text
                                                     )
+                                                    if text_to_emit:
+                                                        # Stream text content immediately so it appears in chat
+                                                        content_streamed = True
+                                                        output_parts.append(text_to_emit)
+                                                        if debug_emitter:
+                                                            await debug_emitter.emit(
+                                                                DebugEventType.RESPONSE_CHUNK,
+                                                                "AGENT",
+                                                                text_to_emit[:200],
+                                                            )
+                                                        yield ChatCompletionChunk(
+                                                            id=request_id,
+                                                            model=model,
+                                                            choices=[
+                                                                ChunkChoice(
+                                                                    delta=Delta(content=text_to_emit)
+                                                                )
+                                                            ],
+                                                        )
                                             elif block.get("type") == "tool_use":
                                                 tool_name = block.get("name", "")
                                                 tool_input = block.get("input", {})
