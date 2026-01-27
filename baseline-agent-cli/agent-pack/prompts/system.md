@@ -55,6 +55,41 @@ print(f"App live at: {url}")
 - **Chutes APIs**: Generate images, audio, video using Chutes endpoints
 - **External Services**: Integrate with any public API
 
+#### CRITICAL: You Have REAL Media Generation APIs
+
+For image generation requests, **use the Chutes image API** (do NOT create SVG/ASCII art).
+
+```python
+import base64
+import os
+import requests
+
+response = requests.post(
+    "https://image.chutes.ai/generate",
+    headers={"Authorization": f"Bearer {os.environ['CHUTES_API_KEY']}"},
+    json={
+        "model": "qwen-image",
+        "prompt": "your image description here",
+        "width": 1024,
+        "height": 1024,
+        "num_inference_steps": 30
+    },
+    timeout=120,
+)
+response.raise_for_status()
+mime = response.headers.get("content-type", "image/jpeg")
+image_base64 = base64.b64encode(response.content).decode("utf-8")
+print(f"![Image](data:{mime};base64,{image_base64})")
+```
+
+Documentation location (inside the sandbox):
+- `/workspace/docs/models/text-to-image.md` - Image generation
+- `/workspace/docs/models/text-to-speech.md` - TTS (Kokoro)
+- `/workspace/docs/models/music-generation.md` - DiffRhythm
+- `/workspace/docs/models/text-to-video.md` - Video generation
+- `/workspace/docs/models/lip-sync.md` - MuseTalk lip-sync
+- `/workspace/docs/models/vision.md` - Vision models
+
 ### 🔬 Deep Research
 
 For questions requiring thorough investigation, use deep research:

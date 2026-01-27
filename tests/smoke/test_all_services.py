@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from tests.config import config
-from tests.utils import is_service_available
+from tests.utils import is_service_available, pre_release_headers
 
 pytestmark = [pytest.mark.smoke, pytest.mark.asyncio]
 
@@ -18,7 +18,9 @@ async def test_gateway_smoke() -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.request_timeout
+        base_url=urls["gateway"],
+        timeout=config.request_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.get("/health")
         if response.status_code == 404:
@@ -72,7 +74,9 @@ async def test_chat_completion_smoke() -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.streaming_timeout
+        base_url=urls["gateway"],
+        timeout=config.streaming_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.post(
             "/v1/chat/completions",
@@ -94,7 +98,9 @@ async def test_models_endpoint_smoke() -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.request_timeout
+        base_url=urls["gateway"],
+        timeout=config.request_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.get("/v1/models")
         if response.status_code == 404:

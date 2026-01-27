@@ -6,7 +6,7 @@ import httpx
 import pytest
 
 from tests.config import config
-from tests.utils import is_service_available
+from tests.utils import is_service_available, pre_release_headers
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -19,7 +19,9 @@ async def test_gateway_to_baseline_flow(mode: str) -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.streaming_timeout
+        base_url=urls["gateway"],
+        timeout=config.streaming_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.post(
             "/v1/chat/completions",
@@ -45,7 +47,9 @@ async def test_competitor_switching(mode: str) -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.streaming_timeout
+        base_url=urls["gateway"],
+        timeout=config.streaming_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.post(
             "/v1/chat/completions",

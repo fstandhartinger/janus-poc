@@ -26,6 +26,7 @@ from typing import Optional
 
 import httpx
 
+from tests.utils import pre_release_headers
 DEFAULT_GATEWAY_URL = "https://janus-gateway-bqou.onrender.com"
 BASELINES = ["baseline-cli-agent", "baseline-langchain"]
 BASELINE_ALIASES = {
@@ -50,6 +51,7 @@ class SmokeTests:
         normalized = self._normalize_baseline(baseline) if baseline else None
         self.baselines = [normalized] if normalized else list(BASELINES)
         self.results: list[TestResult] = []
+        self.headers = pre_release_headers() or None
 
     def _normalize_baseline(self, baseline: str | None) -> str | None:
         if not baseline:
@@ -84,7 +86,7 @@ class SmokeTests:
     async def fetch_available_models(self) -> set[str] | None:
         """Fetch available model IDs from the gateway."""
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=10, headers=self.headers) as client:
                 response = await client.get(f"{self.gateway_url}/v1/models")
                 response.raise_for_status()
                 payload = response.json()
@@ -137,7 +139,7 @@ class SmokeTests:
         """Test gateway health endpoint."""
         start = time.perf_counter()
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(timeout=10, headers=self.headers) as client:
                 response = await client.get(f"{self.gateway_url}/health")
                 duration = (time.perf_counter() - start) * 1000
                 if response.status_code == 200:
@@ -157,7 +159,7 @@ class SmokeTests:
         """Test simple chat query."""
         start = time.perf_counter()
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
+            async with httpx.AsyncClient(timeout=60, headers=self.headers) as client:
                 response = await client.post(
                     f"{self.gateway_url}/v1/chat/completions",
                     json={
@@ -205,7 +207,7 @@ class SmokeTests:
         start = time.perf_counter()
         chunks = 0
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
+            async with httpx.AsyncClient(timeout=60, headers=self.headers) as client:
                 async with client.stream(
                     "POST",
                     f"{self.gateway_url}/v1/chat/completions",
@@ -253,7 +255,7 @@ class SmokeTests:
         """Test a math/reasoning question."""
         start = time.perf_counter()
         try:
-            async with httpx.AsyncClient(timeout=60) as client:
+            async with httpx.AsyncClient(timeout=60, headers=self.headers) as client:
                 response = await client.post(
                     f"{self.gateway_url}/v1/chat/completions",
                     json={
@@ -297,7 +299,7 @@ class SmokeTests:
         """Test handling of edge cases."""
         start = time.perf_counter()
         try:
-            async with httpx.AsyncClient(timeout=30) as client:
+            async with httpx.AsyncClient(timeout=30, headers=self.headers) as client:
                 response = await client.post(
                     f"{self.gateway_url}/v1/chat/completions",
                     json={

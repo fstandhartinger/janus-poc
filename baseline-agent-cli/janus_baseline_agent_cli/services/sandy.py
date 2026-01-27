@@ -41,6 +41,8 @@ from janus_baseline_agent_cli.services.response_processor import process_agent_r
 
 logger = structlog.get_logger()
 
+CLAUDE_AGENT_DEFAULT_MODEL = "claude-3-5-sonnet-latest"
+
 
 def _parse_sse_events(data: str) -> list[dict[str, Any]]:
     """Parse SSE event data into a list of JSON events."""
@@ -75,6 +77,16 @@ def _strip_ansi(text: str) -> str:
     text = re.sub(r"\x1b\[[0-9;]*[A-Za-z]", "", text)
     text = text.replace("\r", "")
     return re.sub(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", "", text)
+
+
+def _filter_agent_message(text: str) -> Optional[str]:
+    """Filter out known noisy agent status lines."""
+    trimmed = text.strip()
+    if not trimmed:
+        return None
+    if "Pre-flight check is taking longer than expected" in trimmed:
+        return None
+    return text
 
 
 def _clean_aider_output(text: str) -> str:
@@ -308,6 +320,23 @@ class SandyService:
             "JANUS_DEFAULT_SANDBOX_TTL": "600",
             "PATH": self._default_path,
         }
+        router_url = self._settings.public_router_url
+        if not router_url and self._settings.use_model_router:
+            router_url = f"http://{self._settings.router_host}:{self._settings.router_port}"
+        if router_url:
+            anthropic_base = router_url.rstrip("/")
+            if anthropic_base.endswith("/v1"):
+                anthropic_base = anthropic_base[:-3]
+            env.setdefault("ANTHROPIC_BASE_URL", anthropic_base)
+            if chutes_api_key:
+                env.setdefault("ANTHROPIC_API_KEY", chutes_api_key)
+                env.setdefault("ANTHROPIC_AUTH_TOKEN", chutes_api_key)
+        if chutes_api_key:
+            env.setdefault("OPENAI_API_KEY", chutes_api_key)
+        if chutes_api_url:
+            env.setdefault("OPENAI_BASE_URL", chutes_api_url)
+            env.setdefault("OPENAI_API_BASE", chutes_api_url)
+            env.setdefault("CHUTES_BASE_URL", chutes_api_url)
         if self._memory_tool_enabled(request):
             env.update(
                 {
@@ -389,40 +418,25 @@ class SandyService:
                 quoted_task,
             ]
         elif agent == "claude" or agent == "claude-code":
-            # Claude Code CLI agent
-            # -p: Print mode (non-interactive)
-            # --verbose: REQUIRED with stream-json for real-time progress events
-            # --output-format stream-json: Structured JSONL output
-            # --no-session-persistence: Fresh context each run (no session contamination)
-            # --dangerously-skip-permissions: YOLO mode for automation
-            # Prepend Janus capabilities directly to the task (simplest approach)
-            janus_context = (
-                "[INSTRUCTION: To generate images, you MUST use the Chutes API with "
-                "Authorization: Bearer $CHUTES_API_KEY. "
-                "Write and run this Python code: "
-                "import base64, os, requests; "
-                "headers = {'Authorization': f\"Bearer {os.environ['CHUTES_API_KEY']}\"}; "
-                "r = requests.post('https://image.chutes.ai/generate', headers=headers, "
-                "json={'model': 'qwen-image', 'prompt': '<your description>', "
-                "'width': 1024, 'height': 1024, 'num_inference_steps': 30}); "
-                "r.raise_for_status(); "
-                "mime = r.headers.get('content-type', 'image/jpeg'); "
-                "b64 = base64.b64encode(r.content).decode('utf-8'); "
-                "print(f'![Image](data:{mime};base64,{b64})'); "
-                "DO NOT create SVG or ASCII art. The API is available and works.]\n\n"
-            )
-            # Don't use shlex.quote for list commands - subprocess handles escaping
-            enhanced_task = janus_context + task
+            # Claude Code CLI agent (print mode)
             command = [
                 "claude",
                 "-p",
                 "--verbose",
-                "--output-format", "stream-json",
+                "--output-format",
+                "text",
                 "--no-session-persistence",
-                "--dangerously-skip-permissions",
-                "--allowedTools", "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
-                enhanced_task,
+                "--permission-mode",
+                "acceptEdits",
+                "--add-dir",
+                "/workspace",
+                "--cwd",
+                "/workspace",
+                "--allowedTools",
+                "Bash,Read,Write,Edit,Glob,Grep,WebFetch,WebSearch",
             ]
+            command += ["--append-system-prompt-file", system_prompt_path]
+            command += ["--", quoted_task]
         elif agent == "aider":
             # Aider needs specific flags for non-interactive mode
             # --yes-always: auto-confirm all changes
@@ -1122,7 +1136,9 @@ class SandyService:
         )
         return agent
 
-    def _select_model_for_api(self, request: ChatCompletionRequest) -> str:
+    def _select_model_for_api(
+        self, request: ChatCompletionRequest, agent: str | None = None
+    ) -> str:
         """Select model for Sandy's agent/run API.
 
         Supported models on Chutes include:
@@ -1134,6 +1150,12 @@ class SandyService:
         """
         # Use the model from request, or default to a good model
         model = request.model
+        agent_name = (agent or self._baseline_agent).strip().lower()
+
+        if agent_name in {"claude", "claude-code"}:
+            if "claude" in model.lower() or "anthropic" in model.lower():
+                return model
+            return CLAUDE_AGENT_DEFAULT_MODEL
 
         # Sandy's agent API expects certain model formats
         # Skip generic baseline aliases
@@ -1829,7 +1851,7 @@ class SandyService:
             )
 
         agent = self._select_agent_for_api(baseline_agent_override)
-        api_model = self._select_model_for_api(request)
+        api_model = self._select_model_for_api(request, agent=agent)
         if debug_emitter:
             await debug_emitter.emit(
                 DebugEventType.AGENT_THINKING,
@@ -2046,7 +2068,7 @@ class SandyService:
         This is the preferred method as it:
         - Uses Sandy's pre-configured agent settings with yolo mode
         - Handles agent setup, config files, and environment
-        - Provides faster sandbox boot times (no bootstrap needed)
+        - Boots the agent pack to ensure docs + router are available
         - Streams real-time output from the agent
         """
         request_id = self._generate_id()
@@ -2099,7 +2121,7 @@ class SandyService:
 
         # Select agent and model for Sandy's API
         agent = self._select_agent_for_api(baseline_agent_override)
-        api_model = self._select_model_for_api(request)
+        api_model = self._select_model_for_api(request, agent=agent)
 
         if debug_emitter:
             await debug_emitter.emit(
@@ -2261,19 +2283,20 @@ class SandyService:
                     if event_type == "status":
                         # Progress status messages
                         message = event.get("message", "")
-                        if message:
+                        filtered_message = _filter_agent_message(message) if message else None
+                        if filtered_message:
                             if debug_emitter:
                                 await debug_emitter.emit(
                                     DebugEventType.AGENT_THINKING,
                                     "AGENT",
-                                    message,
+                                    filtered_message,
                                 )
                             yield ChatCompletionChunk(
                                 id=request_id,
                                 model=model,
                                 choices=[
                                     ChunkChoice(
-                                        delta=Delta(reasoning_content=f"{message}\n")
+                                        delta=Delta(reasoning_content=f"{filtered_message}\n")
                                     )
                                 ],
                             )
@@ -2281,20 +2304,21 @@ class SandyService:
                     elif event_type == "output":
                         # Text output from agent
                         text = _strip_ansi(event.get("text", ""))
-                        if text:
+                        filtered_text = _filter_agent_message(text) if text else None
+                        if filtered_text:
                             if debug_emitter:
                                 await debug_emitter.emit(
                                     DebugEventType.RESPONSE_CHUNK,
                                     "AGENT",
-                                    text,
+                                    filtered_text,
                                 )
-                            output_parts.append(text)
+                            output_parts.append(filtered_text)
                             yield ChatCompletionChunk(
                                 id=request_id,
                                 model=model,
                                 choices=[
                                     ChunkChoice(
-                                        delta=Delta(reasoning_content=f"{text}\n")
+                                        delta=Delta(reasoning_content=f"{filtered_text}\n")
                                     )
                                 ],
                             )
@@ -2452,14 +2476,18 @@ class SandyService:
                             elif msg_type == "system":
                                 # System messages - often contain warnings or status
                                 message = data.get("message", "")
-                                if isinstance(message, str) and message.strip():
+                                if isinstance(message, str):
+                                    filtered_message = _filter_agent_message(message)
+                                else:
+                                    filtered_message = None
+                                if filtered_message:
                                     yield ChatCompletionChunk(
                                         id=request_id,
                                         model=model,
                                         choices=[
                                             ChunkChoice(
                                                 delta=Delta(
-                                                    reasoning_content=f"{message}\n"
+                                                    reasoning_content=f"{filtered_message}\n"
                                                 )
                                             )
                                         ],

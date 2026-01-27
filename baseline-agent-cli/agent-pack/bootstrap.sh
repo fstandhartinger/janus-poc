@@ -25,46 +25,6 @@ echo "=== Setting up CLAUDE.md for Claude Code ==="
 if [ -f "$SYSTEM_PROMPT_PATH" ]; then
   cp "$SYSTEM_PROMPT_PATH" "${WORKSPACE_ROOT}/CLAUDE.md"
   echo "CLAUDE.md created from system prompt"
-  # Also ensure the docs path is mentioned and media API is emphasized
-  cat >> /workspace/CLAUDE.md <<'EOF'
-
-## CRITICAL: You Have REAL Media Generation APIs!
-
-**For image generation requests, use the Chutes API (NOT SVG/ASCII art):**
-
-```python
-import base64
-import os
-import requests
-response = requests.post(
-    "https://image.chutes.ai/generate",
-    headers={"Authorization": f"Bearer {os.environ['CHUTES_API_KEY']}"},
-    json={
-        "model": "qwen-image",
-        "prompt": "your image description here",
-        "width": 1024,
-        "height": 1024,
-        "num_inference_steps": 30
-    }
-)
-response.raise_for_status()
-mime = response.headers.get("content-type", "image/jpeg")
-image_base64 = base64.b64encode(response.content).decode("utf-8")
-# Return to user as: ![Image](data:{mime};base64,{image_base64})
-```
-
-## Documentation Location
-
-Full API docs at `/workspace/docs/models/`:
-- `text-to-image.md` - Image generation
-- `text-to-speech.md` - TTS (Kokoro)
-- `music-generation.md` - DiffRhythm
-- `text-to-video.md` - Video generation
-- `lip-sync.md` - MuseTalk lip-sync
-- `vision.md` - Vision models
-
-**⚠️ READ these docs and USE THE REAL APIs - do NOT create placeholder images!**
-EOF
 else
   echo "WARNING: System prompt not found at ${SYSTEM_PROMPT_PATH}"
 fi

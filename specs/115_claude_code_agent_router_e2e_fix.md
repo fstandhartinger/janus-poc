@@ -35,21 +35,21 @@ streams useful output in the UI.
 
 ## Root Cause Summary
 
-1. **Agent pack not loaded for agent/run**
-   - `execute_via_agent_api()` skipped upload + bootstrap.
-   - No `/workspace/CLAUDE.md`, docs, or local router.
+1. **Claude Code prompt injection broke shell execution**
+   - Sandy’s agent runner inlined large system prompt text.
+   - CLI launch occasionally hit `unterminated quoted string`, so no output.
 
-2. **Claude Code system prompt ignored**
-   - Sandy’s AgentRunner appended internal prompts only.
-   - CLAUDE.md never loaded or appended.
+2. **System prompt not reliably loaded**
+   - CLAUDE.md is only auto-loaded when `cwd` is set correctly.
+   - No explicit `--system-prompt-file` / `--append-system-prompt-file` usage.
 
-3. **Router base mismatch**
-   - Claude Code uses Anthropic base URLs; OpenAI tools expect `/v1`.
-   - Missing router causes long hangs or empty output.
+3. **Model mismatch for Claude Code**
+   - Agent-run used MiniMax model IDs for Claude Code, triggering non-Anthropic heuristics.
+   - Shortened runtime + inconsistent CLI behavior.
 
-4. **Streaming output gaps**
-   - `stream_event` and `result` payloads from Claude Code weren’t parsed.
-   - UI sees “thinking” but no answer.
+4. **Router visibility + streaming noise**
+   - Router only works when bootstrap starts it.
+   - Preflight warnings and “working…” lines dominate streaming output.
 
 ## Solution Design
 
@@ -60,9 +60,9 @@ streams useful output in the UI.
   - Copy docs into `/workspace/docs/models`
   - Start local router on `127.0.0.1:8000`
 
-### B) Sandy: ensure CLAUDE.md is auto-loaded
-- Ensure `/workspace/CLAUDE.md` exists (from bootstrap).
-- Claude Code runs from `/workspace`, so it auto-loads `CLAUDE.md`.
+### B) Sandy: ensure system prompt is always loaded
+- Use `--append-system-prompt-file` for `/workspace/agent-pack/prompts/system.md`.
+- Run Claude Code with `--cwd /workspace` so CLAUDE.md memory is picked up.
 - Keep minimal non-interactive system prompt to enforce tool usage.
 
 ### C) Router base normalization
@@ -73,21 +73,21 @@ streams useful output in the UI.
 ### D) Streaming reliability
 - Parse `stream_event` and `result` payloads from Claude Code output.
 - Emit content as it arrives in `ChatCompletionChunk.delta.content`.
-- Ensure Claude Code is invoked with `--include-partial-messages` and without
-  `--verbose` noise by using an agent-pack wrapper.
+- Filter known “preflight” warnings from agent output.
 
 ## Implementation Steps
 
 1. **baseline-agent-cli**
-   - Upload agent pack + run bootstrap in `execute_via_agent_api` and `complete_via_agent_api`.
-   - Default `apiBaseUrl` to local router when `use_model_router` is enabled.
-   - Add `stream_event` + `result` parsing for agent-run streaming.
-   - Add agent-pack `bin/claude` wrapper to enforce CLI flags and append prompt.
-   - Clamp Anthropic `max_tokens` to model limits in the local router.
+   - Ensure `execute_via_agent_api` bootstraps router and agent pack.
+   - Pick a Claude-compatible model when agent is `claude-code` (router ignores model).
+   - Filter noisy preflight output lines in streaming.
+   - Provide Anthropic base + key env vars for manual CLI fallback.
+   - Update `system.md` with explicit media API instructions.
 
 2. **sandy**
-   - Normalize router base URLs for OpenAI vs Anthropic.
-   - Append `/workspace/CLAUDE.md` to Claude Code command if present.
+   - Add `--append-system-prompt-file` (system.md) to Claude Code launch.
+   - Add `--cwd /workspace` to ensure CLAUDE.md memory loads.
+   - Keep `--verbose` before `--output-format` for stream-json reliability.
 
 3. **Tests**
    - Unit test for `stream_event` parsing in baseline.

@@ -73,3 +73,9 @@
 - Completed spec 90_complexity_detection_improvements.md with multilingual/git keyword routing, separable verb matching, Sandy unavailability messaging, health sandbox status, and UI availability indicator.
 - Completed spec 91_fix_sign_in_with_chutes.md with OAuth config error handling, optional client secrets, refreshed IDP app credentials, Render env updates, and verified production login/logout + authenticated chat flow.
 - Completed spec 92_baseline_agent_cli_e2e_verification.md with comprehensive E2E tests for agent selection (Claude Code, Codex, Aider), complex tasks (git clone, web search, coding, image gen, TTS), model compatibility tests, SSE streaming verification, and yolo mode validation. Added retry logic for transient 5xx errors and flexible assertions for task engagement detection.
+
+## 2026-01-27
+- Added pre-release password gate wiring (Render env + constitution guidance) for UI + gateway access.
+- Updated baseline agent system prompt with explicit media API instructions and removed bootstrap duplication.
+- Hardened Sandy streaming output handling (filter noisy preflight warnings) and ensured Claude-compatible model selection for claude-code agent-run.
+- Refined Claude Code agent-run invocation (append system prompt file, set cwd) and router usage notes in spec 115.

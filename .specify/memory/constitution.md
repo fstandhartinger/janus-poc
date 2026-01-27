@@ -3,7 +3,7 @@
 > A spec-first Proof-of-Concept for the Janus platform - an AI agent gateway with OpenAI API compatibility.
 
 ## Version
-1.0.0
+1.0.2
 
 ## Ralph Wiggum Version
 Installed from commit: 81231ca4e7466d84e3908841e9ed3d08e8c0803e
@@ -378,10 +378,11 @@ cd ui && npm run typecheck
 ## Pre-release Access
 
 - If automating the frontend via Playwright (or similar), enter the pre-release
-  password stored in `CHUTES_JANUS_PRE_RELEASE_PWD`.
+  password stored in `CHUTES_JANUS_PRE_RELEASE_PWD` into the pre-release modal
+  before attempting any page interactions or API calls.
 
 ---
 
 **Created**: 2025-01-22
-**Version**: 1.0.1
-**Amendments**: Added pre-release access guidance for browser automation.
+**Version**: 1.0.2
+**Amendments**: Added explicit pre-release password entry guidance for browser automation.

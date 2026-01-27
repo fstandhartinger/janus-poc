@@ -8,7 +8,7 @@ import httpx
 import pytest
 
 from tests.config import config
-from tests.utils import is_service_available
+from tests.utils import is_service_available, pre_release_headers
 
 pytestmark = [pytest.mark.integration, pytest.mark.asyncio]
 
@@ -21,7 +21,9 @@ async def test_gateway_health(mode: str) -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.request_timeout
+        base_url=urls["gateway"],
+        timeout=config.request_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.get("/health")
         if response.status_code == 404:
@@ -39,7 +41,9 @@ async def test_gateway_chat_completion(mode: str) -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.request_timeout
+        base_url=urls["gateway"],
+        timeout=config.request_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.post(
             "/v1/chat/completions",
@@ -66,7 +70,9 @@ async def test_gateway_streaming_chat(mode: str) -> None:
 
     chunks: list[dict] = []
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.streaming_timeout
+        base_url=urls["gateway"],
+        timeout=config.streaming_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         async with client.stream(
             "POST",
@@ -107,7 +113,9 @@ async def test_gateway_multimodal_request(mode: str) -> None:
     )
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.streaming_timeout
+        base_url=urls["gateway"],
+        timeout=config.streaming_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.post(
             "/v1/chat/completions",
@@ -141,7 +149,9 @@ async def test_gateway_models_endpoint(mode: str) -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.request_timeout
+        base_url=urls["gateway"],
+        timeout=config.request_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.get("/v1/models")
         if response.status_code == 404:
@@ -161,7 +171,9 @@ async def test_gateway_transcription_health(mode: str) -> None:
         pytest.skip(f"Gateway not reachable at {urls['gateway']}")
 
     async with httpx.AsyncClient(
-        base_url=urls["gateway"], timeout=config.request_timeout
+        base_url=urls["gateway"],
+        timeout=config.request_timeout,
+        headers=pre_release_headers() or None,
     ) as client:
         response = await client.get("/api/transcribe/health")
         if response.status_code == 404:

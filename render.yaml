@@ -30,6 +30,8 @@ services:
           envVarKey: BASELINE_LANGCHAIN_URL
       - key: CHUTES_API_KEY
         sync: false
+      - key: CHUTES_JANUS_PRE_RELEASE_PWD
+        sync: false
       - key: JANUS_MEMORY_SERVICE_URL
         value: "https://janus-memory-service.onrender.com"
     healthCheckPath: /health
@@ -135,5 +137,7 @@ services:
       - key: CHUTES_OAUTH_REDIRECT_URI
         sync: false
       - key: CHUTES_OAUTH_COOKIE_SECRET
+        sync: false
+      - key: CHUTES_JANUS_PRE_RELEASE_PWD
         sync: false
     healthCheckPath: /

@@ -9,20 +9,34 @@ from typing import Iterable
 
 import httpx
 
+PRE_RELEASE_HEADER = "X-PreReleasePassword"
+
+
+def pre_release_headers() -> dict[str, str]:
+    """Return pre-release headers when password is configured."""
+    password = os.getenv("CHUTES_JANUS_PRE_RELEASE_PWD")
+    if not password:
+        return {}
+    return {PRE_RELEASE_HEADER: password}
+
 
 async def create_test_client(base_url: str) -> httpx.AsyncClient:
     """Create configured test client."""
     return httpx.AsyncClient(
         base_url=base_url,
         timeout=60.0,
-        headers={"Content-Type": "application/json"},
+        headers={"Content-Type": "application/json", **pre_release_headers()},
     )
 
 
 async def is_service_available(base_url: str, timeout: float = 2.0) -> bool:
     """Check if a baseline service is reachable."""
     try:
-        async with httpx.AsyncClient(base_url=base_url, timeout=timeout) as client:
+        async with httpx.AsyncClient(
+            base_url=base_url,
+            timeout=timeout,
+            headers=pre_release_headers() or None,
+        ) as client:
             response = await client.get("/health")
             response.raise_for_status()
         return True

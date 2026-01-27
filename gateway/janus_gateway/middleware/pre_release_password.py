@@ -5,12 +5,13 @@ from typing import Callable, Awaitable
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
+from starlette.types import ASGIApp
 
 
 class PreReleasePasswordMiddleware(BaseHTTPMiddleware):
     """Require X-PreReleasePassword header for all API calls when configured."""
 
-    def __init__(self, app: Callable, password: str) -> None:
+    def __init__(self, app: ASGIApp, password: str) -> None:
         super().__init__(app)
         self._password = password
 

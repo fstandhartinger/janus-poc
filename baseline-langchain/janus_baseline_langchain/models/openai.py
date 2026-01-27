@@ -149,6 +149,7 @@ class ChatCompletionRequest(BaseModel):
     enable_memory: bool = False
     chutes_access_token: Optional[str] = None
     generation_flags: Optional[GenerationFlags] = None
+    debug: bool = False
 
 
 class FinishReason(str, Enum):

@@ -5,7 +5,7 @@ from __future__ import annotations
 import httpx
 import pytest
 
-from tests.utils import is_service_available
+from tests.utils import is_service_available, pre_release_headers
 
 pytestmark = [pytest.mark.smoke, pytest.mark.asyncio, pytest.mark.smoke_baseline]
 
@@ -41,7 +41,11 @@ class TestBaselineSmokeGateway:
         """Simple query returns a response."""
         if not await is_service_available(gateway_url):
             pytest.skip(f"Gateway not reachable at {gateway_url}")
-        async with httpx.AsyncClient(base_url=gateway_url, timeout=60) as client:
+        async with httpx.AsyncClient(
+            base_url=gateway_url,
+            timeout=60,
+            headers=pre_release_headers() or None,
+        ) as client:
             await _skip_if_unavailable(client, baseline)
             response = await client.post(
                 "/v1/chat/completions",
@@ -62,7 +66,11 @@ class TestBaselineSmokeGateway:
         if not await is_service_available(gateway_url):
             pytest.skip(f"Gateway not reachable at {gateway_url}")
         chunks: list[str] = []
-        async with httpx.AsyncClient(base_url=gateway_url, timeout=60) as client:
+        async with httpx.AsyncClient(
+            base_url=gateway_url,
+            timeout=60,
+            headers=pre_release_headers() or None,
+        ) as client:
             await _skip_if_unavailable(client, baseline)
             async with client.stream(
                 "POST",
