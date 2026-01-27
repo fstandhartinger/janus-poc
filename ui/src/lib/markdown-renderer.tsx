@@ -27,6 +27,16 @@ interface CitationEntry {
   title?: string;
 }
 
+function normalizeDataUrls(content: string): string {
+  if (!content || !content.includes('data:')) {
+    return content;
+  }
+  return content.replace(/!\[([^\]]*)]\((data:[^)]+)\)/g, (_match, alt, url) => {
+    const compact = String(url).replace(/\s+/g, '');
+    return `![${alt}](${compact})`;
+  });
+}
+
 function copyText(text: string) {
   if (navigator.clipboard?.writeText) {
     void navigator.clipboard.writeText(text);
@@ -109,7 +119,8 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
     return null;
   }
 
-  const blocks = parseCustomBlocks(content);
+  const normalizedContent = normalizeDataUrls(content);
+  const blocks = parseCustomBlocks(normalizedContent);
   const urlTransform = (url: string) => {
     if (!url) {
       return url;
