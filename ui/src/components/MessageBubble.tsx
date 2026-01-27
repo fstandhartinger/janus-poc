@@ -235,7 +235,7 @@ export function MessageBubble({
   const combinedImageMedia = useMemo<MessageContent | null>(() => {
     if (inlineImages.length === 0 && imageArtifacts.length === 0) return null;
     const seen = new Set<string>();
-    const items = [];
+    const items: { type: 'image_url'; image_url: { url: string } }[] = [];
     inlineImages.forEach((image) => {
       if (!image.url || seen.has(image.url)) return;
       seen.add(image.url);
