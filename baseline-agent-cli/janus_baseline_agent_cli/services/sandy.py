@@ -41,7 +41,7 @@ from janus_baseline_agent_cli.services.response_processor import process_agent_r
 
 logger = structlog.get_logger()
 
-CLAUDE_AGENT_DEFAULT_MODEL = "claude-3-5-sonnet-latest"
+CLAUDE_AGENT_DEFAULT_MODEL = "janus-router"
 
 
 def _parse_sse_events(data: str) -> list[dict[str, Any]]:
@@ -174,6 +174,7 @@ class SandyService:
     """Service for executing tasks in Sandy sandboxes."""
 
     _max_inline_bytes = 1_000_000
+    _max_inline_image_bytes = 5_000_000
     # Include common pip --user install paths and standard paths
     # Note: Using actual paths instead of unexpanded shell variables
     _default_path = (
@@ -776,7 +777,8 @@ class SandyService:
             mime_type = mime_type or "application/octet-stream"
             size_bytes = len(data)
             sha256 = hashlib.sha256(data).hexdigest()
-            if size_bytes <= self._max_inline_bytes:
+            max_inline_bytes = self._max_inline_image_bytes if mime_type.startswith("image/") else self._max_inline_bytes
+            if size_bytes <= max_inline_bytes:
                 url = self._build_data_url(data, mime_type)
             else:
                 filename = Path(path).name
@@ -1170,9 +1172,8 @@ class SandyService:
         agent_name = (agent or self._baseline_agent).strip().lower()
 
         if agent_name in {"claude", "claude-code"}:
-            if "claude" in model.lower() or "anthropic" in model.lower():
-                return model
-            return CLAUDE_AGENT_DEFAULT_MODEL
+            # Claude Code uses Anthropic Messages format; route through Janus router by default.
+            return self._settings.effective_model or CLAUDE_AGENT_DEFAULT_MODEL
 
         # Sandy's agent API expects certain model formats
         # Skip generic baseline aliases
@@ -1766,6 +1767,21 @@ class SandyService:
                     client, sandbox_id, public_url
                 )
                 if artifacts:
+                    artifact_payload = [artifact.model_dump(mode="json") for artifact in artifacts]
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    janus={
+                                        "event": "artifacts",
+                                        "payload": {"items": artifact_payload},
+                                    }
+                                )
+                            )
+                        ],
+                    )
                     links = self._format_artifact_links(artifacts)
                     yield ChatCompletionChunk(
                         id=request_id,
@@ -1869,11 +1885,16 @@ class SandyService:
 
         agent = self._select_agent_for_api(baseline_agent_override)
         api_model = self._select_model_for_api(request, agent=agent)
+        start_message = (
+            "Starting claude-code agent with intelligent model routing among Chutes models"
+            if agent in {"claude", "claude-code"}
+            else f"Starting {agent} agent in Sandy sandbox"
+        )
         if debug_emitter:
             await debug_emitter.emit(
                 DebugEventType.AGENT_THINKING,
                 "AGENT",
-                f"Starting {agent} agent with model {api_model}",
+                start_message,
                 data={"agent": agent, "model": api_model},
             )
         sandbox_start = time.perf_counter()
@@ -2140,11 +2161,16 @@ class SandyService:
         agent = self._select_agent_for_api(baseline_agent_override)
         api_model = self._select_model_for_api(request, agent=agent)
 
+        start_message = (
+            "Starting claude-code agent with intelligent model routing among Chutes models"
+            if agent in {"claude", "claude-code"}
+            else f"Starting {agent} agent in Sandy sandbox"
+        )
         if debug_emitter:
             await debug_emitter.emit(
                 DebugEventType.AGENT_THINKING,
                 "AGENT",
-                f"Starting {agent} agent with model {api_model}",
+                start_message,
                 data={"agent": agent, "model": api_model},
             )
 
@@ -2153,9 +2179,7 @@ class SandyService:
             model=model,
             choices=[
                 ChunkChoice(
-                    delta=Delta(
-                        reasoning_content=f"Starting {agent} agent with model {api_model}...\n"
-                    )
+                    delta=Delta(reasoning_content=f"{start_message}...\n")
                 )
             ],
         )
@@ -2698,6 +2722,21 @@ class SandyService:
                 # Collect artifacts
                 artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
                 if artifacts:
+                    artifact_payload = [artifact.model_dump(mode="json") for artifact in artifacts]
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    janus={
+                                        "event": "artifacts",
+                                        "payload": {"items": artifact_payload},
+                                    }
+                                )
+                            )
+                        ],
+                    )
                     links = self._format_artifact_links(artifacts)
                     yield ChatCompletionChunk(
                         id=request_id,

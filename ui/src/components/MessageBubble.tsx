@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Message } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { parseAudioContent } from '@/lib/audio-parser';
@@ -221,6 +221,21 @@ export function MessageBubble({
   const hasRichContent =
     Array.isArray(message.content) && message.content.some((part) => part.type !== 'text');
   const hasArtifacts = Boolean(message.artifacts?.length);
+  const imageArtifacts = useMemo(
+    () => (message.artifacts || []).filter((artifact) => artifact.type === 'image' && artifact.url),
+    [message.artifacts]
+  );
+  const artifactMedia = useMemo(() => {
+    if (imageArtifacts.length === 0) return null;
+    return imageArtifacts.map((artifact) => ({
+      type: 'image_url',
+      image_url: { url: artifact.url },
+    }));
+  }, [imageArtifacts]);
+  const nonImageArtifacts = useMemo(
+    () => (message.artifacts || []).filter((artifact) => artifact.type !== 'image'),
+    [message.artifacts]
+  );
   const shouldShowPlaceholder =
     !isUser &&
     isStreaming &&
@@ -283,10 +298,11 @@ export function MessageBubble({
       data-testid={isUser ? 'user-message' : 'assistant-message'}
     >
       <div
-        className={`chat-message max-w-[80%] ${
+        className={`chat-message max-w-[94%] sm:max-w-[85%] lg:max-w-[78%] ${
           isUser ? 'chat-message-user' : 'chat-message-assistant'
         }${isStreaming && !isUser ? ' chat-message-streaming' : ''}`}
       >
+        {!isUser && artifactMedia ? <MediaRenderer content={artifactMedia} /> : null}
         <MediaRenderer content={message.content} />
 
         {/* Show reasoning panel if available - collapsible with max-height */}
@@ -381,9 +397,9 @@ export function MessageBubble({
         )}
 
         {/* Show artifacts */}
-        {message.artifacts && message.artifacts.length > 0 && (
+        {nonImageArtifacts.length > 0 && (
           <div className="mt-2 space-y-1">
-            {message.artifacts.map((artifact) => (
+            {nonImageArtifacts.map((artifact) => (
               <a
                 key={artifact.id}
                 href={artifact.url}

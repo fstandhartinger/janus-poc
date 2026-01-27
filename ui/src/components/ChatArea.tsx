@@ -31,7 +31,7 @@ import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
 import { ShareModal } from './ShareModal';
 import { useAuth } from '@/hooks/useAuth';
-import type { ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
+import type { Artifact, ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { GenerationFlags } from '@/types/generation';
 import type { AttachedFile } from '@/lib/file-types';
 
@@ -70,6 +70,7 @@ export function ChatArea({
     showReasoning,
     addMessage,
     appendToLastMessage,
+    appendArtifacts,
     updateLastMessage,
     setStreaming,
     createSession,
@@ -183,6 +184,26 @@ export function ChatArea({
   }, []);
 
   type MessageContentPart = Exclude<MessageContent, string>[number];
+
+  const coerceArtifact = (payload: unknown): Artifact | null => {
+    if (!payload || typeof payload !== 'object') return null;
+    const candidate = payload as Partial<Artifact>;
+    if (!candidate.id || !candidate.url || !candidate.display_name) {
+      return null;
+    }
+    return candidate as Artifact;
+  };
+
+  const coerceArtifactsPayload = (payload: unknown): Artifact[] => {
+    if (!payload) return [];
+    if (Array.isArray(payload)) {
+      return payload.map(coerceArtifact).filter(Boolean) as Artifact[];
+    }
+    if (typeof payload !== 'object') return [];
+    const candidate = payload as { items?: unknown };
+    const items = Array.isArray(candidate.items) ? candidate.items : [];
+    return items.map(coerceArtifact).filter(Boolean) as Artifact[];
+  };
 
   const buildMessageContent = (content: string, files: AttachedFile[]): MessageContent => {
     const trimmedContent = content.trim();
@@ -447,6 +468,20 @@ export function ChatArea({
           const payload = coerceScreenshotPayload(delta.janus.payload);
           if (payload) {
             pushScreenshot(payload);
+          }
+          continue;
+        }
+        if (delta?.janus?.event === 'artifacts') {
+          const artifacts = coerceArtifactsPayload(delta.janus.payload);
+          if (artifacts.length > 0) {
+            appendArtifacts(artifacts);
+          }
+          continue;
+        }
+        if (delta?.janus?.event === 'artifact') {
+          const artifact = coerceArtifact(delta.janus.payload);
+          if (artifact) {
+            appendArtifacts([artifact]);
           }
           continue;
         }

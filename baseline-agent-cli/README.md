@@ -193,6 +193,15 @@ For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
 | `BASELINE_AGENT_CLI_ENABLE_FILE_TOOLS` | `true` | Enable file tooling |
 | `JANUS_BASELINE_AGENT` | `aider` | CLI agent command to run in the sandbox |
 
+### Sandy + Claude Code Agent Wiring (Recommended)
+
+When routing complex requests into Sandy, we run Claude Code (or other CLI agents) through Sandy's `/agent/run` API. The recommended wiring ensures the model router, system prompt, and agent pack are always in play:
+
+- **Model router**: set `BASELINE_AGENT_CLI_USE_MODEL_ROUTER=true` and pass `apiBaseUrl` to Sandy `/agent/run` (public router URL if available). The model name should stay `janus-router` so the router can choose the best Chutes model + fallbacks.
+- **System prompt + agent pack**: upload `agent-pack/` into `/workspace/agent-pack`, run `agent-pack/bootstrap.sh`, and point `JANUS_SYSTEM_PROMPT_PATH` at `agent-pack/prompts/system.md` (Claude Code uses `--append-system-prompt-file`).
+- **Working directory**: run the CLI from `/workspace` and include `--add-dir /workspace` for tools that need file access.
+- **Artifacts**: images are inlined as data URLs (up to ~5MB) and/or exposed as artifact links; streaming emits Janus `artifacts` events so the UI can render previews immediately.
+
 ### E2E Testing Configuration
 
 | Variable | Default | Description |

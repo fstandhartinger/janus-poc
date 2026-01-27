@@ -1,9 +1,10 @@
 'use client';
 
 import type { ReactNode } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
+import remarkBreaks from 'remark-breaks';
 import rehypeKatex from 'rehype-katex';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
@@ -109,6 +110,18 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
   }
 
   const blocks = parseCustomBlocks(content);
+  const urlTransform = (url: string) => {
+    if (!url) {
+      return url;
+    }
+    if (url.startsWith('data:image/') || url.startsWith('data:video/') || url.startsWith('data:audio/')) {
+      return url;
+    }
+    if (url.startsWith('blob:')) {
+      return url;
+    }
+    return defaultUrlTransform(url);
+  };
 
   return (
     <div className="rich-content">
@@ -157,8 +170,9 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
                   prose-hr:border-white/10"
               >
                 <ReactMarkdown
-                  remarkPlugins={[remarkGfm, remarkMath]}
+                  remarkPlugins={[remarkGfm, remarkMath, remarkBreaks]}
                   rehypePlugins={[rehypeKatex]}
+                  urlTransform={urlTransform}
                   components={{
                     text({ children }) {
                       const value = Array.isArray(children) ? children.join('') : String(children ?? '');
@@ -223,6 +237,7 @@ export function MarkdownContent({ content }: MarkdownContentProps) {
                       return <td className="markdown-td">{children}</td>;
                     },
                     img({ src, alt }) {
+                      if (!src) return null;
                       return (
                         <img
                           src={src}

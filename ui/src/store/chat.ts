@@ -4,7 +4,7 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Session, Message, MessageContent, TextContent } from '@/types/chat';
+import type { Session, Message, MessageContent, TextContent, Artifact } from '@/types/chat';
 
 function generateId(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
@@ -25,6 +25,7 @@ interface ChatState {
   addMessage: (message: Omit<Message, 'id' | 'created_at'>) => void;
   updateLastMessage: (updates: Partial<Message>) => void;
   appendToLastMessage: (content: string, reasoning?: string) => void;
+  appendArtifacts: (artifacts: Artifact[]) => void;
 
   // UI state
   setStreaming: (streaming: boolean) => void;
@@ -155,6 +156,30 @@ export const useChatStore = create<ChatState>()(
                 ...lastMessage,
                 content: cleanContent,
                 reasoning_content: newReasoning,
+              };
+              return { ...session, messages, updated_at: new Date() };
+            }
+            return session;
+          });
+          return { sessions };
+        });
+      },
+
+      appendArtifacts: (artifacts) => {
+        if (!artifacts || artifacts.length === 0) return;
+        set((state) => {
+          const sessions = state.sessions.map((session) => {
+            if (session.id === state.currentSessionId && session.messages.length > 0) {
+              const messages = [...session.messages];
+              const lastIndex = messages.length - 1;
+              const lastMessage = messages[lastIndex];
+              const existing = lastMessage.artifacts || [];
+              const merged = new Map<string, Artifact>();
+              existing.forEach((artifact) => merged.set(artifact.id, artifact));
+              artifacts.forEach((artifact) => merged.set(artifact.id, artifact));
+              messages[lastIndex] = {
+                ...lastMessage,
+                artifacts: Array.from(merged.values()),
               };
               return { ...session, messages, updated_at: new Date() };
             }
