@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import type { Message, MessageContent } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { parseAudioContent } from '@/lib/audio-parser';
+import { parseImageContent } from '@/lib/image-parser';
 import { MarkdownContent } from '@/lib/markdown-renderer';
 import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
@@ -212,26 +213,41 @@ export function MessageBubble({
   const textContent = stripCanvasBlocks(rawTextContent);
   const parsedAudio = parseAudioContent(textContent);
   const cleanedText = stripAudioContent(textContent);
-  const hasText = Boolean(cleanedText);
+  const { text: cleanedTextSansImages, images: inlineImages } = useMemo(
+    () => parseImageContent(cleanedText),
+    [cleanedText]
+  );
+  const hasInlineImages = inlineImages.length > 0;
+  const hasText = Boolean(cleanedTextSansImages);
   const hasAudio = parsedAudio.length > 0;
 
   // Strip ANSI codes from reasoning content
   const cleanedReasoning = stripAnsiCodes(message.reasoning_content || '');
   const hasUsefulReasoning = showReasoning && isUsefulReasoning(cleanedReasoning);
   const hasRichContent =
-    Array.isArray(message.content) && message.content.some((part) => part.type !== 'text');
+    (Array.isArray(message.content) && message.content.some((part) => part.type !== 'text')) ||
+    hasInlineImages;
   const hasArtifacts = Boolean(message.artifacts?.length);
   const imageArtifacts = useMemo(
     () => (message.artifacts || []).filter((artifact) => artifact.type === 'image' && artifact.url),
     [message.artifacts]
   );
-  const artifactMedia = useMemo<MessageContent | null>(() => {
-    if (imageArtifacts.length === 0) return null;
-    return imageArtifacts.map((artifact) => ({
-      type: 'image_url' as const,
-      image_url: { url: artifact.url },
-    }));
-  }, [imageArtifacts]);
+  const combinedImageMedia = useMemo<MessageContent | null>(() => {
+    if (inlineImages.length === 0 && imageArtifacts.length === 0) return null;
+    const seen = new Set<string>();
+    const items = [];
+    inlineImages.forEach((image) => {
+      if (!image.url || seen.has(image.url)) return;
+      seen.add(image.url);
+      items.push({ type: 'image_url' as const, image_url: { url: image.url } });
+    });
+    imageArtifacts.forEach((artifact) => {
+      if (!artifact.url || seen.has(artifact.url)) return;
+      seen.add(artifact.url);
+      items.push({ type: 'image_url' as const, image_url: { url: artifact.url } });
+    });
+    return items.length > 0 ? items : null;
+  }, [inlineImages, imageArtifacts]);
   const nonImageArtifacts = useMemo(
     () => (message.artifacts || []).filter((artifact) => artifact.type !== 'image'),
     [message.artifacts]
@@ -245,8 +261,13 @@ export function MessageBubble({
     !hasRichContent &&
     !hasArtifacts;
   const hasRenderableContent =
-    hasText || hasAudio || hasUsefulReasoning || hasRichContent || hasArtifacts || shouldShowPlaceholder;
-  const displayText = useStreamingBuffer(cleanedText, isStreaming && !isUser);
+    hasText ||
+    hasAudio ||
+    hasUsefulReasoning ||
+    hasRichContent ||
+    hasArtifacts ||
+    shouldShowPlaceholder;
+  const displayText = useStreamingBuffer(cleanedTextSansImages, isStreaming && !isUser);
   const canShowActions = hasRenderableContent && !shouldShowPlaceholder;
 
   // Check if we have real content (not just status messages or empty)
@@ -302,7 +323,7 @@ export function MessageBubble({
           isUser ? 'chat-message-user' : 'chat-message-assistant'
         }${isStreaming && !isUser ? ' chat-message-streaming' : ''}`}
       >
-        {!isUser && artifactMedia ? <MediaRenderer content={artifactMedia} /> : null}
+        {combinedImageMedia ? <MediaRenderer content={combinedImageMedia} /> : null}
         <MediaRenderer content={message.content} />
 
         {/* Show reasoning panel if available - collapsible with max-height */}
