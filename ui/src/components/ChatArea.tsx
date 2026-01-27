@@ -18,6 +18,7 @@ import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFr
 import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
 import { useSmartScroll } from '@/hooks/useSmartScroll';
+import { cacheArtifact } from '@/lib/artifact-client';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress';
@@ -475,6 +476,14 @@ export function ChatArea({
           const artifacts = coerceArtifactsPayload(delta.janus.payload);
           if (artifacts.length > 0) {
             appendArtifacts(artifacts);
+            if (currentSessionId) {
+              void (async () => {
+                const cached = await Promise.all(
+                  artifacts.map((artifact) => cacheArtifact(currentSessionId, artifact))
+                );
+                appendArtifacts(cached);
+              })();
+            }
           }
           continue;
         }
@@ -482,6 +491,12 @@ export function ChatArea({
           const artifact = coerceArtifact(delta.janus.payload);
           if (artifact) {
             appendArtifacts([artifact]);
+            if (currentSessionId) {
+              void (async () => {
+                const cached = await cacheArtifact(currentSessionId, artifact);
+                appendArtifacts([cached]);
+              })();
+            }
           }
           continue;
         }

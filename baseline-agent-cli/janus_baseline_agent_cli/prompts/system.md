@@ -221,23 +221,24 @@ response = requests.post(
 )
 response.raise_for_status()
 mime = response.headers.get("content-type", "image/jpeg")
-image_base64 = base64.b64encode(response.content).decode("utf-8")
-# Return as: ![Generated Image](data:{mime};base64,{image_base64})
+ext = ".jpg" if "jpeg" in mime else ".png"
+output_path = f"/workspace/artifacts/generated-image{ext}"
+with open(output_path, "wb") as f:
+    f.write(response.content)
+print(f"Image saved to {output_path}")
+print("The image will be attached as an artifact for the user.")
 ```
 
 ## File URL Patterns
 
-### Base64 Data URLs (inline, small files)
+### Sandbox Artifact Files (preferred)
+Save large or binary outputs into `/workspace/artifacts/{filename}`. The host will collect and attach them for the user. Avoid printing large base64 blobs to stdout.
+
+### Base64 Data URLs (only for small files)
 ```
 data:{mime_type};base64,{base64_encoded_content}
 ```
-- Best for: Images < 500KB, small text files
-- Example: `data:image/png;base64,iVBORw0KGgo...`
-
-### Sandbox Artifact URLs (served files)
-```
-/artifacts/{filename}
-```
+- Use only for very small files (tiny images, short text snippets).
 - Served by sandbox HTTP server on port 8787
 - Agent writes to: `/workspace/artifacts/{filename}`
 - User accesses: `{sandbox_url}/artifacts/{filename}`

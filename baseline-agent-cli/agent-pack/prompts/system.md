@@ -58,6 +58,7 @@ print(f"App live at: {url}")
 #### CRITICAL: You Have REAL Media Generation APIs
 
 For image generation requests, **use the Chutes image API** (do NOT create SVG/ASCII art).
+Always save generated images to `/workspace/artifacts/` and avoid printing large base64 blobs.
 
 ```python
 import base64
@@ -78,8 +79,12 @@ response = requests.post(
 )
 response.raise_for_status()
 mime = response.headers.get("content-type", "image/jpeg")
-image_base64 = base64.b64encode(response.content).decode("utf-8")
-print(f"![Image](data:{mime};base64,{image_base64})")
+ext = ".jpg" if "jpeg" in mime else ".png"
+output_path = f"/workspace/artifacts/generated-image{ext}"
+with open(output_path, "wb") as f:
+    f.write(response.content)
+print(f"Image saved to {output_path}")
+print("The image will be attached as an artifact for the user.")
 ```
 
 Documentation location (inside the sandbox):

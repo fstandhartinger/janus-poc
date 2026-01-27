@@ -200,7 +200,7 @@ When routing complex requests into Sandy, we run Claude Code (or other CLI agent
 - **Model router**: set `BASELINE_AGENT_CLI_USE_MODEL_ROUTER=true` and pass `apiBaseUrl` to Sandy `/agent/run` (public router URL if available). The model name should stay `janus-router` so the router can choose the best Chutes model + fallbacks.
 - **System prompt + agent pack**: upload `agent-pack/` into `/workspace/agent-pack`, run `agent-pack/bootstrap.sh`, and point `JANUS_SYSTEM_PROMPT_PATH` at `agent-pack/prompts/system.md` (Claude Code uses `--append-system-prompt-file`).
 - **Working directory**: run the CLI from `/workspace` and include `--add-dir /workspace` for tools that need file access.
-- **Artifacts**: images are inlined as data URLs (up to ~5MB) and/or exposed as artifact links; streaming emits Janus `artifacts` events so the UI can render previews immediately.
+- **Artifacts**: agents should save files into `/workspace/artifacts`. The baseline service emits Janus `artifacts` events with sandbox URLs; the UI caches them server-side (e.g., `/var/data/janus-artifacts`) and serves them via `/api/artifacts/...` for reliable rendering after sandbox teardown.
 
 ### E2E Testing Configuration
 
