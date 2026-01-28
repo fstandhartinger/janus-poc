@@ -23,6 +23,14 @@ export default defineConfig({
               name: 'janusPreReleasePassword',
               value: process.env.CHUTES_JANUS_PRE_RELEASE_PWD || 'chutesSquad987!!!',
             },
+            {
+              name: 'janus-chat-storage',
+              value: JSON.stringify({ state: { sessions: [], currentSessionId: null }, version: 0 }),
+            },
+            {
+              name: 'janus_free_chats_v1',
+              value: JSON.stringify({ date: '1970-01-01', count: 0 }),
+            },
           ],
         },
       ],

@@ -83,3 +83,6 @@
 - Implemented artifact delivery pipeline updates: cache sandbox artifacts server-side, avoid inline image data URLs, added artifact grace period, and refreshed prompts/docs + cross-project READMEs.
 - Completed spec 117_sandy_artifact_proxy_port.md by aligning artifact serving with Sandy runtime port (5173), updating prompts/docs, improving artifact caching streaming, and fixing Playwright pre-release state.
 - Added baseline agent docs UI components (CodeBlock/ConfigTable/MermaidDiagram) to keep `/docs/baseline-agent-cli` buildable after the doc page update.
+
+## 2026-01-28
+- Completed spec 94_baseline_langchain_e2e_verification.md with resilient LangChain E2E coverage (artifact-aware streaming assertions, error/timeout skips) and refreshed Playwright storage defaults for chat tests.

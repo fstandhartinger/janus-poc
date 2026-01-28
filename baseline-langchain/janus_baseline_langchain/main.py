@@ -1658,6 +1658,7 @@ async def chat_completions(
             )
 
         output = None
+        model_name = request.model or settings.model
         for attempt in range(settings.max_retries + 1):
             try:
                 result = await agent.ainvoke(
@@ -1672,7 +1673,7 @@ async def chat_completions(
                 logger.error(
                     "agent_invoke_error",
                     request_id=request_id,
-                    model=request.model or settings.model,
+                    model=model_name,
                     error=str(exc),
                 )
                 if attempt >= settings.max_retries or not _is_retryable_agent_error(exc):
@@ -1681,10 +1682,31 @@ async def chat_completions(
                 await asyncio.sleep(min(2 ** attempt, 8))
         if output is None:
             output = "Error: failed to generate response."
+        if output == "Error: failed to generate response.":
+            try:
+                base_messages = convert_to_langchain_messages(request.messages)
+                model_name, output = await _run_basic_completion(
+                    settings,
+                    base_messages,
+                    api_key_override=api_key_override,
+                    base_url_override=base_url_override,
+                )
+                logger.warning(
+                    "agent_fallback_basic_completion",
+                    request_id=request_id,
+                    model=model_name,
+                )
+            except Exception as exc:
+                logger.error(
+                    "agent_fallback_failed",
+                    request_id=request_id,
+                    model=model_name,
+                    error=str(exc),
+                )
         artifacts = get_collected_artifacts()
         response = _format_response(
             request_id,
-            request.model or settings.model,
+            model_name,
             output,
             artifacts=artifacts or None,
         )
