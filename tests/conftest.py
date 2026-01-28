@@ -57,7 +57,7 @@ def ui_url(test_config: TestConfig) -> str:
     return test_config.get_urls(test_config.default_mode())["ui"]
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def cli_client(
     baseline_cli_url: str, baseline_cli_model: str
 ) -> httpx.AsyncClient:
@@ -73,7 +73,7 @@ async def cli_client(
         yield client
 
 
-@pytest_asyncio.fixture(scope="session")
+@pytest_asyncio.fixture
 async def langchain_client(
     baseline_langchain_url: str, baseline_langchain_model: str
 ) -> httpx.AsyncClient:

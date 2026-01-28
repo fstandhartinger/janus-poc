@@ -1405,16 +1405,31 @@ async def chat_completions(
             api_key_override=api_key_override,
             base_url_override=base_url_override,
         )
-        try:
-            result = await agent.ainvoke(
-                {"input": agent_prompt, "chat_history": list(history)}
+        def _is_retryable_agent_error(exc: Exception) -> bool:
+            message = str(exc).lower()
+            return any(
+                token in message
+                for token in ("429", "rate", "capacity", "timeout", "500", "502", "503", "504")
             )
-            if isinstance(result, dict):
-                output = str(result.get("output") or result)
-            else:
-                output = str(result)
-        except Exception as exc:
-            logger.error("agent_invoke_error", error=str(exc))
+
+        output = None
+        for attempt in range(settings.max_retries + 1):
+            try:
+                result = await agent.ainvoke(
+                    {"input": agent_prompt, "chat_history": list(history)}
+                )
+                if isinstance(result, dict):
+                    output = str(result.get("output") or result)
+                else:
+                    output = str(result)
+                break
+            except Exception as exc:
+                logger.error("agent_invoke_error", error=str(exc))
+                if attempt >= settings.max_retries or not _is_retryable_agent_error(exc):
+                    output = "Error: failed to generate response."
+                    break
+                await asyncio.sleep(min(2 ** attempt, 8))
+        if output is None:
             output = "Error: failed to generate response."
         artifacts = get_collected_artifacts()
         response = _format_response(
