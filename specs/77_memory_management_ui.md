@@ -1,6 +1,6 @@
 # Spec 77: Memory Management UI
 
-**Status:** COMPLETE
+## Status: COMPLETE
 **Priority:** Medium
 **Complexity:** Medium
 **Prerequisites:** Spec 72, Spec 73, Spec 74

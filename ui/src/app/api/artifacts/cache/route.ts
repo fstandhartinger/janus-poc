@@ -1,29 +1,76 @@
-import { NextResponse } from 'next/server';
-import type { Artifact } from '@/types/chat';
-import { cacheArtifactFile } from '@/lib/artifact-cache';
+import { NextRequest, NextResponse } from 'next/server';
+import fs from 'fs/promises';
 
-export async function POST(request: Request) {
+import { resolveArtifactRoot, sanitizeSegment, resolveExtension, safeJoin } from '@/lib/artifact-storage';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
+type ArtifactPayload = {
+  id: string;
+  type: string;
+  mime_type: string;
+  display_name: string;
+  size_bytes?: number;
+  url: string;
+  sha256?: string;
+};
+
+export async function POST(request: NextRequest) {
+  let body: { chatId?: string; artifact?: ArtifactPayload } | null = null;
   try {
-    const body = (await request.json()) as { chatId?: string; artifact?: Artifact };
-    const chatId = body.chatId;
-    const artifact = body.artifact;
-
-    if (!chatId || !artifact?.url) {
-      return NextResponse.json({ error: 'Missing chatId or artifact' }, { status: 400 });
-    }
-
-    if (artifact.url.startsWith('data:')) {
-      return NextResponse.json({ url: artifact.url, cached: false });
-    }
-
-    const cached = await cacheArtifactFile(chatId, artifact);
-    if (!cached) {
-      return NextResponse.json({ url: artifact.url, cached: false });
-    }
-
-    return NextResponse.json({ url: cached.url, cached: true, size: cached.size });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    return NextResponse.json({ error: message }, { status: 500 });
+    body = (await request.json()) as { chatId?: string; artifact?: ArtifactPayload };
+  } catch {
+    body = null;
   }
+
+  const chatId = body?.chatId;
+  const artifact = body?.artifact;
+
+  if (!chatId || !artifact || typeof artifact.url !== 'string') {
+    return NextResponse.json({ error: 'INVALID_REQUEST' }, { status: 400 });
+  }
+
+  if (!artifact.url.startsWith('http')) {
+    return NextResponse.json({ url: artifact.url });
+  }
+
+  const root = await resolveArtifactRoot();
+  const safeChatId = sanitizeSegment(chatId);
+  const extension = resolveExtension(artifact.display_name, artifact.mime_type);
+  const baseName = sanitizeSegment(artifact.id || artifact.display_name || 'artifact');
+  const filename = `${baseName}${extension}`;
+  const folder = safeJoin(root, safeChatId);
+  const filePath = safeJoin(folder, filename);
+  const metaPath = `${filePath}.json`;
+
+  await fs.mkdir(folder, { recursive: true });
+
+  try {
+    await fs.access(filePath);
+  } catch {
+    const response = await fetch(artifact.url);
+    if (!response.ok) {
+      return NextResponse.json({ url: artifact.url });
+    }
+    const buffer = Buffer.from(await response.arrayBuffer());
+    await fs.writeFile(filePath, buffer);
+    await fs.writeFile(
+      metaPath,
+      JSON.stringify(
+        {
+          id: artifact.id,
+          display_name: artifact.display_name,
+          mime_type: artifact.mime_type,
+          size_bytes: artifact.size_bytes ?? buffer.length,
+          sha256: artifact.sha256,
+          source_url: artifact.url,
+        },
+        null,
+        2
+      )
+    );
+  }
+
+  return NextResponse.json({ url: `/api/artifacts/${safeChatId}/${filename}` });
 }

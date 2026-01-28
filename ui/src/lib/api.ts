@@ -260,6 +260,38 @@ export async function* streamChatCompletion(
   const decoder = new TextDecoder();
   let buffer = '';
 
+  const parseLine = (line: string): { done: boolean; event?: ChatStreamEvent } => {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith(':')) {
+      return { done: false };
+    }
+    if (!trimmed.startsWith('data:')) {
+      return { done: false };
+    }
+    const data = trimmed.slice(5).trim();
+    if (data === '[DONE]') {
+      return { done: true };
+    }
+    try {
+      const parsed = JSON.parse(data) as ChatStreamEvent;
+      if (
+        parsed &&
+        typeof parsed === 'object' &&
+        'type' in parsed &&
+        parsed.type === 'screenshot'
+      ) {
+        return { done: false, event: parsed };
+      }
+      const chunk = parsed as ChatCompletionChunk;
+      if (chunk && Array.isArray(chunk.choices)) {
+        return { done: false, event: chunk };
+      }
+    } catch {
+      console.warn('Failed to parse SSE chunk:', data);
+    }
+    return { done: false };
+  };
+
   while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -269,34 +301,25 @@ export async function* streamChatCompletion(
     buffer = lines.pop() || '';
 
     for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith(':')) {
-        // Empty line or keep-alive comment
-        continue;
+      const result = parseLine(line);
+      if (result.event) {
+        yield result.event;
       }
-      if (trimmed.startsWith('data:')) {
-        const data = trimmed.slice(5).trim();
-        if (data === '[DONE]') {
-          return;
-        }
-        try {
-          const parsed = JSON.parse(data) as ChatStreamEvent;
-          if (
-            parsed &&
-            typeof parsed === 'object' &&
-            'type' in parsed &&
-            parsed.type === 'screenshot'
-          ) {
-            yield parsed;
-            continue;
-          }
-          const chunk = parsed as ChatCompletionChunk;
-          if (chunk && Array.isArray(chunk.choices)) {
-            yield chunk;
-          }
-        } catch {
-          console.warn('Failed to parse SSE chunk:', data);
-        }
+      if (result.done) {
+        return;
+      }
+    }
+  }
+
+  if (buffer.trim()) {
+    const lines = buffer.split('\n');
+    for (const line of lines) {
+      const result = parseLine(line);
+      if (result.event) {
+        yield result.event;
+      }
+      if (result.done) {
+        return;
       }
     }
   }

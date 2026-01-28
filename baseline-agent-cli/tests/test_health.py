@@ -12,3 +12,7 @@ def test_health_check(client: TestClient) -> None:
     data = response.json()
     assert data["status"] == "ok"
     assert data["version"] == __version__
+    assert isinstance(data["sandbox_available"], bool)
+    assert data["features"]["agent_sandbox"] == data["sandbox_available"]
+    assert "memory" in data["features"]
+    assert "vision" in data["features"]

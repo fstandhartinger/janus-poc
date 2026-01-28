@@ -31,3 +31,21 @@ def test_chat_completion_validation_error(client: TestClient) -> None:
         },
     )
     assert response.status_code == 422  # Validation error
+
+
+def test_chat_completion_sandy_unavailable_for_complex_request(
+    client: TestClient,
+) -> None:
+    """Return a clear message when Sandy is unavailable for complex requests."""
+    response = client.post(
+        "/v1/chat/completions",
+        json={
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": "run tests and take a screenshot"}],
+            "stream": False,
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    message = data["choices"][0]["message"]["content"]
+    assert "Agent sandbox is currently unavailable" in message

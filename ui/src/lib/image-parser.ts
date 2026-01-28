@@ -3,6 +3,8 @@ export interface ParsedImage {
   alt?: string;
 }
 
+const MAX_INLINE_IMAGE_URL_LENGTH = 20000;
+
 /**
  * Extract inline data-image markdown and return cleaned text + images.
  *
@@ -43,7 +45,10 @@ export function parseImageContent(content: string): { text: string; images: Pars
     const url = content.slice(urlStart, end);
     const compact = url.replace(/\s+/g, '');
 
-    images.push({ url: compact, alt: alt || undefined });
+    const isTruncated = closeParen === -1 || compact.length > MAX_INLINE_IMAGE_URL_LENGTH;
+    if (!isTruncated) {
+      images.push({ url: compact, alt: alt || undefined });
+    }
     output += content.slice(cursor, start);
     cursor = closeParen === -1 ? content.length : closeParen + 1;
   }

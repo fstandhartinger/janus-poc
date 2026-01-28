@@ -236,7 +236,8 @@ export function MessageBubble({
     if (inlineImages.length === 0 && imageArtifacts.length === 0) return null;
     const seen = new Set<string>();
     const items: { type: 'image_url'; image_url: { url: string } }[] = [];
-    inlineImages.forEach((image) => {
+    const inlineCandidates = imageArtifacts.length > 0 ? [] : inlineImages;
+    inlineCandidates.forEach((image) => {
       if (!image.url || seen.has(image.url)) return;
       seen.add(image.url);
       items.push({ type: 'image_url' as const, image_url: { url: image.url } });

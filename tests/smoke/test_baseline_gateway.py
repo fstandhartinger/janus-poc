@@ -15,6 +15,8 @@ BASELINES = ["baseline-cli-agent", "baseline-langchain"]
 async def _available_models(client: httpx.AsyncClient) -> set[str] | None:
     try:
         response = await client.get("/v1/models")
+        if response.status_code == 404:
+            return set()
         response.raise_for_status()
     except Exception:
         return None

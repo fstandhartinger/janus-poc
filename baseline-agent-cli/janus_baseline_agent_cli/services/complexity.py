@@ -20,9 +20,9 @@ ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
 
 # Routing models in order of preference (with fallbacks)
 ROUTING_MODELS = [
-    "tngtech/TNG-R1T-Chimera-Turbo",  # Fast, smart, reliable
-    "XiaomiMiMo/MiMo-V2-Flash",       # Fallback
-    "deepseek-ai/DeepSeek-V3",        # Second fallback
+    "Qwen/Qwen3-Next-80B-A3B-Instruct",  # Fast MoE model (135 t/s), smart routing
+    "XiaomiMiMo/MiMo-V2-Flash",          # Fallback
+    "deepseek-ai/DeepSeek-V3",           # Second fallback
 ]
 ROUTING_MODEL = ROUTING_MODELS[0]  # Default for settings
 ROUTING_PROMPT = """Analyze this user request and decide if it needs agent sandbox capabilities.
@@ -117,7 +117,7 @@ TRIVIAL_GREETINGS = {
 
 # NOTE: Pattern-based detection removed in favor of LLM verifier
 # Only trivial greetings bypass LLM check - all other messages go through
-# the smart TNG-R1T-Chimera-Turbo model for routing decisions
+# the smart Qwen3-Next-80B-A3B-Instruct model for routing decisions
 
 URL_PATTERN = re.compile(r'https?://[^\s<>"\']+|www\.[^\s<>"\']+', re.IGNORECASE)
 

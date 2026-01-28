@@ -1,6 +1,6 @@
-# Spec 89: Complexity Detection Improvements
+# Spec 90: Complexity Detection Improvements
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -226,4 +226,4 @@ def test_git_keywords():
 - `specs/80_debug_mode_flow_visualization.md` - Debug mode (NOT STARTED)
 - `specs/88_chat_ui_improvements.md` - Chat UI improvements
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

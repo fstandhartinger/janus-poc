@@ -101,6 +101,7 @@ export interface ChatCompletionRequest {
   enable_memory?: boolean;
   chutes_access_token?: string;
   generation_flags?: GenerationFlags;
+  debug?: boolean;
 }
 
 export interface ChatCompletionChunk {

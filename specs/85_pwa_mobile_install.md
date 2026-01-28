@@ -1,6 +1,6 @@
 # Spec 85: PWA Mobile Installation with Share Target
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -856,4 +856,4 @@ ui/
 - `specs/11_chat_ui.md` - Chat UI base
 - `specs/82_chat_ui_polish.md` - UI polish
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

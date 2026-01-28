@@ -27,6 +27,8 @@ venv/
 # Playwright / E2E
 playwright-report/
 playwright/.cache/
+.playwright-mcp/
+tmp/playwright_mcp/
 
 # Build / artifacts
 *.tmp
@@ -35,3 +37,4 @@ ralph-logs/
 
 # Local config
 credentials.md
+logs/

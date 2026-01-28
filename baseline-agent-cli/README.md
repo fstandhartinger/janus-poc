@@ -140,6 +140,17 @@ flowchart TB
 7. **Agent Execution**: CLI agent (Claude Code/Aider) runs with full tool access and memory integration
 8. **Response Streaming**: SSE stream with reasoning_content, artifacts, and optional debug_info
 
+## Sandy agent-run checklist (Claude Code)
+
+When the complex path uses Sandy’s `/agent/run`, make sure the following are true:
+
+- Upload the `agent-pack/` folder into `/workspace/agent-pack`.
+- Run `agent-pack/bootstrap.sh` to create `/workspace/CLAUDE.md` and prep the agent pack (it can start a local router, but prefer the shared Janus router when available).
+- Call Sandy with `rawPrompt: true`, `apiBaseUrl` pointed at the Janus model router, and `systemPromptPath=/workspace/agent-pack/prompts/system.md`.
+- Save binaries to `/workspace/artifacts` and return markdown links to `/artifacts/<file>` (do **not** print base64 blobs).
+- The UI should cache sandbox artifacts into `/var/data/...` and serve them via `/api/artifacts/...` before the sandbox is terminated.
+- If Claude Code emits `Output too large... tool-results/*.txt`, the baseline should read the tool-result file, decode any data URL images, and materialize them into `/workspace/artifacts`.
+
 ## Features
 
 - OpenAI-compatible `/v1/chat/completions` endpoint

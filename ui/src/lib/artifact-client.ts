@@ -1,4 +1,5 @@
 import type { Artifact } from '@/types/chat';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 export async function cacheArtifact(chatId: string, artifact: Artifact): Promise<Artifact> {
   if (!artifact.url || artifact.url.startsWith('data:') || artifact.url.startsWith('/api/artifacts/')) {
@@ -8,7 +9,7 @@ export async function cacheArtifact(chatId: string, artifact: Artifact): Promise
   try {
     const response = await fetch('/api/artifacts/cache', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: applyPreReleaseHeader({ 'Content-Type': 'application/json' }),
       body: JSON.stringify({ chatId, artifact }),
       credentials: 'include',
     });

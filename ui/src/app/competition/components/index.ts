@@ -1,5 +1,6 @@
 export { ArchitectureOverview } from './ArchitectureOverview';
 export { BenchRunner } from './BenchRunner';
+export { BaselinesSection } from './BaselinesSection';
 export { ComponentMarketplace } from './ComponentMarketplace';
 export { CompetitionOverview } from './CompetitionOverview';
 export { FAQ } from './FAQ';

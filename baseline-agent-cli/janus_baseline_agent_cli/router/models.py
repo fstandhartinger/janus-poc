@@ -51,8 +51,8 @@ MODEL_REGISTRY: dict[str, ModelConfig] = {
         timeout_seconds=30.0,
     ),
     "general": ModelConfig(
-        model_id="tngtech/TNG-R1T-Chimera-Turbo",
-        display_name="TNG R1T Chimera Turbo",
+        model_id="Qwen/Qwen3-Next-80B-A3B-Instruct",
+        display_name="Qwen3 Next 80B",
         task_types=[TaskType.GENERAL_TEXT, TaskType.UNKNOWN],
         priority=2,
         max_tokens=8192,

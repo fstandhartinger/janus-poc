@@ -41,6 +41,7 @@ RLM_INDEX="$RLM_DIR/index.tsv"
 MAX_ITERATIONS=0  # 0 = unlimited
 MODE="build"
 CLAUDE_CMD="${CLAUDE_CMD:-claude}"
+CLAUDE_MODEL="${CLAUDE_MODEL:-}"  # e.g., "sonnet", "opus", or full model name
 YOLO_FLAG="--dangerously-skip-permissions"
 RLM_CONTEXT_FILE=""
 FULL_LOG=true
@@ -108,6 +109,10 @@ RLM Mode (optional):
 Full Logging (enabled by default):
   --no-full-log         Disable full terminal output capture
                         By default, complete terminal output is captured to ralph-logs/
+
+Model Selection:
+  --model <model>       Claude model to use (e.g., "sonnet", "opus", or full model name)
+                        Can also set CLAUDE_MODEL env var
 
 How it works:
   1. Each iteration feeds PROMPT.md to Claude via stdin
@@ -235,6 +240,10 @@ while [[ $# -gt 0 ]]; do
         --no-full-log)
             FULL_LOG=false
             shift
+            ;;
+        --model)
+            CLAUDE_MODEL="${2:-}"
+            shift 2
             ;;
         -h|--help)
             show_help
@@ -533,9 +542,15 @@ if [ ! -f "$PROMPT_FILE" ]; then
 fi
 
 # Build Claude flags
-CLAUDE_FLAGS="-p"
+# --verbose ensures we see tool usage and progress
+# --no-session-persistence ensures fresh context each iteration
+# --output-format stream-json enables real-time streaming output
+CLAUDE_FLAGS="-p --verbose --no-session-persistence --output-format stream-json"
 if [ "$YOLO_ENABLED" = true ]; then
     CLAUDE_FLAGS="$CLAUDE_FLAGS $YOLO_FLAG"
+fi
+if [ -n "$CLAUDE_MODEL" ]; then
+    CLAUDE_FLAGS="$CLAUDE_FLAGS --model $CLAUDE_MODEL"
 fi
 
 # Get current branch
@@ -560,6 +575,7 @@ echo -e "${BLUE}Mode:${NC}     $MODE"
 echo -e "${BLUE}Prompt:${NC}   $PROMPT_FILE"
 echo -e "${BLUE}Branch:${NC}   $CURRENT_BRANCH"
 echo -e "${YELLOW}YOLO:${NC}     $([ "$YOLO_ENABLED" = true ] && echo "ENABLED" || echo "DISABLED")"
+[ -n "$CLAUDE_MODEL" ] && echo -e "${BLUE}Model:${NC}    $CLAUDE_MODEL"
 [ "$FULL_LOG" = true ] && echo -e "${BLUE}Full Log:${NC} $RALPH_LOG_DIR/ (captures full terminal output)"
 [ -n "$RLM_CONTEXT_FILE" ] && echo -e "${BLUE}RLM:${NC}      $RLM_CONTEXT_FILE"
 [ -n "$SESSION_LOG" ] && echo -e "${BLUE}Log:${NC}      $SESSION_LOG"
@@ -577,8 +593,8 @@ else
     echo -e "  ${RED}✗${NC} specs/ folder (no .md files found)"
 fi
 echo ""
+echo -e "${CYAN}Command: $CLAUDE_CMD $CLAUDE_FLAGS${NC}"
 echo -e "${CYAN}The loop checks for <promise>DONE</promise> in each iteration.${NC}"
-echo -e "${CYAN}Agent must verify acceptance criteria before outputting it.${NC}"
 echo ""
 echo -e "${YELLOW}Press Ctrl+C to stop the loop${NC}"
 echo ""
@@ -624,26 +640,57 @@ while true; do
     fi
 
     # Run Claude with prompt via stdin, capture output
-    # If FULL_LOG is enabled, use 'script' to capture complete terminal output
-    CLAUDE_OUTPUT=""
+    # Output is shown in real-time AND captured to log file
     CLAUDE_SUCCESS=false
 
-    if [ "$FULL_LOG" = true ]; then
-        # Use script to capture full terminal output (including streaming UI)
-        # -q = quiet, -e = return exit code, -c = command
-        echo -e "${BLUE}Full logging enabled: $FULL_LOG_FILE${NC}"
-        if script -q -e -c "cat '$PROMPT_FILE' | '$CLAUDE_CMD' $CLAUDE_FLAGS 2>&1 | tee '$LOG_FILE'" "$FULL_LOG_FILE"; then
-            CLAUDE_SUCCESS=true
+    echo -e "${BLUE}Running: $CLAUDE_CMD $CLAUDE_FLAGS < $PROMPT_FILE${NC}"
+    [ "$FULL_LOG" = true ] && echo -e "${BLUE}Full log: $FULL_LOG_FILE${NC}"
+    echo ""
+
+    # Run Claude with streaming JSON output, parse and display in real-time
+    # Use jq to extract and display message content as it streams
+    if "$CLAUDE_CMD" $CLAUDE_FLAGS < "$PROMPT_FILE" 2>&1 | tee "$LOG_FILE" | while IFS= read -r line; do
+        # Try to parse as JSON with jq
+        if echo "$line" | jq -e . >/dev/null 2>&1; then
+            msg_type=$(echo "$line" | jq -r '.type // empty' 2>/dev/null)
+            case "$msg_type" in
+                assistant)
+                    # Extract text from content blocks
+                    echo "$line" | jq -r '
+                        .message.content[]? |
+                        if .type == "text" then .text
+                        elif .type == "tool_use" then "🔧 Using tool: \(.name)"
+                        else empty
+                        end
+                    ' 2>/dev/null | while IFS= read -r text; do
+                        [ -n "$text" ] && echo -e "${GREEN}$text${NC}"
+                    done
+                    ;;
+                result)
+                    # Show tool result summary
+                    tool_name=$(echo "$line" | jq -r '.tool_name // "tool"' 2>/dev/null)
+                    echo -e "${CYAN}✓ $tool_name completed${NC}"
+                    ;;
+                system|user)
+                    # Skip system/user messages in display
+                    ;;
+                *)
+                    # Show other message types
+                    [ -n "$msg_type" ] && echo -e "${BLUE}[$msg_type]${NC}"
+                    ;;
+            esac
+        else
+            # Non-JSON line (errors, startup messages, etc) - show as-is
+            [ -n "$line" ] && echo "$line"
         fi
-        # Read output from full log for checking magic phrase
-        if [ -f "$FULL_LOG_FILE" ]; then
-            CLAUDE_OUTPUT=$(cat "$FULL_LOG_FILE")
-        fi
-    else
-        if CLAUDE_OUTPUT=$(cat "$PROMPT_FILE" | "$CLAUDE_CMD" $CLAUDE_FLAGS 2>&1 | tee "$LOG_FILE"); then
-            CLAUDE_SUCCESS=true
-        fi
+    done; then
+        CLAUDE_SUCCESS=true
     fi
+
+    # Save full log if enabled
+    [ "$FULL_LOG" = true ] && [ -f "$LOG_FILE" ] && cp "$LOG_FILE" "$FULL_LOG_FILE"
+
+    CLAUDE_OUTPUT=$(cat "$LOG_FILE" 2>/dev/null || echo "")
 
     # Stop watcher if running
     if [ -n "$WATCH_PID" ]; then

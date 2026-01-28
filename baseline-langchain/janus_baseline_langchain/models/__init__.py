@@ -23,6 +23,7 @@ from janus_baseline_langchain.models.openai import (
     ToolCall,
     Usage,
 )
+from janus_baseline_langchain.models.debug import DebugEvent, DebugEventType
 
 __all__ = [
     "ChatCompletionChunk",
@@ -46,4 +47,6 @@ __all__ = [
     "Tool",
     "ToolCall",
     "Usage",
+    "DebugEvent",
+    "DebugEventType",
 ]

@@ -49,7 +49,6 @@ def _render_image_response(endpoints: list[str]) -> str:
             f"Endpoint: {endpoint}",
             "Example (Python):",
             "```python",
-            "import base64",
             "import os",
             "import requests",
             "headers = {\"Authorization\": f\"Bearer {os.environ['CHUTES_API_KEY']}\"}",
@@ -63,8 +62,12 @@ def _render_image_response(endpoints: list[str]) -> str:
             f"resp = requests.post(\"{endpoint}\", json=payload, headers=headers, timeout=120)",
             "resp.raise_for_status()",
             "mime = resp.headers.get(\"content-type\", \"image/jpeg\")",
-            "image_b64 = base64.b64encode(resp.content).decode(\"utf-8\")",
-            "print(f\"![Generated Image](data:{mime};base64,{image_b64})\")",
+            "ext = \".jpg\" if \"jpeg\" in mime else \".png\"",
+            "output_path = f\"/workspace/artifacts/generated-image{ext}\"",
+            "with open(output_path, \"wb\") as handle:",
+            "    handle.write(resp.content)",
+            "artifact_base = os.environ.get(\"JANUS_ARTIFACT_URL_BASE\", \"/artifacts\")",
+            "print(f\"![Generated Image]({artifact_base}/{os.path.basename(output_path)})\")",
             "```",
         ]
     )

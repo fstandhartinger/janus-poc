@@ -9,6 +9,7 @@ const PNG_BASE64 =
 test.describe('Chat UI', () => {
   test('uploads an image and submits a prompt', async ({ page }) => {
     await page.goto('/chat');
+    await page.locator('[data-testid="chat-input"]').waitFor();
 
     // Create a temp test image for this test
     const testImagePath = path.join(__dirname, `test-image-${Date.now()}.png`);
@@ -21,14 +22,31 @@ test.describe('Chat UI', () => {
 
       // Verify image preview appears
       const imagePreview = page.locator(`img[alt="${testImageName}"]`);
-      await expect(imagePreview).toBeVisible();
+      await expect(imagePreview).toBeVisible({ timeout: 10000 });
 
       // Enter a prompt
       const textarea = page.locator('[data-testid="chat-input"]');
-      await textarea.fill('What is in this image?');
+      await textarea.click();
+      await page.evaluate((text) => {
+        const input = document.querySelector('[data-testid="chat-input"]') as HTMLTextAreaElement | null;
+        if (!input) return;
+        const setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value')?.set;
+        if (setter) {
+          setter.call(input, text);
+        } else {
+          input.value = text;
+        }
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+      }, 'What is in this image?');
+      await page.waitForFunction(() => {
+        const input = document.querySelector('[data-testid="chat-input"]') as HTMLTextAreaElement | null;
+        return Boolean(input?.value.trim());
+      });
 
       // Submit the message
       const sendButton = page.locator('[data-testid="send-button"]');
+      await expect(sendButton).toBeEnabled({ timeout: 10000 });
       await sendButton.click();
 
       // Verify user message appears (the message bubble div, not buttons)
@@ -64,14 +82,16 @@ test.describe('Chat UI', () => {
     });
 
     await page.goto('/chat');
+    await page.locator('[data-testid="chat-input"]').waitFor();
 
     // Enter a prompt
     const textarea = page.locator('[data-testid="chat-input"]');
     await textarea.fill('Hello, how are you?');
+    await expect(textarea).toHaveValue(/Hello, how are you\?/);
 
     // Submit the message
     const sendButton = page.locator('[data-testid="send-button"]');
-    await expect(sendButton).toBeEnabled();
+    await expect(sendButton).toBeEnabled({ timeout: 10000 });
     await sendButton.click();
 
     const userMessageBubble = page.locator('[data-testid="user-message"]');

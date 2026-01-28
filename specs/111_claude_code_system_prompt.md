@@ -19,22 +19,23 @@ Claude Code: "I can't generate images directly - I'm a text-based AI assistant..
 ```
 
 This happens because the system prompt (`agent-pack/prompts/system.md`) and docs are
-not consistently loaded in the Sandy agent-run flow.
+not consistently loaded in the Sandy agent-run flow, or are not appended to the
+Claude Code CLI invocation.
 
 ## Root Cause Analysis
 
 1. **Agent pack not loaded for agent/run**
    - `execute_via_agent_api()` did not upload the agent pack or run bootstrap.
-   - Result: `/workspace/CLAUDE.md` never exists and the local router never starts.
+   - Result: `/workspace/CLAUDE.md` never exists and the prompt/model docs are missing.
 
 2. **Sandy agent-run bypasses CLAUDE.md**
-   - Sandy’s `AgentRunner` uses hard-coded `CLAUDE_RAW_PROMPT` / `CLAUDE_TOOL_PROMPT`.
-   - It never appends `/workspace/CLAUDE.md`, so Claude Code misses Janus capabilities.
+   - Sandy’s `AgentRunner` controls the CLI invocation, so CLAUDE.md is not guaranteed
+     to be appended to the prompt on every run.
+   - Without `--append-system-prompt` or `systemPromptPath`, Claude Code misses Janus capabilities.
 
 3. **Router base URL mismatch**
-   - Claude Code is configured to call an Anthropic Messages API endpoint.
-   - When `PUBLIC_ROUTER_URL` is `http://127.0.0.1:8000` but the router is not started,
-     the agent hangs waiting for a model response.
+   - Claude Code expects an Anthropic Messages API base URL.
+   - When the router URL is wrong (e.g. `/v1` appended twice), the agent hangs waiting for a model response.
 
 ## Research Findings
 
@@ -43,8 +44,8 @@ From Claude Code docs:
 - `CLAUDE.md` memory files are automatically loaded from the working directory tree.
 
 **Key insight:** `CLAUDE.md` is the supported, auto-loaded mechanism for persistent
-instructions. The fix is to ensure `/workspace/CLAUDE.md` exists and Claude Code runs
-from `/workspace`, while keeping the minimal non-interactive system prompt in place.
+instructions, but the robust fix is to also **append** the system prompt explicitly
+via CLI flags so agent/run runs are deterministic.
 
 ## Solution
 
@@ -53,12 +54,11 @@ from `/workspace`, while keeping the minimal non-interactive system prompt in pl
 - Run `agent-pack/bootstrap.sh` to:
   - Create `/workspace/CLAUDE.md` from `system.md`
   - Copy docs into `/workspace/docs/models`
-  - Start the local router on `127.0.0.1:8000`
 
-### 2) Sandy agent-run: rely on CLAUDE.md auto-loading
+### 2) Sandy agent-run: append the system prompt deterministically
 - Ensure `/workspace/CLAUDE.md` exists (from bootstrap).
-- Claude Code runs from `/workspace`, so it auto-loads `CLAUDE.md`.
-- Keep `--append-system-prompt` for minimal non-interactive guidance.
+- Always pass `systemPromptPath=/workspace/agent-pack/prompts/system.md` to Sandy agent/run
+  so the CLI appends it even if CLAUDE.md is not loaded.
 
 ### 2b) Enforce Claude Code prompt flags via wrapper
 - Add an agent-pack `bin/claude` wrapper so Sandy agent/run always:

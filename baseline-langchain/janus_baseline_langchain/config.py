@@ -244,6 +244,32 @@ class Settings(BaseSettings):
         ),
     )
 
+    # E2E Test settings
+    e2e_enabled: bool = Field(
+        default=False,
+        description="Enable E2E tests",
+        validation_alias=AliasChoices(
+            "BASELINE_LANGCHAIN_E2E_ENABLED",
+            "E2E_ENABLED",
+        ),
+    )
+    e2e_gateway_url: str = Field(
+        default="https://janus-gateway.onrender.com",
+        description="Gateway URL for E2E tests",
+        validation_alias=AliasChoices(
+            "BASELINE_LANGCHAIN_E2E_GATEWAY_URL",
+            "E2E_GATEWAY_URL",
+        ),
+    )
+    e2e_baseline_langchain_url: str = Field(
+        default="https://janus-baseline-langchain.onrender.com",
+        description="Baseline LangChain URL for E2E tests",
+        validation_alias=AliasChoices(
+            "BASELINE_LANGCHAIN_E2E_BASELINE_LANGCHAIN_URL",
+            "E2E_BASELINE_LANGCHAIN_URL",
+        ),
+    )
+
 
 @lru_cache
 def get_settings() -> Settings:

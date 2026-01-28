@@ -110,7 +110,7 @@ async def test_memory_extraction_fires_after_stream() -> None:
     class DummySandy:
         is_available = False
 
-        async def execute_complex(self, request):
+        async def execute_complex(self, request, debug_emitter=None):
             if False:
                 yield
 

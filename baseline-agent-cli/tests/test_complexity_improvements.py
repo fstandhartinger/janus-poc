@@ -106,3 +106,32 @@ class TestConservativeDefaults:
         analysis = await detector.analyze_async(messages)
         assert analysis.is_complex
         assert "no_api_key" in analysis.reason
+
+
+class TestMultilingualKeywords:
+    """Test multilingual keyword detection."""
+
+    def test_german_separable_verbs(self, detector: ComplexityDetector) -> None:
+        messages = [
+            Message(
+                role=MessageRole.USER,
+                content="lade das repo von github herunter",
+            )
+        ]
+        analysis = detector.analyze(messages)
+        assert analysis.is_complex
+        assert "herunterladen" in analysis.keywords_matched
+
+    def test_git_repository_keywords(self, detector: ComplexityDetector) -> None:
+        messages = [
+            Message(
+                role=MessageRole.USER,
+                content="clone the chutes-api repo from github",
+            )
+        ]
+        analysis = detector.analyze(messages)
+        assert analysis.is_complex
+        assert any(
+            keyword in analysis.keywords_matched
+            for keyword in ("git clone", "github", "repo", "clone the")
+        )

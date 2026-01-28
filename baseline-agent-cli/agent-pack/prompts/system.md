@@ -52,7 +52,7 @@ print(f"App live at: {url}")
 
 ### 🌐 Network & APIs
 - **HTTP Requests**: Call any API using curl, httpx, fetch
-- **Chutes APIs**: Generate images, audio, video using Chutes endpoints
+- **Chutes APIs**: Generate images, audio, video using Chutes endpoints (save binaries to `/workspace/artifacts` and only link them; **never print base64 blobs**, outputs are truncated)
 - **External Services**: Integrate with any public API
 
 #### CRITICAL: You Have REAL Media Generation APIs
@@ -366,7 +366,7 @@ python solution.py
 
 ### 5. Create & Serve Files
 
-**Always save binaries (images, audio, video, PDFs) to `/workspace/artifacts` and link them:**
+**Always save binaries (images, audio, video, PDFs) to `/workspace/artifacts` and link them (do NOT print base64 data URLs — large outputs are truncated and will break rendering):**
 ```markdown
 I've created your file. Download it here:
 [Download report.pdf](/artifacts/report.pdf)

@@ -1,5 +1,7 @@
 # 116 Artifact delivery pipeline for Sandy agent outputs
 
+## Status: IN_PROGRESS
+
 ## Problem
 Image generation works inside the Sandy sandbox, but the chat UI often shows broken images or nothing. The current agent output may print large base64 data URLs that get truncated, and artifacts stored in the sandbox can disappear before the UI can fetch them. We need a reliable, deterministic pipeline to transport binary outputs (images, files) from sandbox to UI.
 
@@ -8,6 +10,7 @@ Image generation works inside the Sandy sandbox, but the chat UI often shows bro
 - **No giant base64 in stdout**: Agents should save binaries to `/workspace/artifacts` and avoid printing large data URLs.
 - **Persisted cache**: Node server downloads artifacts into a persistent disk (`/var/data`) and serves them as static files.
 - **Stream friendly**: UI should render images as soon as artifacts arrive.
+- **Tool-result recovery**: If Claude Code truncates tool output into `tool-results/*.txt`, the baseline should recover it and materialize any data URL images into `/workspace/artifacts`.
 
 ## Non‑Goals
 - No changes to Sandy sandbox artifact server internals.
@@ -17,10 +20,12 @@ Image generation works inside the Sandy sandbox, but the chat UI often shows bro
 1. **Agent behavior**
    - When producing images/files, save them to `/workspace/artifacts/<filename>`.
    - Print a short confirmation only (no base64 blobs).
+   - If a tool output is too large, Claude Code writes it to `tool-results/*.txt`; we should recover it server-side.
 
 2. **Baseline service (Janus)**
    - Collect artifacts from `/workspace/artifacts` after agent run completes.
    - Emit `janus` SSE events: `artifacts` with file metadata + URL to sandbox.
+   - Detect `tool-results/*.txt` paths in Claude Code tool output and decode any data URL images into `/workspace/artifacts`.
 
 3. **UI (Node server + client)**
    - When receiving `artifacts` events, the client calls a server route to cache files.
@@ -33,6 +38,8 @@ Image generation works inside the Sandy sandbox, but the chat UI often shows bro
 - **Serve route**: `GET /api/artifacts/[...path]` streams file from `/var/data` with correct content type.
 - **Fallback**: If caching fails, continue to use the original artifact URL.
 - **No inline images**: sandbox artifact collection should always emit URLs for images (avoid `data:` base64) so the UI can cache reliably.
+- **Inline guardrails**: the UI should ignore huge/truncated `data:image` URLs and prefer artifact URLs whenever available.
+- **Tool-result repair**: parse `Full output saved to: .../tool-results/*.txt`, read it from the sandbox, and replace data URLs with `/artifacts/<file>`.
 - **Grace period**: keep the sandbox alive briefly after emitting artifacts so the UI can download before termination.
 - **Port alignment**: artifact server must bind to the Sandy runtime port (default 5173) so the public sandbox URL can serve `/artifacts/*`.
 

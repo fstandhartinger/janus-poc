@@ -16,6 +16,8 @@ class PreReleasePasswordMiddleware(BaseHTTPMiddleware):
         self._password = password
 
     async def dispatch(self, request: Request, call_next: Callable[[Request], Awaitable[Response]]) -> Response:
+        if not self._password:
+            return await call_next(request)
         if request.method == "OPTIONS":
             return await call_next(request)
 

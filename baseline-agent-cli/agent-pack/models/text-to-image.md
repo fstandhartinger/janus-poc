@@ -10,7 +10,7 @@ Header: Authorization: Bearer $CHUTES_API_KEY
   "height": 1024,
   "num_inference_steps": 30
 }
-Response: raw image bytes (Content-Type: image/jpeg). Use response.content and base64-encode.
+Response: raw image bytes (Content-Type: image/jpeg). Save `response.content` to `/workspace/artifacts/<filename>` and link it; do **not** embed base64 data URLs.
 
 ## Alternative: HunYuan (direct)
 POST https://chutes-hunyuan-image-3.chutes.ai/generate
@@ -20,4 +20,4 @@ Header: Authorization: Bearer $CHUTES_API_KEY
   "size": "auto",
   "steps": 50
 }
-Response: raw image bytes (Content-Type: image/webp).
+Response: raw image bytes (Content-Type: image/webp). Save to `/workspace/artifacts/<filename>` and link it.

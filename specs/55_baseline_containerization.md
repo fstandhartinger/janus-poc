@@ -1,6 +1,22 @@
-# Spec 54: Baseline Containerization for Sandy Execution
+# Spec 55: Baseline Containerization for Sandy Execution
 
 ## Status: COMPLETE
+
+## ⚠️ Architecture Note
+
+**For the PoC, baselines run as Render services, NOT inside Sandy containers.**
+
+The current PoC architecture is:
+```
+Gateway (Render) → baseline-agent-cli (Render) → Sandy agent/run API → Agent
+```
+
+This is simpler and working. Running baselines inside Sandy containers is **deferred** until CPU TEE Nodes are ready. See Spec 95 for details.
+
+**What's complete:** Dockerfiles for local testing and portability
+**What's deferred:** Running baseline containers inside Sandy sandboxes
+
+---
 
 ## Context / Why
 
@@ -642,4 +658,4 @@ docs/
 - `specs/10_competitor_submission.md` - Competitor contract
 - `specs/08_sandy_integration.md` - Sandy sandboxing
 
-NR_OF_TRIES: 1
+NR_OF_TRIES: 2

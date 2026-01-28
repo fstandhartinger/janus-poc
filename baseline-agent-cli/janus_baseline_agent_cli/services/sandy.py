@@ -42,6 +42,8 @@ from janus_baseline_agent_cli.services.response_processor import process_agent_r
 logger = structlog.get_logger()
 
 CLAUDE_AGENT_DEFAULT_MODEL = "janus-router"
+_TOOL_RESULT_PATH_RE = re.compile(r"Full output saved to:\s*(\S+)")
+_DATA_IMAGE_URL_RE = re.compile(r"data:(image/[^;]+);base64,([A-Za-z0-9+/=\s]+)")
 
 
 def _parse_sse_events(data: str) -> list[dict[str, Any]]:
@@ -94,6 +96,14 @@ def _filter_agent_message(text: str) -> Optional[str]:
     ):
         return None
     return text
+
+
+def _extract_tool_result_path(text: str) -> Optional[str]:
+    """Extract tool-result file path from Claude Code output."""
+    match = _TOOL_RESULT_PATH_RE.search(text or "")
+    if not match:
+        return None
+    return match.group(1).strip()
 
 
 def _dedupe_result_text(result_text: str, output_parts: list[str]) -> Optional[str]:
@@ -780,6 +790,63 @@ class SandyService:
         encoded = base64.b64encode(data).decode("utf-8")
         return f"data:{mime_type};base64,{encoded}"
 
+    def _safe_tool_result_path(self, path: str) -> bool:
+        if not path or not path.startswith("/"):
+            return False
+        if ".." in path:
+            return False
+        return path.startswith("/root/.claude/projects/") or path.startswith("/workspace/")
+
+    async def _read_tool_result_text(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        path: str,
+        max_chars: int = 200_000,
+    ) -> Optional[str]:
+        """Read a tool-result file if it exists and looks safe."""
+        if not self._safe_tool_result_path(path):
+            return None
+        data = await self._read_file(client, sandbox_id, path)
+        if not data:
+            return None
+        text = data.decode("utf-8", errors="ignore")
+        if len(text) > max_chars:
+            text = text[:max_chars] + "\n... (tool output truncated)"
+        return text
+
+    async def _materialize_data_url_images(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        text: str,
+    ) -> str:
+        """Convert data URL images in text into /workspace/artifacts files."""
+        if not text or "data:image" not in text:
+            return text
+
+        updated = text
+        for match in list(_DATA_IMAGE_URL_RE.finditer(text)):
+            mime_type = match.group(1)
+            encoded = match.group(2) or ""
+            encoded = re.sub(r"\s+", "", encoded)
+            if not encoded:
+                continue
+            try:
+                data = base64.b64decode(encoded, validate=False)
+            except Exception:
+                continue
+            if not data:
+                continue
+            sha256 = hashlib.sha256(data).hexdigest()
+            ext = mimetypes.guess_extension(mime_type) or ".png"
+            filename = f"tool-result-{sha256[:12]}{ext}"
+            dest_path = f"{self._artifact_dir.rstrip('/')}/{filename}"
+            if not await self._write_file(client, sandbox_id, dest_path, data):
+                await self._write_file_via_exec(client, sandbox_id, dest_path, data)
+            updated = updated.replace(match.group(0), f"/artifacts/{filename}")
+        return updated
+
     async def _collect_artifacts(
         self,
         client: httpx.AsyncClient,
@@ -1017,6 +1084,9 @@ class SandyService:
         if env:
             payload["env"] = env
             payload["envVars"] = env
+            system_prompt_path = env.get("JANUS_SYSTEM_PROMPT_PATH")
+            if system_prompt_path:
+                payload["systemPromptPath"] = system_prompt_path
 
         # Pass the public router URL if configured - enables smart model switching,
         # 429 fallbacks, and multimodal routing for Sandy agents
@@ -1418,9 +1488,6 @@ class SandyService:
             sandbox_url = self._sandbox_url(sandbox_id, public_url)
             artifacts_present = False
             artifacts: list[Artifact] = []
-            artifacts_present = False
-            artifacts_present = False
-            artifacts_present = False
 
             try:
                 if not await self._upload_agent_pack(client, sandbox_id):
@@ -1984,6 +2051,8 @@ class SandyService:
             )
         sandbox_start = time.perf_counter()
         output_parts: list[str] = []
+        recovered_output_parts: list[str] = []
+        seen_tool_results: set[str] = set()
 
         async with self._client_factory() as client:
             sandbox_info = await self._create_sandbox(client)
@@ -2074,7 +2143,23 @@ class SandyService:
                     if event_type == "output":
                         text = _strip_ansi(event.get("text", ""))
                         if text:
-                            output_parts.append(text)
+                            filtered_text = _filter_agent_message(text)
+                            if filtered_text:
+                                tool_result_path = _extract_tool_result_path(filtered_text)
+                                if tool_result_path and tool_result_path not in seen_tool_results:
+                                    seen_tool_results.add(tool_result_path)
+                                    recovered_text = await self._read_tool_result_text(
+                                        client, sandbox_id, tool_result_path
+                                    )
+                                    if recovered_text:
+                                        recovered_text = await self._materialize_data_url_images(
+                                            client, sandbox_id, recovered_text
+                                        )
+                                        recovered_text = process_agent_response(
+                                            recovered_text, sandbox_url
+                                        )
+                                        recovered_output_parts.append(recovered_text)
+                                output_parts.append(filtered_text)
 
                     elif event_type == "agent-output":
                         data = event.get("data", {})
@@ -2095,11 +2180,15 @@ class SandyService:
                                 if not text:
                                     text = data.get("text")
                                 if isinstance(text, str) and text:
-                                    output_parts.append(text)
+                                    filtered_text = _filter_agent_message(text)
+                                    if filtered_text:
+                                        output_parts.append(filtered_text)
                             elif msg_type == "result":
                                 result_text = data.get("result") or data.get("text")
                                 if isinstance(result_text, str) and result_text:
-                                    output_parts.append(result_text)
+                                    filtered_text = _filter_agent_message(result_text)
+                                    if filtered_text:
+                                        output_parts.append(filtered_text)
                             elif msg_type == "assistant":
                                 message = data.get("message", {})
                                 content = message.get("content", [])
@@ -2108,7 +2197,32 @@ class SandyService:
                                         if isinstance(block, dict) and block.get("type") == "text":
                                             text = block.get("text", "")
                                             if text:
-                                                output_parts.append(text)
+                                                filtered_text = _filter_agent_message(text)
+                                                if filtered_text:
+                                                    output_parts.append(filtered_text)
+                            elif msg_type == "user":
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "tool_result":
+                                            tool_content = block.get("content", "")
+                                            if not isinstance(tool_content, str) or not tool_content.strip():
+                                                continue
+                                            tool_result_path = _extract_tool_result_path(tool_content)
+                                            if tool_result_path and tool_result_path not in seen_tool_results:
+                                                seen_tool_results.add(tool_result_path)
+                                                recovered_text = await self._read_tool_result_text(
+                                                    client, sandbox_id, tool_result_path
+                                                )
+                                                if recovered_text:
+                                                    recovered_text = await self._materialize_data_url_images(
+                                                        client, sandbox_id, recovered_text
+                                                    )
+                                                    recovered_text = process_agent_response(
+                                                        recovered_text, sandbox_url
+                                                    )
+                                                    recovered_output_parts.append(recovered_text)
 
                     elif event_type == "stream_event":
                         event_payload = event.get("event", {})
@@ -2125,18 +2239,27 @@ class SandyService:
                         if not text:
                             text = event.get("text")
                         if isinstance(text, str) and text:
-                            output_parts.append(text)
+                            filtered_text = _filter_agent_message(text)
+                            if filtered_text:
+                                output_parts.append(filtered_text)
 
                     elif event_type == "result":
                         result_text = event.get("result") or event.get("text")
                         if isinstance(result_text, str) and result_text:
-                            output_parts.append(result_text)
+                            filtered_text = _filter_agent_message(result_text)
+                            if filtered_text:
+                                output_parts.append(filtered_text)
 
                     elif event_type == "error":
                         error_msg = event.get("error", "Unknown error")
                         output_parts.append(f"Error: {error_msg}")
 
-                result = "\n".join(output_parts) if output_parts else "Agent completed without output."
+                if output_parts:
+                    result = "\n".join(output_parts)
+                elif recovered_output_parts:
+                    result = "\n".join(recovered_output_parts)
+                else:
+                    result = "Agent completed without output."
                 # Clean up Aider-specific output formatting
                 result = _clean_aider_output(result)
                 result = process_agent_response(result, sandbox_url)
@@ -2282,6 +2405,8 @@ class SandyService:
 
         sandbox_start = time.perf_counter()
         output_parts: list[str] = []
+        recovered_output_parts: list[str] = []
+        seen_tool_results: set[str] = set()
         content_streamed = False  # Track if we've streamed any content
         has_error = False
         exit_code = 0
@@ -2443,6 +2568,20 @@ class SandyService:
                         text = _strip_ansi(event.get("text", ""))
                         filtered_text = _filter_agent_message(text) if text else None
                         if filtered_text:
+                            tool_result_path = _extract_tool_result_path(filtered_text)
+                            if tool_result_path and tool_result_path not in seen_tool_results:
+                                seen_tool_results.add(tool_result_path)
+                                recovered_text = await self._read_tool_result_text(
+                                    client, sandbox_id, tool_result_path
+                                )
+                                if recovered_text:
+                                    recovered_text = await self._materialize_data_url_images(
+                                        client, sandbox_id, recovered_text
+                                    )
+                                    recovered_text = process_agent_response(
+                                        recovered_text, sandbox_url
+                                    )
+                                    recovered_output_parts.append(recovered_text)
                             if debug_emitter:
                                 await debug_emitter.emit(
                                     DebugEventType.RESPONSE_CHUNK,
@@ -2481,28 +2620,34 @@ class SandyService:
                                 if not text:
                                     text = data.get("text")
                                 if isinstance(text, str) and text:
+                                    filtered_text = _filter_agent_message(text)
+                                    if not filtered_text:
+                                        continue
                                     content_streamed = True
-                                    output_parts.append(text)
+                                    output_parts.append(filtered_text)
                                     if debug_emitter:
                                         await debug_emitter.emit(
                                             DebugEventType.RESPONSE_CHUNK,
                                             "AGENT",
-                                            text[:200],
+                                            filtered_text[:200],
                                         )
                                     yield ChatCompletionChunk(
                                         id=request_id,
                                         model=model,
                                         choices=[
-                                            ChunkChoice(delta=Delta(content=text))
+                                            ChunkChoice(delta=Delta(content=filtered_text))
                                         ],
                                     )
                             elif msg_type == "result":
                                 result_text = data.get("result") or data.get("text")
                                 if isinstance(result_text, str) and result_text:
+                                    filtered_text = _filter_agent_message(result_text)
+                                    if not filtered_text:
+                                        continue
                                     text_to_emit = (
-                                        _dedupe_result_text(result_text, output_parts)
+                                        _dedupe_result_text(filtered_text, output_parts)
                                         if content_streamed
-                                        else result_text
+                                        else filtered_text
                                     )
                                     if text_to_emit:
                                         content_streamed = True
@@ -2529,10 +2674,13 @@ class SandyService:
                                             if block.get("type") == "text":
                                                 text = block.get("text", "")
                                                 if text:
+                                                    filtered_text = _filter_agent_message(text)
+                                                    if not filtered_text:
+                                                        continue
                                                     text_to_emit = (
-                                                        _dedupe_result_text(text, output_parts)
+                                                        _dedupe_result_text(filtered_text, output_parts)
                                                         if content_streamed
-                                                        else text
+                                                        else filtered_text
                                                     )
                                                     if text_to_emit:
                                                         # Stream text content immediately so it appears in chat
@@ -2608,6 +2756,20 @@ class SandyService:
                                         if isinstance(block, dict) and block.get("type") == "tool_result":
                                             tool_content = block.get("content", "")
                                             if isinstance(tool_content, str) and tool_content.strip():
+                                                tool_result_path = _extract_tool_result_path(tool_content)
+                                                if tool_result_path and tool_result_path not in seen_tool_results:
+                                                    seen_tool_results.add(tool_result_path)
+                                                    recovered_text = await self._read_tool_result_text(
+                                                        client, sandbox_id, tool_result_path
+                                                    )
+                                                    if recovered_text:
+                                                        recovered_text = await self._materialize_data_url_images(
+                                                            client, sandbox_id, recovered_text
+                                                        )
+                                                        recovered_text = process_agent_response(
+                                                            recovered_text, sandbox_url
+                                                        )
+                                                        recovered_output_parts.append(recovered_text)
                                                 # Truncate very long outputs
                                                 truncated = tool_content[:500]
                                                 if len(tool_content) > 500:
@@ -2658,29 +2820,35 @@ class SandyService:
                         if not text:
                             text = event.get("text")
                         if isinstance(text, str) and text:
+                            filtered_text = _filter_agent_message(text)
+                            if not filtered_text:
+                                continue
                             content_streamed = True
-                            output_parts.append(text)
+                            output_parts.append(filtered_text)
                             if debug_emitter:
                                 await debug_emitter.emit(
                                     DebugEventType.RESPONSE_CHUNK,
                                     "AGENT",
-                                    text[:200],
+                                    filtered_text[:200],
                                 )
                             yield ChatCompletionChunk(
                                 id=request_id,
                                 model=model,
                                 choices=[
-                                    ChunkChoice(delta=Delta(content=text))
+                                    ChunkChoice(delta=Delta(content=filtered_text))
                                 ],
                             )
 
                     elif event_type == "result":
                         result_text = event.get("result") or event.get("text")
                         if isinstance(result_text, str) and result_text:
+                            filtered_text = _filter_agent_message(result_text)
+                            if not filtered_text:
+                                continue
                             text_to_emit = (
-                                _dedupe_result_text(result_text, output_parts)
+                                _dedupe_result_text(filtered_text, output_parts)
                                 if content_streamed
-                                else result_text
+                                else filtered_text
                             )
                             if text_to_emit:
                                 content_streamed = True
@@ -2809,7 +2977,12 @@ class SandyService:
                 # Only emit final content if we haven't streamed any content yet
                 # (content was already streamed from agent-output events)
                 if not content_streamed:
-                    result = "\n".join(output_parts) if output_parts else "Agent completed without output."
+                    if output_parts:
+                        result = "\n".join(output_parts)
+                    elif recovered_output_parts:
+                        result = "\n".join(recovered_output_parts)
+                    else:
+                        result = "Agent completed without output."
                     # Clean up Aider-specific output formatting
                     result = _clean_aider_output(result)
                     result = process_agent_response(result, sandbox_url)

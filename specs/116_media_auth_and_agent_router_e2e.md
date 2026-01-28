@@ -43,6 +43,9 @@ configuration rather than model behavior.
 4. **CHUTES_API_KEY missing inside Sandy agent/run**
    - Claude Code reports `CHUTES_API_KEY` unset in the sandbox.
    - This blocks media calls even when prompts are correct.
+5. **Large media outputs truncated**
+   - Claude Code can emit `Output too large... tool-results/*.txt`, causing truncated
+     data URLs to reach the UI and render as broken images.
 
 ## Goals
 
@@ -51,6 +54,7 @@ configuration rather than model behavior.
 - Claude Code clearly knows to use `CHUTES_API_KEY` for media endpoints.
 - The two demo prompts succeed end-to-end in the UI.
 - Streaming shows meaningful content while the agent works.
+- Image outputs are delivered as artifacts (not truncated base64).
 
 ## Non-goals
 
@@ -85,6 +89,11 @@ configuration rather than model behavior.
 
 - Set `CHUTES_API_KEY` on the baseline agent Render service so the sandbox env
   can be populated during agent/run.
+
+### E) Prefer artifacts over data URLs
+- Update prompts/examples to save images under `/workspace/artifacts`.
+- When tool output is too large, recover `tool-results/*.txt` and materialize
+  any data URL images into `/workspace/artifacts` before returning artifacts.
 
 ## Acceptance Criteria
 
