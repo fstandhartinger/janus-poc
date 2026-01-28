@@ -21,8 +21,14 @@ async function readMetadata(metaPath: string): Promise<{ mime_type?: string } | 
   }
 }
 
-export async function GET(_request: NextRequest, context: { params: { path?: string[] } }) {
-  const segments = Array.isArray(context.params?.path) ? context.params.path : [];
+type ArtifactRouteParams = { path?: string[] };
+
+export async function GET(
+  _request: NextRequest,
+  context: { params: Promise<ArtifactRouteParams> }
+) {
+  const params = await context.params;
+  const segments = Array.isArray(params?.path) ? params.path : [];
   if (segments.length < 2) {
     return NextResponse.json({ error: 'NOT_FOUND' }, { status: 404 });
   }
