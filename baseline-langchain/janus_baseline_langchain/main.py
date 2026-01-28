@@ -61,6 +61,14 @@ from janus_baseline_langchain.services.vision import (
     convert_to_langchain_messages,
     create_vision_chain,
 )
+from janus_baseline_langchain.tools import (
+    audio_generation_tool,
+    deep_research_tool,
+    image_generation_tool,
+    music_generation_tool,
+    video_generation_tool,
+    web_search_tool,
+)
 
 # Global router instance for metrics tracking
 _router_instance: CompositeRoutingChatModel | None = None
@@ -499,6 +507,172 @@ def _generation_flag_reasons(flags: GenerationFlags) -> list[str]:
     if flags.web_search:
         reasons.append("web search requested")
     return reasons
+
+
+def _resolve_generation_tool(
+    flags: GenerationFlags | None,
+    prompt: str,
+) -> tuple[str, Any, dict[str, Any]] | None:
+    if not flags:
+        return None
+
+    active_flags = [
+        name
+        for name, enabled in (
+            ("generate_image", flags.generate_image),
+            ("generate_video", flags.generate_video),
+            ("generate_audio", flags.generate_audio),
+            ("deep_research", flags.deep_research),
+            ("web_search", flags.web_search),
+        )
+        if enabled
+    ]
+    if len(active_flags) != 1:
+        return None
+
+    selected = active_flags[0]
+    lowered = prompt.lower()
+    if selected == "generate_image":
+        return "image_generation", image_generation_tool, {"prompt": prompt}
+    if selected == "generate_video":
+        return "video_generation", video_generation_tool, {"prompt": prompt}
+    if selected == "generate_audio":
+        if any(token in lowered for token in ("music", "song", "instrumental")):
+            return "music_generation", music_generation_tool, {"prompt": prompt}
+        return "audio_generation", audio_generation_tool, {"prompt": prompt, "type": "speech"}
+    if selected == "deep_research":
+        return "deep_research", deep_research_tool, {"query": prompt, "mode": "max"}
+    if selected == "web_search":
+        return "web_search", web_search_tool, {"query": prompt}
+    return None
+
+
+async def _run_generation_tool(
+    tool_name: str,
+    tool: Any,
+    tool_args: dict[str, Any],
+    request_id: str,
+    debug_emitter: DebugEmitter | None = None,
+) -> str:
+    logger.info(
+        "tool_call_start",
+        request_id=request_id,
+        tool=tool_name,
+        tool_input=tool_args,
+    )
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.TOOL_CALL_START,
+            _debug_step_for_tool(tool_name),
+            f"Running tool: {tool_name}",
+            data={"tool": tool_name},
+        )
+    try:
+        result = await tool.ainvoke(tool_args)
+    except Exception as exc:
+        logger.error(
+            "tool_call_error",
+            request_id=request_id,
+            tool=tool_name,
+            error=str(exc),
+        )
+        result = f"{tool_name} failed: {exc}"
+    logger.info(
+        "tool_call_complete",
+        request_id=request_id,
+        tool=tool_name,
+    )
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.TOOL_CALL_COMPLETE,
+            _debug_step_for_tool(tool_name),
+            f"Tool finished: {tool_name}",
+            data={"tool": tool_name},
+        )
+    return str(result)
+
+
+async def _stream_tool_output(
+    request_id: str,
+    model: str,
+    output: str,
+    include_usage: bool,
+    response_collector: list[str] | None = None,
+    metadata: dict[str, Any] | None = None,
+    debug_emitter: DebugEmitter | None = None,
+) -> AsyncGenerator[str, None]:
+    started = False
+    metadata_sent = False
+
+    if not started:
+        yield _chunk_payload(
+            request_id,
+            model,
+            Delta(role=MessageRole.ASSISTANT),
+            metadata=metadata if not metadata_sent else None,
+        )
+        started = True
+        metadata_sent = True
+
+    content_parts = _split_stream_content(output)
+    for part in content_parts:
+        if response_collector is not None:
+            response_collector.append(part)
+        yield _chunk_payload(
+            request_id,
+            model,
+            Delta(content=part),
+        )
+
+    artifacts = get_collected_artifacts()
+    if artifacts:
+        if debug_emitter:
+            for artifact in artifacts:
+                await debug_emitter.emit(
+                    DebugEventType.FILE_CREATED,
+                    "TOOL_FILES",
+                    f"Artifact created: {artifact.display_name}",
+                    data={
+                        "filename": artifact.display_name,
+                        "artifact_id": artifact.id,
+                    },
+                )
+        yield _chunk_payload(
+            request_id,
+            model,
+            Delta(
+                janus={
+                    "event": "artifacts",
+                    "payload": {
+                        "artifacts": [
+                            artifact.model_dump(mode="json") for artifact in artifacts
+                        ]
+                    },
+                }
+            ),
+        )
+
+    if include_usage:
+        yield _chunk_payload(
+            request_id,
+            model,
+            Delta(),
+            usage=Usage(prompt_tokens=0, completion_tokens=0, total_tokens=0),
+        )
+
+    yield _chunk_payload(
+        request_id,
+        model,
+        Delta(),
+        finish_reason=FinishReason.STOP,
+    )
+    if debug_emitter:
+        await debug_emitter.emit(
+            DebugEventType.RESPONSE_COMPLETE,
+            "SSE",
+            "Response complete",
+        )
+    yield "data: [DONE]\n\n"
 
 
 def _build_agent_prompt(user_message: str, flags: GenerationFlags | None) -> str:
@@ -1250,8 +1424,10 @@ async def chat_completions(
         request.generation_flags,
     )
 
+    user_prompt = _latest_user_text(request.messages)
+    generation_tool = _resolve_generation_tool(request.generation_flags, user_prompt)
     flags_payload = _generation_flags_payload(request.generation_flags)
-    use_generation_agent = analysis.is_complex
+    use_generation_agent = analysis.is_complex and generation_tool is None
     flag_reasons = (
         _generation_flag_reasons(request.generation_flags)
         if request.generation_flags and flags_payload
@@ -1297,10 +1473,16 @@ async def chat_completions(
             f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
             data={"is_complex": analysis.is_complex, "reason": analysis.reason},
         )
+        route_label = "SANDY" if use_generation_agent else ("TOOL" if generation_tool else "FAST_LLM")
+        route_message = (
+            "Routing to agent path"
+            if use_generation_agent
+            else ("Routing to tool path" if generation_tool else "Routing to fast path")
+        )
         await debug_emitter.emit(
             DebugEventType.AGENT_PATH_START if use_generation_agent else DebugEventType.FAST_PATH_START,
-            "SANDY" if use_generation_agent else "FAST_LLM",
-            "Routing to agent path" if use_generation_agent else "Routing to fast path",
+            route_label,
+            route_message,
             data={"using_agent": use_generation_agent, "reason": analysis.reason},
         )
 
@@ -1316,7 +1498,7 @@ async def chat_completions(
         vision_routing=use_vision,
     )
 
-    tool_call = None if use_generation_agent else _infer_tool_call(request)
+    tool_call = None if use_generation_agent or generation_tool else _infer_tool_call(request)
 
     if request.stream:
         full_response_parts: list[str] = []
@@ -1348,6 +1530,34 @@ async def chat_completions(
                 clear_artifact_collection()
 
         include_usage = bool(request.stream_options and request.stream_options.include_usage)
+        if generation_tool:
+            tool_name, tool, tool_args = generation_tool
+
+            async def tool_stream() -> AsyncGenerator[str, None]:
+                output = await _run_generation_tool(
+                    tool_name,
+                    tool,
+                    tool_args,
+                    request_id,
+                    debug_emitter=debug_emitter,
+                )
+                async for payload in _stream_tool_output(
+                    request_id,
+                    model,
+                    output,
+                    include_usage,
+                    response_collector=full_response_parts,
+                    metadata=metadata_payload,
+                    debug_emitter=debug_emitter,
+                ):
+                    yield payload
+
+            wrapped_stream = stream_with_memory(optimized_stream_response(tool_stream()))
+            return StreamingResponse(
+                wrapped_stream,
+                media_type="text/event-stream",
+                headers=response_headers,
+            )
         if use_generation_agent:
             user_input, history = _build_agent_context(request.messages)
             agent_prompt = _build_agent_prompt(user_input, request.generation_flags)
@@ -1471,6 +1681,52 @@ async def chat_completions(
                 await asyncio.sleep(min(2 ** attempt, 8))
         if output is None:
             output = "Error: failed to generate response."
+        artifacts = get_collected_artifacts()
+        response = _format_response(
+            request_id,
+            request.model or settings.model,
+            output,
+            artifacts=artifacts or None,
+        )
+        if debug_emitter and artifacts:
+            for artifact in artifacts:
+                await debug_emitter.emit(
+                    DebugEventType.FILE_CREATED,
+                    "TOOL_FILES",
+                    f"Artifact created: {artifact.display_name}",
+                    data={
+                        "filename": artifact.display_name,
+                        "artifact_id": artifact.id,
+                    },
+                )
+        if memory_enabled and request.user_id:
+            conversation = conversation_base + [
+                {"role": "assistant", "content": output}
+            ]
+            asyncio.create_task(
+                memory_service.extract_memories(
+                    user_id=request.user_id,
+                    conversation=conversation,
+                )
+            )
+        clear_artifact_collection()
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.RESPONSE_COMPLETE,
+                "SSE",
+                "Response complete",
+            )
+        return response
+
+    if generation_tool:
+        tool_name, tool, tool_args = generation_tool
+        output = await _run_generation_tool(
+            tool_name,
+            tool,
+            tool_args,
+            request_id,
+            debug_emitter=debug_emitter,
+        )
         artifacts = get_collected_artifacts()
         response = _format_response(
             request_id,
