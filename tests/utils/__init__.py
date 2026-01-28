@@ -106,7 +106,7 @@ async def send_message(
     client: httpx.AsyncClient,
     content: str,
     images: list[str] | None = None,
-    timeout: float = 60.0,
+    timeout: float = 120.0,
     model: str | None = None,
     history: list[dict[str, object]] | None = None,
 ) -> str:

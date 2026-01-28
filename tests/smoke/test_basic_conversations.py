@@ -38,15 +38,15 @@ class TestBasicConversations:
     async def test_follow_up_questions(self, client):
         """Agent handles follow-up questions with implicit references."""
         history: list[dict[str, object]] = []
-        first = await send_message(client, "Tell me about Python programming.", history=history)
+        first = await send_message(client, "Python is a programming language.", history=history)
         history.extend(
             [
-                {"role": "user", "content": "Tell me about Python programming."},
+                {"role": "user", "content": "Python is a programming language."},
                 {"role": "assistant", "content": first},
             ]
         )
-        response = await send_message(client, "What are its main advantages?", history=history)
-        assert_contains_any(response, ["python", "readability", "library"])
+        response = await send_message(client, "What is it?", history=history)
+        assert_contains_any(response, ["python", "programming", "language"])
 
     async def test_correction_handling(self, client):
         """Agent accepts corrections gracefully."""

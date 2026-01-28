@@ -557,7 +557,7 @@ class ComplexityDetector:
                     "messages": [
                         {
                             "role": "user",
-                            "content": ROUTING_PROMPT.format(user_message=text[:500]),
+                            "content": ROUTING_PROMPT.replace("{user_message}", text[:500]),
                         }
                     ],
                     "tools": [USE_AGENT_TOOL],
