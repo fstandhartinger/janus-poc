@@ -587,4 +587,4 @@ Run the same queries against both baselines and compare:
 - Spec 92: Baseline Agent CLI E2E Verification (parallel spec)
 - Spec 93: Comprehensive Logging & Observability (logging framework)
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

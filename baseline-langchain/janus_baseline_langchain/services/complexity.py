@@ -13,7 +13,7 @@ import structlog
 from janus_baseline_langchain.config import Settings, get_settings
 from janus_baseline_langchain.models import GenerationFlags, Message, MessageContent
 from janus_baseline_langchain.services.vision import contains_images, count_images
-from janus_baseline_langchain.tools.robust import robust_parse_tool_call
+from janus_baseline_langchain.services.robust import robust_parse_tool_call
 
 logger = structlog.get_logger()
 

@@ -652,8 +652,14 @@ async def _stream_tool_call_response(
     metadata: dict[str, Any] | None = None,
     debug_emitter: DebugEmitter | None = None,
 ) -> AsyncGenerator[str, None]:
+    tool_name = tool_call.function.name
+    logger.info(
+        "tool_call_start",
+        request_id=request_id,
+        tool=tool_name,
+        tool_input=tool_call.function.arguments,
+    )
     if debug_emitter:
-        tool_name = tool_call.function.name
         await debug_emitter.emit(
             DebugEventType.TOOL_CALL_START,
             _debug_step_for_tool(tool_name),
@@ -685,8 +691,12 @@ async def _stream_tool_call_response(
         Delta(),
         finish_reason=FinishReason.STOP,
     )
+    logger.info(
+        "tool_call_complete",
+        request_id=request_id,
+        tool=tool_name,
+    )
     if debug_emitter:
-        tool_name = tool_call.function.name
         await debug_emitter.emit(
             DebugEventType.TOOL_CALL_COMPLETE,
             _debug_step_for_tool(tool_name),
@@ -877,6 +887,12 @@ async def stream_agent_response(
                     tool_input = tool_payload.get("input") or tool_payload.get("inputs") or {}
                     if not isinstance(tool_input, dict):
                         tool_input = {"input": tool_input}
+                    logger.info(
+                        "tool_call_start",
+                        request_id=request_id,
+                        tool=tool_name,
+                        tool_input=tool_input,
+                    )
                     tool_call = ToolCall(
                         id=f"tool-{tool_index}",
                         function=FunctionCall(
@@ -902,6 +918,11 @@ async def stream_agent_response(
                     tool_index += 1
                 elif event_type == "on_tool_end":
                     tool_name = _tool_event_message(event)
+                    logger.info(
+                        "tool_call_complete",
+                        request_id=request_id,
+                        tool=tool_name,
+                    )
                     if debug_emitter:
                         await debug_emitter.emit(
                             DebugEventType.TOOL_CALL_COMPLETE,
@@ -930,7 +951,12 @@ async def stream_agent_response(
                     yield "data: [DONE]\n\n"
                     return
         except Exception as exc:
-            logger.error("agent_stream_error", error=str(exc))
+            logger.error(
+                "agent_stream_error",
+                request_id=request_id,
+                model=model,
+                error=str(exc),
+            )
             if debug_emitter:
                 await debug_emitter.emit(
                     DebugEventType.ERROR,
@@ -1096,11 +1122,16 @@ async def _stream_vision_response(
                 if attempt_model == primary:
                     logger.warning(
                         "vision_stream_primary_failed",
+                        model=attempt_model,
                         error=str(exc),
                         fallback=fallback,
                     )
                     continue
-                logger.error("vision_stream_error", error=str(exc))
+                logger.error(
+                    "vision_stream_error",
+                    model=attempt_model,
+                    error=str(exc),
+                )
                 yield _chunk_payload(
                     request_id,
                     attempt_model,
@@ -1133,7 +1164,12 @@ async def _run_vision_completion(
         result = await llm.ainvoke(messages)
         return primary, str(getattr(result, "content", result))
     except Exception as exc:
-        logger.warning("vision_primary_failed", error=str(exc), fallback=fallback)
+        logger.warning(
+            "vision_primary_failed",
+            model=primary,
+            error=str(exc),
+            fallback=fallback,
+        )
         llm = create_vision_chain(
             settings,
             fallback,
@@ -1423,7 +1459,12 @@ async def chat_completions(
                     output = str(result)
                 break
             except Exception as exc:
-                logger.error("agent_invoke_error", error=str(exc))
+                logger.error(
+                    "agent_invoke_error",
+                    request_id=request_id,
+                    model=request.model or settings.model,
+                    error=str(exc),
+                )
                 if attempt >= settings.max_retries or not _is_retryable_agent_error(exc):
                     output = "Error: failed to generate response."
                     break
@@ -1511,7 +1552,12 @@ async def chat_completions(
                 base_url_override=base_url_override,
             )
         except Exception as exc:
-            logger.error("vision_completion_error", error=str(exc))
+            logger.error(
+                "vision_completion_error",
+                request_id=request_id,
+                model=model,
+                error=str(exc),
+            )
             output = "Error: failed to generate vision response."
             model_name = model
         response = _format_response(request_id, model_name, output)
@@ -1543,7 +1589,12 @@ async def chat_completions(
             base_url_override=base_url_override,
         )
     except Exception as exc:
-        logger.error("agent_invoke_error", error=str(exc))
+        logger.error(
+            "agent_invoke_error",
+            request_id=request_id,
+            model=model,
+            error=str(exc),
+        )
         output = "Error: failed to generate response."
         model_name = model
 

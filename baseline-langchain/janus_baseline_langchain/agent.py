@@ -71,8 +71,8 @@ Example:
 <html>
 <head>
   <style>
-    body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui; padding: 1rem; margin: 0; }
-    button { background: #63D297; color: #1a1a2e; border: none; padding: 0.5rem 1rem; border-radius: 6px; }
+    body {{ background: #1a1a2e; color: #e0e0e0; font-family: system-ui; padding: 1rem; margin: 0; }}
+    button {{ background: #63D297; color: #1a1a2e; border: none; padding: 0.5rem 1rem; border-radius: 6px; }}
   </style>
 </head>
 <body>
@@ -80,15 +80,15 @@ Example:
   <button onclick="inc()">+1</button>
   <span id="count">0</span>
   <script>
-    try {
+    try {{
       var count = 0;
-      function inc() {
+      function inc() {{
         count += 1;
         document.getElementById('count').textContent = String(count);
-      }
-    } catch (error) {
+      }}
+    }} catch (error) {{
       console.error('Widget error:', error);
-    }
+    }}
   </script>
 </body>
 </html>

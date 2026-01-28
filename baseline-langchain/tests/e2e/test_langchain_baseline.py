@@ -8,6 +8,8 @@ import time
 import httpx
 import pytest
 
+from .conftest import build_e2e_headers
+
 pytestmark = pytest.mark.e2e
 
 
@@ -48,11 +50,11 @@ class TestLangChainBaseline:
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(300)
-    async def test_complexity_detection(
-        self, e2e_settings, chutes_access_token
-    ) -> None:
+    async def test_complexity_detection(self, e2e_settings) -> None:
         """LangChain should route based on complexity."""
-        async with httpx.AsyncClient(timeout=120.0) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=120.0, headers=headers) as client:
             # Simple query (should be fast)
             start = time.time()
             response = await client.post(
@@ -63,7 +65,7 @@ class TestLangChainBaseline:
                         "messages": [{"role": "user", "content": "Hello"}],
                         "stream": False,
                     },
-                    chutes_access_token,
+                    token,
                 ),
             )
             simple_time = time.time() - start
@@ -88,7 +90,7 @@ class TestLangChainBaseline:
                         ],
                         "stream": False,
                     },
-                    chutes_access_token,
+                    token,
                 ),
                 timeout=timeout,
             )
@@ -101,12 +103,12 @@ class TestLangChainBaseline:
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(300)
-    async def test_langchain_tools(
-        self, e2e_settings, chutes_access_token
-    ) -> None:
+    async def test_langchain_tools(self, e2e_settings) -> None:
         """LangChain should have working tools."""
         timeout = httpx.Timeout(30.0, read=300.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
             # Test code execution via agent path
             response = await client.post(
                 f"{e2e_settings.baseline_langchain_url}/v1/chat/completions",
@@ -121,7 +123,7 @@ class TestLangChainBaseline:
                         ],
                         "stream": False,
                     },
-                    chutes_access_token,
+                    token,
                 ),
             )
 
@@ -138,12 +140,12 @@ class TestLangChainBaseline:
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(120)
-    async def test_langchain_streaming(
-        self, e2e_settings, chutes_access_token
-    ) -> None:
+    async def test_langchain_streaming(self, e2e_settings) -> None:
         """LangChain should stream SSE correctly."""
         timeout = httpx.Timeout(30.0, read=120.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
             async with client.stream(
                 "POST",
                 f"{e2e_settings.baseline_langchain_url}/v1/chat/completions",
@@ -153,7 +155,7 @@ class TestLangChainBaseline:
                         "messages": [{"role": "user", "content": "Tell me a short joke"}],
                         "stream": True,
                     },
-                    chutes_access_token,
+                    token,
                 ),
             ) as response:
                 if response.status_code == 504 or response.status_code >= 500:
@@ -172,12 +174,12 @@ class TestLangChainBaseline:
 
     @pytest.mark.asyncio
     @pytest.mark.timeout(300)
-    async def test_langchain_reasoning_content(
-        self, e2e_settings, chutes_access_token
-    ) -> None:
+    async def test_langchain_reasoning_content(self, e2e_settings) -> None:
         """LangChain should include reasoning_content when using agent."""
         timeout = httpx.Timeout(30.0, read=300.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
             async with client.stream(
                 "POST",
                 f"{e2e_settings.baseline_langchain_url}/v1/chat/completions",
@@ -193,7 +195,7 @@ class TestLangChainBaseline:
                         "stream": True,
                         "generation_flags": {"web_search": True},
                     },
-                    chutes_access_token,
+                    token,
                 ),
             ) as response:
                 if response.status_code == 504 or response.status_code >= 500:
@@ -211,7 +213,8 @@ class TestLangChainBaseline:
     @pytest.mark.timeout(120)
     async def test_health_endpoint(self, e2e_settings) -> None:
         """LangChain service should have working health endpoint."""
-        async with httpx.AsyncClient(timeout=30.0) as client:
+        headers = build_e2e_headers(e2e_settings)
+        async with httpx.AsyncClient(timeout=30.0, headers=headers) as client:
             response = await client.get(
                 f"{e2e_settings.baseline_langchain_url}/health"
             )

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import os
 from pathlib import Path
 
@@ -18,7 +18,8 @@ class E2ESettings:
     gateway_url: str
     baseline_langchain_url: str
     enabled: bool
-    chutes_access_token: str | None
+    chutes_access_token: str | None = field(repr=False)
+    pre_release_password: str | None = field(repr=False)
 
 
 def _load_e2e_settings() -> E2ESettings:
@@ -30,6 +31,11 @@ def _load_e2e_settings() -> E2ESettings:
         chutes_access_token=(
             os.getenv("BASELINE_LANGCHAIN_E2E_CHUTES_API_KEY")
             or os.getenv("CHUTES_API_KEY")
+        ),
+        pre_release_password=(
+            os.getenv("BASELINE_LANGCHAIN_E2E_PRE_RELEASE_PASSWORD")
+            or os.getenv("CHUTES_JANUS_PRE_RELEASE_PWD")
+            or os.getenv("JANUS_PRE_RELEASE_PASSWORD")
         ),
     )
 
@@ -62,6 +68,8 @@ def e2e_settings() -> E2ESettings:
     return E2E_SETTINGS
 
 
-@pytest.fixture(scope="session")
-def chutes_access_token(e2e_settings: E2ESettings) -> str | None:
-    return e2e_settings.chutes_access_token
+def build_e2e_headers(e2e_settings: E2ESettings) -> dict[str, str]:
+    headers: dict[str, str] = {}
+    if e2e_settings.pre_release_password:
+        headers["X-PreReleasePassword"] = e2e_settings.pre_release_password
+    return headers

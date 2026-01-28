@@ -7,6 +7,8 @@ import json
 import httpx
 import pytest
 
+from .conftest import build_e2e_headers
+
 pytestmark = pytest.mark.e2e
 
 
@@ -46,10 +48,12 @@ class TestFeatureParity:
     @pytest.mark.timeout(120)
     @pytest.mark.parametrize("baseline", ["baseline-cli-agent", "baseline-langchain"])
     async def test_simple_query_response(
-        self, e2e_settings, chutes_access_token, baseline: str
+        self, e2e_settings, baseline: str
     ) -> None:
         """Both baselines should answer simple queries quickly."""
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=60.0, headers=headers) as client:
             response = await client.post(
                 f"{e2e_settings.gateway_url}/v1/chat/completions",
                 json=_with_token(
@@ -58,7 +62,7 @@ class TestFeatureParity:
                         "messages": [{"role": "user", "content": "What is 2 + 2?"}],
                         "stream": False,
                     },
-                    chutes_access_token,
+                    token,
                 ),
             )
             if response.status_code == 504 or response.status_code >= 500:
@@ -73,11 +77,13 @@ class TestFeatureParity:
     @pytest.mark.timeout(300)
     @pytest.mark.parametrize("baseline", ["baseline-cli-agent", "baseline-langchain"])
     async def test_image_generation(
-        self, e2e_settings, chutes_access_token, baseline: str
+        self, e2e_settings, baseline: str
     ) -> None:
         """Both baselines should generate images."""
         timeout = httpx.Timeout(30.0, read=300.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
             async with client.stream(
                 "POST",
                 f"{e2e_settings.gateway_url}/v1/chat/completions",
@@ -90,7 +96,7 @@ class TestFeatureParity:
                         "stream": True,
                         "generation_flags": {"generate_image": True},
                     },
-                    chutes_access_token,
+                    token,
                 ),
             ) as response:
                 if response.status_code == 504 or response.status_code >= 500:
@@ -117,11 +123,13 @@ class TestFeatureParity:
     @pytest.mark.timeout(300)
     @pytest.mark.parametrize("baseline", ["baseline-cli-agent", "baseline-langchain"])
     async def test_web_search(
-        self, e2e_settings, chutes_access_token, baseline: str
+        self, e2e_settings, baseline: str
     ) -> None:
         """Both baselines should perform web search."""
         timeout = httpx.Timeout(30.0, read=300.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
             async with client.stream(
                 "POST",
                 f"{e2e_settings.gateway_url}/v1/chat/completions",
@@ -137,7 +145,7 @@ class TestFeatureParity:
                         "stream": True,
                         "generation_flags": {"web_search": True},
                     },
-                    chutes_access_token,
+                    token,
                 ),
             ) as response:
                 if response.status_code == 504 or response.status_code >= 500:
@@ -161,11 +169,13 @@ class TestFeatureParity:
     @pytest.mark.timeout(300)
     @pytest.mark.parametrize("baseline", ["baseline-cli-agent", "baseline-langchain"])
     async def test_streaming_format(
-        self, e2e_settings, chutes_access_token, baseline: str
+        self, e2e_settings, baseline: str
     ) -> None:
         """Both baselines should stream SSE correctly."""
         timeout = httpx.Timeout(30.0, read=120.0)
-        async with httpx.AsyncClient(timeout=timeout) as client:
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
             async with client.stream(
                 "POST",
                 f"{e2e_settings.gateway_url}/v1/chat/completions",
@@ -175,7 +185,7 @@ class TestFeatureParity:
                         "messages": [{"role": "user", "content": "Tell me a short joke"}],
                         "stream": True,
                     },
-                    chutes_access_token,
+                    token,
                 ),
             ) as response:
                 if response.status_code == 504 or response.status_code >= 500:
