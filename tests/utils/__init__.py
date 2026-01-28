@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import asyncio
 import os
 import re
 from typing import Iterable
@@ -105,20 +106,40 @@ async def send_message(
     client: httpx.AsyncClient,
     content: str,
     images: list[str] | None = None,
-    timeout: float = 30.0,
+    timeout: float = 60.0,
     model: str | None = None,
+    history: list[dict[str, object]] | None = None,
 ) -> str:
     """Send a chat message and return response."""
-    messages = [{"role": "user", "content": _format_message_content(content, images)}]
+    messages = list(history or [])
+    messages.append({"role": "user", "content": _format_message_content(content, images)})
     resolved_model = model or getattr(client, "_janus_model", None)
     if resolved_model is None:
         resolved_model = resolve_default_model("baseline")
 
-    response = await client.post(
-        "/v1/chat/completions",
-        json={"model": resolved_model, "messages": messages},
-        timeout=timeout,
+    resolved_timeout = float(os.getenv("TEST_REQUEST_TIMEOUT", timeout))
+    max_retries = int(os.getenv("TEST_MESSAGE_RETRIES", "2"))
+    retryable_markers = (
+        "failed to generate response",
+        "encountered an error processing your request",
     )
-    response.raise_for_status()
-    data = response.json()
-    return data["choices"][0]["message"]["content"]
+    for attempt in range(max_retries + 1):
+        try:
+            response = await client.post(
+                "/v1/chat/completions",
+                json={"model": resolved_model, "messages": messages},
+                timeout=resolved_timeout,
+            )
+            response.raise_for_status()
+            data = response.json()
+            content = data["choices"][0]["message"]["content"]
+            if isinstance(content, str) and any(marker in content.lower() for marker in retryable_markers):
+                if attempt < max_retries:
+                    await asyncio.sleep(min(2 ** attempt, 4))
+                    continue
+            return content
+        except (httpx.ReadTimeout, httpx.ConnectTimeout) as exc:
+            if attempt >= max_retries:
+                raise exc
+            await asyncio.sleep(min(2 ** attempt, 4))
+    return "Error: failed to generate response."

@@ -23,21 +23,42 @@ class TestBasicConversations:
 
     async def test_multi_turn_context(self, client):
         """Agent maintains context across turns."""
-        await send_message(client, "My name is Alice.")
-        response = await send_message(client, "What's my name?")
+        history: list[dict[str, object]] = []
+        first = await send_message(client, "My name is Alice.", history=history)
+        history.extend(
+            [
+                {"role": "user", "content": "My name is Alice."},
+                {"role": "assistant", "content": first},
+            ]
+        )
+        response = await send_message(client, "What's my name?", history=history)
         if not is_mock_response(response):
             assert "alice" in response.lower()
 
     async def test_follow_up_questions(self, client):
         """Agent handles follow-up questions with implicit references."""
-        await send_message(client, "Tell me about Python programming.")
-        response = await send_message(client, "What are its main advantages?")
+        history: list[dict[str, object]] = []
+        first = await send_message(client, "Tell me about Python programming.", history=history)
+        history.extend(
+            [
+                {"role": "user", "content": "Tell me about Python programming."},
+                {"role": "assistant", "content": first},
+            ]
+        )
+        response = await send_message(client, "What are its main advantages?", history=history)
         assert_contains_any(response, ["python", "readability", "library"])
 
     async def test_correction_handling(self, client):
         """Agent accepts corrections gracefully."""
-        await send_message(client, "The capital of Australia is Sydney.")
-        response = await send_message(client, "Actually, it's Canberra.")
+        history: list[dict[str, object]] = []
+        first = await send_message(client, "The capital of Australia is Sydney.", history=history)
+        history.extend(
+            [
+                {"role": "user", "content": "The capital of Australia is Sydney."},
+                {"role": "assistant", "content": first},
+            ]
+        )
+        response = await send_message(client, "Actually, it's Canberra.", history=history)
         assert_contains_any(response, ["canberra", "correct"])
 
     async def test_clarification_request(self, client):
