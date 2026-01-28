@@ -7,10 +7,13 @@ import httpx
 from langchain_core.tools import tool
 
 from janus_baseline_langchain.config import get_settings
-from janus_baseline_langchain.services import get_request_auth_token
+from janus_baseline_langchain.services import add_artifact, get_artifact_manager, get_request_auth_token
 
-DEFAULT_IMAGE_MODEL = "Qwen/Qwen2.5-VL-72B-Instruct"
-DEFAULT_IMAGE_SIZE = "1024x1024"
+IMAGE_API_URL = "https://image.chutes.ai/generate"
+DEFAULT_IMAGE_MODEL = "qwen-image"
+DEFAULT_IMAGE_WIDTH = 1024
+DEFAULT_IMAGE_HEIGHT = 1024
+DEFAULT_IMAGE_STEPS = 30
 
 
 def _post_with_retries(
@@ -48,14 +51,15 @@ def image_generation(prompt: str) -> str:
     payload = {
         "model": DEFAULT_IMAGE_MODEL,
         "prompt": prompt,
-        "n": 1,
-        "size": DEFAULT_IMAGE_SIZE,
+        "width": DEFAULT_IMAGE_WIDTH,
+        "height": DEFAULT_IMAGE_HEIGHT,
+        "num_inference_steps": DEFAULT_IMAGE_STEPS,
     }
-    headers = {"Authorization": f"Bearer {token}"}
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
     try:
         response = _post_with_retries(
-            f"{settings.chutes_api_base.rstrip('/')}/images/generations",
+            IMAGE_API_URL,
             headers=headers,
             payload=payload,
             timeout=settings.request_timeout,
@@ -64,25 +68,16 @@ def image_generation(prompt: str) -> str:
     except Exception as exc:
         return f"Image generation failed: {exc}"
 
-    try:
-        data = response.json()
-    except ValueError as exc:
-        return f"Image generation failed: {exc}"
-
-    items = data.get("data") or []
-    if not items:
-        return "Image generation failed: empty response."
-
-    first = items[0]
-    if isinstance(first, dict):
-        url = first.get("url")
-        if isinstance(url, str) and url:
-            return url
-        b64_data = first.get("b64_json")
-        if isinstance(b64_data, str) and b64_data:
-            return f"data:image/png;base64,{b64_data}"
-
-    return "Image generation failed: invalid response format."
+    content_type = response.headers.get("content-type", "image/png")
+    ext = ".jpg" if "jpeg" in content_type else ".png"
+    manager = get_artifact_manager()
+    artifact = manager.create_artifact(
+        f"generated-image{ext}",
+        response.content,
+        content_type,
+    )
+    add_artifact(artifact)
+    return f"Image generated: {artifact.url}"
 
 
 image_generation_tool = image_generation
