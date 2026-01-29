@@ -6,5 +6,6 @@ export const runtime = 'nodejs';
 export async function POST() {
   const response = NextResponse.json({ ok: true });
   response.headers.append('Set-Cookie', clearSessionCookieHeader());
+  response.cookies.set('chutes_fingerprint', '', { path: '/', maxAge: 0 });
   return response;
 }

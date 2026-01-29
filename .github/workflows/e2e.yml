@@ -1,0 +1,38 @@
+name: E2E Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: cd ui && npm ci
+
+      - name: Install Playwright browsers
+        run: cd ui && npx playwright install --with-deps
+
+      - name: Run E2E tests
+        run: cd ui && npx playwright test
+        env:
+          TEST_URL: ${{ secrets.TEST_URL }}
+          CHUTES_FINGERPRINT: ${{ secrets.CHUTES_FINGERPRINT }}
+          CHUTES_JANUS_PRE_RELEASE_PWD: ${{ secrets.CHUTES_JANUS_PRE_RELEASE_PWD }}
+          NEXT_PUBLIC_ENABLE_VOICE_INPUT: ${{ secrets.NEXT_PUBLIC_ENABLE_VOICE_INPUT }}
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: ui/playwright-report/
+          retention-days: 30

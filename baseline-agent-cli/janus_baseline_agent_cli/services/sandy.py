@@ -536,6 +536,12 @@ class SandyService:
             env["JANUS_ENABLE_MEMORY_TOOL"] = "false"
         return env
 
+    def _router_api_base(self, router_url: str, agent: str) -> str:
+        base = router_url.rstrip("/")
+        if agent in {"claude", "claude-code"}:
+            return base[:-3] if base.endswith("/v1") else base
+        return base if base.endswith("/v1") else f"{base}/v1"
+
     def _resolve_auth_token(self, request: ChatCompletionRequest | None) -> str | None:
         if request is None:
             return self._settings.sandy_api_key
@@ -1228,7 +1234,8 @@ class SandyService:
         if not router_url and self._settings.use_model_router:
             router_url = f"http://{self._settings.router_host}:{self._settings.router_port}"
         if router_url:
-            payload["apiBaseUrl"] = router_url
+            api_base_url = self._router_api_base(router_url, agent)
+            payload["apiBaseUrl"] = api_base_url
 
         logger.info(
             "agent_api_request",
@@ -1238,6 +1245,7 @@ class SandyService:
             prompt_length=len(prompt),
             max_duration=max_duration,
             router_url=router_url,
+            api_base_url=payload.get("apiBaseUrl"),
         )
 
         try:

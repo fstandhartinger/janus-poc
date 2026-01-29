@@ -4321,9 +4321,11 @@ code {
 }
 
 .mermaid-container {
-  display: inline-block;
-  min-width: 100%;
-  overflow: visible;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
   padding: 10px 0;
 }
 
@@ -4607,7 +4609,9 @@ code {
 
 @media (max-width: 768px) {
   .mermaid-container svg {
-    min-width: 500px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
   }
 
   .mermaid-container .nodeLabel {

@@ -17,6 +17,25 @@ class DummyClient:
         return None
 
 
+def test_router_api_base_normalization() -> None:
+    settings = Settings()
+    service = SandyService(settings, client_factory=lambda: DummyClient())
+
+    assert service._router_api_base("http://router.test", "claude-code") == "http://router.test"
+    assert (
+        service._router_api_base("http://router.test/v1", "claude-code")
+        == "http://router.test"
+    )
+    assert (
+        service._router_api_base("http://router.test", "aider")
+        == "http://router.test/v1"
+    )
+    assert (
+        service._router_api_base("http://router.test/v1", "aider")
+        == "http://router.test/v1"
+    )
+
+
 @pytest.mark.asyncio
 async def test_agent_api_stream_event_yields_content(monkeypatch: pytest.MonkeyPatch) -> None:
     settings = Settings(sandy_base_url="http://sandy.test")

@@ -1,6 +1,6 @@
 # Spec 111: Claude Code System Prompt Integration
 
-## Status: IN_PROGRESS
+## Status: COMPLETE
 
 ## Problem
 
@@ -94,3 +94,5 @@ via CLI flags so agent/run runs are deterministic.
 
 3. **Streaming smoke**
    - Confirm `stream_event` deltas appear in UI while agent is working
+
+NR_OF_TRIES: 1

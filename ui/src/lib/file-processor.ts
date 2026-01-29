@@ -4,6 +4,13 @@ import { fileToBase64, formatBytes } from './file-utils';
 const PREVIEW_LIMIT = 500;
 const CONTENT_LIMIT = 100_000;
 
+function createFileId(): string {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+  return `file-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 function buildPreview(text: string): string {
   if (text.length <= PREVIEW_LIMIT) {
     return text;
@@ -16,7 +23,7 @@ function trimContent(text: string): string {
 }
 
 export async function processFile(file: File, category: FileCategory): Promise<AttachedFile> {
-  const id = crypto.randomUUID();
+  const id = createFileId();
 
   switch (category) {
     case 'images':

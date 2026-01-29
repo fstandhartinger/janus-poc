@@ -1,15 +1,78 @@
 import { test, expect } from '@playwright/test';
 import path from 'path';
 import fs from 'fs';
+import {
+  captureConsoleErrors,
+  setChatInputValue,
+  stubChatDependencies,
+  waitForChatReady,
+  waitForStreamingComplete,
+} from './utils/helpers';
 
 // Minimal 1x1 transparent PNG as base64
 const PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
 
 test.describe('Chat UI', () => {
-  test('uploads an image and submits a prompt', async ({ page }) => {
+  test.beforeEach(async ({ page }) => {
+    await stubChatDependencies(page);
+  });
+
+  test('renders chat interface', async ({ page }) => {
     await page.goto('/chat');
-    await page.waitForLoadState('networkidle');
+    await waitForChatReady(page);
+
+    await expect(page.locator('[data-testid="chat-input"]')).toBeVisible();
+    await expect(page.locator('[data-testid="send-button"]')).toBeVisible();
+  });
+
+  test('renders without console errors', async ({ page }) => {
+    const errors = captureConsoleErrors(page);
+    await page.goto('/chat');
+    await waitForChatReady(page);
+    await page.waitForTimeout(2000);
+    const filtered = errors.filter(
+      (error) =>
+        !error.includes('Failed to fetch service health') &&
+        !error.includes('net::ERR_FAILED')
+    );
+    expect(filtered).toHaveLength(0);
+  });
+
+  test('model selector is visible', async ({ page }) => {
+    await page.goto('/chat');
+    await waitForChatReady(page);
+
+    const modelSelect = page.locator('[data-testid="model-select"]');
+    await expect(modelSelect).toBeVisible();
+    await modelSelect.click();
+    await expect(page.locator('[role="option"]').first()).toBeVisible();
+  });
+
+  test('empty message cannot be sent', async ({ page }) => {
+    await page.goto('/chat');
+    await waitForChatReady(page);
+
+    const sendButton = page.locator('[data-testid="send-button"]');
+    await expect(sendButton).toBeDisabled();
+  });
+
+  test('uploads an image and submits a prompt', async ({ page }) => {
+    await page.route('**/api/chat', async (route) => {
+      const streamChunks = [
+        'data: {"id":"chatcmpl-image","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
+        'data: {"id":"chatcmpl-image","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"Thanks for the image!"},"finish_reason":null}]}',
+        'data: [DONE]',
+      ];
+      await route.fulfill({
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream', 'x-request-id': 'image-upload-request' },
+        body: streamChunks.join('\n\n'),
+      });
+    });
+
+    await page.goto('/chat');
+    await waitForChatReady(page);
     await page.locator('[data-testid="chat-input"]').waitFor();
 
     // Create a temp test image for this test
@@ -28,7 +91,7 @@ test.describe('Chat UI', () => {
       // Enter a prompt
       const textarea = page.locator('[data-testid="chat-input"]');
       await expect(textarea).toBeEditable();
-      await textarea.fill('What is in this image?');
+      await setChatInputValue(page, 'What is in this image?');
       await expect(textarea).toHaveValue(/What is in this image\?/);
 
       // Submit the message
@@ -65,13 +128,13 @@ test.describe('Chat UI', () => {
     });
 
     await page.goto('/chat');
-    await page.waitForLoadState('networkidle');
+    await waitForChatReady(page);
     await page.locator('[data-testid="chat-input"]').waitFor();
 
     // Enter a prompt
     const textarea = page.locator('[data-testid="chat-input"]');
     await expect(textarea).toBeEditable();
-    await textarea.fill('Hello, how are you?');
+    await setChatInputValue(page, 'Hello, how are you?');
     await expect(textarea).toHaveValue(/Hello, how are you\?/);
 
     // Submit the message
@@ -84,6 +147,8 @@ test.describe('Chat UI', () => {
 
     const assistantMessage = page.locator('[data-testid="assistant-message"]');
     await expect(assistantMessage.first()).toContainText('Hello from Janus');
+
+    await waitForStreamingComplete(page);
   });
 
   test('demo prompts send messages and open the full list', async ({ page }) => {
@@ -101,7 +166,7 @@ test.describe('Chat UI', () => {
     });
 
     await page.goto('/chat');
-    await page.waitForLoadState('networkidle');
+    await waitForChatReady(page);
 
     const seeMoreButton = page.getByTestId('see-more-prompts');
     await expect(seeMoreButton).toBeVisible();
@@ -125,6 +190,7 @@ test.describe('Chat UI', () => {
 
   test('reasoning toggle is not shown in the top bar', async ({ page }) => {
     await page.goto('/chat');
+    await waitForChatReady(page);
 
     const toggleButton = page.locator('button:has-text("Thinking")');
     await expect(toggleButton).toHaveCount(0);
@@ -134,6 +200,7 @@ test.describe('Chat UI', () => {
     // This test verifies the artifact rendering component
     // In a real scenario, we'd need a mock server returning artifacts
     await page.goto('/chat');
+    await waitForChatReady(page);
 
     // Verify the message bubble component is set up to render artifacts
     // We can test this by checking the component exists and can render
@@ -149,6 +216,7 @@ test.describe('Chat UI', () => {
 
   test('can create new chat session', async ({ page }) => {
     await page.goto('/chat');
+    await waitForChatReady(page);
 
     // Find the new chat button in sidebar
     const newChatButton = page.locator('button:has-text("New Chat")');
@@ -160,5 +228,16 @@ test.describe('Chat UI', () => {
     // Verify empty state appears
     const emptyState = page.locator('.chat-empty-title');
     await expect(emptyState).toBeVisible();
+  });
+
+  test('chat page is responsive', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 });
+    await page.goto('/chat');
+    await waitForChatReady(page);
+
+    const hasHorizontalScroll = await page.evaluate(
+      () => document.body.scrollWidth > document.body.clientWidth
+    );
+    expect(hasHorizontalScroll).toBe(false);
   });
 });

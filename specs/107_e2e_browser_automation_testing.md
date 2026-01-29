@@ -1,6 +1,6 @@
 # Spec 102: E2E Browser Automation Testing
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** High
 **Complexity:** High
@@ -964,4 +964,4 @@ jobs:
 - Video recording available for flaky tests
 - If a test fails, debug with `--headed` mode
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

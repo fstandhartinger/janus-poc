@@ -55,7 +55,7 @@ export function DebugPanel({ baseline, debugState, onClose }: DebugPanelProps) {
     (debugState.events.length > 0 ? debugState.events[0].correlation_id : undefined);
 
   return (
-    <div className="chat-debug-panel">
+    <div className="chat-debug-panel" data-testid="debug-panel">
       <div className="chat-debug-header">
         <div className="chat-debug-title">
           <BugIcon className="w-4 h-4" />

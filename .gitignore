@@ -29,6 +29,8 @@ playwright-report/
 playwright/.cache/
 .playwright-mcp/
 tmp/playwright_mcp/
+ui/e2e-screenshots/
+ui/e2e/fixtures/
 
 # Build / artifacts
 *.tmp

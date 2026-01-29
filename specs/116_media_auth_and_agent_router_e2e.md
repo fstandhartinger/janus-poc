@@ -1,6 +1,6 @@
 # Spec 116: Media Auth + Claude Code Agent Router E2E Fix
 
-## Status: IN_PROGRESS
+## Status: TODO
 
 ## Context / Why
 

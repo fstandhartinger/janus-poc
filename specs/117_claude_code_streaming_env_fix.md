@@ -1,6 +1,6 @@
 # Spec 117: Claude Code Streaming + Env Reliability (Agent-Run)
 
-## Status: IN_PROGRESS
+## Status: TODO
 
 ## Context / Why
 

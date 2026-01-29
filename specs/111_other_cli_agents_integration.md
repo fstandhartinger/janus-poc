@@ -1,6 +1,6 @@
 # Spec 111: Other CLI Agents Integration
 
-## Status: IN PROGRESS - Additional agents identified
+## Status: TODO
 
 ## Context / Background
 

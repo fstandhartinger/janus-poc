@@ -1,6 +1,6 @@
 # 116 Artifact delivery pipeline for Sandy agent outputs
 
-## Status: IN_PROGRESS
+## Status: TODO
 
 ## Problem
 Image generation works inside the Sandy sandbox, but the chat UI often shows broken images or nothing. The current agent output may print large base64 data URLs that get truncated, and artifacts stored in the sandbox can disappear before the UI can fetch them. We need a reliable, deterministic pipeline to transport binary outputs (images, files) from sandbox to UI.

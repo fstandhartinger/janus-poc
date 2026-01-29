@@ -1,8 +1,18 @@
 import { test, expect } from '@playwright/test';
+import { captureConsoleErrors, waitForPageReady } from './utils/helpers';
 
 test.describe('Landing Page', () => {
+  test('renders without console errors', async ({ page }) => {
+    const errors = captureConsoleErrors(page);
+    await page.goto('/');
+    await waitForPageReady(page);
+    await page.waitForTimeout(2000);
+    expect(errors).toHaveLength(0);
+  });
+
   test('displays hero section with Janus branding', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Verify page title
     await expect(page).toHaveTitle(/Janus/);
@@ -22,6 +32,7 @@ test.describe('Landing Page', () => {
 
   test('navigation works correctly', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Verify navigation links exist
     const navLinks = page.locator('nav');
@@ -33,6 +44,7 @@ test.describe('Landing Page', () => {
 
   test('CTA button navigates to chat page', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Click the primary CTA
     const ctaButton = page.locator('main a:has-text("Janus Chat")').first();
@@ -45,6 +57,7 @@ test.describe('Landing Page', () => {
 
   test('API section is visible', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     const apiSection = page.locator('text=Drop-in API for intelligence builders');
     await expect(apiSection).toBeVisible();
@@ -55,6 +68,7 @@ test.describe('Landing Page', () => {
 
   test('feature cards are displayed', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Verify feature cards section
     const featureSection = page.locator('text=Why Janus?');
@@ -68,6 +82,7 @@ test.describe('Landing Page', () => {
 
   test('how it works section is displayed', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Verify how it works section
     const howItWorks = page.locator('text=How It Works');
@@ -81,6 +96,7 @@ test.describe('Landing Page', () => {
 
   test('flexibility and ideals sections are displayed', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     await expect(page.getByRole('heading', { name: 'Any Stack. Any Approach.' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Built on Bittensor Ideals' })).toBeVisible();
@@ -88,6 +104,7 @@ test.describe('Landing Page', () => {
 
   test('footer is displayed with links', async ({ page }) => {
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Verify footer exists
     const footer = page.locator('footer');
@@ -102,6 +119,7 @@ test.describe('Landing Page', () => {
     // Set viewport to mobile size
     await page.setViewportSize({ width: 375, height: 812 });
     await page.goto('/');
+    await waitForPageReady(page);
 
     // Verify hamburger menu button exists on mobile
     const menuButton = page.locator('button[aria-label="Toggle menu"]');
@@ -113,5 +131,10 @@ test.describe('Landing Page', () => {
     // Verify mobile nav links are visible
     const mobileNav = page.locator('nav.flex.flex-col');
     await expect(mobileNav.getByRole('link', { name: 'Chat', exact: true })).toBeVisible();
+
+    const hasHorizontalScroll = await page.evaluate(
+      () => document.body.scrollWidth > document.body.clientWidth
+    );
+    expect(hasHorizontalScroll).toBe(false);
   });
 });

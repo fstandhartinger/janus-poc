@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useChatStore } from '@/store/chat';
 import { useCanvasStore } from '@/store/canvas';
 import { useSettingsStore } from '@/store/settings';
@@ -18,6 +18,7 @@ import { isMemoryEnabled, setMemoryEnabled } from '@/lib/memory';
 import { FREE_CHAT_LIMIT, incrementFreeChatCount, readFreeChatState, remainingFreeChats, setFreeChatCount } from '@/lib/freeChat';
 import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
+import { useDebug } from '@/hooks/useDebug';
 import { useSmartScroll } from '@/hooks/useSmartScroll';
 import { cacheArtifact } from '@/lib/artifact-client';
 import logger from '@/lib/logger';
@@ -31,6 +32,7 @@ import { ModelSelector } from './ModelSelector';
 import { AgentStatusIndicator } from './chat/AgentStatusIndicator';
 import { EmptyState } from './chat/EmptyState';
 import { QuickSuggestions } from './chat/QuickSuggestions';
+import { DebugPanel } from './debug/DebugPanel';
 import { DebugToggle } from './debug/DebugToggle';
 import { MemoryToggle } from './MemoryToggle';
 import { MemorySheet } from './memory/MemorySheet';
@@ -118,10 +120,15 @@ export function ChatArea({
 
   const session = getCurrentSession();
   const messages = session?.messages || [];
+  const lastDebugRequestId = useMemo(() => {
+    const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant');
+    return lastAssistant?.metadata?.requestId || null;
+  }, [messages]);
   const lastMessageContent = messages.length
     ? getMessageText(messages[messages.length - 1].content)
     : '';
   const { resetUserScroll } = useSmartScroll(messagesContainerRef, [lastMessageContent, isStreaming]);
+  const debugState = useDebug(debugMode, lastDebugRequestId, selectedModel);
 
   const updateLastMessageMetadata = useCallback(
     (updates: Partial<NonNullable<(typeof messages)[number]['metadata']>>) => {
@@ -853,7 +860,12 @@ export function ChatArea({
             </div>
           )}
 
-          <div ref={messagesContainerRef} className="chat-messages-container px-6 py-6" aria-busy={isStreaming}>
+          <div
+            ref={messagesContainerRef}
+            className="chat-messages-container px-6 py-6"
+            aria-busy={isStreaming}
+            data-testid="chat-messages"
+          >
             <div className="max-w-4xl mx-auto flex min-h-full flex-col">
               <DeepResearchProgress stages={deepResearchStages} isActive={deepResearchActive} />
               <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
@@ -906,6 +918,13 @@ export function ChatArea({
           </div>
         </div>
 
+        {debugMode && (
+          <DebugPanel
+            baseline={selectedModel}
+            debugState={debugState}
+            onClose={() => setDebugMode(false)}
+          />
+        )}
       </div>
     </div>
   );

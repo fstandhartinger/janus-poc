@@ -5,6 +5,7 @@ import { decryptPayload, encryptPayload, getAuthSecret } from './crypto';
 const SESSION_COOKIE = 'auth_session';
 const SESSION_TTL_SECONDS = 30 * 24 * 60 * 60;
 const REFRESH_WINDOW_MS = 60 * 1000;
+const FINGERPRINT_COOKIE = 'chutes_fingerprint';
 
 export type AuthSession = {
   userId: string;
@@ -89,10 +90,29 @@ const refreshSession = async (session: AuthSession): Promise<AuthSession | null>
   };
 };
 
+const getFingerprintSession = (request: NextRequest): AuthSession | null => {
+  const expected = process.env.CHUTES_FINGERPRINT;
+  if (!expected) {
+    return null;
+  }
+  const provided = request.cookies.get(FINGERPRINT_COOKIE)?.value;
+  if (!provided || provided !== expected) {
+    return null;
+  }
+
+  return {
+    userId: provided,
+    username: 'chutes-test',
+    accessToken: provided,
+    expiresAt: Date.now() + SESSION_TTL_SECONDS * 1000,
+    createdAt: Date.now(),
+  };
+};
+
 export const getAuthSession = async (request: NextRequest): Promise<AuthSessionResult> => {
   const raw = request.cookies.get(SESSION_COOKIE)?.value;
   if (!raw) {
-    return { session: null };
+    return { session: getFingerprintSession(request) };
   }
 
   let session: AuthSession | null = null;

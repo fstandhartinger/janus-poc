@@ -103,3 +103,5 @@
 - Completed spec 110_mermaid_edge_label_clipping_fix.md with updated Mermaid sizing/overflow CSS, diagram wrapper + config tweaks, and new visual tests for edge label rendering.
 - UI Playwright `npm test` still reports pre-existing failures: chat CORS/401 console errors, chat streaming indicator visibility, competition leaderboard selector + horizontal scroll check, and memory toggle blocked by memory sheet overlay.
 - Production gateway check: /health and /v1/models OK; /v1/chat/completions returned an error response message for baseline-cli-agent.
+- Completed spec 111_claude_code_system_prompt.md with Claude router base normalization and stable Sandy agent-run prompt injection.
+- Stabilized Playwright chat/competition/memory E2E flows with gateway stubs and chat readiness helpers; full UI + gateway test suites now pass.
