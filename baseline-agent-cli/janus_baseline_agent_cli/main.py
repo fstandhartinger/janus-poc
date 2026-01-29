@@ -1,6 +1,7 @@
 """Janus Baseline Competitor - FastAPI application entry point."""
 
 import asyncio
+import json
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -45,7 +46,7 @@ from janus_baseline_agent_cli.services import (
     get_sandy_service,
 )
 from janus_baseline_agent_cli.services.debug import DebugEmitter
-from janus_baseline_agent_cli.streaming import optimized_stream_response
+from janus_baseline_agent_cli.streaming import optimized_stream_response, stream_with_keepalive
 from janus_baseline_agent_cli.tools.memory import INVESTIGATE_MEMORY_TOOL
 from janus_baseline_agent_cli.router.debug import router as debug_router
 from janus_baseline_agent_cli.router.server import app as router_app
@@ -183,6 +184,38 @@ def _extract_response_content(response: ChatCompletionResponse) -> str:
     message = response.choices[0].message
     content = getattr(message, "content", None)
     return content or ""
+
+
+def _update_keepalive_state(payload: str, state: dict[str, str | None]) -> None:
+    for line in payload.splitlines():
+        line = line.strip()
+        if not line.startswith("data:"):
+            continue
+        data = line[5:].strip()
+        if not data or data == "[DONE]":
+            continue
+        try:
+            parsed = json.loads(data)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(parsed, dict):
+            request_id = parsed.get("id")
+            model = parsed.get("model")
+            if request_id:
+                state["request_id"] = request_id
+            if model:
+                state["model"] = model
+
+
+def _build_keepalive_payload(state: dict[str, str | None]) -> str:
+    request_id = state.get("request_id") or state.get("fallback_id") or ""
+    model = state.get("model") or "unknown"
+    chunk = ChatCompletionChunk(
+        id=request_id,
+        model=model,
+        choices=[ChunkChoice(delta=Delta(reasoning_content="Working...\n"))],
+    )
+    return f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
 
 
 def _build_unavailable_response(request: ChatCompletionRequest) -> ChatCompletionResponse:
@@ -606,7 +639,18 @@ async def stream_response(
                     )
                 )
 
-    async for payload in optimized_stream_response(raw_stream()):
+    keepalive_state: dict[str, str | None] = {
+        "request_id": None,
+        "model": request.model,
+        "fallback_id": f"chatcmpl-{uuid.uuid4().hex}",
+    }
+    keepalive_stream = stream_with_keepalive(
+        raw_stream(),
+        keepalive_interval=float(settings.sse_keepalive_interval),
+        keepalive_factory=lambda: _build_keepalive_payload(keepalive_state),
+        on_chunk=lambda payload: _update_keepalive_state(payload, keepalive_state),
+    )
+    async for payload in optimized_stream_response(keepalive_stream):
         yield payload
 
 

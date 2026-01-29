@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import suppress
 import time
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Callable
 
 
 async def optimized_stream_response(
@@ -30,3 +32,40 @@ async def optimized_stream_response(
 
     if buffer:
         yield buffer
+
+
+async def stream_with_keepalive(
+    llm_response: AsyncGenerator[str, None],
+    *,
+    keepalive_interval: float,
+    keepalive_factory: Callable[[], str],
+    on_chunk: Callable[[str], None] | None = None,
+) -> AsyncGenerator[str, None]:
+    if keepalive_interval <= 0:
+        async for chunk in llm_response:
+            if on_chunk:
+                on_chunk(chunk)
+            yield chunk
+        return
+
+    stream_iter = llm_response.__aiter__()
+    pending = asyncio.create_task(stream_iter.__anext__())
+    try:
+        while True:
+            done, _ = await asyncio.wait({pending}, timeout=keepalive_interval)
+            if pending in done:
+                try:
+                    chunk = pending.result()
+                except StopAsyncIteration:
+                    break
+                if on_chunk:
+                    on_chunk(chunk)
+                yield chunk
+                pending = asyncio.create_task(stream_iter.__anext__())
+            else:
+                yield keepalive_factory()
+    finally:
+        if not pending.done():
+            pending.cancel()
+            with suppress(asyncio.CancelledError):
+                await pending

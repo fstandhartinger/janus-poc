@@ -8,6 +8,7 @@ import { useCanvasStore } from '@/store/canvas';
 import { useSettingsStore } from '@/store/settings';
 import {
   RateLimitError,
+  RequestTimeoutError,
   fetchModels,
   streamChatCompletion,
   streamDeepResearch,
@@ -556,6 +557,11 @@ export function ChatArea({
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         // User cancelled
+      } else if (error instanceof RequestTimeoutError) {
+        updateLastMessage({
+          content: 'The task took too long and was stopped. Try breaking it into smaller steps.',
+          reasoning_content: '',
+        });
       } else if (error instanceof RateLimitError) {
         const message = error.message || 'Daily limit reached. Sign in to continue.';
         console.error('Rate limit error:', error);

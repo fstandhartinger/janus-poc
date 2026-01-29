@@ -58,6 +58,16 @@ export class RateLimitError extends Error {
   }
 }
 
+export class RequestTimeoutError extends Error {
+  readonly timeoutMs: number;
+
+  constructor(timeoutMs: number) {
+    super('The request timed out. Try again.');
+    this.name = 'RequestTimeoutError';
+    this.timeoutMs = timeoutMs;
+  }
+}
+
 type FetchRetryOptions = {
   retries?: number;
   timeoutMs?: number;
@@ -146,6 +156,7 @@ export async function fetchWithRetry(
 
   let attempt = 0;
   let lastError: unknown = null;
+  let sawTimeout = false;
 
   while (attempt <= retries) {
     const { signal, cleanup, timedOut } = createAbortSignal(timeoutMs, init.signal);
@@ -170,7 +181,11 @@ export async function fetchWithRetry(
       if (init.signal?.aborted) {
         throw error;
       }
-      if (isAbortError(error) && !timedOut()) {
+      const didTimeout = isAbortError(error) && timedOut();
+      if (didTimeout) {
+        sawTimeout = true;
+      }
+      if (isAbortError(error) && !didTimeout) {
         throw error;
       }
       lastError = error;
@@ -183,6 +198,9 @@ export async function fetchWithRetry(
     }
   }
 
+  if (sawTimeout) {
+    throw new RequestTimeoutError(timeoutMs);
+  }
   throw lastError ?? new Error('Request failed');
 }
 

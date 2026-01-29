@@ -44,6 +44,19 @@ logger = structlog.get_logger()
 CLAUDE_AGENT_DEFAULT_MODEL = "janus-router"
 _TOOL_RESULT_PATH_RE = re.compile(r"Full output saved to:\s*(\S+)")
 _DATA_IMAGE_URL_RE = re.compile(r"data:(image/[^;]+);base64,([A-Za-z0-9+/=\s]+)")
+_LONG_OPERATION_INDICATORS = {
+    "git clone": "Cloning repository...",
+    "npm install": "Installing dependencies...",
+    "pnpm install": "Installing dependencies...",
+    "yarn install": "Installing dependencies...",
+    "pip install": "Installing Python packages...",
+    "apt-get install": "Installing system packages...",
+    "apt install": "Installing system packages...",
+    "downloading": "Downloading file...",
+    "download": "Downloading file...",
+    "analyzing": "Analyzing content...",
+    "extracting": "Extracting data...",
+}
 
 
 def _parse_sse_events(data: str) -> list[dict[str, Any]]:
@@ -96,6 +109,37 @@ def _filter_agent_message(text: str) -> Optional[str]:
     ):
         return None
     return text
+
+
+def _long_operation_indicator(text: str | None) -> Optional[str]:
+    if not text:
+        return None
+    lowered = text.lower()
+    for needle, indicator in _LONG_OPERATION_INDICATORS.items():
+        if needle in lowered:
+            return indicator
+    return None
+
+
+def _is_timeout_error(message: str) -> bool:
+    lowered = message.lower()
+    return "timeout" in lowered or "timed out" in lowered
+
+
+def _build_long_operation_chunk(
+    indicator: str | None,
+    request_id: str,
+    model: str,
+    seen: set[str],
+) -> Optional[ChatCompletionChunk]:
+    if not indicator or indicator in seen:
+        return None
+    seen.add(indicator)
+    return ChatCompletionChunk(
+        id=request_id,
+        model=model,
+        choices=[ChunkChoice(delta=Delta(reasoning_content=f"{indicator}\n"))],
+    )
 
 
 def _extract_tool_result_path(text: str) -> Optional[str]:
@@ -226,7 +270,7 @@ class SandyService:
         self._settings = settings
         self._base_url = settings.sandy_base_url
         self._api_key = settings.sandy_api_key
-        self._timeout = settings.sandy_timeout
+        self._timeout = settings.sandy_agent_timeout
         self._client_factory = client_factory or httpx.AsyncClient
         self._baseline_root = Path(__file__).resolve().parents[2]
         self._agent_pack_path = self._resolve_path(settings.agent_pack_path)
@@ -1178,7 +1222,7 @@ class SandyService:
                 },
                 timeout=httpx.Timeout(
                     connect=30.0,
-                    read=float(max_duration + 60),  # Extra buffer for response
+                    read=float(self._settings.http_client_timeout),
                     write=30.0,
                     pool=30.0,
                 ),
@@ -1294,6 +1338,53 @@ class SandyService:
         except Exception as e:
             logger.error("agent_api_exception", error=str(e))
             yield {"type": "error", "error": f"Agent execution failed: {e}"}
+
+    async def _run_agent_via_api_with_retry(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        agent: str,
+        model: str,
+        task: str,
+        *,
+        request: ChatCompletionRequest,
+        public_url: str | None,
+        has_images: bool,
+        max_duration: int,
+        max_retries: int,
+    ) -> AsyncGenerator[dict[str, Any], None]:
+        attempt = 0
+        while True:
+            error_event: dict[str, Any] | None = None
+            async for event in self._run_agent_via_api(
+                client,
+                sandbox_id,
+                agent,
+                model,
+                task,
+                request=request,
+                public_url=public_url,
+                has_images=has_images,
+                max_duration=max_duration,
+            ):
+                if event.get("type") == "error":
+                    error_event = event
+                    continue
+                yield event
+
+            if error_event:
+                error_message = str(error_event.get("error") or "Unknown error")
+                if _is_timeout_error(error_message) and attempt < max_retries:
+                    yield {
+                        "type": "retry",
+                        "error": error_message,
+                        "attempt": attempt + 1,
+                    }
+                    await asyncio.sleep(2 ** attempt)
+                    attempt += 1
+                    continue
+                yield error_event
+            break
 
     def _select_agent_for_api(self, requested_agent: str | None = None) -> str:
         """Select agent for Sandy's agent/run API.
@@ -2187,7 +2278,7 @@ class SandyService:
                         stdout=bootstrap_stdout,
                     )
 
-                async for event in self._run_agent_via_api(
+                async for event in self._run_agent_via_api_with_retry(
                     client,
                     sandbox_id,
                     agent,
@@ -2197,6 +2288,7 @@ class SandyService:
                     public_url=public_url,
                     has_images=has_images,
                     max_duration=self._timeout,
+                    max_retries=2,
                 ):
                     event_type = event.get("type", "")
 
@@ -2450,7 +2542,7 @@ class SandyService:
                         "system_prompt_missing", path=str(self._system_prompt_path)
                     )
 
-                async for event in self._run_agent_via_api(
+                async for event in self._run_agent_via_api_with_retry(
                     client,
                     sandbox_id,
                     agent,
@@ -2460,6 +2552,7 @@ class SandyService:
                     public_url=public_url,
                     has_images=has_images,
                     max_duration=self._timeout,
+                    max_retries=2,
                 ):
                     event_type = event.get("type", "")
 
@@ -2744,6 +2837,7 @@ class SandyService:
         output_parts: list[str] = []
         recovered_output_parts: list[str] = []
         seen_tool_results: set[str] = set()
+        long_ops_seen: set[str] = set()
         content_streamed = False  # Track if we've streamed any content
         has_error = False
         exit_code = 0
@@ -2866,7 +2960,7 @@ class SandyService:
                     )
 
                 # Run agent via Sandy's API
-                async for event in self._run_agent_via_api(
+                async for event in self._run_agent_via_api_with_retry(
                     client,
                     sandbox_id,
                     agent,
@@ -2876,6 +2970,7 @@ class SandyService:
                     public_url=public_url,
                     has_images=has_images,
                     max_duration=self._timeout,
+                    max_retries=2,
                 ):
                     event_type = event.get("type", "")
 
@@ -2884,6 +2979,14 @@ class SandyService:
                         message = event.get("message", "")
                         filtered_message = _filter_agent_message(message) if message else None
                         if filtered_message:
+                            indicator_chunk = _build_long_operation_chunk(
+                                _long_operation_indicator(filtered_message),
+                                request_id,
+                                model,
+                                long_ops_seen,
+                            )
+                            if indicator_chunk:
+                                yield indicator_chunk
                             if debug_emitter:
                                 await debug_emitter.emit(
                                     DebugEventType.AGENT_THINKING,
@@ -2905,6 +3008,14 @@ class SandyService:
                         text = _strip_ansi(event.get("text", ""))
                         filtered_text = _filter_agent_message(text) if text else None
                         if filtered_text:
+                            indicator_chunk = _build_long_operation_chunk(
+                                _long_operation_indicator(filtered_text),
+                                request_id,
+                                model,
+                                long_ops_seen,
+                            )
+                            if indicator_chunk:
+                                yield indicator_chunk
                             tool_result_path = _extract_tool_result_path(filtered_text)
                             if tool_result_path and tool_result_path not in seen_tool_results:
                                 seen_tool_results.add(tool_result_path)
@@ -2960,6 +3071,14 @@ class SandyService:
                                     filtered_text = _filter_agent_message(text)
                                     if not filtered_text:
                                         continue
+                                    indicator_chunk = _build_long_operation_chunk(
+                                        _long_operation_indicator(filtered_text),
+                                        request_id,
+                                        model,
+                                        long_ops_seen,
+                                    )
+                                    if indicator_chunk:
+                                        yield indicator_chunk
                                     content_streamed = True
                                     output_parts.append(filtered_text)
                                     if debug_emitter:
@@ -3014,6 +3133,14 @@ class SandyService:
                                                     filtered_text = _filter_agent_message(text)
                                                     if not filtered_text:
                                                         continue
+                                                    indicator_chunk = _build_long_operation_chunk(
+                                                        _long_operation_indicator(filtered_text),
+                                                        request_id,
+                                                        model,
+                                                        long_ops_seen,
+                                                    )
+                                                    if indicator_chunk:
+                                                        yield indicator_chunk
                                                     text_to_emit = (
                                                         _dedupe_result_text(filtered_text, output_parts)
                                                         if content_streamed
@@ -3043,6 +3170,7 @@ class SandyService:
                                                 tool_input = block.get("input", {})
                                                 # Extract useful info from tool input
                                                 tool_detail = ""
+                                                cmd = ""
                                                 if tool_name == "Bash":
                                                     cmd = tool_input.get("command", "")[:100]
                                                     if cmd:
@@ -3051,6 +3179,14 @@ class SandyService:
                                                     path = tool_input.get("file_path", "") or tool_input.get("path", "") or tool_input.get("pattern", "")
                                                     if path:
                                                         tool_detail = f": {path[:80]}"
+                                                indicator_chunk = _build_long_operation_chunk(
+                                                    _long_operation_indicator(cmd),
+                                                    request_id,
+                                                    model,
+                                                    long_ops_seen,
+                                                )
+                                                if indicator_chunk:
+                                                    yield indicator_chunk
                                                 if debug_emitter:
                                                     await debug_emitter.emit(
                                                         DebugEventType.TOOL_CALL_START,
@@ -3160,6 +3296,14 @@ class SandyService:
                             filtered_text = _filter_agent_message(text)
                             if not filtered_text:
                                 continue
+                            indicator_chunk = _build_long_operation_chunk(
+                                _long_operation_indicator(filtered_text),
+                                request_id,
+                                model,
+                                long_ops_seen,
+                            )
+                            if indicator_chunk:
+                                yield indicator_chunk
                             content_streamed = True
                             output_parts.append(filtered_text)
                             if debug_emitter:
@@ -3256,6 +3400,21 @@ class SandyService:
                                     )
                                 ],
                             )
+
+                    elif event_type == "retry":
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[
+                                ChunkChoice(
+                                    delta=Delta(
+                                        reasoning_content=(
+                                            "Operation taking longer than expected, retrying...\n"
+                                        )
+                                    )
+                                )
+                            ],
+                        )
 
                     elif event_type == "complete":
                         # Agent execution complete
@@ -3508,6 +3667,7 @@ class SandyService:
         output_parts: list[str] = []
         recovered_output_parts: list[str] = []
         seen_tool_results: set[str] = set()
+        long_ops_seen: set[str] = set()
         content_streamed = False
         has_error = False
         exit_code = 0
@@ -3534,7 +3694,7 @@ class SandyService:
                         "system_prompt_missing", path=str(self._system_prompt_path)
                     )
 
-                async for event in self._run_agent_via_api(
+                async for event in self._run_agent_via_api_with_retry(
                     client,
                     sandbox_id,
                     agent,
@@ -3544,6 +3704,7 @@ class SandyService:
                     public_url=public_url,
                     has_images=has_images,
                     max_duration=self._timeout,
+                    max_retries=2,
                 ):
                     event_type = event.get("type", "")
 
@@ -3551,6 +3712,14 @@ class SandyService:
                         message = event.get("message", "")
                         filtered_message = _filter_agent_message(message) if message else None
                         if filtered_message:
+                            indicator_chunk = _build_long_operation_chunk(
+                                _long_operation_indicator(filtered_message),
+                                request_id,
+                                model,
+                                long_ops_seen,
+                            )
+                            if indicator_chunk:
+                                yield indicator_chunk
                             if debug_emitter:
                                 await debug_emitter.emit(
                                     DebugEventType.AGENT_THINKING,
@@ -3571,6 +3740,14 @@ class SandyService:
                         text = _strip_ansi(event.get("text", ""))
                         filtered_text = _filter_agent_message(text) if text else None
                         if filtered_text:
+                            indicator_chunk = _build_long_operation_chunk(
+                                _long_operation_indicator(filtered_text),
+                                request_id,
+                                model,
+                                long_ops_seen,
+                            )
+                            if indicator_chunk:
+                                yield indicator_chunk
                             tool_result_path = _extract_tool_result_path(filtered_text)
                             if tool_result_path and tool_result_path not in seen_tool_results:
                                 seen_tool_results.add(tool_result_path)
@@ -3732,6 +3909,14 @@ class SandyService:
                             filtered_text = _filter_agent_message(text)
                             if not filtered_text:
                                 continue
+                            indicator_chunk = _build_long_operation_chunk(
+                                _long_operation_indicator(filtered_text),
+                                request_id,
+                                model,
+                                long_ops_seen,
+                            )
+                            if indicator_chunk:
+                                yield indicator_chunk
                             content_streamed = True
                             output_parts.append(filtered_text)
                             if debug_emitter:
@@ -3825,6 +4010,21 @@ class SandyService:
                                     )
                                 ],
                             )
+
+                    elif event_type == "retry":
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[
+                                ChunkChoice(
+                                    delta=Delta(
+                                        reasoning_content=(
+                                            "Operation taking longer than expected, retrying...\n"
+                                        )
+                                    )
+                                )
+                            ],
+                        )
 
                     elif event_type == "complete":
                         exit_code = event.get("exitCode", 0)

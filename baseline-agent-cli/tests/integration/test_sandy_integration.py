@@ -283,7 +283,7 @@ async def test_timeout_terminates_sandbox() -> None:
     fake_client = FakeAsyncClient(simulate_timeout=True)
     settings = Settings(
         sandy_base_url="http://sandy.test",
-        sandy_timeout=1,
+        sandy_agent_timeout=1,
         baseline_agent="aider",
     )
     service = SandyService(settings, client_factory=lambda: fake_client)

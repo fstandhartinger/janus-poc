@@ -192,7 +192,36 @@ class Settings(BaseSettings):
         validation_alias="SANDY_API_KEY",
         description="Sandy API key",
     )
-    sandy_timeout: int = Field(default=600, description="Sandy sandbox timeout in seconds")
+    sandy_agent_timeout: int = Field(
+        default=600,
+        description="Sandy sandbox timeout in seconds",
+        validation_alias=AliasChoices(
+            "SANDY_AGENT_TIMEOUT",
+            "BASELINE_AGENT_CLI_SANDY_AGENT_TIMEOUT",
+            "BASELINE_SANDY_AGENT_TIMEOUT",
+            "SANDY_TIMEOUT",
+            "BASELINE_AGENT_CLI_SANDY_TIMEOUT",
+            "BASELINE_SANDY_TIMEOUT",
+        ),
+    )
+    http_client_timeout: int = Field(
+        default=660,
+        description="HTTP client timeout in seconds",
+        validation_alias=AliasChoices(
+            "HTTP_CLIENT_TIMEOUT",
+            "BASELINE_AGENT_CLI_HTTP_CLIENT_TIMEOUT",
+            "BASELINE_HTTP_CLIENT_TIMEOUT",
+        ),
+    )
+    sse_keepalive_interval: int = Field(
+        default=15,
+        description="SSE keepalive interval in seconds",
+        validation_alias=AliasChoices(
+            "SSE_KEEPALIVE_INTERVAL",
+            "BASELINE_AGENT_CLI_SSE_KEEPALIVE_INTERVAL",
+            "BASELINE_SSE_KEEPALIVE_INTERVAL",
+        ),
+    )
     artifact_port: int = Field(
         default=5173,
         validation_alias="JANUS_ARTIFACT_PORT",
