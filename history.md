@@ -102,3 +102,4 @@
 - Completed spec 108_visual_regression_testing.md with Playwright visual config, visual test suites (pages, components, themes, responsive, states, a11y, animations), stabilized UI fixtures, baseline snapshots, and CI workflow.
 - Completed spec 110_mermaid_edge_label_clipping_fix.md with updated Mermaid sizing/overflow CSS, diagram wrapper + config tweaks, and new visual tests for edge label rendering.
 - UI Playwright `npm test` still reports pre-existing failures: chat CORS/401 console errors, chat streaming indicator visibility, competition leaderboard selector + horizontal scroll check, and memory toggle blocked by memory sheet overlay.
+- Production gateway check: /health and /v1/models OK; /v1/chat/completions returned an error response message for baseline-cli-agent.
