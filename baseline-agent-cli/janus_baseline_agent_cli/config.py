@@ -269,6 +269,44 @@ class Settings(BaseSettings):
         description="Use Sandy's built-in agent/run API instead of manual exec (faster, better configured)",
     )
 
+    # Warm pool settings
+    warm_pool_enabled: bool = Field(
+        default=True,
+        description="Enable warm pool for Sandy sandboxes",
+        validation_alias=AliasChoices(
+            "WARM_POOL_ENABLED",
+            "BASELINE_AGENT_CLI_WARM_POOL_ENABLED",
+            "BASELINE_WARM_POOL_ENABLED",
+        ),
+    )
+    warm_pool_size: int = Field(
+        default=2,
+        description="Number of warm sandboxes to maintain",
+        validation_alias=AliasChoices(
+            "WARM_POOL_SIZE",
+            "BASELINE_AGENT_CLI_WARM_POOL_SIZE",
+            "BASELINE_WARM_POOL_SIZE",
+        ),
+    )
+    warm_pool_max_age: int = Field(
+        default=3600,
+        description="Max sandbox age in seconds",
+        validation_alias=AliasChoices(
+            "WARM_POOL_MAX_AGE",
+            "BASELINE_AGENT_CLI_WARM_POOL_MAX_AGE",
+            "BASELINE_WARM_POOL_MAX_AGE",
+        ),
+    )
+    warm_pool_max_requests: int = Field(
+        default=10,
+        description="Max requests per sandbox before refresh",
+        validation_alias=AliasChoices(
+            "WARM_POOL_MAX_REQUESTS",
+            "BASELINE_AGENT_CLI_WARM_POOL_MAX_REQUESTS",
+            "BASELINE_WARM_POOL_MAX_REQUESTS",
+        ),
+    )
+
     # Complexity detection
     complexity_threshold: int = Field(
         default=100, description="Token count threshold for complex path"

@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 from dataclasses import dataclass
 from typing import Iterable, List
 
@@ -78,9 +79,10 @@ async def extract_memories(conversation: Iterable[dict]) -> List[ExtractedMemory
         "max_tokens": settings.llm_max_tokens,
     }
     content = await _call_llm(payload)
-    if not content:
-        return []
-    return _parse_extracted_memories(content)
+    memories = _parse_extracted_memories(content) if content else []
+    if memories:
+        return memories
+    return _fallback_extract_memories(conversation)
 
 
 async def select_relevant_ids(prompt: str, memories: Iterable[tuple[str, str]]) -> List[str]:
@@ -100,9 +102,10 @@ async def select_relevant_ids(prompt: str, memories: Iterable[tuple[str, str]]) 
         "max_tokens": settings.llm_max_tokens,
     }
     content = await _call_llm(payload)
-    if not content:
-        return []
-    return _parse_relevant_ids(content)
+    ids = _parse_relevant_ids(content) if content else []
+    if ids:
+        return ids
+    return _fallback_relevant_ids(prompt, memories)
 
 
 def _format_json(conversation: Iterable[dict]) -> str:
@@ -172,9 +175,80 @@ async def _call_llm(payload: dict) -> str:
             logger.warning("LLM request failed: %s", exc)
             return ""
 
-    data = response.json()
+    try:
+        data = response.json()
+    except (ValueError, TypeError) as exc:
+        logger.warning("LLM response JSON parse failed: %s", exc)
+        return ""
+    if not isinstance(data, dict):
+        logger.warning("LLM response payload not a dict")
+        return ""
     choices = data.get("choices", [])
     if not choices:
         return ""
     message = choices[0].get("message", {})
     return str(message.get("content", "")).strip()
+
+
+def _fallback_extract_memories(conversation: Iterable[dict]) -> List[ExtractedMemory]:
+    """Fallback heuristic extraction when the LLM is unavailable."""
+    memories: List[ExtractedMemory] = []
+    seen: set[str] = set()
+    for message in conversation:
+        if message.get("role") != "user":
+            continue
+        content = str(message.get("content", "")).strip()
+        if not content:
+            continue
+        for sentence in _split_sentences(content):
+            lowered = sentence.lower()
+            if not _matches_memory_pattern(lowered):
+                continue
+            caption = truncate(sentence, 100)
+            full_text = truncate(sentence, 500)
+            key = caption.lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            memories.append(ExtractedMemory(caption=caption, full_text=full_text))
+    return memories
+
+
+def _fallback_relevant_ids(
+    prompt: str, memories: Iterable[tuple[str, str]]
+) -> List[str]:
+    """Fallback relevance matching based on token overlap."""
+    prompt_tokens = _tokenize(prompt)
+    if not prompt_tokens:
+        return []
+    ranked: list[tuple[int, str]] = []
+    for mem_id, caption in memories:
+        caption_tokens = _tokenize(caption)
+        overlap = prompt_tokens & caption_tokens
+        if overlap:
+            ranked.append((len(overlap), mem_id))
+    ranked.sort(reverse=True)
+    return [mem_id for _, mem_id in ranked]
+
+
+def _matches_memory_pattern(text: str) -> bool:
+    return any(
+        phrase in text
+        for phrase in (
+            "my favorite",
+            "my name",
+            "i am ",
+            "i'm ",
+            "i live",
+            "remember",
+        )
+    )
+
+
+def _split_sentences(text: str) -> list[str]:
+    parts = re.split(r"(?<=[.!?])\\s+", text)
+    return [part.strip() for part in parts if part.strip()]
+
+
+def _tokenize(text: str) -> set[str]:
+    return set(re.findall(r"[a-z0-9']+", text.lower()))

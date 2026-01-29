@@ -254,7 +254,7 @@ class Settings(BaseSettings):
         ),
     )
     e2e_gateway_url: str = Field(
-        default="https://janus-gateway.onrender.com",
+        default="https://janus-gateway-bqou.onrender.com",
         description="Gateway URL for E2E tests",
         validation_alias=AliasChoices(
             "BASELINE_LANGCHAIN_E2E_GATEWAY_URL",

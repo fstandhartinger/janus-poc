@@ -9,6 +9,7 @@ const PNG_BASE64 =
 test.describe('Chat UI', () => {
   test('uploads an image and submits a prompt', async ({ page }) => {
     await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="chat-input"]').waitFor();
 
     // Create a temp test image for this test
@@ -26,8 +27,8 @@ test.describe('Chat UI', () => {
 
       // Enter a prompt
       const textarea = page.locator('[data-testid="chat-input"]');
-      await textarea.click();
-      await textarea.type('What is in this image?');
+      await expect(textarea).toBeEditable();
+      await textarea.fill('What is in this image?');
       await expect(textarea).toHaveValue(/What is in this image\?/);
 
       // Submit the message
@@ -64,12 +65,13 @@ test.describe('Chat UI', () => {
     });
 
     await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
     await page.locator('[data-testid="chat-input"]').waitFor();
 
     // Enter a prompt
     const textarea = page.locator('[data-testid="chat-input"]');
-    await textarea.click();
-    await textarea.type('Hello, how are you?');
+    await expect(textarea).toBeEditable();
+    await textarea.fill('Hello, how are you?');
     await expect(textarea).toHaveValue(/Hello, how are you\?/);
 
     // Submit the message

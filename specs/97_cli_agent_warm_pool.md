@@ -1,6 +1,6 @@
 # Spec 97: CLI Agent Warm Pool
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -223,4 +223,4 @@ async def test_sandbox_recycling():
 - Spec 08: Sandy Integration
 - Spec 43: Agent Sandbox Management
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 2

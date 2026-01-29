@@ -38,6 +38,7 @@ from janus_baseline_agent_cli.services import (
     LLMService,
     MemoryService,
     SandyService,
+    WarmPoolManager,
     get_complexity_detector,
     get_llm_service,
     get_memory_service,
@@ -50,6 +51,7 @@ from janus_baseline_agent_cli.router.debug import router as debug_router
 from janus_baseline_agent_cli.router.server import app as router_app
 
 settings = get_settings()
+warm_pool: WarmPoolManager | None = None
 
 AGENT_UNAVAILABLE_MESSAGE = (
     "Agent sandbox is currently unavailable. "
@@ -299,13 +301,28 @@ def _resolve_debug_request_id(header_value: str | None, enabled: bool) -> str | 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
+    global warm_pool
     logger.info(
         "baseline_starting",
         version=__version__,
         host=settings.host,
         port=settings.port,
     )
+    if settings.warm_pool_enabled and settings.use_sandy_agent_api:
+        sandy_service = get_sandy_service()
+        warm_pool = WarmPoolManager(
+            sandy_service,
+            pool_size=settings.warm_pool_size,
+            max_age_seconds=settings.warm_pool_max_age,
+            max_requests=settings.warm_pool_max_requests,
+        )
+        await warm_pool.start()
+    elif settings.warm_pool_enabled and not settings.use_sandy_agent_api:
+        logger.info("warm_pool_disabled", reason="sandy_agent_api_disabled")
     yield
+    if warm_pool:
+        await warm_pool.stop()
+        warm_pool = None
     logger.info("baseline_stopping")
 
 
@@ -343,6 +360,7 @@ class HealthResponse(BaseModel):
     version: str
     sandbox_available: bool
     features: dict[str, bool]
+    warm_pool: dict[str, int | bool]
 
 
 @app.get("/health", response_model=HealthResponse)
@@ -350,6 +368,14 @@ async def health_check(
     sandy_service: SandyService = Depends(get_sandy_service),
 ) -> HealthResponse:
     """Health check endpoint."""
+    if warm_pool:
+        warm_pool_status = warm_pool.status()
+    else:
+        warm_pool_status = {
+            "enabled": False,
+            "size": 0,
+            "target": settings.warm_pool_size if settings.warm_pool_enabled else 0,
+        }
     return HealthResponse(
         status="ok",
         version=__version__,
@@ -359,6 +385,7 @@ async def health_check(
             "memory": settings.enable_memory_feature,
             "vision": True,
         },
+        warm_pool=warm_pool_status,
     )
 
 
@@ -480,8 +507,45 @@ async def stream_response(
         fast_path_emitted = False
         try:
             if using_agent:
-                # Use Sandy's agent/run API if enabled (faster, better configured)
-                if settings.use_sandy_agent_api:
+                if settings.use_sandy_agent_api and warm_pool:
+                    sandbox = await warm_pool.acquire()
+                    if sandbox:
+                        try:
+                            async for chunk in sandbox.stream(
+                                request,
+                                debug_emitter=debug_emitter,
+                                baseline_agent_override=baseline_agent_override,
+                            ):
+                                chunk_text = _extract_chunk_content(chunk)
+                                if chunk_text:
+                                    full_response_parts.append(chunk_text)
+                                if first_chunk and metadata_payload:
+                                    chunk = chunk.model_copy(
+                                        update={"metadata": metadata_payload}
+                                    )
+                                first_chunk = False
+                                yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+                        except Exception:
+                            await warm_pool.release(sandbox, reusable=False)
+                            raise
+                        else:
+                            await warm_pool.release(sandbox, reusable=True)
+                    else:
+                        async for chunk in sandy_service.execute_via_agent_api(
+                            request,
+                            debug_emitter=debug_emitter,
+                            baseline_agent_override=baseline_agent_override,
+                        ):
+                            chunk_text = _extract_chunk_content(chunk)
+                            if chunk_text:
+                                full_response_parts.append(chunk_text)
+                            if first_chunk and metadata_payload:
+                                chunk = chunk.model_copy(
+                                    update={"metadata": metadata_payload}
+                                )
+                            first_chunk = False
+                            yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+                elif settings.use_sandy_agent_api:
                     async for chunk in sandy_service.execute_via_agent_api(
                         request,
                         debug_emitter=debug_emitter,
@@ -495,7 +559,6 @@ async def stream_response(
                         first_chunk = False
                         yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
                 else:
-                    # Fallback to manual exec approach
                     async for chunk in sandy_service.execute_complex(
                         request,
                         debug_emitter=debug_emitter,
@@ -705,13 +768,33 @@ async def chat_completions(
             )
             return _build_unavailable_response(request)
         if settings.always_use_agent or (is_complex and sandy_service.is_available):
-            # Use Sandy's agent/run API if enabled (faster, better configured)
             if settings.use_sandy_agent_api:
-                response = await sandy_service.complete_via_agent_api(
-                    request,
-                    debug_emitter=debug_emitter,
-                    baseline_agent_override=baseline_agent_header,
-                )
+                if warm_pool:
+                    sandbox = await warm_pool.acquire()
+                    if sandbox:
+                        try:
+                            response = await sandbox.complete(
+                                request,
+                                debug_emitter=debug_emitter,
+                                baseline_agent_override=baseline_agent_header,
+                            )
+                        except Exception:
+                            await warm_pool.release(sandbox, reusable=False)
+                            raise
+                        else:
+                            await warm_pool.release(sandbox, reusable=True)
+                    else:
+                        response = await sandy_service.complete_via_agent_api(
+                            request,
+                            debug_emitter=debug_emitter,
+                            baseline_agent_override=baseline_agent_header,
+                        )
+                else:
+                    response = await sandy_service.complete_via_agent_api(
+                        request,
+                        debug_emitter=debug_emitter,
+                        baseline_agent_override=baseline_agent_header,
+                    )
             else:
                 response = await sandy_service.complete(
                     request,

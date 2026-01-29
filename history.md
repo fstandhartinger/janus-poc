@@ -86,3 +86,6 @@
 
 ## 2026-01-28
 - Completed spec 94_baseline_langchain_e2e_verification.md with resilient LangChain E2E coverage (artifact-aware streaming assertions, error/timeout skips) and refreshed Playwright storage defaults for chat tests.
+
+## 2026-01-29
+- Completed spec 97_cli_agent_warm_pool.md with warm pool lifecycle management, agent API sandbox reuse, health reporting, config wiring, and refill/recycle test coverage.

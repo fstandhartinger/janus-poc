@@ -286,6 +286,66 @@ class SandyService:
         async with self._client_factory() as client:
             await self._terminate_sandbox(client, sandbox_id)
 
+    @log_function_call
+    async def check_sandbox(self, sandbox_id: str) -> bool:
+        """Check whether a sandbox is responsive."""
+        async with self._client_factory() as client:
+            _, _, exit_code = await self._exec_in_sandbox(client, sandbox_id, "true")
+        return exit_code == 0
+
+    @log_function_call
+    async def reset_sandbox(self, sandbox_id: str) -> None:
+        """Reset sandbox state for reuse."""
+        artifact_dir = shlex.quote(self._artifact_dir.rstrip("/"))
+        command = f"rm -rf -- {artifact_dir} && mkdir -p {artifact_dir}"
+        async with self._client_factory() as client:
+            await self._exec_in_sandbox(client, sandbox_id, command)
+
+    @log_function_call
+    async def prepare_warm_sandbox(
+        self,
+        request: ChatCompletionRequest | None = None,
+        has_images: bool = False,
+    ) -> Optional[tuple[str, str | None]]:
+        """Create and warm a sandbox with the agent pack bootstrapped."""
+        if not self.is_available:
+            return None
+        async with self._client_factory() as client:
+            sandbox_info = await self._create_sandbox(client)
+            if not sandbox_info:
+                return None
+            sandbox_id, public_url = sandbox_info
+            try:
+                if not await self._upload_agent_pack(client, sandbox_id):
+                    await self._terminate_sandbox(client, sandbox_id)
+                    return None
+                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
+                    client, sandbox_id, public_url, request, has_images
+                )
+                if bootstrap_exit != 0:
+                    logger.warning(
+                        "sandy_bootstrap_failed",
+                        sandbox_id=sandbox_id,
+                        error=bootstrap_stderr or "bootstrap failed",
+                    )
+                    await self._terminate_sandbox(client, sandbox_id)
+                    return None
+                if bootstrap_stdout:
+                    logger.info(
+                        "sandy_bootstrap_output",
+                        sandbox_id=sandbox_id,
+                        stdout=bootstrap_stdout,
+                    )
+                return sandbox_id, public_url
+            except Exception as exc:
+                logger.warning(
+                    "sandy_warm_sandbox_error",
+                    sandbox_id=sandbox_id,
+                    error=str(exc),
+                )
+                await self._terminate_sandbox(client, sandbox_id)
+                return None
+
     def _get_headers(self) -> dict[str, str]:
         """Get request headers."""
         headers = {"Content-Type": "application/json"}
@@ -2313,6 +2373,283 @@ class SandyService:
                 else:
                     await self._terminate_sandbox(client, sandbox_id)
 
+    async def complete_via_agent_api_in_sandbox(
+        self,
+        sandbox_id: str,
+        public_url: str | None,
+        request: ChatCompletionRequest,
+        debug_emitter: DebugEmitter | None = None,
+        baseline_agent_override: str | None = None,
+        run_state: dict[str, Any] | None = None,
+        terminate_on_finish: bool = False,
+    ) -> ChatCompletionResponse:
+        """Execute a task using an existing warmed sandbox."""
+        request_id = self._generate_id()
+        model = request.model
+        task = self._extract_task(request)
+        has_images = contains_images(request.messages)
+
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.SANDBOX_INIT,
+                "SANDY",
+                "Starting sandbox execution",
+                data={"warm_pool": True},
+            )
+
+        if not self.is_available:
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.ERROR,
+                    "SANDY",
+                    "Sandy is not configured",
+                )
+            content = (
+                "I would execute this task in a Sandy sandbox:\n\n"
+                f"**Task:** {task}\n\nSandy is not currently configured. "
+                "Please configure SANDY_BASE_URL to enable sandbox execution."
+            )
+            return ChatCompletionResponse(
+                id=request_id,
+                model=model,
+                choices=[
+                    Choice(
+                        message=AssistantMessage(
+                            role="assistant",
+                            content=content,
+                        ),
+                        finish_reason=FinishReason.STOP,
+                    )
+                ],
+            )
+
+        agent = self._select_agent_for_api(baseline_agent_override)
+        api_model = self._select_model_for_api(request, agent=agent)
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.AGENT_THINKING,
+                "AGENT",
+                "Using warm sandbox for agent execution",
+                data={"agent": agent, "model": api_model, "sandbox_id": sandbox_id},
+            )
+
+        sandbox_start = time.perf_counter()
+        output_parts: list[str] = []
+        recovered_output_parts: list[str] = []
+        seen_tool_results: set[str] = set()
+        has_error = False
+        exit_code = 0
+        artifacts_present = False
+        termination_scheduled = False
+
+        async with self._client_factory() as client:
+            sandbox_url = self._sandbox_url(sandbox_id, public_url)
+            try:
+                if not self._system_prompt_path.exists():
+                    logger.warning(
+                        "system_prompt_missing", path=str(self._system_prompt_path)
+                    )
+
+                async for event in self._run_agent_via_api(
+                    client,
+                    sandbox_id,
+                    agent,
+                    api_model,
+                    task,
+                    request=request,
+                    public_url=public_url,
+                    has_images=has_images,
+                    max_duration=self._timeout,
+                ):
+                    event_type = event.get("type", "")
+
+                    if event_type == "output":
+                        text = _strip_ansi(event.get("text", ""))
+                        if text:
+                            filtered_text = _filter_agent_message(text)
+                            if filtered_text:
+                                tool_result_path = _extract_tool_result_path(filtered_text)
+                                if tool_result_path and tool_result_path not in seen_tool_results:
+                                    seen_tool_results.add(tool_result_path)
+                                    recovered_text = await self._read_tool_result_text(
+                                        client, sandbox_id, tool_result_path
+                                    )
+                                    if recovered_text:
+                                        recovered_text = await self._materialize_data_url_images(
+                                            client, sandbox_id, recovered_text
+                                        )
+                                        recovered_text = process_agent_response(
+                                            recovered_text, sandbox_url
+                                        )
+                                        recovered_output_parts.append(recovered_text)
+                                output_parts.append(filtered_text)
+
+                    elif event_type == "agent-output":
+                        data = event.get("data", {})
+                        if isinstance(data, dict):
+                            msg_type = data.get("type", "")
+                            if msg_type == "stream_event":
+                                event_payload = data.get("event", {})
+                                delta = {}
+                                if isinstance(event_payload, dict):
+                                    delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                                if not delta and isinstance(data.get("delta"), dict):
+                                    delta = data.get("delta", {})
+                                text = None
+                                if isinstance(delta, dict):
+                                    text = delta.get("text") or delta.get("content")
+                                if not text and isinstance(event_payload, dict):
+                                    text = event_payload.get("text") or event_payload.get("content")
+                                if not text:
+                                    text = data.get("text")
+                                if isinstance(text, str) and text:
+                                    filtered_text = _filter_agent_message(text)
+                                    if filtered_text:
+                                        output_parts.append(filtered_text)
+                            elif msg_type == "result":
+                                result_text = data.get("result") or data.get("text")
+                                if isinstance(result_text, str) and result_text:
+                                    filtered_text = _filter_agent_message(result_text)
+                                    if filtered_text:
+                                        output_parts.append(filtered_text)
+                            elif msg_type == "assistant":
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "text":
+                                            text = block.get("text", "")
+                                            if text:
+                                                filtered_text = _filter_agent_message(text)
+                                                if filtered_text:
+                                                    output_parts.append(filtered_text)
+                            elif msg_type == "user":
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "tool_result":
+                                            tool_content = block.get("content", "")
+                                            if not isinstance(tool_content, str) or not tool_content.strip():
+                                                continue
+                                            tool_result_path = _extract_tool_result_path(tool_content)
+                                            if tool_result_path and tool_result_path not in seen_tool_results:
+                                                seen_tool_results.add(tool_result_path)
+                                                recovered_text = await self._read_tool_result_text(
+                                                    client, sandbox_id, tool_result_path
+                                                )
+                                                if recovered_text:
+                                                    recovered_text = await self._materialize_data_url_images(
+                                                        client, sandbox_id, recovered_text
+                                                    )
+                                                    recovered_text = process_agent_response(
+                                                        recovered_text, sandbox_url
+                                                    )
+                                                    recovered_output_parts.append(recovered_text)
+
+                    elif event_type == "stream_event":
+                        event_payload = event.get("event", {})
+                        delta = {}
+                        if isinstance(event_payload, dict):
+                            delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                        if not delta and isinstance(event.get("delta"), dict):
+                            delta = event.get("delta", {})
+                        text = None
+                        if isinstance(delta, dict):
+                            text = delta.get("text") or delta.get("content")
+                        if not text and isinstance(event_payload, dict):
+                            text = event_payload.get("text") or event_payload.get("content")
+                        if not text:
+                            text = event.get("text")
+                        if isinstance(text, str) and text:
+                            filtered_text = _filter_agent_message(text)
+                            if filtered_text:
+                                output_parts.append(filtered_text)
+
+                    elif event_type == "result":
+                        result_text = event.get("result") or event.get("text")
+                        if isinstance(result_text, str) and result_text:
+                            filtered_text = _filter_agent_message(result_text)
+                            if filtered_text:
+                                output_parts.append(filtered_text)
+
+                    elif event_type == "complete":
+                        exit_code = event.get("exitCode", 0)
+
+                    elif event_type == "error":
+                        error_msg = event.get("error", "Unknown error")
+                        has_error = True
+                        output_parts.append(f"Error: {error_msg}")
+
+                if output_parts:
+                    result = "\n".join(output_parts)
+                elif recovered_output_parts:
+                    result = "\n".join(recovered_output_parts)
+                else:
+                    result = "Agent completed without output."
+                result = _clean_aider_output(result)
+                result = process_agent_response(result, sandbox_url)
+
+                artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
+                artifacts_present = bool(artifacts)
+                if artifacts:
+                    links = self._format_artifact_links(artifacts)
+                    result = f"{result}\n\nArtifacts available:\n{links}"
+
+                response_payload = ChatCompletionResponse(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        Choice(
+                            message=AssistantMessage(
+                                role="assistant",
+                                content=result,
+                                artifacts=artifacts or None,
+                            ),
+                            finish_reason=FinishReason.STOP,
+                        )
+                    ],
+                    usage=Usage(
+                        prompt_tokens=0,
+                        completion_tokens=0,
+                        total_tokens=0,
+                        sandbox_seconds=time.perf_counter() - sandbox_start,
+                    ),
+                )
+
+                if debug_emitter:
+                    await debug_emitter.emit(
+                        DebugEventType.RESPONSE_COMPLETE,
+                        "SSE",
+                        "Response complete",
+                    )
+
+                return response_payload
+
+            finally:
+                if artifacts_present and self._artifact_grace_seconds > 0:
+                    logger.info(
+                        "sandy_terminate_delayed",
+                        sandbox_id=sandbox_id,
+                        delay_seconds=self._artifact_grace_seconds,
+                    )
+                    self._schedule_sandbox_termination(
+                        sandbox_id, self._artifact_grace_seconds
+                    )
+                    termination_scheduled = True
+                elif terminate_on_finish or has_error:
+                    await self._terminate_sandbox(client, sandbox_id)
+
+                if run_state is not None:
+                    run_state.update(
+                        {
+                            "has_error": has_error,
+                            "exit_code": exit_code,
+                            "artifacts_present": artifacts_present,
+                            "termination_scheduled": termination_scheduled,
+                        }
+                    )
+
     async def execute_via_agent_api(
         self,
         request: ChatCompletionRequest,
@@ -3080,6 +3417,576 @@ class SandyService:
                             total_tokens=0,
                             sandbox_seconds=sandbox_seconds,
                         ),
+                    )
+
+    async def execute_via_agent_api_in_sandbox(
+        self,
+        sandbox_id: str,
+        public_url: str | None,
+        request: ChatCompletionRequest,
+        debug_emitter: DebugEmitter | None = None,
+        baseline_agent_override: str | None = None,
+        run_state: dict[str, Any] | None = None,
+        terminate_on_finish: bool = False,
+    ) -> AsyncGenerator[ChatCompletionChunk, None]:
+        """Execute a task in a warmed sandbox using Sandy's agent/run API."""
+        request_id = self._generate_id()
+        model = request.model
+        task = self._extract_task(request)
+        has_images = contains_images(request.messages)
+
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.SANDBOX_INIT,
+                "SANDY",
+                "Starting warm sandbox execution",
+                data={"warm_pool": True, "sandbox_id": sandbox_id},
+            )
+
+        yield ChatCompletionChunk(
+            id=request_id,
+            model=model,
+            choices=[ChunkChoice(delta=Delta(role=MessageRole.ASSISTANT))],
+        )
+
+        if not self.is_available:
+            if debug_emitter:
+                await debug_emitter.emit(
+                    DebugEventType.ERROR,
+                    "SANDY",
+                    "Sandy is not configured",
+                )
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[
+                    ChunkChoice(
+                        delta=Delta(
+                            content=(
+                                "I would execute this task in a Sandy sandbox:\n\n"
+                                f"**Task:** {task}\n\nSandy is not currently configured. "
+                                "Please configure SANDY_BASE_URL to enable sandbox execution."
+                            )
+                        )
+                    )
+                ],
+            )
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)],
+            )
+            return
+
+        agent = self._select_agent_for_api(baseline_agent_override)
+        api_model = self._select_model_for_api(request, agent=agent)
+
+        start_message = (
+            "Starting claude-code agent with intelligent model routing among Chutes models"
+            if agent in {"claude", "claude-code"}
+            else f"Starting {agent} agent in Sandy sandbox"
+        )
+        if debug_emitter:
+            await debug_emitter.emit(
+                DebugEventType.AGENT_THINKING,
+                "AGENT",
+                f"{start_message} (warm sandbox)",
+                data={"agent": agent, "model": api_model, "sandbox_id": sandbox_id},
+            )
+
+        yield ChatCompletionChunk(
+            id=request_id,
+            model=model,
+            choices=[
+                ChunkChoice(
+                    delta=Delta(reasoning_content=f"{start_message} (warm)...\n")
+                )
+            ],
+        )
+
+        sandbox_start = time.perf_counter()
+        output_parts: list[str] = []
+        recovered_output_parts: list[str] = []
+        seen_tool_results: set[str] = set()
+        content_streamed = False
+        has_error = False
+        exit_code = 0
+        artifacts_present = False
+        termination_scheduled = False
+
+        async with self._client_factory() as client:
+            sandbox_url = self._sandbox_url(sandbox_id, public_url)
+            yield ChatCompletionChunk(
+                id=request_id,
+                model=model,
+                choices=[
+                    ChunkChoice(
+                        delta=Delta(
+                            reasoning_content=f"Using warm sandbox: {sandbox_id}\n"
+                        )
+                    )
+                ],
+            )
+
+            try:
+                if not self._system_prompt_path.exists():
+                    logger.warning(
+                        "system_prompt_missing", path=str(self._system_prompt_path)
+                    )
+
+                async for event in self._run_agent_via_api(
+                    client,
+                    sandbox_id,
+                    agent,
+                    api_model,
+                    task,
+                    request=request,
+                    public_url=public_url,
+                    has_images=has_images,
+                    max_duration=self._timeout,
+                ):
+                    event_type = event.get("type", "")
+
+                    if event_type == "status":
+                        message = event.get("message", "")
+                        filtered_message = _filter_agent_message(message) if message else None
+                        if filtered_message:
+                            if debug_emitter:
+                                await debug_emitter.emit(
+                                    DebugEventType.AGENT_THINKING,
+                                    "AGENT",
+                                    filtered_message,
+                                )
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(reasoning_content=f"{filtered_message}\n")
+                                    )
+                                ],
+                            )
+
+                    elif event_type == "output":
+                        text = _strip_ansi(event.get("text", ""))
+                        filtered_text = _filter_agent_message(text) if text else None
+                        if filtered_text:
+                            tool_result_path = _extract_tool_result_path(filtered_text)
+                            if tool_result_path and tool_result_path not in seen_tool_results:
+                                seen_tool_results.add(tool_result_path)
+                                recovered_text = await self._read_tool_result_text(
+                                    client, sandbox_id, tool_result_path
+                                )
+                                if recovered_text:
+                                    recovered_text = await self._materialize_data_url_images(
+                                        client, sandbox_id, recovered_text
+                                    )
+                                    recovered_text = process_agent_response(
+                                        recovered_text, sandbox_url
+                                    )
+                                    recovered_output_parts.append(recovered_text)
+                            if debug_emitter:
+                                await debug_emitter.emit(
+                                    DebugEventType.RESPONSE_CHUNK,
+                                    "AGENT",
+                                    filtered_text,
+                                )
+                            output_parts.append(filtered_text)
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(reasoning_content=f"{filtered_text}\n")
+                                    )
+                                ],
+                            )
+
+                    elif event_type == "agent-output":
+                        data = event.get("data", {})
+                        if isinstance(data, dict):
+                            msg_type = data.get("type", "")
+                            if msg_type == "stream_event":
+                                event_payload = data.get("event", {})
+                                delta = {}
+                                if isinstance(event_payload, dict):
+                                    delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                                if not delta and isinstance(data.get("delta"), dict):
+                                    delta = data.get("delta", {})
+                                text = None
+                                if isinstance(delta, dict):
+                                    text = delta.get("text") or delta.get("content")
+                                if not text and isinstance(event_payload, dict):
+                                    text = event_payload.get("text") or event_payload.get("content")
+                                if not text:
+                                    text = data.get("text")
+                                if isinstance(text, str) and text:
+                                    filtered_text = _filter_agent_message(text)
+                                    if not filtered_text:
+                                        continue
+                                    content_streamed = True
+                                    output_parts.append(filtered_text)
+                                    if debug_emitter:
+                                        await debug_emitter.emit(
+                                            DebugEventType.RESPONSE_CHUNK,
+                                            "AGENT",
+                                            filtered_text[:200],
+                                        )
+                                    yield ChatCompletionChunk(
+                                        id=request_id,
+                                        model=model,
+                                        choices=[
+                                            ChunkChoice(delta=Delta(content=filtered_text))
+                                        ],
+                                    )
+                            elif msg_type == "result":
+                                result_text = data.get("result") or data.get("text")
+                                if isinstance(result_text, str) and result_text:
+                                    filtered_text = _filter_agent_message(result_text)
+                                    if not filtered_text:
+                                        continue
+                                    text_to_emit = (
+                                        _dedupe_result_text(filtered_text, output_parts)
+                                        if content_streamed
+                                        else filtered_text
+                                    )
+                                    if text_to_emit:
+                                        content_streamed = True
+                                        output_parts.append(text_to_emit)
+                                        if debug_emitter:
+                                            await debug_emitter.emit(
+                                                DebugEventType.RESPONSE_CHUNK,
+                                                "AGENT",
+                                                text_to_emit[:200],
+                                            )
+                                        yield ChatCompletionChunk(
+                                            id=request_id,
+                                            model=model,
+                                            choices=[
+                                                ChunkChoice(delta=Delta(content=text_to_emit))
+                                            ],
+                                        )
+                            elif msg_type == "assistant":
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "text":
+                                            text = block.get("text", "")
+                                            if text:
+                                                filtered_text = _filter_agent_message(text)
+                                                if filtered_text:
+                                                    output_parts.append(filtered_text)
+                            elif msg_type == "user":
+                                message = data.get("message", {})
+                                content = message.get("content", [])
+                                if isinstance(content, list):
+                                    for block in content:
+                                        if isinstance(block, dict) and block.get("type") == "tool_result":
+                                            tool_content = block.get("content", "")
+                                            if isinstance(tool_content, str) and tool_content.strip():
+                                                tool_result_path = _extract_tool_result_path(tool_content)
+                                                if tool_result_path and tool_result_path not in seen_tool_results:
+                                                    seen_tool_results.add(tool_result_path)
+                                                    recovered_text = await self._read_tool_result_text(
+                                                        client, sandbox_id, tool_result_path
+                                                    )
+                                                    if recovered_text:
+                                                        recovered_text = await self._materialize_data_url_images(
+                                                            client, sandbox_id, recovered_text
+                                                        )
+                                                        recovered_text = process_agent_response(
+                                                            recovered_text, sandbox_url
+                                                        )
+                                                        recovered_output_parts.append(recovered_text)
+                                                truncated = tool_content[:500]
+                                                if len(tool_content) > 500:
+                                                    truncated += "... (truncated)"
+                                                yield ChatCompletionChunk(
+                                                    id=request_id,
+                                                    model=model,
+                                                    choices=[
+                                                        ChunkChoice(
+                                                            delta=Delta(
+                                                                reasoning_content=f"Tool output:\n{truncated}\n"
+                                                            )
+                                                        )
+                                                    ],
+                                                )
+
+                    elif event_type == "stream_event":
+                        event_payload = event.get("event", {})
+                        delta = {}
+                        if isinstance(event_payload, dict):
+                            delta = event_payload.get("delta", {}) if isinstance(event_payload.get("delta"), dict) else {}
+                        if not delta and isinstance(event.get("delta"), dict):
+                            delta = event.get("delta", {})
+                        text = None
+                        if isinstance(delta, dict):
+                            text = delta.get("text") or delta.get("content")
+                        if not text and isinstance(event_payload, dict):
+                            text = event_payload.get("text") or event_payload.get("content")
+                        if not text:
+                            text = event.get("text")
+                        if isinstance(text, str) and text:
+                            filtered_text = _filter_agent_message(text)
+                            if not filtered_text:
+                                continue
+                            content_streamed = True
+                            output_parts.append(filtered_text)
+                            if debug_emitter:
+                                await debug_emitter.emit(
+                                    DebugEventType.RESPONSE_CHUNK,
+                                    "AGENT",
+                                    filtered_text[:200],
+                                )
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(delta=Delta(content=filtered_text))
+                                ],
+                            )
+
+                    elif event_type == "result":
+                        result_text = event.get("result") or event.get("text")
+                        if isinstance(result_text, str) and result_text:
+                            filtered_text = _filter_agent_message(result_text)
+                            if not filtered_text:
+                                continue
+                            text_to_emit = (
+                                _dedupe_result_text(filtered_text, output_parts)
+                                if content_streamed
+                                else filtered_text
+                            )
+                            if text_to_emit:
+                                content_streamed = True
+                                output_parts.append(text_to_emit)
+                                if debug_emitter:
+                                    await debug_emitter.emit(
+                                        DebugEventType.RESPONSE_CHUNK,
+                                        "AGENT",
+                                        text_to_emit[:200],
+                                    )
+                                yield ChatCompletionChunk(
+                                    id=request_id,
+                                    model=model,
+                                    choices=[
+                                        ChunkChoice(delta=Delta(content=text_to_emit))
+                                    ],
+                                )
+
+                    elif event_type == "files-update":
+                        changes = event.get("changes", [])
+                        if changes:
+                            if debug_emitter:
+                                for change in changes:
+                                    filename = change.get("path", "unknown")
+                                    change_type = change.get("changeType", "modified")
+                                    await debug_emitter.emit(
+                                        DebugEventType.FILE_CREATED
+                                        if change_type == "created"
+                                        else DebugEventType.FILE_MODIFIED,
+                                        "TOOL_FILES",
+                                        f"File {change_type}: {filename}",
+                                        data={
+                                            "filename": filename,
+                                            "change_type": change_type,
+                                        },
+                                    )
+                            change_summary = ", ".join(
+                                f"{c.get('path', 'unknown')} ({c.get('changeType', 'modified')})"
+                                for c in changes[:5]
+                            )
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(
+                                            reasoning_content=f"Files changed: {change_summary}\n"
+                                        )
+                                    )
+                                ],
+                            )
+
+                    elif event_type == "heartbeat":
+                        elapsed = event.get("elapsed", 0)
+                        if not content_streamed and elapsed > 10:
+                            elapsed_int = int(elapsed)
+                            yield ChatCompletionChunk(
+                                id=request_id,
+                                model=model,
+                                choices=[
+                                    ChunkChoice(
+                                        delta=Delta(
+                                            reasoning_content=f"⏳ Agent working... ({elapsed_int}s)\n"
+                                        )
+                                    )
+                                ],
+                            )
+
+                    elif event_type == "complete":
+                        exit_code = event.get("exitCode", 0)
+                        success = event.get("success", exit_code == 0)
+                        duration = event.get("duration", 0)
+                        if debug_emitter:
+                            await debug_emitter.emit(
+                                DebugEventType.RESPONSE_COMPLETE,
+                                "SSE",
+                                f"Agent completed ({'success' if success else 'failed'})",
+                                data={
+                                    "success": success,
+                                    "exit_code": exit_code,
+                                    "duration": duration,
+                                },
+                            )
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[
+                                ChunkChoice(
+                                    delta=Delta(
+                                        reasoning_content=(
+                                            f"Agent completed ({'success' if success else 'failed'}) "
+                                            f"in {duration:.1f}s\n"
+                                        )
+                                    )
+                                )
+                            ],
+                        )
+
+                    elif event_type == "error":
+                        error_msg = event.get("error", "Unknown error")
+                        has_error = True
+                        output_parts.append(f"Error: {error_msg}")
+                        if debug_emitter:
+                            await debug_emitter.emit(
+                                DebugEventType.ERROR,
+                                "AGENT",
+                                f"Error: {error_msg}",
+                            )
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[
+                                ChunkChoice(
+                                    delta=Delta(
+                                        reasoning_content=f"Error: {error_msg}\n"
+                                    )
+                                )
+                            ],
+                        )
+
+                if not content_streamed:
+                    if output_parts:
+                        result = "\n".join(output_parts)
+                    elif recovered_output_parts:
+                        result = "\n".join(recovered_output_parts)
+                    else:
+                        result = "Agent completed without output."
+                    result = _clean_aider_output(result)
+                    result = process_agent_response(result, sandbox_url)
+                    if result:
+                        yield ChatCompletionChunk(
+                            id=request_id,
+                            model=model,
+                            choices=[ChunkChoice(delta=Delta(content=result))],
+                        )
+
+                artifacts = await self._collect_artifacts(client, sandbox_id, public_url)
+                artifacts_present = bool(artifacts)
+                if artifacts:
+                    artifact_payload = [artifact.model_dump(mode="json") for artifact in artifacts]
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    janus={
+                                        "event": "artifacts",
+                                        "payload": {"items": artifact_payload},
+                                    }
+                                )
+                            )
+                        ],
+                    )
+                    links = self._format_artifact_links(artifacts)
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    content=f"\n\nArtifacts available:\n{links}"
+                                )
+                            )
+                        ],
+                    )
+
+            finally:
+                if artifacts_present and self._artifact_grace_seconds > 0:
+                    grace_seconds = self._artifact_grace_seconds
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(
+                                    reasoning_content=(
+                                        "Keeping sandbox alive for artifact downloads "
+                                        f"({grace_seconds}s)...\n"
+                                    )
+                                )
+                            )
+                        ],
+                    )
+                    self._schedule_sandbox_termination(sandbox_id, grace_seconds)
+                    termination_scheduled = True
+                elif terminate_on_finish or has_error:
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[
+                            ChunkChoice(
+                                delta=Delta(reasoning_content="Terminating sandbox...\n")
+                            )
+                        ],
+                    )
+                    await self._terminate_sandbox(client, sandbox_id)
+
+                sandbox_seconds = time.perf_counter() - sandbox_start
+
+                yield ChatCompletionChunk(
+                    id=request_id,
+                    model=model,
+                    choices=[
+                        ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)
+                    ],
+                )
+
+                if request.stream_options and request.stream_options.include_usage:
+                    yield ChatCompletionChunk(
+                        id=request_id,
+                        model=model,
+                        choices=[],
+                        usage=Usage(
+                            prompt_tokens=0,
+                            completion_tokens=0,
+                            total_tokens=0,
+                            sandbox_seconds=sandbox_seconds,
+                        ),
+                    )
+
+                if run_state is not None:
+                    run_state.update(
+                        {
+                            "has_error": has_error,
+                            "exit_code": exit_code,
+                            "artifacts_present": artifacts_present,
+                            "termination_scheduled": termination_scheduled,
+                        }
                     )
 
 
