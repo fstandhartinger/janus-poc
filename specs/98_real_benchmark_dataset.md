@@ -1,6 +1,6 @@
 # Spec 98: Real Benchmark Dataset
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -257,4 +257,4 @@ bench/
 - Spec 30-35: Janus Benchmarks
 - Spec 56: Scoring Service Backend
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

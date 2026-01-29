@@ -5,7 +5,7 @@ from collections import Counter
 import pytest
 
 from janus_bench.benchmarks import get_janus_benchmark_names
-from janus_bench.datasets import get_tasks, load_suite
+from janus_bench.datasets import get_tasks, load_suite, private_dataset_available
 from janus_bench.models import Suite, TaskType
 
 
@@ -59,6 +59,33 @@ class TestDatasetLoader:
         tasks = load_suite("public/train")
         assert len(tasks) > 0
         assert all(t.suite == Suite.PUBLIC_TRAIN for t in tasks)
+
+    def test_public_train_has_minimum_size(self):
+        """Ensure public train has at least 100 tasks."""
+        tasks = get_tasks(suite=Suite.PUBLIC_TRAIN)
+        assert len(tasks) >= 100
+
+    def test_public_dev_has_minimum_size(self):
+        """Ensure public dev has at least 50 tasks."""
+        tasks = get_tasks(suite=Suite.PUBLIC_DEV)
+        assert len(tasks) >= 50
+
+    def test_public_dataset_categories_covered(self):
+        """Ensure public dataset covers all required categories."""
+        tasks = get_tasks(suite=Suite.PUBLIC_TRAIN)
+        categories = {
+            task.metadata.get("category")
+            for task in tasks
+            if task.metadata and task.metadata.get("category")
+        }
+        assert {
+            "chat",
+            "research",
+            "code",
+            "multimodal",
+            "agentic",
+            "deep_research",
+        }.issubset(categories)
 
     def test_load_suite_public_dev(self):
         """Test loading public/dev suite."""
@@ -126,10 +153,17 @@ class TestDatasetLoader:
     def test_private_tasks_are_stubs(self):
         """Test that private test tasks are marked as stubs."""
         private_tasks = get_tasks(suite=Suite.PRIVATE_TEST)
+        assert len(private_tasks) > 0
 
-        for task in private_tasks:
-            assert task.metadata is not None
-            assert task.metadata.get("stub") is True
+        if private_dataset_available():
+            assert all(
+                not (task.metadata and task.metadata.get("stub"))
+                for task in private_tasks
+            )
+        else:
+            for task in private_tasks:
+                assert task.metadata is not None
+                assert task.metadata.get("stub") is True
 
     def test_subset_sampling_is_deterministic(self):
         """Test deterministic subset sampling with a seed."""

@@ -13,6 +13,7 @@ import structlog
 
 from .config import Settings, get_settings
 from .datasets import load_suite
+from .evaluators import evaluate_task_response
 from .models import (
     BenchmarkReport,
     BenchmarkTask,
@@ -370,6 +371,19 @@ class BenchmarkRunner:
             result.quality_score = quality_score
             result.cost_score = efficiency_score
             result.judge_output = cost_details
+        elif (
+            task_metadata.get("expected")
+            and task.benchmark != "janus_research"
+            and task.type not in {TaskType.TOOL_USE, TaskType.COST}
+        ):
+            evaluation = evaluate_task_response(task, result)
+            if evaluation is not None:
+                task_metadata = dict(task_metadata or {})
+                task_metadata["quality_override"] = True
+                task_metadata["evaluation_result"] = evaluation.details
+                result.metadata = task_metadata
+                result.quality_score = evaluation.score
+                result.judge_output = evaluation.details
 
         # Compute scores
         result = compute_task_scores(

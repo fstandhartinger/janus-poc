@@ -1,0 +1,12 @@
+{"id": "chat_dev_001", "category": "chat", "input": {"messages": [{"role": "user", "content": "What is the symbol for the joule?"}]}, "expected": {"type": "text", "contains": ["J"], "max_latency_ms": 2000}}
+{"id": "chat_dev_002", "category": "chat", "input": {"messages": [{"role": "user", "content": "What is 12 * 12?"}]}, "expected": {"type": "text", "contains": ["144"], "max_latency_ms": 2000}}
+{"id": "chat_dev_003", "category": "chat", "input": {"messages": [{"role": "user", "content": "What color do you get by mixing red and blue?"}]}, "expected": {"type": "text", "contains": ["purple"], "max_latency_ms": 2000}}
+{"id": "chat_dev_004", "category": "chat", "input": {"messages": [{"role": "user", "content": "How many days are in a leap year?"}]}, "expected": {"type": "text", "contains": ["366"], "max_latency_ms": 2000}}
+{"id": "chat_dev_005", "category": "chat", "input": {"messages": [{"role": "user", "content": "Who wrote Pride and Prejudice?"}]}, "expected": {"type": "text", "contains": ["Jane Austen", "Austen"], "max_latency_ms": 2000}}
+{"id": "chat_dev_006", "category": "chat", "input": {"messages": [{"role": "user", "content": "What is the largest continent?"}]}, "expected": {"type": "text", "contains": ["Asia"], "max_latency_ms": 2000}}
+{"id": "chat_dev_007", "category": "chat", "input": {"messages": [{"role": "user", "content": "What is the capital of Italy?"}]}, "expected": {"type": "text", "contains": ["Rome"], "max_latency_ms": 2000}}
+{"id": "chat_dev_008", "category": "chat", "input": {"messages": [{"role": "user", "content": "What is the capital of Spain?"}]}, "expected": {"type": "text", "contains": ["Madrid"], "max_latency_ms": 2000}}
+{"id": "chat_dev_009", "category": "chat", "input": {"messages": [{"role": "user", "content": "How many meters are in a kilometer?"}]}, "expected": {"type": "text", "contains": ["1000"], "max_latency_ms": 2000}}
+{"id": "chat_dev_010", "category": "chat", "input": {"messages": [{"role": "user", "content": "What gas do plants absorb from the air?"}]}, "expected": {"type": "text", "contains": ["carbon dioxide", "CO2"], "max_latency_ms": 2000}}
+{"id": "chat_dev_011", "category": "chat", "input": {"messages": [{"role": "user", "content": "Which organ pumps blood through the body?"}]}, "expected": {"type": "text", "contains": ["heart"], "max_latency_ms": 2000}}
+{"id": "chat_dev_012", "category": "chat", "input": {"messages": [{"role": "user", "content": "What is the freezing point of water in Celsius?"}]}, "expected": {"type": "text", "contains": ["0"], "max_latency_ms": 2000}}

@@ -2,6 +2,7 @@
 
 import json
 import math
+import os
 import random
 from pathlib import Path
 from typing import Optional
@@ -108,24 +109,189 @@ BUILTIN_TASKS: list[BenchmarkTask] = [
         image_url="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8DwHwAFBQIAX8jx0gAAAABJRU5ErkJggg==",
         expected_keywords=None,  # Subjective
     ),
-    # Private test stubs (placeholders)
-    BenchmarkTask(
-        id="private_test_001",
-        suite=Suite.PRIVATE_TEST,
-        type=TaskType.CHAT_QUALITY,
-        prompt="[PRIVATE] This task is hidden for final evaluation.",
-        expected_answer=None,
-        metadata={"stub": True},
-    ),
-    BenchmarkTask(
-        id="private_test_002",
-        suite=Suite.PRIVATE_TEST,
-        type=TaskType.CODING,
-        prompt="[PRIVATE] This coding task is hidden for final evaluation.",
-        expected_answer=None,
-        metadata={"stub": True},
-    ),
 ]
+
+PUBLIC_DATA_ROOT = Path(__file__).resolve().parents[2] / "datasets" / "public"
+PRIVATE_DATA_ROOT = Path(__file__).resolve().parents[2] / "datasets" / "private" / "test"
+PRIVATE_DATA_ENV = "JANUS_PRIVATE_DATASET_PATH"
+
+
+def private_dataset_available() -> bool:
+    """Return True if a private dataset is configured."""
+    env_path = os.getenv(PRIVATE_DATA_ENV)
+    if env_path:
+        path = Path(env_path)
+        if path.is_file():
+            return True
+        if path.is_dir() and any(path.glob("*.jsonl")):
+            return True
+    if PRIVATE_DATA_ROOT.exists() and any(PRIVATE_DATA_ROOT.glob("*.jsonl")):
+        return True
+    return False
+
+
+def _category_to_task_type(category: str) -> TaskType:
+    mapping = {
+        "chat": TaskType.CHAT_QUALITY,
+        "research": TaskType.RESEARCH,
+        "code": TaskType.CODING,
+        "multimodal": TaskType.MULTIMODAL,
+        "agentic": TaskType.TOOL_USE,
+        "tool_use": TaskType.TOOL_USE,
+        "deep_research": TaskType.RESEARCH,
+    }
+    return mapping.get(category, TaskType.CHAT_QUALITY)
+
+
+def _extract_prompt(messages: object) -> str | None:
+    if not isinstance(messages, list):
+        return None
+    for message in messages:
+        if not isinstance(message, dict):
+            continue
+        if message.get("role") != "user":
+            continue
+        content = message.get("content")
+        if isinstance(content, str):
+            return content
+        if isinstance(content, list):
+            text_parts = []
+            for part in content:
+                if isinstance(part, dict) and part.get("type") == "text":
+                    text = part.get("text")
+                    if isinstance(text, str):
+                        text_parts.append(text)
+            if text_parts:
+                return " ".join(text_parts)
+    return None
+
+
+def _extract_image_url(messages: object) -> str | None:
+    if not isinstance(messages, list):
+        return None
+    for message in messages:
+        if not isinstance(message, dict):
+            continue
+        content = message.get("content")
+        if not isinstance(content, list):
+            continue
+        for part in content:
+            if not isinstance(part, dict):
+                continue
+            if part.get("type") != "image_url":
+                continue
+            image_url = part.get("image_url")
+            if isinstance(image_url, dict):
+                url = image_url.get("url")
+                if isinstance(url, str):
+                    return url
+    return None
+
+
+def _load_jsonl_file(path: Path, suite: Suite) -> list[BenchmarkTask]:
+    tasks: list[BenchmarkTask] = []
+    if not path.exists():
+        return tasks
+    with open(path, "r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            item = json.loads(line)
+            tasks.append(_public_item_to_task(item, suite))
+    return tasks
+
+
+def _load_jsonl_dir(path: Path, suite: Suite) -> list[BenchmarkTask]:
+    tasks: list[BenchmarkTask] = []
+    if not path.exists():
+        return tasks
+    for file_path in sorted(path.glob("*.jsonl")):
+        tasks.extend(_load_jsonl_file(file_path, suite))
+    return tasks
+
+
+def _public_item_to_task(item: dict[str, object], suite: Suite) -> BenchmarkTask:
+    category = str(item.get("category") or "chat")
+    input_payload = item.get("input") if isinstance(item.get("input"), dict) else {}
+    messages = None
+    if isinstance(input_payload, dict):
+        messages = input_payload.get("messages")
+    prompt = _extract_prompt(messages) or str(item.get("prompt") or "")
+    if not prompt:
+        prompt = str(item.get("id") or "Benchmark task")
+    image_url = _extract_image_url(messages)
+    expected = item.get("expected") if isinstance(item.get("expected"), dict) else {}
+    expected_keywords = expected.get("contains") if isinstance(expected, dict) else None
+    if isinstance(expected_keywords, str):
+        expected_keywords = [expected_keywords]
+
+    metadata = dict(item.get("metadata") or {})
+    metadata["category"] = category
+    metadata["expected"] = expected
+    if messages:
+        metadata["messages"] = messages
+    for key, value in item.items():
+        if key in {"id", "category", "input", "expected", "metadata"}:
+            continue
+        metadata.setdefault(key, value)
+
+    return BenchmarkTask(
+        id=str(item.get("id") or f"{category}_{suite.value}_task"),
+        benchmark=str(item.get("benchmark") or f"public_{category}"),
+        suite=suite,
+        type=_category_to_task_type(category),
+        prompt=prompt,
+        expected_answer=None,
+        expected_keywords=expected_keywords,
+        image_url=image_url,
+        metadata=metadata or None,
+    )
+
+
+def _load_public_tasks() -> list[BenchmarkTask]:
+    tasks: list[BenchmarkTask] = []
+    tasks.extend(_load_jsonl_dir(PUBLIC_DATA_ROOT / "train", Suite.PUBLIC_TRAIN))
+    tasks.extend(_load_jsonl_dir(PUBLIC_DATA_ROOT / "dev", Suite.PUBLIC_DEV))
+    return tasks
+
+
+def _private_stub_tasks() -> list[BenchmarkTask]:
+    return [
+        BenchmarkTask(
+            id="private_test_001",
+            suite=Suite.PRIVATE_TEST,
+            type=TaskType.CHAT_QUALITY,
+            prompt="[PRIVATE] This task is hidden for final evaluation.",
+            expected_answer=None,
+            metadata={"stub": True},
+        ),
+        BenchmarkTask(
+            id="private_test_002",
+            suite=Suite.PRIVATE_TEST,
+            type=TaskType.CODING,
+            prompt="[PRIVATE] This coding task is hidden for final evaluation.",
+            expected_answer=None,
+            metadata={"stub": True},
+        ),
+    ]
+
+
+def _load_private_tasks() -> list[BenchmarkTask]:
+    env_path = os.getenv(PRIVATE_DATA_ENV)
+    if env_path:
+        path = Path(env_path)
+        if path.is_file():
+            tasks = _load_jsonl_file(path, Suite.PRIVATE_TEST)
+        else:
+            tasks = _load_jsonl_dir(path, Suite.PRIVATE_TEST)
+        if tasks:
+            return tasks
+
+    tasks = _load_jsonl_dir(PRIVATE_DATA_ROOT, Suite.PRIVATE_TEST)
+    if tasks:
+        return tasks
+    return _private_stub_tasks()
 
 
 def get_tasks(
@@ -148,6 +314,8 @@ def get_tasks(
         List of matching benchmark tasks
     """
     tasks = BUILTIN_TASKS.copy()
+    tasks.extend(_load_public_tasks())
+    tasks.extend(_load_private_tasks())
     tasks.extend(_load_janus_tasks())
 
     if suite is not None:

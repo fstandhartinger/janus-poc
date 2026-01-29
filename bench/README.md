@@ -75,6 +75,24 @@ The composite score (0-100) is calculated from weighted components:
 - **private/test** - Hidden test data for final evaluation (stubs in PoC)
 - **janus/intelligence** - Full Janus Intelligence benchmark suite
 
+## Dataset Layout
+
+Public datasets live under `bench/datasets/public/{train,dev}` as JSONL files
+(`chat`, `research`, `code`, `multimodal`, `agentic`, `deep_research`).
+
+Private test data is stored outside git. Generate local data via:
+
+```bash
+cd bench/scripts
+python generate_private_dataset.py
+```
+
+Or point the loader at a secure location:
+
+```bash
+export JANUS_PRIVATE_DATASET_PATH=/absolute/path/to/private/test
+```
+
 ## Task Types
 
 - **chat_quality** - Simple Q&A for quality measurement

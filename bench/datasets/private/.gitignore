@@ -1,0 +1,2 @@
+# Keep private benchmark data out of git
+/test/*.jsonl
