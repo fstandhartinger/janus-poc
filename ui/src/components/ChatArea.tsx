@@ -29,6 +29,7 @@ import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress
 import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
+import { AgentSelector, type AgentOption } from './AgentSelector';
 import { AgentStatusIndicator } from './chat/AgentStatusIndicator';
 import { EmptyState } from './chat/EmptyState';
 import { QuickSuggestions } from './chat/QuickSuggestions';
@@ -57,6 +58,15 @@ type ResearchSource = {
   url: string;
   snippet: string;
 };
+
+const AGENT_OPTIONS: AgentOption[] = [
+  { id: 'claude-code', label: 'Claude Code', badges: ['Shell', 'Web', 'Downloads', 'Code'] },
+  { id: 'roo-code', label: 'Roo Code', badges: ['TBD'] },
+  { id: 'cline', label: 'Cline', badges: ['TBD'] },
+  { id: 'opencode', label: 'OpenCode', badges: ['TBD'] },
+  { id: 'codex', label: 'Codex', badges: ['TBD'] },
+  { id: 'aider', label: 'Aider', badges: ['Code'] },
+];
 
 const getMessageText = (content: MessageContent) => {
   if (typeof content === 'string') {
@@ -98,6 +108,7 @@ export function ChatArea({
   const shareHandledRef = useRef<string | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState('baseline-cli-agent');
+  const [selectedAgent, setSelectedAgent] = useState('claude-code');
   const [screenshots, setScreenshots] = useState<ScreenshotData[]>([]);
   const [screenshotsLive, setScreenshotsLive] = useState(false);
   const [freeChatsRemaining, setFreeChatsRemaining] = useState(FREE_CHAT_LIMIT);
@@ -129,6 +140,7 @@ export function ChatArea({
     : '';
   const { resetUserScroll } = useSmartScroll(messagesContainerRef, [lastMessageContent, isStreaming]);
   const debugState = useDebug(debugMode, lastDebugRequestId, selectedModel);
+  const isCliAgentModel = selectedModel.includes('cli-agent');
 
   const updateLastMessageMetadata = useCallback(
     (updates: Partial<NonNullable<(typeof messages)[number]['metadata']>>) => {
@@ -494,6 +506,7 @@ export function ChatArea({
 
       const userId = getUserId(user);
       const memoryEnabledSetting = memoryEnabled;
+      const baselineAgentHeader = isCliAgentModel ? selectedAgent : undefined;
 
       if (arenaMode) {
         const arenaResponse = await requestArenaCompletion(
@@ -539,7 +552,8 @@ export function ChatArea({
           debug: debugMode,
         },
         signal,
-        handleResponse
+        handleResponse,
+        { baselineAgent: baselineAgentHeader }
       )) {
         if ('type' in chunk && chunk.type === 'screenshot') {
           pushScreenshot(chunk.data);
@@ -782,6 +796,13 @@ export function ChatArea({
                   </button>
                 )}
                 <AgentStatusIndicator />
+                {isCliAgentModel && (
+                  <AgentSelector
+                    agents={AGENT_OPTIONS}
+                    selectedAgent={selectedAgent}
+                    onSelect={setSelectedAgent}
+                  />
+                )}
                 <ModelSelector
                   models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
                   selectedModel={selectedModel}

@@ -105,3 +105,4 @@
 - Production gateway check: /health and /v1/models OK; /v1/chat/completions returned an error response message for baseline-cli-agent.
 - Completed spec 111_claude_code_system_prompt.md with Claude router base normalization and stable Sandy agent-run prompt injection.
 - Stabilized Playwright chat/competition/memory E2E flows with gateway stubs and chat readiness helpers; full UI + gateway test suites now pass.
+- Completed spec 111_other_cli_agents_integration.md with CLI agent command updates (OpenCode/Codex), Roo Code + Cline installs, CLI agent selection UI + header wiring, and updated agent capability docs.

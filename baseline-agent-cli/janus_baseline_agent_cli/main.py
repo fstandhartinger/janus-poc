@@ -397,6 +397,11 @@ async def stream_response(
     reason = analysis.reason
     sandy_unavailable = is_complex and not sandy_service.is_available
     using_agent = settings.always_use_agent or (is_complex and sandy_service.is_available)
+    use_cli_fallback = (
+        sandy_service.requires_cli_execution(baseline_agent_override)
+        if hasattr(sandy_service, "requires_cli_execution")
+        else False
+    )
     flags_payload = _generation_flags_payload(request.generation_flags)
     metadata_payload = (
         {
@@ -489,7 +494,7 @@ async def stream_response(
         fast_path_emitted = False
         try:
             if using_agent:
-                if settings.use_sandy_agent_api and warm_pool:
+                if settings.use_sandy_agent_api and warm_pool and not use_cli_fallback:
                     sandbox = await warm_pool.acquire()
                     if sandbox:
                         try:
@@ -527,7 +532,7 @@ async def stream_response(
                                 )
                             first_chunk = False
                             yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
-                elif settings.use_sandy_agent_api:
+                elif settings.use_sandy_agent_api and not use_cli_fallback:
                     async for chunk in sandy_service.execute_via_agent_api(
                         request,
                         debug_emitter=debug_emitter,
@@ -544,6 +549,7 @@ async def stream_response(
                     async for chunk in sandy_service.execute_complex(
                         request,
                         debug_emitter=debug_emitter,
+                        baseline_agent_override=baseline_agent_override,
                     ):
                         chunk_text = _extract_chunk_content(chunk)
                         if chunk_text:
@@ -761,7 +767,12 @@ async def chat_completions(
             )
             return _build_unavailable_response(request)
         if settings.always_use_agent or (is_complex and sandy_service.is_available):
-            if settings.use_sandy_agent_api:
+            use_cli_fallback = (
+                sandy_service.requires_cli_execution(baseline_agent_header)
+                if hasattr(sandy_service, "requires_cli_execution")
+                else False
+            )
+            if settings.use_sandy_agent_api and not use_cli_fallback:
                 if warm_pool:
                     sandbox = await warm_pool.acquire()
                     if sandbox:
@@ -792,6 +803,7 @@ async def chat_completions(
                 response = await sandy_service.complete(
                     request,
                     debug_emitter=debug_emitter,
+                    baseline_agent_override=baseline_agent_header,
                 )
         else:
             response = await llm_service.complete(request)

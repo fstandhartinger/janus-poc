@@ -3259,6 +3259,10 @@ html {
     display: none;
   }
 
+  .chat-header-actions .agent-selector {
+    display: none;
+  }
+
   .agent-status-indicator {
     display: none;
   }
@@ -4008,6 +4012,149 @@ html {
   height: 16px;
   margin-left: 8px;
   color: #63D297;
+}
+
+/* ─── Agent Selector (Custom Dropdown) ────────────────────────────────────── */
+
+.agent-selector {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.agent-selector-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3em;
+  color: #6B7280;
+}
+
+.agent-selector-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(55, 65, 81, 0.8);
+  background: rgba(17, 23, 38, 0.9);
+  color: #F3F4F6;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.agent-selector-trigger:hover {
+  border-color: rgba(99, 210, 151, 0.4);
+  background: rgba(17, 23, 38, 1);
+}
+
+.agent-selector-trigger:focus {
+  outline: none;
+  border-color: #63D297;
+  box-shadow: 0 0 0 2px rgba(99, 210, 151, 0.2);
+}
+
+.agent-selector-value {
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.agent-selector-chevron {
+  width: 14px;
+  height: 14px;
+  color: #9CA3AF;
+  transition: transform 0.15s ease;
+}
+
+.agent-selector-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  min-width: 240px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 4px;
+  border-radius: 10px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  background: rgba(17, 23, 38, 0.98);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+  z-index: 50;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+.agent-selector-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #D1D5DB;
+  font-size: 13px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.1s ease;
+}
+
+.agent-selector-option:hover {
+  background: rgba(99, 210, 151, 0.1);
+  color: #F3F4F6;
+}
+
+.agent-selector-option-selected {
+  background: rgba(99, 210, 151, 0.15);
+  color: #63D297;
+}
+
+.agent-selector-option-selected:hover {
+  background: rgba(99, 210, 151, 0.2);
+}
+
+.agent-selector-option-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
+.agent-selector-option-name {
+  font-weight: 500;
+}
+
+.agent-selector-option-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.agent-selector-option-badge {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(99, 210, 151, 0.15);
+  color: #63D297;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.agent-selector-option-badge.is-muted {
+  background: rgba(148, 163, 184, 0.2);
+  color: #94A3B8;
+}
+
+.agent-selector-check {
+  width: 16px;
+  height: 16px;
+  color: currentColor;
 }
 
 /* ─── Form Elements (Global Dark Mode Styling) ─────────────────────────────── */

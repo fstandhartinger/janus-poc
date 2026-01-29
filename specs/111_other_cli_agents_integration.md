@@ -1,6 +1,6 @@
 # Spec 111: Other CLI Agents Integration
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Context / Background
 
@@ -307,4 +307,4 @@ cline "task prompt" --auto-approve
 - Cline: https://github.com/cline/cline
 - Cline Docs: https://docs.cline.bot/cline-cli/overview
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

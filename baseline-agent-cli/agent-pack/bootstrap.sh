@@ -58,6 +58,15 @@ pip_install() {
     pip install "$@"
 }
 
+npm_install() {
+  if ! command -v npm >/dev/null 2>&1; then
+    echo "npm not available; skipping npm install for: $*"
+    return 1
+  fi
+  echo "Installing (npm): $*"
+  npm_config_loglevel=error npm install -g "$@" 2>/dev/null || npm install -g "$@"
+}
+
 # Install Playwright for browser automation
 echo "=== Installing Playwright ==="
 if ! python3 - <<'PY' >/dev/null 2>&1
@@ -74,6 +83,18 @@ if ! command -v aider >/dev/null 2>&1; then
   pip_install aider-chat
   # Ensure ~/.local/bin is in PATH (where pip --user installs to)
   export PATH="$HOME/.local/bin:/root/.local/bin:$PATH"
+fi
+
+# Install Roo Code CLI (autonomous coding agent)
+echo "=== Installing Roo Code CLI ==="
+if ! command -v roo-code-cli >/dev/null 2>&1; then
+  npm_install roo-code-cli || echo "WARNING: roo-code-cli install failed"
+fi
+
+# Install Cline CLI (autonomous coding agent)
+echo "=== Installing Cline CLI ==="
+if ! command -v cline >/dev/null 2>&1; then
+  npm_install @anthropic/cline-cli || npm_install cline || echo "WARNING: cline install failed"
 fi
 
 # Verify aider installation
@@ -104,7 +125,7 @@ else
 fi
 
 # Check for other agents
-for agent in opencode openhands; do
+for agent in opencode openhands codex roo-code-cli cline; do
   if command -v "$agent" >/dev/null 2>&1; then
     echo "$agent found at: $(which $agent)"
   else

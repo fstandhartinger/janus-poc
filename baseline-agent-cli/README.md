@@ -171,6 +171,20 @@ When the complex path uses Sandy’s `/agent/run`, make sure the following are t
 - Browser automation via Playwright
 - GUI/Desktop automation support
 
+## CLI Agent Support Matrix
+
+| Agent | Command | Capabilities | Notes |
+| --- | --- | --- | --- |
+| Claude Code | `claude` | Shell, Web, Downloads, Code | Default + most reliable |
+| Roo Code CLI | `roo-code-cli` | TBD | Experimental |
+| Cline CLI | `cline` | TBD | Experimental |
+| OpenCode | `opencode` | TBD | Non-interactive run mode |
+| Codex | `codex` | TBD | Output capture under investigation |
+| Aider | `aider` | Code | Editor-style agent |
+| OpenHands | `openhands` | TBD | Deferred (sandbox conflicts) |
+
+Select an agent via `X-Baseline-Agent` header or `JANUS_BASELINE_AGENT`.
+
 ## Installation
 
 ```bash

@@ -40,6 +40,39 @@ const howItWorksSteps = [
   'Streams responses with reasoning content and artifacts over SSE.',
 ];
 
+const agentCapabilities = [
+  {
+    name: 'Claude Code',
+    summary: 'Default CLI agent with full sandbox tooling.',
+    badges: ['Shell', 'Web', 'Downloads', 'Code'],
+  },
+  {
+    name: 'Roo Code CLI',
+    summary: 'Experimental CLI agent for autonomous workflows.',
+    badges: ['TBD'],
+  },
+  {
+    name: 'Cline CLI',
+    summary: 'Experimental CLI agent with multi-tool support.',
+    badges: ['TBD'],
+  },
+  {
+    name: 'OpenCode',
+    summary: 'Non-interactive CLI runner (capabilities pending validation).',
+    badges: ['TBD'],
+  },
+  {
+    name: 'Codex',
+    summary: 'CLI output capture under investigation.',
+    badges: ['TBD'],
+  },
+  {
+    name: 'Aider',
+    summary: 'Code editing workflows only.',
+    badges: ['Code'],
+  },
+];
+
 const configSections: Array<{ title: string; description?: string; entries: ConfigEntry[] }> = [
   {
     title: 'Server configuration',
@@ -177,7 +210,7 @@ const configSections: Array<{ title: string; description?: string; entries: Conf
       },
       {
         name: 'JANUS_BASELINE_AGENT',
-        defaultValue: 'aider',
+        defaultValue: 'claude-code',
         description: 'CLI agent command invoked in the sandbox.',
       },
     ],
@@ -426,6 +459,20 @@ export default function BaselineAgentCliPage() {
             </div>
           </section>
 
+          <section className="space-y-4">
+            <h2 className="text-2xl font-semibold text-[#F3F4F6]">CLI Agent Capabilities</h2>
+            <p className="text-sm text-[#9CA3AF]">
+              Use <span className="text-[#F3F4F6]">JANUS_BASELINE_AGENT</span> or{' '}
+              <span className="text-[#F3F4F6]">X-Baseline-Agent</span> to select the CLI agent.
+              Badges reflect currently verified capabilities.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {agentCapabilities.map((agent) => (
+                <AgentCapabilityCard key={agent.name} {...agent} />
+              ))}
+            </div>
+          </section>
+
           <section className="space-y-6">
             <h2 className="text-2xl font-semibold text-[#F3F4F6]">Configuration</h2>
             <p className="text-sm text-[#9CA3AF]">
@@ -474,6 +521,39 @@ function FeatureCard({ title, description }: { title: string; description: strin
     <div className="glass-card p-4 space-y-2">
       <h3 className="text-lg font-semibold text-[#F3F4F6]">{title}</h3>
       <p className="text-sm text-[#9CA3AF]">{description}</p>
+    </div>
+  );
+}
+
+function AgentCapabilityCard({
+  name,
+  summary,
+  badges,
+}: {
+  name: string;
+  summary: string;
+  badges: string[];
+}) {
+  return (
+    <div className="glass-card p-4 space-y-3">
+      <div className="space-y-1">
+        <h3 className="text-lg font-semibold text-[#F3F4F6]">{name}</h3>
+        <p className="text-sm text-[#9CA3AF]">{summary}</p>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        {badges.map((badge) => (
+          <span
+            key={`${name}-${badge}`}
+            className={`px-2 py-1 rounded-md text-[10px] uppercase tracking-[0.2em] ${
+              badge === 'TBD'
+                ? 'bg-white/10 text-[#9CA3AF]'
+                : 'bg-[#63D297]/15 text-[#63D297]'
+            }`}
+          >
+            {badge}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }

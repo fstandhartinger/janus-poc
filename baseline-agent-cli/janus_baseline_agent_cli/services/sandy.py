@@ -59,6 +59,36 @@ _LONG_OPERATION_INDICATORS = {
     "extracting": "Extracting data...",
 }
 
+_AGENT_ALIASES = {
+    "claude": "claude-code",
+    "claude-code": "claude-code",
+    "aider": "aider",
+    "opencode": "opencode",
+    "openhands": "openhands",
+    "codex": "codex",
+    "roo": "roo-code",
+    "roo-code": "roo-code",
+    "roo-code-cli": "roo-code",
+    "cline": "cline",
+    "droid": "droid",
+    "builtin": "builtin",
+    "run_agent": "builtin",
+}
+
+_AGENT_BINARY_NAMES = {
+    "claude-code": "claude",
+    "roo-code": "roo-code-cli",
+    "aider": "aider",
+    "opencode": "opencode",
+    "codex": "codex",
+    "cline": "cline",
+    "openhands": "openhands",
+    "droid": "droid",
+    "builtin": "builtin",
+}
+
+_CLI_FALLBACK_AGENTS = {"roo-code", "cline"}
+
 
 def _parse_sse_events(data: str) -> list[dict[str, Any]]:
     """Parse SSE event data into a list of JSON events."""
@@ -536,6 +566,19 @@ class SandyService:
             env["JANUS_ENABLE_MEMORY_TOOL"] = "false"
         return env
 
+    def _normalize_agent_name(self, agent: str | None) -> str:
+        if not agent:
+            return ""
+        normalized = agent.strip().lower()
+        return _AGENT_ALIASES.get(normalized, normalized)
+
+    def _agent_binary_name(self, agent: str) -> str:
+        return _AGENT_BINARY_NAMES.get(agent, agent)
+
+    def requires_cli_execution(self, requested_agent: str | None) -> bool:
+        normalized = self._normalize_agent_name(requested_agent or self._baseline_agent)
+        return normalized in _CLI_FALLBACK_AGENTS
+
     def _router_api_base(self, router_url: str, agent: str) -> str:
         base = router_url.rstrip("/")
         if agent in {"claude", "claude-code"}:
@@ -610,7 +653,7 @@ class SandyService:
                 f"{agent_pack_root}/run_agent.py",
                 quoted_task,
             ]
-        elif agent == "claude" or agent == "claude-code":
+        elif agent in {"claude", "claude-code"}:
             # Claude Code CLI agent (print mode)
             command = [
                 "claude",
@@ -645,9 +688,34 @@ class SandyService:
             # OpenCode CLI agent
             command = [
                 "opencode",
-                "--non-interactive",
-                "--context", system_prompt_path,
+                "run",
                 quoted_task,
+                "--format",
+                "json",
+                "--context",
+                system_prompt_path,
+            ]
+        elif agent == "codex":
+            # Codex CLI agent
+            command = [
+                "codex",
+                "--output-format",
+                "json",
+                quoted_task,
+            ]
+        elif agent == "roo-code":
+            # Roo Code CLI agent
+            command = [
+                "roo-code-cli",
+                "--auto-approve",
+                quoted_task,
+            ]
+        elif agent == "cline":
+            # Cline CLI agent
+            command = [
+                "cline",
+                quoted_task,
+                "--auto-approve",
             ]
         elif agent == "openhands":
             # OpenHands CLI
@@ -672,17 +740,22 @@ class SandyService:
         )
         return full_command
 
-    def _agent_candidates(self) -> list[str]:
+    def _agent_candidates(self, requested_agent: str | None = None) -> list[str]:
         """Determine preferred agent order.
 
         Supported agents:
-        - claude / claude-code: Anthropic's Claude Code CLI
-        - aider: AI pair programmer
+        - claude-code: Anthropic's Claude Code CLI
+        - roo-code: Roo Code CLI agent
+        - cline: Cline CLI agent
         - opencode: Factory OpenCode agent
+        - codex: OpenAI Codex CLI
+        - aider: AI pair programmer
         - openhands: OpenHands CLI
         - builtin: Simple template-based fallback
         """
-        requested = self._baseline_agent.strip().lower()
+        requested = self._normalize_agent_name(
+            requested_agent or self._baseline_agent
+        )
         logger.info(
             "agent_candidates_config",
             requested_agent=requested,
@@ -691,19 +764,48 @@ class SandyService:
         if requested in {"builtin", "run_agent"}:
             return ["builtin"]
         if requested in {"claude", "claude-code"}:
-            return ["claude", "aider", "builtin"]
+            return [
+                "claude-code",
+                "roo-code",
+                "cline",
+                "opencode",
+                "codex",
+                "aider",
+                "openhands",
+                "builtin",
+            ]
         if requested:
-            return [requested, "claude", "aider", "builtin"]
-        # Default order: prefer Claude Code, then aider, then others
-        return ["claude", "aider", "opencode", "openhands", "builtin"]
+            return [
+                requested,
+                "claude-code",
+                "roo-code",
+                "cline",
+                "opencode",
+                "codex",
+                "aider",
+                "openhands",
+                "builtin",
+            ]
+        # Default order: prefer Claude Code, then Roo/Cline, then other agents
+        return [
+            "claude-code",
+            "roo-code",
+            "cline",
+            "opencode",
+            "codex",
+            "aider",
+            "openhands",
+            "builtin",
+        ]
 
     async def _select_agent(
         self,
         client: httpx.AsyncClient,
         sandbox_id: str,
+        requested_agent: str | None = None,
     ) -> str:
         """Pick an available CLI agent inside the sandbox."""
-        candidates = self._agent_candidates()
+        candidates = self._agent_candidates(requested_agent)
         logger.info(
             "agent_selection_start",
             candidates=candidates,
@@ -712,7 +814,13 @@ class SandyService:
         )
 
         # First, log what's available in the PATH for debugging
-        path_check_cmd = f"PATH={shlex.quote(self._default_path)} ls -la /root/.local/bin/ 2>/dev/null || echo 'No /root/.local/bin'; which aider claude opencode openhands 2>/dev/null || echo 'None found in PATH'"
+        path_check_cmd = (
+            "PATH="
+            f"{shlex.quote(self._default_path)} "
+            "ls -la /root/.local/bin/ 2>/dev/null || echo 'No /root/.local/bin'; "
+            "which aider claude opencode openhands codex roo-code-cli cline 2>/dev/null "
+            "|| echo 'None found in PATH'"
+        )
         path_stdout, path_stderr, _ = await self._exec_in_sandbox(
             client, sandbox_id, path_check_cmd
         )
@@ -727,8 +835,9 @@ class SandyService:
                 logger.info("agent_selected", agent="builtin", reason="fallback_reached")
                 return "builtin"
 
-            # Handle claude-code alias
-            binary_name = "claude" if candidate in {"claude", "claude-code"} else candidate
+            binary_name = self._agent_binary_name(
+                self._normalize_agent_name(candidate)
+            )
 
             check_cmd = f"PATH={shlex.quote(self._default_path)} command -v {shlex.quote(binary_name)}"
             stdout, stderr, exit_code = await self._exec_in_sandbox(
@@ -1300,6 +1409,16 @@ class SandyService:
                                 parsed = json.loads(data)
                                 event_count += 1
                                 event_type = parsed.get("type", "unknown")
+                                if agent == "codex":
+                                    stdout = parsed.get("stdout")
+                                    stderr = parsed.get("stderr")
+                                    if stdout or stderr:
+                                        logger.info(
+                                            "codex_agent_io",
+                                            event_type=event_type,
+                                            stdout_preview=str(stdout)[:300] if stdout else "",
+                                            stderr_preview=str(stderr)[:300] if stderr else "",
+                                        )
                                 # Log detailed event info for debugging
                                 logger.info(
                                     "agent_api_event",
@@ -1350,6 +1469,16 @@ class SandyService:
                             parsed = json.loads(data)
                             event_count += 1
                             event_type = parsed.get("type", "unknown")
+                            if agent == "codex":
+                                stdout = parsed.get("stdout")
+                                stderr = parsed.get("stderr")
+                                if stdout or stderr:
+                                    logger.info(
+                                        "codex_agent_io",
+                                        event_type=event_type,
+                                        stdout_preview=str(stdout)[:300] if stdout else "",
+                                        stderr_preview=str(stderr)[:300] if stderr else "",
+                                    )
                             logger.info(
                                 "agent_api_sse_event",
                                 event_count=event_count,
@@ -1435,7 +1564,7 @@ class SandyService:
         - openhands: OpenHands devin-like agent
         - droid: Droid agent
         """
-        requested = (requested_agent or self._baseline_agent).strip().lower()
+        requested = self._normalize_agent_name(requested_agent or self._baseline_agent)
         if requested in {"claude", "claude-code"}:
             agent = "claude-code"
         elif requested == "codex":
@@ -1476,7 +1605,7 @@ class SandyService:
         """
         # Use the model from request, or default to a good model
         model = request.model
-        agent_name = (agent or self._baseline_agent).strip().lower()
+        agent_name = self._normalize_agent_name(agent or self._baseline_agent)
 
         if agent_name in {"claude", "claude-code"}:
             # Claude Code uses Anthropic Messages format; route through Janus router by default.
@@ -1618,6 +1747,7 @@ class SandyService:
         self,
         request: ChatCompletionRequest,
         debug_emitter: DebugEmitter | None = None,
+        baseline_agent_override: str | None = None,
     ) -> ChatCompletionResponse:
         """Execute a complex task and return a non-streaming response."""
         request_id = self._generate_id()
@@ -1718,7 +1848,16 @@ class SandyService:
                 if bootstrap_stdout:
                     logger.info("sandy_bootstrap_output", stdout=bootstrap_stdout)
 
-                selected_agent = await self._select_agent(client, sandbox_id)
+                selected_agent = await self._select_agent(
+                    client, sandbox_id, baseline_agent_override
+                )
+                if debug_emitter:
+                    await debug_emitter.emit(
+                        DebugEventType.AGENT_THINKING,
+                        "AGENT",
+                        f"Selected CLI agent: {selected_agent}",
+                        data={"agent": selected_agent},
+                    )
                 command = self._build_agent_command(
                     selected_agent, task, sandbox_id, public_url, request, has_images
                 )
@@ -1780,6 +1919,7 @@ class SandyService:
         self,
         request: ChatCompletionRequest,
         debug_emitter: DebugEmitter | None = None,
+        baseline_agent_override: str | None = None,
     ) -> AsyncGenerator[ChatCompletionChunk, None]:
         """Execute a complex task using Sandy sandbox."""
         request_id = self._generate_id()
@@ -1998,7 +2138,16 @@ class SandyService:
                     ],
                 )
 
-                selected_agent = await self._select_agent(client, sandbox_id)
+                selected_agent = await self._select_agent(
+                    client, sandbox_id, baseline_agent_override
+                )
+                if debug_emitter:
+                    await debug_emitter.emit(
+                        DebugEventType.AGENT_THINKING,
+                        "AGENT",
+                        f"Selected CLI agent: {selected_agent}",
+                        data={"agent": selected_agent},
+                    )
                 yield ChatCompletionChunk(
                     id=request_id,
                     model=model,
@@ -2180,6 +2329,12 @@ class SandyService:
         debug_emitter: DebugEmitter | None = None,
         baseline_agent_override: str | None = None,
     ) -> ChatCompletionResponse:
+        if self.requires_cli_execution(baseline_agent_override):
+            return await self.complete(
+                request,
+                debug_emitter=debug_emitter,
+                baseline_agent_override=baseline_agent_override,
+            )
         """
         Execute a task using Sandy's agent/run API and return a non-streaming response.
 

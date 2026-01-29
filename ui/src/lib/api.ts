@@ -229,16 +229,21 @@ export async function fetchModels(): Promise<Model[]> {
 export async function* streamChatCompletion(
   request: ChatCompletionRequest,
   signal?: AbortSignal,
-  onResponse?: (response: Response) => void
+  onResponse?: (response: Response) => void,
+  options?: { baselineAgent?: string }
 ): AsyncGenerator<ChatStreamEvent> {
+  const headers = applyPreReleaseHeader({
+    'Content-Type': 'application/json',
+    Accept: 'text/event-stream',
+  });
+  if (options?.baselineAgent) {
+    headers.set('X-Baseline-Agent', options.baselineAgent);
+  }
   const response = await fetchWithRetry(
     CHAT_PROXY_URL,
     {
       method: 'POST',
-      headers: applyPreReleaseHeader({
-        'Content-Type': 'application/json',
-        Accept: 'text/event-stream',
-      }),
+      headers,
       body: JSON.stringify({
         ...request,
         stream: true,
