@@ -1,6 +1,6 @@
 # Spec 110: Fix Mermaid Diagram Edge Label Clipping
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** Medium
 **Complexity:** Low
@@ -377,4 +377,4 @@ npx playwright test e2e/visual/mermaid.visual.spec.ts --headed
 - `specs/71_competition_page_improvements.md` - Competition page
 - `specs/108_visual_regression_testing.md` - Visual testing setup
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

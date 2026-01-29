@@ -71,22 +71,25 @@ export function MermaidDiagram({
         // Flowchart specific
         flowchart: {
           curve: 'basis',
-          padding: 20,
-          nodeSpacing: 50,
-          rankSpacing: 60,
+          padding: 30,
+          nodeSpacing: 60,
+          rankSpacing: 70,
           htmlLabels: true,
-          useMaxWidth: true,
+          useMaxWidth: false,
+          wrappingWidth: 200,
         },
 
         // Sequence diagram specific
         sequence: {
-          actorMargin: 50,
-          boxMargin: 10,
-          boxTextMargin: 5,
-          noteMargin: 10,
-          messageMargin: 35,
+          actorMargin: 60,
+          boxMargin: 15,
+          boxTextMargin: 8,
+          noteMargin: 15,
+          messageMargin: 45,
           mirrorActors: true,
-          useMaxWidth: true,
+          useMaxWidth: false,
+          wrap: true,
+          wrapPadding: 10,
         },
 
         // Theme variables aligned with Chutes design system
@@ -242,20 +245,22 @@ export function MermaidDiagram({
 
   return (
     <>
-      <div
-        className={`mermaid-container ${clickable ? 'mermaid-clickable' : ''} ${className || ''}`}
-        role="img"
-        aria-label={ariaLabel ?? 'Mermaid diagram'}
-        onClick={handleClick}
-        onKeyDown={(e) => {
-          if (clickable && (e.key === 'Enter' || e.key === ' ')) {
-            e.preventDefault();
-            setShowModal(true);
-          }
-        }}
-        tabIndex={clickable ? 0 : undefined}
-        dangerouslySetInnerHTML={{ __html: svg }}
-      />
+      <div className={`mermaid-wrapper ${className || ''}`}>
+        <div
+          className={`mermaid-container ${clickable ? 'mermaid-clickable' : ''}`}
+          role="img"
+          aria-label={ariaLabel ?? 'Mermaid diagram'}
+          onClick={handleClick}
+          onKeyDown={(e) => {
+            if (clickable && (e.key === 'Enter' || e.key === ' ')) {
+              e.preventDefault();
+              setShowModal(true);
+            }
+          }}
+          tabIndex={clickable ? 0 : undefined}
+          dangerouslySetInnerHTML={{ __html: svg }}
+        />
+      </div>
       {showModal && (
         <MermaidDiagramModal
           svg={svg}

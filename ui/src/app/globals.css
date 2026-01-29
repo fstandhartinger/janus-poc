@@ -130,6 +130,7 @@ body {
   background: var(--bg-base);
   color: var(--text-primary);
   font-family: var(--font-display);
+  overflow-x: hidden;
 }
 
 html {
@@ -1919,7 +1920,8 @@ html {
   padding: 12px 14px;
 }
 
-.chat-debug-mermaid {
+.chat-debug-mermaid,
+.chat-debug-mermaid .mermaid-container {
   background: transparent;
   border: none;
   padding: 0;
@@ -4310,28 +4312,38 @@ code {
 
 /* ─── Mermaid Diagram Styling ──────────────────────────────────────────────── */
 
-.mermaid-container {
+.mermaid-wrapper {
   width: 100%;
   overflow-x: auto;
+  overflow-y: visible;
   scrollbar-width: thin;
   scrollbar-color: rgba(99, 210, 151, 0.3) transparent;
 }
 
-.mermaid-container::-webkit-scrollbar {
+.mermaid-container {
+  display: inline-block;
+  min-width: 100%;
+  overflow: visible;
+  padding: 10px 0;
+}
+
+.mermaid-wrapper::-webkit-scrollbar {
   height: 6px;
 }
 
-.mermaid-container::-webkit-scrollbar-track {
+.mermaid-wrapper::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.mermaid-container::-webkit-scrollbar-thumb {
+.mermaid-wrapper::-webkit-scrollbar-thumb {
   background: rgba(99, 210, 151, 0.3);
   border-radius: 3px;
 }
 
 .mermaid-container svg {
-  max-width: 100%;
+  overflow: visible !important;
+  max-width: none;
+  width: auto;
   height: auto;
   display: block;
   margin: 0 auto;
@@ -4424,13 +4436,27 @@ code {
 /* Edge labels */
 .mermaid-container .edgeLabel {
   background-color: #0B0F14 !important;
-  padding: 2px 6px;
+  padding: 4px 8px !important;
   border-radius: 4px;
+  overflow: visible !important;
+  white-space: nowrap !important;
 }
 
 .mermaid-container .edgeLabel .label {
   fill: #9CA3AF !important;
   font-size: 11px;
+  overflow: visible !important;
+}
+
+.mermaid-container .edgeLabel foreignObject {
+  overflow: visible !important;
+}
+
+.mermaid-container .edgeLabel span {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible !important;
+  text-overflow: clip !important;
 }
 
 /* Sequence diagram styling */
@@ -4462,6 +4488,11 @@ code {
 .mermaid-container .messageText {
   fill: #D1D5DB !important;
   font-size: 12px;
+  overflow: visible !important;
+}
+
+.mermaid-container text.messageText {
+  dominant-baseline: central;
 }
 
 /* Activation box */
@@ -4506,6 +4537,10 @@ code {
   font-weight: 600;
 }
 
+.mermaid-container .flowchart-link {
+  overflow: visible !important;
+}
+
 /* Mermaid error state */
 .mermaid-error {
   display: flex;
@@ -4521,9 +4556,16 @@ code {
 
 /* ─── Mermaid in Glass Cards ───────────────────────────────────────────────── */
 
+.glass-card .mermaid-wrapper,
+.glass .mermaid-wrapper {
+  margin: -8px;
+  padding: 8px;
+}
+
 .glass-card .mermaid-container,
 .glass .mermaid-container {
-  padding: 8px;
+  padding: 12px;
+  min-height: 200px;
 }
 
 /* ─── Mermaid Diagram Wrapper with Aurora Glow ─────────────────────────────── */
@@ -4555,7 +4597,7 @@ code {
   z-index: -1;
 }
 
-.mermaid-glow > .mermaid-container {
+.mermaid-glow > .mermaid-wrapper {
   background: rgba(11, 15, 20, 0.9);
   border-radius: 15px;
   padding: 20px;
