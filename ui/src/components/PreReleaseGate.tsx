@@ -47,13 +47,50 @@ export default function PreReleaseGate() {
   }, []);
 
   useEffect(() => {
-    const stored = getStoredPreReleasePassword();
-    if (!stored) {
+    let active = true;
+
+    const checkGate = async () => {
+      setError(null);
+      setStatus('checking');
+      const stored = getStoredPreReleasePassword();
+      if (stored) {
+        try {
+          const ok = await verifyPassword(stored);
+          if (!active) return;
+          if (ok) {
+            setStatus('unlocked');
+            return;
+          }
+        } catch {
+          // Ignore and fall through to locked state.
+        }
+        if (!active) return;
+        clearPreReleasePassword();
+        setStatus('locked');
+        setError('Incorrect password. Please try again.');
+        return;
+      }
+
+      try {
+        const ok = await verifyPassword('');
+        if (!active) return;
+        if (ok) {
+          setStatus('unlocked');
+          return;
+        }
+      } catch {
+        // Ignore and fall through to locked state.
+      }
+
+      if (!active) return;
       setStatus('locked');
-      return;
-    }
-    attemptUnlock(stored).catch(() => undefined);
-  }, [attemptUnlock]);
+    };
+
+    checkGate().catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const isLocked = status !== 'unlocked';
 
