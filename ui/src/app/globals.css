@@ -300,10 +300,42 @@ html {
 }
 
 .diagram-block {
+  position: relative;
   background: var(--card-bg);
   border: 1px solid var(--border-color);
   border-radius: 0.75rem;
   overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.diagram-block:hover {
+  transform: scale(1.01);
+  box-shadow: 0 0 20px rgba(99, 210, 151, 0.2);
+}
+
+.diagram-block:focus {
+  outline: 2px solid #63d297;
+  outline-offset: 4px;
+}
+
+.diagram-block::after {
+  content: 'Click to enlarge';
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  padding: 4px 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  font-size: 12px;
+  border-radius: 4px;
+  opacity: 0;
+  transition: opacity 0.2s;
+  pointer-events: none;
+}
+
+.diagram-block:hover::after {
+  opacity: 1;
 }
 
 .diagram-toolbar {

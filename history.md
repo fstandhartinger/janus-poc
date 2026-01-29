@@ -96,3 +96,5 @@
 - Completed spec 102_core_demo_use_cases.md with demo E2E coverage, web search result filtering + fallback checks, repo clone error messaging, and image response validation. Core demo tests ran locally but skipped due to unavailable services (pytest-timeout plugin missing for --timeout).
 - Completed spec 104_request_tracing_observability.md with request ID propagation, structured tracing middleware, log search endpoints/CLI, and UI debug request metadata display.
 - Completed spec 103_demo_prompts_in_chat_ui.md with demo prompt data, empty-state grid, quick suggestions, full prompt modal, and Playwright coverage.
+- Completed spec 105_fix_mermaid_modal.md with chat mermaid fullscreen modal support, hover hint styling, and keyboard-accessible interactions.
+- Note: `npm run lint` currently fails due to existing `react-hooks/set-state-in-effect` errors in chat/share/pre-release/TTS components; not addressed in this spec.

@@ -1,6 +1,6 @@
 # Spec 105: Fix Mermaid Diagram Modal in Chat
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
