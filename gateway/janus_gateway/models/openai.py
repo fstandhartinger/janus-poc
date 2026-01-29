@@ -4,7 +4,9 @@ from datetime import datetime
 from enum import Enum
 from typing import Any, Literal, Optional, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+from janus_gateway.models.janus import Artifact
 
 
 class MessageRole(str, Enum):
@@ -80,6 +82,7 @@ class Message(BaseModel):
     name: Optional[str] = None
     tool_calls: Optional[list[ToolCall]] = None
     tool_call_id: Optional[str] = None
+    artifacts: Optional[list[Artifact]] = None
 
 
 class FunctionDefinition(BaseModel):
@@ -144,6 +147,13 @@ class ChatCompletionRequest(BaseModel):
 
     # Janus extension: select competitor
     competitor_id: Optional[str] = None
+
+    @field_validator("messages")
+    @classmethod
+    def _validate_messages(cls, messages: list[Message]) -> list[Message]:
+        if not messages:
+            raise ValueError("messages must not be empty")
+        return messages
 
 
 class Usage(BaseModel):

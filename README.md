@@ -137,6 +137,9 @@ Test matrix (component -> category):
 # Comprehensive test runner
 ./scripts/run-tests.sh local
 
+# Unit test runner
+./scripts/run-unit-tests.sh
+
 # Gateway tests
 cd gateway && pytest
 

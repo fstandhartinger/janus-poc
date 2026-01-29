@@ -68,6 +68,31 @@ export class RequestTimeoutError extends Error {
   }
 }
 
+export type ParsedSSELine =
+  | { type: 'data'; data: unknown }
+  | { type: 'done' }
+  | { type: 'comment' }
+  | { type: 'error'; data: string };
+
+export function parseSSELine(line: string): ParsedSSELine {
+  const trimmed = line.trim();
+  if (!trimmed || trimmed.startsWith(':')) {
+    return { type: 'comment' };
+  }
+  if (!trimmed.startsWith('data:')) {
+    return { type: 'comment' };
+  }
+  const data = trimmed.slice(5).trim();
+  if (data === '[DONE]') {
+    return { type: 'done' };
+  }
+  try {
+    return { type: 'data', data: JSON.parse(data) };
+  } catch {
+    return { type: 'error', data };
+  }
+}
+
 type FetchRetryOptions = {
   retries?: number;
   timeoutMs?: number;
@@ -293,33 +318,24 @@ export async function* streamChatCompletion(
   let buffer = '';
 
   const parseLine = (line: string): { done: boolean; event?: ChatStreamEvent } => {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith(':')) {
-      return { done: false };
-    }
-    if (!trimmed.startsWith('data:')) {
-      return { done: false };
-    }
-    const data = trimmed.slice(5).trim();
-    if (data === '[DONE]') {
+    const parsed = parseSSELine(line);
+    if (parsed.type === 'done') {
       return { done: true };
     }
-    try {
-      const parsed = JSON.parse(data) as ChatStreamEvent;
-      if (
-        parsed &&
-        typeof parsed === 'object' &&
-        'type' in parsed &&
-        parsed.type === 'screenshot'
-      ) {
-        return { done: false, event: parsed };
-      }
-      const chunk = parsed as ChatCompletionChunk;
-      if (chunk && Array.isArray(chunk.choices)) {
-        return { done: false, event: chunk };
-      }
-    } catch {
-      console.warn('Failed to parse SSE chunk:', data);
+    if (parsed.type === 'error') {
+      console.warn('Failed to parse SSE chunk:', parsed.data);
+      return { done: false };
+    }
+    if (parsed.type !== 'data') {
+      return { done: false };
+    }
+    const event = parsed.data as ChatStreamEvent;
+    if (event && typeof event === 'object' && 'type' in event && event.type === 'screenshot') {
+      return { done: false, event };
+    }
+    const chunk = event as ChatCompletionChunk;
+    if (chunk && Array.isArray(chunk.choices)) {
+      return { done: false, event: chunk };
     }
     return { done: false };
   };

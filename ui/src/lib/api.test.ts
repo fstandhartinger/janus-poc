@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { fetchWithRetry, normalizeGatewayUrl } from './api';
+import { fetchWithRetry, normalizeGatewayUrl, parseSSELine } from './api';
 
 const originalFetch = global.fetch;
 
@@ -48,5 +48,34 @@ describe('fetchWithRetry', () => {
     const response = await fetchWithRetry('https://example.com', {}, { retries: 2, retryDelayMs: 1 });
     expect(response.status).toBe(400);
     expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('parseSSELine', () => {
+  it('parses data line', () => {
+    const line = 'data: {"id":"123","choices":[{"delta":{"content":"Hi"}}]}';
+    const result = parseSSELine(line);
+    expect(result.type).toBe('data');
+    if (result.type === 'data') {
+      expect((result.data as { id: string }).id).toBe('123');
+    }
+  });
+
+  it('parses [DONE] marker', () => {
+    const line = 'data: [DONE]';
+    const result = parseSSELine(line);
+    expect(result.type).toBe('done');
+  });
+
+  it('parses comment/keep-alive', () => {
+    const line = ': ping';
+    const result = parseSSELine(line);
+    expect(result.type).toBe('comment');
+  });
+
+  it('handles malformed JSON gracefully', () => {
+    const line = 'data: {invalid json}';
+    const result = parseSSELine(line);
+    expect(result.type).toBe('error');
   });
 });

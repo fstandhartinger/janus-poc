@@ -106,3 +106,6 @@
 - Completed spec 111_claude_code_system_prompt.md with Claude router base normalization and stable Sandy agent-run prompt injection.
 - Stabilized Playwright chat/competition/memory E2E flows with gateway stubs and chat readiness helpers; full UI + gateway test suites now pass.
 - Completed spec 111_other_cli_agents_integration.md with CLI agent command updates (OpenCode/Codex), Roo Code + Cline installs, CLI agent selection UI + header wiring, and updated agent capability docs.
+
+## 2026-01-30
+- Completed spec 112_comprehensive_unit_testing_suite.md with gateway SSE/model unit coverage, baseline CLI complexity/vision/sandy unit tests, LangChain agent/tool unit checks, UI useChat + SSE parsing tests, and a run-unit-tests script.

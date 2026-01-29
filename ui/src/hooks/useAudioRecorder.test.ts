@@ -110,4 +110,22 @@ describe('useAudioRecorder', () => {
 
     vi.useRealTimers();
   });
+
+  it('tracks recording duration', async () => {
+    vi.useFakeTimers();
+
+    const { result } = renderHook(() => useAudioRecorder({ maxDuration: 120 }));
+
+    await act(async () => {
+      await result.current.startRecording();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(1200);
+    });
+
+    expect(result.current.duration).toBeGreaterThan(0);
+
+    vi.useRealTimers();
+  });
 });
