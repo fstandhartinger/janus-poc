@@ -2,7 +2,15 @@
  * API client for communicating with the Janus Gateway.
  */
 
-import type { ChatCompletionRequest, ChatCompletionChunk, ChatStreamEvent, Model } from '@/types/chat';
+import type {
+  ArenaCompletionResponse,
+  ArenaVoteResponse,
+  ArenaWinner,
+  ChatCompletionRequest,
+  ChatCompletionChunk,
+  ChatStreamEvent,
+  Model,
+} from '@/types/chat';
 import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 const DEFAULT_TIMEOUT_MS = 30000;
@@ -10,6 +18,7 @@ const DEFAULT_STREAM_TIMEOUT_MS = 600000; // 10 minutes for long agentic tasks
 const DEFAULT_RETRIES = 2;
 const DEFAULT_RETRY_DELAY_MS = 500;
 const RETRYABLE_STATUS = new Set([408, 425, 429, 500, 502, 503, 504]);
+const ARENA_PROXY_URL = '/api/arena';
 
 export function normalizeGatewayUrl(rawUrl: string): string {
   const trimmed = rawUrl.trim().replace(/\/+$/, '');
@@ -423,4 +432,44 @@ export async function* streamDeepResearch(
 
 export function getArtifactUrl(artifactId: string): string {
   return `${GATEWAY_URL}/v1/artifacts/${artifactId}`;
+}
+
+export async function createArenaCompletion(
+  request: ChatCompletionRequest,
+  signal?: AbortSignal
+): Promise<ArenaCompletionResponse> {
+  return fetchJson<ArenaCompletionResponse>(
+    ARENA_PROXY_URL,
+    {
+      method: 'POST',
+      headers: applyPreReleaseHeader({
+        'Content-Type': 'application/json',
+      }),
+      body: JSON.stringify({ ...request, stream: false }),
+      signal,
+      credentials: 'include',
+      cache: 'no-store',
+    },
+    { timeoutMs: DEFAULT_TIMEOUT_MS }
+  );
+}
+
+export async function submitArenaVote(payload: {
+  prompt_id: string;
+  winner: ArenaWinner;
+}): Promise<ArenaVoteResponse> {
+  return fetchJson<ArenaVoteResponse>(`${ARENA_PROXY_URL}/vote`, {
+    method: 'POST',
+    headers: applyPreReleaseHeader({
+      'Content-Type': 'application/json',
+    }),
+    body: JSON.stringify(payload),
+    credentials: 'include',
+  });
+}
+
+export async function fetchArenaLeaderboard(): Promise<
+  { model: string; elo: number; wins: number; losses: number; ties: number; matches: number }[]
+> {
+  return fetchJson(`${ARENA_PROXY_URL}/leaderboard`, { cache: 'no-store' });
 }

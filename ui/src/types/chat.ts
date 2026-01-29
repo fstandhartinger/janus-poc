@@ -74,7 +74,25 @@ export interface Message {
   content: MessageContent;
   reasoning_content?: string;
   artifacts?: Artifact[];
+  arena?: ArenaComparison;
   created_at: Date;
+}
+
+export type ArenaWinner = 'A' | 'B' | 'tie' | 'both_bad';
+
+export interface ArenaResponse {
+  content: string;
+}
+
+export interface ArenaComparison {
+  promptId: string;
+  responseA: ArenaResponse;
+  responseB: ArenaResponse;
+  voted?: boolean;
+  winner?: ArenaWinner;
+  modelA?: string;
+  modelB?: string;
+  error?: string;
 }
 
 export interface Session {
@@ -102,6 +120,18 @@ export interface ChatCompletionRequest {
   chutes_access_token?: string;
   generation_flags?: GenerationFlags;
   debug?: boolean;
+}
+
+export interface ArenaCompletionResponse {
+  prompt_id: string;
+  response_a: ArenaResponse;
+  response_b: ArenaResponse;
+}
+
+export interface ArenaVoteResponse {
+  status: string;
+  model_a: string;
+  model_b: string;
 }
 
 export interface ChatCompletionChunk {

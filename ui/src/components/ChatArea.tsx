@@ -19,6 +19,7 @@ import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
 import { useSmartScroll } from '@/hooks/useSmartScroll';
 import { cacheArtifact } from '@/lib/artifact-client';
+import { useArena } from '@/hooks/useArena';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
 import { DeepResearchProgress, type ResearchStage } from './DeepResearchProgress';
@@ -31,6 +32,7 @@ import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
 import { ShareModal } from './ShareModal';
+import { ArenaToggle } from './arena/ArenaToggle';
 import { useAuth } from '@/hooks/useAuth';
 import type { Artifact, ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { GenerationFlags } from '@/types/generation';
@@ -81,6 +83,7 @@ export function ChatArea({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: authLoading, signIn, signOut } = useAuth();
+  const { arenaMode, requestArenaCompletion } = useArena();
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const processedCanvasMessagesRef = useRef<Set<string>>(new Set());
@@ -415,6 +418,13 @@ export function ChatArea({
       role: 'assistant',
       content: '',
       reasoning_content: '',
+      arena: arenaMode
+        ? {
+            promptId: '',
+            responseA: { content: '' },
+            responseB: { content: '' },
+          }
+        : undefined,
     });
 
     // Start streaming
@@ -427,11 +437,22 @@ export function ChatArea({
         : undefined;
     const isResearchRequest = Boolean(flagsPayload?.deep_research || flagsPayload?.web_search);
     const researchMode: 'light' | 'max' = flagsPayload?.deep_research ? 'max' : 'light';
-    setScreenshotsLive(!isResearchRequest);
+    setScreenshotsLive(!isResearchRequest && !arenaMode);
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
 
     try {
+      if (arenaMode && isResearchRequest) {
+        updateLastMessage({
+          arena: {
+            promptId: '',
+            responseA: { content: '' },
+            responseB: { content: '' },
+            error: 'Arena mode does not support deep research yet.',
+          },
+        });
+        return;
+      }
       if (isResearchRequest) {
         await streamResearch(trimmedContent, researchMode, signal);
         return;
@@ -447,6 +468,29 @@ export function ChatArea({
 
       const userId = getUserId(user);
       const memoryEnabledSetting = memoryEnabled;
+
+      if (arenaMode) {
+        const arenaResponse = await requestArenaCompletion(
+          {
+            model: selectedModel,
+            messages: requestMessages,
+            stream: false,
+            user_id: userId,
+            enable_memory: memoryEnabledSetting,
+            generation_flags: flagsPayload,
+          },
+          signal
+        );
+        updateLastMessage({
+          arena: {
+            promptId: arenaResponse.prompt_id,
+            responseA: arenaResponse.response_a,
+            responseB: arenaResponse.response_b,
+            voted: false,
+          },
+        });
+        return;
+      }
 
       for await (const chunk of streamChatCompletion(
         {
@@ -531,7 +575,22 @@ export function ChatArea({
         setFreeChatsRemaining(0);
       } else {
         console.error('Streaming error:', error);
-        appendToLastMessage('\n\n*Error: Failed to get response*', '');
+        if (arenaMode) {
+          const sessionAtError = getCurrentSession();
+          const lastArena = sessionAtError?.messages?.at(-1)?.arena;
+          updateLastMessage({
+            arena: {
+              ...(lastArena || {
+                promptId: '',
+                responseA: { content: '' },
+                responseB: { content: '' },
+              }),
+              error: 'Failed to load arena responses.',
+            },
+          });
+        } else {
+          appendToLastMessage('\n\n*Error: Failed to get response*', '');
+        }
       }
     } finally {
       setScreenshotsLive(false);
@@ -686,6 +745,7 @@ export function ChatArea({
                   <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
                 )}
               </div>
+              <ArenaToggle />
               <MemoryToggle
                 enabled={memoryEnabled}
                 onOpen={() => setMemorySheetOpen(true)}

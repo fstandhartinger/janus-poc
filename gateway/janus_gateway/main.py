@@ -19,6 +19,7 @@ from janus_gateway.routers import (
     logs_router,
     memories_router,
     models_router,
+    arena_router,
     transcription_router,
     research_router,
     tts_router,
@@ -146,6 +147,7 @@ app.include_router(transcription_router)
 app.include_router(research_router)
 app.include_router(tts_router)
 app.include_router(memories_router)
+app.include_router(arena_router)
 
 
 def main() -> None:

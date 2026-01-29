@@ -111,6 +111,13 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("MEMORY_SERVICE_URL", "JANUS_MEMORY_SERVICE_URL"),
     )
 
+    # Scoring service
+    scoring_service_url: str = Field(
+        default="https://janus-scoring-service.onrender.com",
+        description="Scoring service base URL",
+        validation_alias=AliasChoices("SCORING_SERVICE_URL", "JANUS_SCORING_SERVICE_URL"),
+    )
+
     # Artifact storage
     artifact_storage_path: str = Field(default="/tmp/janus_artifacts", description="Local artifact storage path")
     artifact_ttl_seconds: int = Field(default=3600, description="Artifact TTL in seconds")

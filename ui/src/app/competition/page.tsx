@@ -16,6 +16,7 @@ import {
   SubmissionForm,
   TechRequirements,
 } from './components';
+import { ArenaLeaderboard } from '@/components/arena/ArenaLeaderboard';
 
 export default function CompetitionPage() {
   return (
@@ -25,6 +26,7 @@ export default function CompetitionPage() {
         <HeroSection />
         <CompetitionOverview />
         <Leaderboard />
+        <ArenaLeaderboard />
         <HowItWorks />
         <BaselinesSection />
         <PrizePool />

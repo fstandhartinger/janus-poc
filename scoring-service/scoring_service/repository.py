@@ -9,8 +9,13 @@ from sqlalchemy.orm import selectinload
 
 from janus_bench.models import TaskResult as BenchTaskResult
 
-from scoring_service.database import Competitor, ScoringRun, TaskResult as TaskResultRow
-from scoring_service.models import CreateRunRequest
+from scoring_service.database import (
+    ArenaVote,
+    Competitor,
+    ScoringRun,
+    TaskResult as TaskResultRow,
+)
+from scoring_service.models import ArenaVoteRequest, CreateRunRequest
 from scoring_service.utils import redact_pii
 
 
@@ -291,3 +296,23 @@ async def get_leaderboard(
             best_run = await get_run(session, competitor.best_run_id)
         leaderboard.append((competitor, best_run))
     return leaderboard
+
+
+async def store_arena_vote(session: AsyncSession, request: ArenaVoteRequest) -> ArenaVote:
+    vote = ArenaVote(
+        prompt_id=request.prompt_id,
+        prompt_hash=request.prompt_hash,
+        model_a=request.model_a,
+        model_b=request.model_b,
+        winner=request.winner,
+        user_id=request.user_id,
+    )
+    session.add(vote)
+    await session.commit()
+    await session.refresh(vote)
+    return vote
+
+
+async def list_arena_votes(session: AsyncSession) -> list[ArenaVote]:
+    result = await session.execute(select(ArenaVote).order_by(ArenaVote.created_at.asc()))
+    return list(result.scalars())

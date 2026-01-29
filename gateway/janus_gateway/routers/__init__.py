@@ -10,6 +10,7 @@ from .tts import router as tts_router
 from .memories import router as memories_router
 from .debug import router as debug_router
 from .logs import router as logs_router
+from .arena import router as arena_router
 
 __all__ = [
     "health_router",
@@ -22,4 +23,5 @@ __all__ = [
     "memories_router",
     "debug_router",
     "logs_router",
+    "arena_router",
 ]

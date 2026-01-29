@@ -5,6 +5,7 @@ from .competitor_runner import SandyCompetitorRunner
 from .artifact_store import ArtifactStore, get_artifact_store
 from .file_extractor import FileExtractor
 from .message_processor import MessageProcessor
+from .arena import ArenaService, ArenaPromptStore, hash_prompt
 
 __all__ = [
     "CompetitorRegistry",
@@ -14,4 +15,7 @@ __all__ = [
     "get_artifact_store",
     "FileExtractor",
     "MessageProcessor",
+    "ArenaService",
+    "ArenaPromptStore",
+    "hash_prompt",
 ]

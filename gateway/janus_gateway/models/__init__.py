@@ -35,6 +35,13 @@ from .janus import (
     ModelsResponse,
 )
 from .streaming import ScreenshotEvent, format_screenshot_sse
+from .arena import (
+    ArenaCompletionResponse,
+    ArenaResponseMessage,
+    ArenaVoteRequest,
+    ArenaVoteResponse,
+    ArenaWinner,
+)
 
 __all__ = [
     # OpenAI models
@@ -71,4 +78,9 @@ __all__ = [
     "ModelsResponse",
     "ScreenshotEvent",
     "format_screenshot_sse",
+    "ArenaCompletionResponse",
+    "ArenaResponseMessage",
+    "ArenaVoteRequest",
+    "ArenaVoteResponse",
+    "ArenaWinner",
 ]

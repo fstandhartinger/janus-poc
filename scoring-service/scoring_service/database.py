@@ -147,12 +147,31 @@ class TaskResult(Base):
     run: Mapped[ScoringRun] = relationship(back_populates="results")
 
 
+class ArenaVote(Base):
+    __tablename__ = "arena_votes"
+
+    id: Mapped[uuid.UUID] = mapped_column(Uuid(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    prompt_id: Mapped[str] = mapped_column(String(100))
+    prompt_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    model_a: Mapped[str] = mapped_column(String(100))
+    model_b: Mapped[str] = mapped_column(String(100))
+    winner: Mapped[str] = mapped_column(String(20))
+    user_id: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+
+
 Index("idx_scoring_runs_status", ScoringRun.status)
 Index("idx_scoring_runs_created_at", ScoringRun.created_at.desc())
 Index("idx_scoring_runs_competitor_id", ScoringRun.competitor_id)
 Index("idx_task_results_run_id", TaskResult.run_id)
 Index("idx_task_results_benchmark", TaskResult.benchmark)
 Index("idx_competitors_best_score", Competitor.best_composite_score.desc())
+Index("idx_arena_votes_prompt_id", ArenaVote.prompt_id, unique=True)
+Index("idx_arena_votes_user_id", ArenaVote.user_id)
+Index("idx_arena_votes_created_at", ArenaVote.created_at.desc())
 
 
 settings = get_settings()

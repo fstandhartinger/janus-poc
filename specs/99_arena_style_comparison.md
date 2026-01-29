@@ -1,6 +1,6 @@
 # Spec 99: Arena-Style User Preference Comparison (Optional)
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -296,4 +296,4 @@ scoring-service/scoring_service/
 - Spec 56: Scoring Service Backend
 - Spec 98: Real Benchmark Dataset
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

@@ -109,3 +109,31 @@ class LeaderboardEntry(BaseModel):
     competitor: CompetitorResponse
     best_run_id: Optional[UUID]
     scores: dict[str, float]
+
+
+ArenaVoteWinner = Literal["A", "B", "tie", "both_bad"]
+
+
+class ArenaVoteRequest(BaseModel):
+    prompt_id: str
+    winner: ArenaVoteWinner
+    model_a: str
+    model_b: str
+    user_id: Optional[str] = None
+    prompt_hash: Optional[str] = None
+
+
+class ArenaVoteResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    status: str
+
+
+class ArenaLeaderboardEntry(BaseModel):
+    model: str
+    elo: float
+    wins: int
+    losses: int
+    ties: int
+    matches: int

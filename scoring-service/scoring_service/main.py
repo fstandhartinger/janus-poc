@@ -7,11 +7,16 @@ from typing import Deque, Optional
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.responses import StreamingResponse
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from scoring_service.database import SessionLocal, close_db, get_session, init_db
+from scoring_service.arena_elo import compute_leaderboard
 from scoring_service.executor import enqueue_run, start_workers, stop_workers
 from scoring_service.models import (
+    ArenaLeaderboardEntry,
+    ArenaVoteRequest,
+    ArenaVoteResponse,
     CompetitorResponse,
     CreateRunRequest,
     LeaderboardEntry,
@@ -27,8 +32,10 @@ from scoring_service.repository import (
     get_leaderboard,
     get_run,
     list_competitors,
+    list_arena_votes,
     list_results,
     list_runs,
+    store_arena_vote,
 )
 from scoring_service.settings import get_settings
 from scoring_service.utils import is_valid_container_image
@@ -223,6 +230,30 @@ async def get_leaderboard_endpoint(
         entries.append(entry)
 
     return entries
+
+
+@app.post("/api/arena/vote", response_model=ArenaVoteResponse)
+async def submit_arena_vote(
+    request: ArenaVoteRequest,
+    session: AsyncSession = Depends(get_session),
+) -> ArenaVoteResponse:
+    try:
+        vote = await store_arena_vote(session, request)
+    except IntegrityError:
+        await session.rollback()
+        raise HTTPException(status_code=409, detail="Vote already recorded")
+    return ArenaVoteResponse(id=vote.id, status="recorded")
+
+
+@app.get("/api/arena/leaderboard", response_model=list[ArenaLeaderboardEntry])
+async def get_arena_leaderboard(
+    session: AsyncSession = Depends(get_session),
+) -> list[ArenaLeaderboardEntry]:
+    votes = await list_arena_votes(session)
+    leaderboard = compute_leaderboard(
+        [{"model_a": vote.model_a, "model_b": vote.model_b, "winner": vote.winner} for vote in votes]
+    )
+    return [ArenaLeaderboardEntry(**entry) for entry in leaderboard]
 
 
 @app.get("/health")

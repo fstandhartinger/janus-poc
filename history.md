@@ -90,3 +90,4 @@
 ## 2026-01-29
 - Completed spec 97_cli_agent_warm_pool.md with warm pool lifecycle management, agent API sandbox reuse, health reporting, config wiring, and refill/recycle test coverage.
 - Completed spec 98_real_benchmark_dataset.md with public train/dev JSONL datasets, evaluator suite, loader updates, private dataset scaffolding, and benchmark scoring integration.
+- Completed spec 99_arena_style_comparison.md with arena mode UI toggle, paired responses, vote collection + ELO leaderboard, and scoring-service integrations.

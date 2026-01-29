@@ -5,11 +5,14 @@ import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { parseAudioContent } from '@/lib/audio-parser';
 import { parseImageContent } from '@/lib/image-parser';
 import { MarkdownContent } from '@/lib/markdown-renderer';
+import { useArena } from '@/hooks/useArena';
+import { useChatStore } from '@/store/chat';
 import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
 import { AudioResponse } from './audio/AudioResponse';
 import { MessageActions } from './chat/MessageActions';
 import { ThinkingIndicator } from './ThinkingIndicator';
+import { ArenaComparison } from './arena/ArenaComparison';
 
 interface MessageBubbleProps {
   message: Message;
@@ -202,6 +205,9 @@ export function MessageBubble({
   onShare,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
+  const { submitVote } = useArena();
+  const updateMessage = useChatStore((state) => state.updateMessage);
+  const arenaData = message.arena;
   const contentParts = typeof message.content === 'string' ? [] : message.content || [];
   const rawTextContent =
     typeof message.content === 'string'
@@ -267,7 +273,8 @@ export function MessageBubble({
     hasUsefulReasoning ||
     hasRichContent ||
     hasArtifacts ||
-    shouldShowPlaceholder;
+    shouldShowPlaceholder ||
+    Boolean(arenaData);
   const displayText = useStreamingBuffer(cleanedTextSansImages, isStreaming && !isUser);
   const canShowActions = hasRenderableContent && !shouldShowPlaceholder;
 
@@ -312,6 +319,55 @@ export function MessageBubble({
 
   if (!hasRenderableContent) {
     return null;
+  }
+
+  if (arenaData) {
+    const handleArenaVote = async (winner: 'A' | 'B' | 'tie' | 'both_bad') => {
+      try {
+        const voteResponse = await submitVote(arenaData.promptId, winner);
+        updateMessage(message.id, {
+          arena: {
+            ...arenaData,
+            voted: true,
+            winner,
+            modelA: voteResponse.model_a,
+            modelB: voteResponse.model_b,
+            error: undefined,
+          },
+        });
+      } catch (error) {
+        const detail = error instanceof Error ? error.message : 'Vote failed.';
+        updateMessage(message.id, {
+          arena: {
+            ...arenaData,
+            error: detail,
+          },
+        });
+      }
+    };
+
+    return (
+      <div
+        className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-6`}
+        data-testid="arena-message"
+      >
+        <div
+          className={`chat-message max-w-[94%] sm:max-w-[85%] lg:max-w-[78%] chat-message-assistant`}
+        >
+          <ArenaComparison
+            promptId={arenaData.promptId}
+            responseA={arenaData.responseA}
+            responseB={arenaData.responseB}
+            voted={arenaData.voted}
+            winner={arenaData.winner}
+            modelA={arenaData.modelA}
+            modelB={arenaData.modelB}
+            error={arenaData.error}
+            onVote={handleArenaVote}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (

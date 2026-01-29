@@ -24,6 +24,7 @@ interface ChatState {
   // Message actions
   addMessage: (message: Omit<Message, 'id' | 'created_at'>) => void;
   updateLastMessage: (updates: Partial<Message>) => void;
+  updateMessage: (id: string, updates: Partial<Message>) => void;
   appendToLastMessage: (content: string, reasoning?: string) => void;
   appendArtifacts: (artifacts: Artifact[]) => void;
 
@@ -122,6 +123,21 @@ export const useChatStore = create<ChatState>()(
               return { ...session, messages, updated_at: new Date() };
             }
             return session;
+          });
+          return { sessions };
+        });
+      },
+
+      updateMessage: (id, updates) => {
+        set((state) => {
+          const sessions = state.sessions.map((session) => {
+            if (session.id !== state.currentSessionId) {
+              return session;
+            }
+            const messages = session.messages.map((message) =>
+              message.id === id ? { ...message, ...updates } : message
+            );
+            return { ...session, messages, updated_at: new Date() };
           });
           return { sessions };
         });
