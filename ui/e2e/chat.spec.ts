@@ -86,6 +86,43 @@ test.describe('Chat UI', () => {
     await expect(assistantMessage.first()).toContainText('Hello from Janus');
   });
 
+  test('demo prompts send messages and open the full list', async ({ page }) => {
+    await page.route('**/api/chat', async (route) => {
+      const streamChunks = [
+        'data: {\"id\":\"chatcmpl-demo\",\"object\":\"chat.completion.chunk\",\"created\":0,\"model\":\"baseline\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\"},\"finish_reason\":null}]}',
+        'data: {\"id\":\"chatcmpl-demo\",\"object\":\"chat.completion.chunk\",\"created\":0,\"model\":\"baseline\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"The sky is blue because of Rayleigh scattering.\"},\"finish_reason\":null}]}',
+        'data: [DONE]',
+      ];
+      await route.fulfill({
+        status: 200,
+        headers: { 'Content-Type': 'text/event-stream' },
+        body: streamChunks.join('\\n\\n'),
+      });
+    });
+
+    await page.goto('/chat');
+    await page.waitForLoadState('networkidle');
+
+    const seeMoreButton = page.getByTestId('see-more-prompts');
+    await expect(seeMoreButton).toBeVisible();
+    await seeMoreButton.click();
+    await expect(page.getByTestId('all-prompts-modal')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-testid=\"all-prompts-modal\"]')).toHaveCount(0);
+
+    const promptButton = page.getByTestId('demo-prompt-simple-sky');
+    await expect(promptButton).toBeVisible();
+    const [chatRequest] = await Promise.all([
+      page.waitForRequest('**/api/chat'),
+      promptButton.click(),
+    ]);
+
+    await expect(chatRequest.postData() || '').toContain('Explain why the sky is blue');
+
+    const userMessageBubble = page.locator('[data-testid=\"user-message\"]');
+    await expect(userMessageBubble.first()).toContainText('Explain why the sky is blue');
+  });
+
   test('reasoning toggle is not shown in the top bar', async ({ page }) => {
     await page.goto('/chat');
 

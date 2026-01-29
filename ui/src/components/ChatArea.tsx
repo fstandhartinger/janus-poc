@@ -28,6 +28,8 @@ import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
 import { AgentStatusIndicator } from './chat/AgentStatusIndicator';
+import { EmptyState } from './chat/EmptyState';
+import { QuickSuggestions } from './chat/QuickSuggestions';
 import { MemoryToggle } from './MemoryToggle';
 import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
@@ -627,6 +629,17 @@ export function ChatArea({
     [handleSend, isStreaming]
   );
 
+  const handleSelectPrompt = useCallback(
+    (prompt: string) => {
+      if (isStreaming) return;
+      handleSend(prompt, []);
+    },
+    [handleSend, isStreaming]
+  );
+
+  const showQuickSuggestions =
+    !isStreaming && (messages.length === 0 || messages[messages.length - 1]?.role === 'assistant');
+
   useEffect(() => {
     if (!initialMessage) return;
     if (autoSubmit && isStreaming) return;
@@ -809,14 +822,7 @@ export function ChatArea({
               <DeepResearchProgress stages={deepResearchStages} isActive={deepResearchActive} />
               <ScreenshotStream screenshots={screenshots} isLive={screenshotsLive} />
               {messages.length === 0 ? (
-                <div className="chat-empty flex-1">
-                  <div className="text-center">
-                    <p className="chat-empty-title">Where should we begin?</p>
-                    <p className="chat-empty-subtitle">
-                      Powered by Chutes. The world&apos;s open-source decentralized AI compute platform.
-                    </p>
-                  </div>
-                </div>
+                <EmptyState onSelectPrompt={handleSelectPrompt} />
               ) : (
                 <>
                   {messages.map((message, index) => {
@@ -857,6 +863,7 @@ export function ChatArea({
 
           <div className="chat-input-bottom px-6">
             <div className="max-w-4xl mx-auto">
+              <QuickSuggestions visible={showQuickSuggestions} onSelect={handleSelectPrompt} />
               <ChatInput onSend={handleSend} disabled={isStreaming} initialInput={prefillMessage} />
             </div>
           </div>

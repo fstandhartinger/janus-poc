@@ -1,6 +1,6 @@
 # Spec 103: Pre-Built Demo Prompts in Chat UI
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -543,4 +543,4 @@ test('demo prompts work', async ({ page }) => {
 - Spec 11: Chat UI
 - Spec 28: Chat UI Improvements
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1
