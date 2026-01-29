@@ -12,13 +12,17 @@ from janus_baseline_langchain.config import Settings
 from janus_baseline_langchain.router.chat_model import CompositeRoutingChatModel
 from janus_baseline_langchain.tools import (
     audio_generation_tool,
+    clone_repository_tool,
     code_execution_tool,
+    create_directory_tool,
     deep_research_tool,
     file_read_tool,
     file_write_tool,
     image_generation_tool,
     InvestigateMemoryTool,
+    list_repository_files_tool,
     music_generation_tool,
+    read_repository_file_tool,
     text_to_speech_tool,
     video_generation_tool,
     web_search_tool,
@@ -35,8 +39,12 @@ You have access to these tools:
 - web_search: Search the web for current information
 - deep_research: Perform comprehensive research with citations
 - code_execution: Execute Python code safely
+- clone_repository: Clone a git repository
+- list_repository_files: List files in a cloned repository
+- read_repository_file: Read files from a cloned repository
 - write_file: Write content to a file artifact
 - read_file: Read content from a file artifact
+- create_directory: Create a working directory for file operations
 
 Always use the appropriate tool for the task. For image requests, use image_generation.
 For audio/speech requests, use text_to_speech.
@@ -46,6 +54,9 @@ For video requests, use video_generation.
 For questions about current events or real-time data, use web_search.
 For comprehensive research, use deep_research.
 For calculations or data processing, use code_execution.
+For repository tasks, use clone_repository and list_repository_files.
+For reading repo files, use read_repository_file.
+For file operations, use create_directory and write_file.
 
 ## Generative UI responses
 
@@ -155,8 +166,12 @@ def create_agent(
         web_search_tool,
         deep_research_tool,
         code_execution_tool,
+        clone_repository_tool,
+        list_repository_files_tool,
+        read_repository_file_tool,
         file_write_tool,
         file_read_tool,
+        create_directory_tool,
     ]
     if settings.enable_memory_feature and enable_memory and user_id and has_memory_context:
         tools.append(
@@ -182,6 +197,7 @@ def create_agent(
         agent=cast(Any, agent),
         tools=tools,
         verbose=settings.debug,
-        max_iterations=10,
+        handle_parsing_errors=True,
+        max_iterations=15,
         return_intermediate_steps=True,
     )

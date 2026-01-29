@@ -1,6 +1,6 @@
 # Spec 102: Core Demo Use Cases - End-to-End Quality
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -390,4 +390,4 @@ pytest tests/e2e/test_core_demos.py::TestCoreDemos::test_demo_2_repo_clone_summa
 - Spec 101: Baseline LangChain Full Parity
 - Spec 103: Demo Prompts in Chat UI
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 2

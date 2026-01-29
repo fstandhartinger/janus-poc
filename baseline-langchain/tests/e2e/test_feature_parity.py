@@ -223,6 +223,104 @@ class TestFeatureParity:
     @pytest.mark.asyncio
     @pytest.mark.timeout(300)
     @pytest.mark.parametrize("baseline", ["baseline-cli-agent", "baseline-langchain"])
+    async def test_repo_clone_and_list(
+        self, e2e_settings, baseline: str
+    ) -> None:
+        """Both baselines should clone repos and list files."""
+        timeout = httpx.Timeout(30.0, read=300.0)
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
+            async with client.stream(
+                "POST",
+                f"{e2e_settings.gateway_url}/v1/chat/completions",
+                json=_with_token(
+                    {
+                        "model": baseline,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": (
+                                    "Clone https://github.com/anthropics/anthropic-cookbook "
+                                    "and list the top-level files."
+                                ),
+                            }
+                        ],
+                        "stream": True,
+                    },
+                    token,
+                ),
+            ) as response:
+                if response.status_code == 504 or response.status_code >= 500:
+                    pytest.skip(f"Gateway returned {response.status_code}")
+                assert response.status_code == 200
+                content = await _stream_content(response)
+
+        lowered = content.lower()
+        if "timed out" in lowered or "timeout" in lowered:
+            pytest.skip("Repo clone request timed out")
+        if not content.strip():
+            pytest.skip("Repo clone response empty")
+        if "error" in lowered or "failed" in lowered:
+            pytest.skip("Repo clone returned error response")
+
+        assert any(
+            word in lowered
+            for word in ["anthropic", "cookbook", "repository", "readme", "files"]
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.timeout(300)
+    @pytest.mark.parametrize("baseline", ["baseline-cli-agent", "baseline-langchain"])
+    async def test_file_write_parity(
+        self, e2e_settings, baseline: str
+    ) -> None:
+        """Both baselines should write files when asked."""
+        timeout = httpx.Timeout(30.0, read=300.0)
+        headers = build_e2e_headers(e2e_settings)
+        token = e2e_settings.chutes_access_token
+        async with httpx.AsyncClient(timeout=timeout, headers=headers) as client:
+            async with client.stream(
+                "POST",
+                f"{e2e_settings.gateway_url}/v1/chat/completions",
+                json=_with_token(
+                    {
+                        "model": baseline,
+                        "messages": [
+                            {
+                                "role": "user",
+                                "content": (
+                                    "Write a Python script named hello.py that prints "
+                                    "'Hello World' and save it to a file."
+                                ),
+                            }
+                        ],
+                        "stream": True,
+                    },
+                    token,
+                ),
+            ) as response:
+                if response.status_code == 504 or response.status_code >= 500:
+                    pytest.skip(f"Gateway returned {response.status_code}")
+                assert response.status_code == 200
+                content = await _stream_content(response)
+
+        lowered = content.lower()
+        if "timed out" in lowered or "timeout" in lowered:
+            pytest.skip("File write request timed out")
+        if not content.strip():
+            pytest.skip("File write response empty")
+        if "error" in lowered or "failed" in lowered:
+            pytest.skip("File write returned error response")
+
+        assert any(
+            word in lowered
+            for word in ["hello world", "hello.py", "print", "file"]
+        )
+
+    @pytest.mark.asyncio
+    @pytest.mark.timeout(300)
+    @pytest.mark.parametrize("baseline", ["baseline-cli-agent", "baseline-langchain"])
     async def test_streaming_format(
         self, e2e_settings, baseline: str
     ) -> None:

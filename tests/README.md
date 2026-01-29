@@ -40,6 +40,12 @@ pytest tests/smoke/test_baseline_gateway.py -v -m smoke_baseline
 pytest tests/integration -v -m integration
 ```
 
+## Run Core Demo E2E Tests
+
+```bash
+pytest tests/e2e -v -m e2e
+```
+
 ## Run Visual Tests
 
 ```bash

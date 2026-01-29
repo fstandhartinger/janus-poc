@@ -16,7 +16,11 @@ An alternative Janus baseline implementation built on LangChain. This service ru
   - `web_search`: Tavily search API
   - `deep_research`: Chutes search with citations
   - `code_execution`: LangChain Python REPL tool
+  - `clone_repository`: Clone git repositories for analysis
+  - `list_repository_files`: List files in cloned repositories
+  - `read_repository_file`: Read files from cloned repositories
   - `write_file` / `read_file`: File operations for artifacts
+  - `create_directory`: Create working directories for file operations
   - `investigate_memory`: Retrieve full memory content when memory references are present
 
 ```mermaid
@@ -50,6 +54,7 @@ flowchart TB
         RESEARCH["Deep Research"]
         CODE["Code Execution"]
         FILES["File Operations"]
+        GIT["Git/Repo Operations"]
     end
 
     subgraph Response ["Response"]
@@ -79,12 +84,25 @@ flowchart TB
     TOOLS --> RESEARCH
     TOOLS --> CODE
     TOOLS --> FILES
+    TOOLS --> GIT
     AGENT --> SSE
 
     SSE --> REASONING
     SSE --> CONTENT
     SSE --> ARTIFACTS
 ```
+
+## Baseline Comparison
+
+| Aspect | Baseline Agent CLI | Baseline LangChain |
+| --- | --- | --- |
+| Execution | Sandy sandbox (Firecracker VM) | In-process Python |
+| Isolation | OS-level sandbox | Process-level only |
+| Git operations | Native git in sandbox | Subprocess git clone |
+| File access | Full filesystem in sandbox | Scoped temp directories + artifacts |
+| Security | High | Medium |
+| Cold start | 10-30s (sandbox) | <1s |
+| Best for | Complex/untrusted tasks | Fast, simple tool use |
 
 ## Environment Variables
 

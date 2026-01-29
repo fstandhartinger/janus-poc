@@ -126,6 +126,27 @@ def _is_timeout_error(message: str) -> bool:
     return "timeout" in lowered or "timed out" in lowered
 
 
+_REPO_ERROR_MESSAGES = {
+    "repository not found": "The repository URL appears to be invalid or private.",
+    "fatal: repository": "The repository URL appears to be invalid or private.",
+    "not a git repository": "This directory is not a valid git repository.",
+    "could not read from remote repository": (
+        "Unable to access this repository. It may be private."
+    ),
+    "permission denied": "Unable to access this repository. It may be private.",
+}
+
+
+def _format_agent_error(message: str) -> str:
+    lowered = message.lower()
+    for needle, friendly in _REPO_ERROR_MESSAGES.items():
+        if needle in lowered:
+            return friendly
+    if "git" in lowered and _is_timeout_error(lowered):
+        return "The repository is taking too long to clone. It may be too large."
+    return message
+
+
 def _build_long_operation_chunk(
     indicator: str | None,
     request_id: str,
@@ -460,6 +481,7 @@ class SandyService:
             "CHUTES_API_KEY": chutes_api_key,
             "CHUTES_API_URL": chutes_api_url,
             "CHUTES_API_BASE": chutes_api_url,
+            "CHUTES_SEARCH_URL": self._settings.chutes_search_url,
             "JANUS_SANDBOX_ID": sandbox_id,
             "JANUS_SANDBOX_URL": sandbox_url,
             "JANUS_SANDBOX_PUBLIC_URL": public_url or "",
@@ -475,6 +497,10 @@ class SandyService:
             "SANDY_BASE_URL": self._settings.sandy_base_url or "",
             "JANUS_MAX_CHILD_SANDBOXES": "5",
             "JANUS_DEFAULT_SANDBOX_TTL": "600",
+            "JANUS_GIT_TIMEOUT": str(self._settings.sandy_git_timeout),
+            "GIT_TERMINAL_PROMPT": "0",
+            "GIT_HTTP_LOW_SPEED_TIME": str(self._settings.sandy_git_timeout),
+            "GIT_HTTP_LOW_SPEED_LIMIT": "1",
             "PATH": self._default_path,
         }
         router_url = self._settings.public_router_url
@@ -2403,7 +2429,9 @@ class SandyService:
                                 output_parts.append(filtered_text)
 
                     elif event_type == "error":
-                        error_msg = event.get("error", "Unknown error")
+                        error_msg = _format_agent_error(
+                            str(event.get("error", "Unknown error"))
+                        )
                         output_parts.append(f"Error: {error_msg}")
 
                 if output_parts:
@@ -2670,7 +2698,9 @@ class SandyService:
                         exit_code = event.get("exitCode", 0)
 
                     elif event_type == "error":
-                        error_msg = event.get("error", "Unknown error")
+                        error_msg = _format_agent_error(
+                            str(event.get("error", "Unknown error"))
+                        )
                         has_error = True
                         output_parts.append(f"Error: {error_msg}")
 
@@ -3449,7 +3479,9 @@ class SandyService:
 
                     elif event_type == "error":
                         # Error from agent
-                        error_msg = event.get("error", "Unknown error")
+                        error_msg = _format_agent_error(
+                            str(event.get("error", "Unknown error"))
+                        )
                         has_error = True
                         output_parts.append(f"Error: {error_msg}")
                         if debug_emitter:
@@ -4057,7 +4089,9 @@ class SandyService:
                         )
 
                     elif event_type == "error":
-                        error_msg = event.get("error", "Unknown error")
+                        error_msg = _format_agent_error(
+                            str(event.get("error", "Unknown error"))
+                        )
                         has_error = True
                         output_parts.append(f"Error: {error_msg}")
                         if debug_emitter:

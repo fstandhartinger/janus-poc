@@ -68,6 +68,9 @@ def image_generation(prompt: str) -> str:
     except Exception as exc:
         return f"Image generation failed: {exc}"
 
+    if not response.content:
+        return "Image generation failed: empty response."
+
     content_type = response.headers.get("content-type", "image/png")
     ext = ".jpg" if "jpeg" in content_type else ".png"
     manager = get_artifact_manager()

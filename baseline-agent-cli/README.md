@@ -239,6 +239,7 @@ The baseline uses [Chutes](https://chutes.ai) as the inference provider. Chutes 
 | `BASELINE_AGENT_CLI_OPENAI_API_KEY` | - | **Chutes API key** (named for OpenAI client compatibility) |
 | `BASELINE_AGENT_CLI_OPENAI_BASE_URL` | - | Legacy alias for the Chutes API URL |
 | `BASELINE_AGENT_CLI_CHUTES_API_BASE` | `https://llm.chutes.ai/v1` | Chutes API base URL |
+| `BASELINE_AGENT_CLI_CHUTES_SEARCH_URL` | `https://chutes-search.onrender.com` | Chutes search base URL |
 | `BASELINE_AGENT_CLI_MODEL` | `janus-router` | Model name exposed to clients |
 | `BASELINE_AGENT_CLI_DIRECT_MODEL` | `zai-org/GLM-4.7-TEE` | Direct model when router is disabled |
 
@@ -262,6 +263,7 @@ For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
 | `SANDY_BASE_URL` | - | Sandy API base URL for agent execution |
 | `SANDY_API_KEY` | - | Sandy API key |
 | `BASELINE_AGENT_CLI_SANDY_TIMEOUT` | `300` | Sandbox timeout in seconds |
+| `BASELINE_AGENT_CLI_SANDY_GIT_TIMEOUT` | `120` | Git clone timeout in seconds |
 | `JANUS_ARTIFACT_PORT` | `5173` | Sandbox artifact server port (should match Sandy runtime port) |
 | `JANUS_ARTIFACTS_DIR` | `/workspace/artifacts` | Directory for sandbox artifacts |
 | `JANUS_ARTIFACT_GRACE_SECONDS` | `30` | Seconds to keep sandboxes alive after emitting artifacts |

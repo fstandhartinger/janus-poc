@@ -102,5 +102,6 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "smoke: smoke tests")
     config.addinivalue_line("markers", "smoke_baseline: baseline smoke tests")
     config.addinivalue_line("markers", "integration: integration tests")
+    config.addinivalue_line("markers", "e2e: end-to-end tests")
     config.addinivalue_line("markers", "slow: slow tests")
     config.addinivalue_line("markers", "visual: visual tests")

@@ -1,0 +1,63 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REAL_GIT="/usr/bin/git"
+if [ ! -x "$REAL_GIT" ]; then
+  REAL_GIT="/usr/local/bin/git"
+fi
+
+if [ ! -x "$REAL_GIT" ]; then
+  WRAPPER_DIR="$(cd "$(dirname "$0")" && pwd)"
+  PATH_NO_WRAP="$(printf "%s" "$PATH" | tr ':' '\n' | awk -v dir="$WRAPPER_DIR" '$0 != dir' | paste -sd: -)"
+  REAL_GIT="$(PATH="$PATH_NO_WRAP" command -v git || true)"
+fi
+
+if [ -z "$REAL_GIT" ] || [ "$REAL_GIT" = "$0" ]; then
+  echo "git not found." >&2
+  exit 127
+fi
+
+GIT_TIMEOUT="${JANUS_GIT_TIMEOUT:-120}"
+COMMAND="${1:-}"
+
+if [ "$COMMAND" = "clone" ]; then
+  echo "Cloning repository..." >&2
+  tmpfile="$(mktemp)"
+  status=0
+  set +e
+  if command -v timeout >/dev/null 2>&1; then
+    timeout "$GIT_TIMEOUT" "$REAL_GIT" "$@" 2>"$tmpfile"
+    status=$?
+    if [ $status -eq 124 ] || [ $status -eq 137 ]; then
+      echo "The repository is taking too long to clone (>${GIT_TIMEOUT}s)." >&2
+    fi
+  else
+    "$REAL_GIT" "$@" 2>"$tmpfile"
+    status=$?
+  fi
+  set -e
+
+  if [ $status -ne 0 ]; then
+    err="$(cat "$tmpfile")"
+    lower="$(printf "%s" "$err" | tr 'A-Z' 'a-z')"
+    if [[ "$lower" == *"repository not found"* ]] || [[ "$lower" == *"not found"* ]]; then
+      echo "The repository URL appears to be invalid or private." >&2
+    elif [[ "$lower" == *"permission denied"* ]] || [[ "$lower" == *"authentication failed"* ]]; then
+      echo "Unable to access this repository. It may be private." >&2
+    elif [[ "$lower" == *"timed out"* ]] || [[ "$lower" == *"timeout"* ]]; then
+      echo "The repository is taking too long to clone. It may be too large." >&2
+    elif [[ "$lower" == *"could not read from remote repository"* ]]; then
+      echo "Unable to access this repository. It may be private." >&2
+    fi
+    if [ -n "$err" ]; then
+      printf "%s\n" "$err" >&2
+    fi
+    rm -f "$tmpfile"
+    exit $status
+  fi
+
+  rm -f "$tmpfile"
+  exit 0
+fi
+
+exec "$REAL_GIT" "$@"

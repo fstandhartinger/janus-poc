@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import tempfile
 from pathlib import Path
 
 from langchain_core.tools import BaseTool
@@ -22,6 +23,12 @@ class FileReadInput(BaseModel):
     """Input schema for reading a file."""
 
     filename: str = Field(description="Name of the file to read")
+
+
+class CreateDirectoryInput(BaseModel):
+    """Input schema for creating a directory."""
+
+    path: str = Field(description="Directory path to create")
 
 
 class FileWriteTool(BaseTool):
@@ -59,5 +66,31 @@ class FileReadTool(BaseTool):
         return self._run(filename)
 
 
+class CreateDirectoryTool(BaseTool):
+    name: str = "create_directory"
+    description: str = "Create a working directory for file operations."
+    args_schema: type[BaseModel] = CreateDirectoryInput
+
+    def _resolve_path(self, path: str) -> Path:
+        base_dir = Path(tempfile.gettempdir()) / "janus_work"
+        candidate = (base_dir / path).resolve()
+        if base_dir not in candidate.parents and candidate != base_dir:
+            raise ValueError("Invalid path")
+        return candidate
+
+    def _run(self, path: str) -> str:
+        try:
+            target = self._resolve_path(path)
+        except ValueError:
+            return "Invalid path"
+
+        target.mkdir(parents=True, exist_ok=True)
+        return str(target)
+
+    async def _arun(self, path: str) -> str:
+        return self._run(path)
+
+
 file_write_tool = FileWriteTool()
 file_read_tool = FileReadTool()
+create_directory_tool = CreateDirectoryTool()

@@ -3,7 +3,16 @@
 from janus_baseline_langchain.tools.audio import audio_generation_tool
 from janus_baseline_langchain.tools.code_exec import code_execution_tool
 from janus_baseline_langchain.tools.deep_research import deep_research_tool
-from janus_baseline_langchain.tools.files import file_read_tool, file_write_tool
+from janus_baseline_langchain.tools.files import (
+    create_directory_tool,
+    file_read_tool,
+    file_write_tool,
+)
+from janus_baseline_langchain.tools.git_tools import (
+    clone_repository_tool,
+    list_repository_files_tool,
+    read_repository_file_tool,
+)
 from janus_baseline_langchain.tools.image_gen import image_generation_tool
 from janus_baseline_langchain.tools.memory import InvestigateMemoryTool
 from janus_baseline_langchain.tools.music_gen import music_generation_tool
@@ -15,6 +24,10 @@ __all__ = [
     "code_execution_tool",
     "audio_generation_tool",
     "deep_research_tool",
+    "clone_repository_tool",
+    "list_repository_files_tool",
+    "read_repository_file_tool",
+    "create_directory_tool",
     "file_read_tool",
     "file_write_tool",
     "image_generation_tool",

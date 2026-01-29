@@ -1,0 +1,176 @@
+#!/usr/bin/env python3
+"""Lightweight web_search helper with fallback."""
+
+from __future__ import annotations
+
+import html
+import json
+import os
+import re
+import sys
+import urllib.parse
+import urllib.request
+from typing import Any
+
+
+def _strip_tags(text: str) -> str:
+    return re.sub(r"<[^>]+>", "", text)
+
+
+def _normalize_results(raw: Any) -> list[dict[str, str]]:
+    results: list[dict[str, str]] = []
+    items: Any = []
+    if isinstance(raw, dict):
+        if isinstance(raw.get("results"), list):
+            items = raw.get("results")
+        elif isinstance(raw.get("data"), dict):
+            data = raw.get("data") or {}
+            if isinstance(data.get("results"), list):
+                items = data.get("results")
+            elif isinstance(data.get("items"), list):
+                items = data.get("items")
+        elif isinstance(raw.get("items"), list):
+            items = raw.get("items")
+        elif isinstance(raw.get("searchResults"), list):
+            items = raw.get("searchResults")
+    elif isinstance(raw, list):
+        items = raw
+
+    for item in items or []:
+        if not isinstance(item, dict):
+            continue
+        title = str(item.get("title") or item.get("name") or "")
+        url = str(item.get("url") or item.get("link") or item.get("href") or "")
+        snippet = str(
+            item.get("snippet")
+            or item.get("content")
+            or item.get("description")
+            or ""
+        )
+        if not (title or url or snippet):
+            continue
+        results.append({"title": title, "url": url, "snippet": snippet})
+    return results
+
+
+def _filter_valid_results(results: list[dict[str, str]]) -> list[dict[str, str]]:
+    filtered: list[dict[str, str]] = []
+    for item in results:
+        if not isinstance(item, dict):
+            continue
+        url = str(item.get("url") or "")
+        snippet = str(item.get("snippet") or "")
+        if url and snippet and len(snippet) > 50:
+            filtered.append(item)
+    return filtered
+
+
+def _resolve_search_url(base_url: str) -> str:
+    base = base_url.rstrip("/")
+    if base.endswith("/api/search"):
+        return base
+    if base.endswith("/api"):
+        return f"{base}/search"
+    if base.endswith("/search"):
+        return base
+    return f"{base}/api/search"
+
+
+def _search_chutes(query: str) -> list[dict[str, str]]:
+    base_url = os.environ.get("CHUTES_SEARCH_URL", "https://chutes-search.onrender.com")
+    url = _resolve_search_url(base_url)
+    payload = json.dumps({"query": query, "max_results": 6}).encode("utf-8")
+    headers = {"Content-Type": "application/json", "User-Agent": "janus-web-search"}
+    api_key = os.environ.get("CHUTES_API_KEY")
+    if api_key:
+        headers["Authorization"] = f"Bearer {api_key}"
+    request = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+    with urllib.request.urlopen(request, timeout=30) as response:
+        raw = response.read().decode("utf-8", errors="replace")
+    data = json.loads(raw)
+    return _normalize_results(data)
+
+
+def _search_duckduckgo(query: str) -> list[dict[str, str]]:
+    url = "https://duckduckgo.com/html/?q=" + urllib.parse.quote(query)
+    request = urllib.request.Request(
+        url,
+        headers={"User-Agent": "Mozilla/5.0"},
+        method="GET",
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        html_text = response.read().decode("utf-8", errors="replace")
+
+    link_matches = re.findall(
+        r'class="result__a"[^>]*href="(.*?)"[^>]*>(.*?)</a>',
+        html_text,
+        re.DOTALL,
+    )
+    snippet_matches = re.findall(
+        r'class="result__snippet"[^>]*>(.*?)</a>',
+        html_text,
+        re.DOTALL,
+    )
+
+    results: list[dict[str, str]] = []
+    for index, (url_match, title_match) in enumerate(link_matches):
+        title = html.unescape(_strip_tags(title_match)).strip()
+        url_clean = html.unescape(url_match).strip()
+        snippet = ""
+        if index < len(snippet_matches):
+            snippet = html.unescape(_strip_tags(snippet_matches[index])).strip()
+        if not (title or url_clean or snippet):
+            continue
+        results.append({"title": title, "url": url_clean, "snippet": snippet})
+    return results
+
+
+def main() -> int:
+    query = " ".join(arg for arg in sys.argv[1:] if arg).strip()
+    if not query:
+        print("Usage: web_search <query>")
+        return 1
+
+    results: list[dict[str, str]] = []
+    source = ""
+    error: str | None = None
+
+    try:
+        results = _search_chutes(query)
+        filtered = _filter_valid_results(results)
+        if filtered:
+            results = filtered
+        else:
+            results = []
+            error = "Chutes search returned no valid results"
+        source = "chutes-search"
+    except Exception as exc:
+        error = str(exc)
+
+    if not results:
+        try:
+            results = _search_duckduckgo(query)
+            filtered = _filter_valid_results(results)
+            if filtered:
+                results = filtered
+            source = "duckduckgo"
+        except Exception as exc:
+            if error:
+                error = f"{error}; {exc}"
+            else:
+                error = str(exc)
+
+    payload: dict[str, object] = {
+        "query": query,
+        "source": source or "unavailable",
+        "results": results[:6],
+    }
+    if error and not results:
+        payload["error"] = error
+
+    print(json.dumps(payload, ensure_ascii=True, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

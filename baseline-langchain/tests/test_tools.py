@@ -1,6 +1,7 @@
 """Tests for LangChain baseline tools."""
 
 import json
+from pathlib import Path
 
 import httpx
 import pytest
@@ -14,12 +15,16 @@ from janus_baseline_langchain.services import (
 from janus_baseline_langchain.tools import (
     InvestigateMemoryTool,
     audio_generation_tool,
+    clone_repository_tool,
     code_execution_tool,
+    create_directory_tool,
     deep_research_tool,
     file_read_tool,
     file_write_tool,
     image_generation_tool,
+    list_repository_files_tool,
     music_generation_tool,
+    read_repository_file_tool,
     text_to_speech_tool,
     video_generation_tool,
     web_search_tool,
@@ -270,6 +275,60 @@ async def test_file_tools_create_artifacts(tmp_path, monkeypatch: pytest.MonkeyP
 
     read_result = await file_read_tool.ainvoke({"filename": "report.txt"})
     assert "hello" in read_result
+
+
+@pytest.mark.asyncio
+async def test_create_directory_tool(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr("janus_baseline_langchain.tools.files.tempfile.gettempdir", lambda: str(tmp_path))
+
+    result = await create_directory_tool.ainvoke({"path": "workdir/subdir"})
+    created_path = Path(result)
+
+    assert created_path.exists()
+    assert created_path.is_dir()
+    assert str(created_path).startswith(str(tmp_path))
+
+
+@pytest.mark.asyncio
+async def test_git_tools_clone_list_read(tmp_path, monkeypatch: pytest.MonkeyPatch) -> None:
+    repo_path = tmp_path / "repo"
+    repo_path.mkdir()
+
+    def fake_mkdtemp(prefix: str) -> str:  # type: ignore[no-untyped-def]
+        return str(repo_path)
+
+    class DummyResult:
+        returncode = 0
+        stderr = ""
+        stdout = ""
+
+    def fake_run(*args, **kwargs) -> DummyResult:  # type: ignore[no-untyped-def]
+        return DummyResult()
+
+    monkeypatch.setattr("janus_baseline_langchain.tools.git_tools.tempfile.mkdtemp", fake_mkdtemp)
+    monkeypatch.setattr("janus_baseline_langchain.tools.git_tools.subprocess.run", fake_run)
+
+    clone_result = await clone_repository_tool.ainvoke(
+        {"url": "https://github.com/example/repo", "branch": "main"}
+    )
+    assert clone_result == str(repo_path)
+
+    (repo_path / "README.md").write_text("Hello")
+    (repo_path / ".git").mkdir()
+    (repo_path / ".git" / "config").write_text("ignored")
+    (repo_path / "src").mkdir()
+    (repo_path / "src" / "main.py").write_text("print('hi')")
+
+    list_result = await list_repository_files_tool.ainvoke(
+        {"repo_path": str(repo_path), "pattern": "*"}
+    )
+    assert "README.md" in list_result
+    assert ".git" not in list_result
+
+    read_result = await read_repository_file_tool.ainvoke(
+        {"file_path": str(repo_path / "src" / "main.py")}
+    )
+    assert "print('hi')" in read_result
 
 
 @pytest.mark.asyncio

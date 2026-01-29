@@ -92,3 +92,5 @@
 - Completed spec 98_real_benchmark_dataset.md with public train/dev JSONL datasets, evaluator suite, loader updates, private dataset scaffolding, and benchmark scoring integration.
 - Completed spec 99_arena_style_comparison.md with arena mode UI toggle, paired responses, vote collection + ELO leaderboard, and scoring-service integrations.
 - Completed spec 100_long_agentic_task_reliability.md with SSE keepalives, retry/progress indicators for long operations, UI timeout messaging, and long-task integration tests.
+- Completed spec 101_baseline_langchain_full_parity.md with git repo tools, create-directory support, parity-focused E2E coverage, and LangChain baseline docs comparison updates.
+- Completed spec 102_core_demo_use_cases.md with demo E2E coverage, web search result filtering + fallback checks, repo clone error messaging, and image response validation. Core demo tests ran locally but skipped due to unavailable services (pytest-timeout plugin missing for --timeout).

@@ -125,6 +125,16 @@ class Settings(BaseSettings):
             "BASELINE_CHUTES_API_BASE",
         ),
     )
+    chutes_search_url: str = Field(
+        default="https://chutes-search.onrender.com",
+        description="Chutes search base URL",
+        validation_alias=AliasChoices(
+            "CHUTES_SEARCH_URL",
+            "JANUS_CHUTES_SEARCH_URL",
+            "BASELINE_AGENT_CLI_CHUTES_SEARCH_URL",
+            "BASELINE_CHUTES_SEARCH_URL",
+        ),
+    )
 
     # Model router configuration
     use_model_router: bool = Field(
@@ -202,6 +212,18 @@ class Settings(BaseSettings):
             "SANDY_TIMEOUT",
             "BASELINE_AGENT_CLI_SANDY_TIMEOUT",
             "BASELINE_SANDY_TIMEOUT",
+        ),
+    )
+    sandy_git_timeout: int = Field(
+        default=120,
+        description="Git operation timeout in seconds inside Sandy sandboxes",
+        validation_alias=AliasChoices(
+            "SANDY_GIT_TIMEOUT",
+            "BASELINE_AGENT_CLI_SANDY_GIT_TIMEOUT",
+            "BASELINE_SANDY_GIT_TIMEOUT",
+            "JANUS_GIT_TIMEOUT",
+            "BASELINE_AGENT_CLI_GIT_TIMEOUT",
+            "BASELINE_GIT_TIMEOUT",
         ),
     )
     http_client_timeout: int = Field(

@@ -1,6 +1,6 @@
 # Spec 101: Baseline LangChain Full Parity with Agent CLI
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -297,4 +297,4 @@ async def test_baseline_parity(prompt):
 - Spec 27: Baseline LangChain
 - Spec 102: Core Demo Use Cases
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

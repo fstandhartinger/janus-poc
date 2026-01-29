@@ -24,8 +24,12 @@ def test_create_agent_includes_tools() -> None:
         "web_search",
         "deep_research",
         "code_execution",
+        "clone_repository",
+        "list_repository_files",
+        "read_repository_file",
         "write_file",
         "read_file",
+        "create_directory",
     }.issubset(tool_names)
 
 

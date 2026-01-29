@@ -266,6 +266,7 @@ keys = [
     "CHUTES_API_KEY",
     "CHUTES_API_URL",
     "CHUTES_API_BASE",
+    "CHUTES_SEARCH_URL",
     "OPENAI_API_BASE",
     "OPENAI_API_KEY",
     "OPENAI_MODEL",
@@ -274,6 +275,7 @@ keys = [
     "CLAUDE_API_BASE_URL",
     "CLAUDE_MODEL",
     "JANUS_SYSTEM_PROMPT_PATH",
+    "JANUS_GIT_TIMEOUT",
 ]
 lines = []
 for key in keys:

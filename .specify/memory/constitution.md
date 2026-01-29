@@ -3,7 +3,7 @@
 > A spec-first Proof-of-Concept for the Janus platform - an AI agent gateway with OpenAI API compatibility.
 
 ## Version
-1.0.2
+1.0.4
 
 ## Ralph Wiggum Version
 Installed from commit: 81231ca4e7466d84e3908841e9ed3d08e8c0803e
@@ -33,6 +33,28 @@ When you're running inside a Ralph bash loop (fed via stdin):
 - If criteria not met, fix issues and try again
 
 **How to detect:** If the prompt instructs you to read IMPLEMENTATION_PLAN.md and pick a task, you're in Ralph Loop Mode.
+
+---
+
+## Parallel Ralph Loops & Port Conflicts
+
+**Warning:** Multiple Ralph loops may run in parallel across different web dev projects on this machine. This can cause port conflicts, especially with Next.js dev servers.
+
+**Common conflict scenarios:**
+- Next.js defaults to port 3000
+- Multiple projects competing for the same ports
+- Background dev servers from other sessions
+
+**Mitigation:**
+- Use ports **4720+** for this project to reduce collision risk
+- If a port is in use, pick another in the 4720-4799 range
+- Check for running servers before starting: `lsof -i :PORT`
+- Kill orphaned processes if needed: `kill $(lsof -t -i :PORT)`
+
+**Recommended port assignments for janus-poc:**
+- Next.js UI dev server: **4721**
+- Gateway dev server: **4722**
+- Test servers: **4723-4729**
 
 ---
 
@@ -70,7 +92,19 @@ These principles apply to ALL agent sessions, not just Ralph loops.
 
 ### Testing Requirements
 
-**Always run complete test suites:**
+**Time Budget:** Testing should consume **at most 25%** of total effort. Feature implementation should be **at least 75%** of agent time and tokens.
+
+**Prioritize high-value tests:**
+1. **Critical path smoke tests** — Does the app start? Do core endpoints respond?
+2. **Integration tests for key flows** — Auth, chat completions, streaming
+3. **Unit tests for complex logic** — Routing, parsing, validation
+
+**Skip or defer:**
+- Exhaustive edge case coverage
+- Visual regression tests (unless UI is the spec focus)
+- Tests for trivial CRUD or pass-through code
+
+**Run test suites:**
 ```bash
 # Unit + Integration tests
 cd gateway && pytest
@@ -81,11 +115,13 @@ cd gateway && mypy janus_gateway
 cd ui && npm run typecheck
 ```
 
-**Add tests proactively:**
-- Add unit and integration tests for new functionality
+**Test hygiene:**
+- Add tests for new functionality (keep it proportional)
 - Update outdated tests
 - Remove tests that no longer make sense
 - All tests must pass before marking complete
+
+**If testing is taking too long:** Stop, commit what works, note the gap in history.md, and move on. Don't let testing block feature delivery.
 
 ### Visual Testing
 
@@ -384,5 +420,8 @@ cd ui && npm run typecheck
 ---
 
 **Created**: 2025-01-22
-**Version**: 1.0.2
-**Amendments**: Added explicit pre-release password entry guidance for browser automation.
+**Version**: 1.0.4
+**Amendments**:
+- 1.0.2: Added explicit pre-release password entry guidance for browser automation.
+- 1.0.3: Added parallel Ralph loops warning and port conflict mitigation (use ports 4720+).
+- 1.0.4: Added testing time budget (max 25%) and prioritization guidance.

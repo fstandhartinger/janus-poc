@@ -6,8 +6,12 @@ from typing import Any
 
 from janus_baseline_langchain.tools import (
     InvestigateMemoryTool,
+    clone_repository_tool,
     code_execution_tool,
+    create_directory_tool,
     image_generation_tool,
+    list_repository_files_tool,
+    read_repository_file_tool,
     text_to_speech_tool,
     web_search_tool,
 )
@@ -37,6 +41,10 @@ def test_tool_schemas_present() -> None:
         image_generation_tool,
         text_to_speech_tool,
         code_execution_tool,
+        clone_repository_tool,
+        list_repository_files_tool,
+        read_repository_file_tool,
+        create_directory_tool,
         InvestigateMemoryTool(
             user_id="user-1",
             memory_service_url="https://memory.test",
