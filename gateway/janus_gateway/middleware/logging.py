@@ -5,7 +5,7 @@ from __future__ import annotations
 import time
 import uuid
 from contextvars import ContextVar
-from typing import Awaitable, Callable
+from typing import Awaitable, Callable, Mapping
 
 import structlog
 from fastapi import Request, Response
@@ -15,15 +15,21 @@ logger = structlog.get_logger()
 
 # Context variable for correlation ID - accessible from any async context
 correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
+request_id_var: ContextVar[str] = ContextVar("request_id", default="")
 
 # Header names for correlation ID propagation
 CORRELATION_ID_HEADER = "X-Correlation-ID"
-REQUEST_ID_HEADER = "X-Request-ID"
+REQUEST_ID_HEADER = "X-Request-Id"
 
 
 def get_correlation_id() -> str:
     """Get current correlation ID from context."""
     return correlation_id_var.get() or ""
+
+
+def get_request_id() -> str:
+    """Get current request ID from context."""
+    return request_id_var.get() or ""
 
 
 def get_or_create_correlation_id(headers: dict[str, str] | None = None) -> str:
@@ -42,18 +48,56 @@ def get_or_create_correlation_id(headers: dict[str, str] | None = None) -> str:
     return correlation_id
 
 
+def _generate_request_id(prefix: str) -> str:
+    token = uuid.uuid4().hex
+    if prefix == "chatcmpl":
+        return f"chatcmpl-{token[:24]}"
+    return f"req_{token[:12]}"
+
+
+def _request_id_prefix_for_path(path: str | None) -> str:
+    if not path:
+        return "req"
+    if path.startswith("/v1/chat/completions"):
+        return "chatcmpl"
+    return "req"
+
+
+def get_or_create_request_id(
+    headers: Mapping[str, str] | None = None,
+    path: str | None = None,
+) -> str:
+    """Get request ID from headers or create new one."""
+    if headers:
+        request_id = (
+            headers.get(REQUEST_ID_HEADER)
+            or headers.get(REQUEST_ID_HEADER.lower())
+            or headers.get(REQUEST_ID_HEADER.upper())
+        )
+        if request_id:
+            request_id_var.set(request_id)
+            return request_id
+
+    request_id = _generate_request_id(_request_id_prefix_for_path(path))
+    request_id_var.set(request_id)
+    return request_id
+
+
+def set_request_id(request_id: str) -> None:
+    """Set request ID in context."""
+    request_id_var.set(request_id)
+
+
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
     """Log requests with timing and correlation IDs for end-to-end tracing."""
 
     async def dispatch(
         self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
-        # Get or create correlation ID for request tracing
+        # Get or create correlation + request ID for tracing
         headers = dict(request.headers)
         correlation_id = get_or_create_correlation_id(headers)
-
-        # Generate short request ID for this specific request
-        request_id = str(uuid.uuid4())[:8]
+        request_id = get_or_create_request_id(headers, request.url.path)
         start_time = time.time()
 
         # Bind context for structured logging
@@ -64,6 +108,9 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             path=request.url.path,
             client_ip=request.client.host if request.client else "unknown",
         )
+
+        # Add to request state for handlers
+        request.state.request_id = request_id
 
         try:
             # Log request received with preview of query params
@@ -103,3 +150,4 @@ class RequestLoggingMiddleware(BaseHTTPMiddleware):
             structlog.contextvars.clear_contextvars()
             # Reset correlation ID context var
             correlation_id_var.set("")
+            request_id_var.set("")

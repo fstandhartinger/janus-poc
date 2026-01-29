@@ -2706,6 +2706,68 @@ html {
   cursor: not-allowed;
 }
 
+.message-footer {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: #9CA3AF;
+}
+
+.message-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.message-footer-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.message-footer-toggle {
+  color: #9CA3AF;
+  font-size: 0.7rem;
+  transition: color 0.2s ease;
+}
+
+.message-footer-toggle:hover {
+  color: #F3F4F6;
+}
+
+.message-footer-debug {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 8px;
+  background: rgba(17, 24, 39, 0.6);
+  border: 1px solid rgba(55, 65, 81, 0.6);
+}
+
+.message-footer-label {
+  color: #6B7280;
+}
+
+.message-footer-value {
+  color: #E5E7EB;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+}
+
+.message-footer-copy {
+  color: #9CA3AF;
+  font-size: 0.7rem;
+  transition: color 0.2s ease;
+}
+
+.message-footer-copy:hover {
+  color: #F3F4F6;
+}
+
 .message-tts {
   margin-top: 0.5rem;
 }

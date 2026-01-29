@@ -4,7 +4,6 @@ import asyncio
 import time
 import uuid
 from contextlib import asynccontextmanager
-from contextvars import ContextVar
 import json
 import re
 from typing import Any, AsyncGenerator, Iterable, Union
@@ -16,7 +15,8 @@ from fastapi.responses import FileResponse, StreamingResponse
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, SecretStr
-from starlette.middleware.base import BaseHTTPMiddleware
+from janus_baseline_langchain.middleware.tracing import RequestTracingMiddleware
+from janus_baseline_langchain.tracing import get_correlation_id, get_request_id
 
 from janus_baseline_langchain import __version__
 from janus_baseline_langchain.agent import create_agent
@@ -75,17 +75,6 @@ _router_instance: CompositeRoutingChatModel | None = None
 
 settings = get_settings()
 
-# Correlation ID context variable for request tracing
-CORRELATION_ID_HEADER = "X-Correlation-ID"
-REQUEST_ID_HEADER = "X-Request-ID"
-correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
-
-
-def get_correlation_id() -> str:
-    """Get current correlation ID from context."""
-    return correlation_id_var.get() or ""
-
-
 # Configure structured logging with contextvars for correlation
 structlog.configure(
     processors=[
@@ -107,53 +96,7 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
-
-
-class CorrelationMiddleware(BaseHTTPMiddleware):
-    """Middleware to extract correlation ID from headers and bind to context."""
-
-    async def dispatch(self, request: Request, call_next):
-        # Get or create correlation ID
-        correlation_id = request.headers.get(CORRELATION_ID_HEADER) or f"corr-{uuid.uuid4().hex[:16]}"
-        request_id = str(uuid.uuid4())[:8]
-        start_time = time.time()
-
-        # Set correlation ID in context var
-        correlation_id_var.set(correlation_id)
-
-        # Bind to structlog context
-        structlog.contextvars.bind_contextvars(
-            correlation_id=correlation_id,
-            request_id=request_id,
-            method=request.method,
-            path=request.url.path,
-        )
-
-        try:
-            logger.info("request_received")
-            response = await call_next(request)
-            duration_ms = (time.time() - start_time) * 1000
-            logger.info(
-                "request_complete",
-                status_code=response.status_code,
-                duration_ms=round(duration_ms, 2),
-            )
-            # Add correlation ID to response headers
-            response.headers[CORRELATION_ID_HEADER] = correlation_id
-            response.headers[REQUEST_ID_HEADER] = request_id
-            return response
-        except Exception as exc:
-            duration_ms = (time.time() - start_time) * 1000
-            logger.error(
-                "request_failed",
-                error=str(exc),
-                error_type=type(exc).__name__,
-                duration_ms=round(duration_ms, 2),
-            )
-            raise
-        finally:
-            structlog.contextvars.clear_contextvars()
-            correlation_id_var.set("")
+structlog.contextvars.bind_contextvars(service="baseline-langchain")
 
 
 def _split_stream_content(content: str, max_chars: int = 40) -> list[str]:
@@ -192,8 +135,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add correlation ID middleware for request tracing
-app.add_middleware(CorrelationMiddleware)
+# Add request tracing middleware for request correlation
+app.add_middleware(RequestTracingMiddleware)
 
 app.include_router(debug_router)
 
@@ -1366,7 +1309,7 @@ async def chat_completions(
     correlation_id_header: str | None = Header(default=None, alias="X-Correlation-ID"),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
-    request_id = _generate_request_id()
+    request_id = get_request_id() or _generate_request_id()
 
     # Get correlation ID from header or context
     correlation_id = correlation_id_header or get_correlation_id()

@@ -75,7 +75,14 @@ export interface Message {
   reasoning_content?: string;
   artifacts?: Artifact[];
   arena?: ArenaComparison;
+  metadata?: MessageMetadata;
   created_at: Date;
+}
+
+export interface MessageMetadata {
+  requestId?: string;
+  model?: string;
+  durationMs?: number;
 }
 
 export type ArenaWinner = 'A' | 'B' | 'tie' | 'both_bad';

@@ -20,6 +20,7 @@ import { getUserId } from '@/lib/userId';
 import { handleCanvasContent, parseCanvasBlocks } from '@/lib/canvas-parser';
 import { useSmartScroll } from '@/hooks/useSmartScroll';
 import { cacheArtifact } from '@/lib/artifact-client';
+import logger from '@/lib/logger';
 import { useArena } from '@/hooks/useArena';
 import { MessageBubble } from './MessageBubble';
 import { ChatInput } from './ChatInput';
@@ -30,6 +31,7 @@ import { ModelSelector } from './ModelSelector';
 import { AgentStatusIndicator } from './chat/AgentStatusIndicator';
 import { EmptyState } from './chat/EmptyState';
 import { QuickSuggestions } from './chat/QuickSuggestions';
+import { DebugToggle } from './debug/DebugToggle';
 import { MemoryToggle } from './MemoryToggle';
 import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
@@ -111,6 +113,8 @@ export function ChatArea({
   const deepResearchSeenRef = useRef<Set<string>>(new Set());
   const ttsAutoPlay = useSettingsStore((state) => state.ttsAutoPlay);
   const setTTSAutoPlay = useSettingsStore((state) => state.setTTSAutoPlay);
+  const debugMode = useSettingsStore((state) => state.debugMode);
+  const setDebugMode = useSettingsStore((state) => state.setDebugMode);
 
   const session = getCurrentSession();
   const messages = session?.messages || [];
@@ -118,6 +122,16 @@ export function ChatArea({
     ? getMessageText(messages[messages.length - 1].content)
     : '';
   const { resetUserScroll } = useSmartScroll(messagesContainerRef, [lastMessageContent, isStreaming]);
+
+  const updateLastMessageMetadata = useCallback(
+    (updates: Partial<NonNullable<(typeof messages)[number]['metadata']>>) => {
+      const current = getCurrentSession();
+      const lastMessage = current?.messages[current.messages.length - 1];
+      const existing = lastMessage?.metadata ?? {};
+      updateLastMessage({ metadata: { ...existing, ...updates } });
+    },
+    [getCurrentSession, updateLastMessage]
+  );
   const lastAssistantIndex = messages.reduce(
     (lastIndex, message, index) => (message.role === 'assistant' ? index : lastIndex),
     -1
@@ -443,6 +457,8 @@ export function ChatArea({
     setScreenshotsLive(!isResearchRequest && !arenaMode);
     abortControllerRef.current = new AbortController();
     const signal = abortControllerRef.current.signal;
+    let requestStart: number | null = null;
+    let responseModel: string | null = null;
 
     try {
       if (arenaMode && isResearchRequest) {
@@ -495,6 +511,16 @@ export function ChatArea({
         return;
       }
 
+      const handleResponse = (streamResponse: Response) => {
+        const requestId =
+          streamResponse.headers.get('x-request-id') || streamResponse.headers.get('X-Request-Id');
+        if (requestId) {
+          updateLastMessageMetadata({ requestId });
+          logger.setRequestId(requestId);
+        }
+      };
+
+      requestStart = performance.now();
       for await (const chunk of streamChatCompletion(
         {
           model: selectedModel,
@@ -503,14 +529,20 @@ export function ChatArea({
           user_id: userId,
           enable_memory: memoryEnabledSetting,
           generation_flags: flagsPayload,
+          debug: debugMode,
         },
-        signal
+        signal,
+        handleResponse
       )) {
         if ('type' in chunk && chunk.type === 'screenshot') {
           pushScreenshot(chunk.data);
           continue;
         }
         const completionChunk = chunk as ChatCompletionChunk;
+        if (!responseModel && completionChunk.model) {
+          responseModel = completionChunk.model;
+          updateLastMessageMetadata({ model: responseModel });
+        }
         const delta = completionChunk.choices[0]?.delta;
         if (delta?.janus?.event === 'screenshot') {
           const payload = coerceScreenshotPayload(delta.janus.payload);
@@ -601,6 +633,9 @@ export function ChatArea({
         }
       }
     } finally {
+      if (requestStart !== null) {
+        updateLastMessageMetadata({ durationMs: Math.round(performance.now() - requestStart) });
+      }
       setScreenshotsLive(false);
       setStreaming(false);
       abortControllerRef.current = null;
@@ -765,6 +800,7 @@ export function ChatArea({
                 )}
               </div>
               <ArenaToggle />
+              <DebugToggle enabled={debugMode} onToggle={setDebugMode} />
               <MemoryToggle
                 enabled={memoryEnabled}
                 onOpen={() => setMemorySheetOpen(true)}
@@ -839,6 +875,7 @@ export function ChatArea({
                         message={message}
                         showReasoning={showReasoning}
                         isStreaming={isStreamingMessage}
+                        debugEnabled={debugMode}
                         autoPlay={shouldAutoPlay}
                         onAutoPlayHandled={shouldAutoPlay ? handleAutoPlayHandled : undefined}
                         onRegenerate={canRegenerate ? () => handleRegenerate(regeneratePrompt) : undefined}

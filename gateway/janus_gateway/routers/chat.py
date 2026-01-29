@@ -14,7 +14,9 @@ from fastapi.responses import StreamingResponse
 from janus_gateway.config import Settings, get_settings
 from janus_gateway.middleware.logging import (
     CORRELATION_ID_HEADER,
+    REQUEST_ID_HEADER,
     get_correlation_id,
+    get_request_id,
 )
 from janus_gateway.models import (
     ChatCompletionChunk,
@@ -36,8 +38,8 @@ logger = structlog.get_logger()
 message_processor = MessageProcessor()
 
 
-def generate_request_id() -> str:
-    """Generate a unique request ID."""
+def generate_completion_id() -> str:
+    """Generate a unique chat completion ID."""
     return f"chatcmpl-{uuid.uuid4().hex[:24]}"
 
 
@@ -50,11 +52,12 @@ async def stream_from_competitor(
     client: httpx.AsyncClient,
     competitor_url: str,
     request: ChatCompletionRequest,
-    request_id: str,
+    completion_id: str,
     settings: Settings,
     debug_request_id: str | None = None,
     baseline_agent: str | None = None,
     correlation_id: str | None = None,
+    trace_request_id: str | None = None,
 ) -> AsyncGenerator[str, None]:
     """Stream responses from a competitor, adding keep-alives."""
     keep_alive_interval = settings.keep_alive_interval
@@ -83,9 +86,12 @@ async def stream_from_competitor(
             headers["X-Debug-Request-Id"] = debug_request_id
         if baseline_agent:
             headers["X-Baseline-Agent"] = baseline_agent
-        # Propagate correlation ID to baseline
+        # Propagate correlation + request IDs to baseline
         if correlation_id:
             headers[CORRELATION_ID_HEADER] = correlation_id
+        if trace_request_id:
+            headers[REQUEST_ID_HEADER] = trace_request_id
+            headers["X-Upstream-Service"] = "gateway"
         async with client.stream(
             "POST",
             f"{competitor_url}/v1/chat/completions",
@@ -113,7 +119,7 @@ async def stream_from_competitor(
                 )
                 # Yield error as SSE
                 error_chunk = ChatCompletionChunk(
-                    id=request_id,
+                    id=completion_id,
                     model=request.model,
                     choices=[
                         ChunkChoice(
@@ -199,7 +205,7 @@ async def stream_from_competitor(
     except httpx.TimeoutException:
         logger.error("competitor_timeout", url=competitor_url)
         error_chunk = ChatCompletionChunk(
-            id=request_id,
+            id=completion_id,
             model=request.model,
             choices=[
                 ChunkChoice(
@@ -214,7 +220,7 @@ async def stream_from_competitor(
     except httpx.RequestError as e:
         logger.error("competitor_request_error", error=str(e))
         error_chunk = ChatCompletionChunk(
-            id=request_id,
+            id=completion_id,
             model=request.model,
             choices=[
                 ChunkChoice(
@@ -305,7 +311,7 @@ async def chat_completions(
     settings: Settings = Depends(get_settings),
 ) -> Union[ChatCompletionResponse, StreamingResponse]:
     """OpenAI-compatible chat completions endpoint."""
-    request_id = generate_request_id()
+    request_id = get_request_id() or generate_completion_id()
     correlation_id = get_correlation_id()
     debug_enabled = getattr(request, "debug", False)
     debug_request_id = generate_debug_request_id() if debug_enabled else None
@@ -328,7 +334,6 @@ async def chat_completions(
     logger.info(
         "chat_completion_request",
         request_id=request_id,
-        correlation_id=correlation_id,
         model=request.model,
         stream=request.stream,
         competitor_id=request.competitor_id,
@@ -382,11 +387,12 @@ async def chat_completions(
                         debug_request_id,
                         baseline_agent,
                         correlation_id,
+                        request_id,
                     ):
                         yield chunk
                 logger.info(
                     "chat_completion_complete",
-                    request_id=request_id,
+                    completion_id=request_id,
                     duration_ms=int((time.time() - start_time) * 1000),
                 )
 
@@ -396,7 +402,6 @@ async def chat_completions(
                 headers={
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
-                    "X-Request-Id": request_id,
                     **({"X-Debug-Request-Id": debug_request_id} if debug_request_id else {}),
                 },
             )
@@ -407,7 +412,7 @@ async def chat_completions(
                     yield chunk
                 logger.info(
                     "chat_completion_complete",
-                    request_id=request_id,
+                    completion_id=request_id,
                     duration_ms=int((time.time() - start_time) * 1000),
                     mock=True,
                 )
@@ -418,7 +423,6 @@ async def chat_completions(
                 headers={
                     "Cache-Control": "no-cache",
                     "Connection": "keep-alive",
-                    "X-Request-Id": request_id,
                     **({"X-Debug-Request-Id": debug_request_id} if debug_request_id else {}),
                 },
             )
@@ -433,6 +437,8 @@ async def chat_completions(
                         fwd_headers["X-Debug-Request-Id"] = debug_request_id
                     if baseline_agent:
                         fwd_headers["X-Baseline-Agent"] = baseline_agent
+                    if request_id:
+                        fwd_headers[REQUEST_ID_HEADER] = request_id
                     competitor_response = await client.post(
                         f"{competitor.url}/v1/chat/completions",
                         json=processed_request.model_dump(

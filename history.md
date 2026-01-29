@@ -94,4 +94,5 @@
 - Completed spec 100_long_agentic_task_reliability.md with SSE keepalives, retry/progress indicators for long operations, UI timeout messaging, and long-task integration tests.
 - Completed spec 101_baseline_langchain_full_parity.md with git repo tools, create-directory support, parity-focused E2E coverage, and LangChain baseline docs comparison updates.
 - Completed spec 102_core_demo_use_cases.md with demo E2E coverage, web search result filtering + fallback checks, repo clone error messaging, and image response validation. Core demo tests ran locally but skipped due to unavailable services (pytest-timeout plugin missing for --timeout).
+- Completed spec 104_request_tracing_observability.md with request ID propagation, structured tracing middleware, log search endpoints/CLI, and UI debug request metadata display.
 - Completed spec 103_demo_prompts_in_chat_ui.md with demo prompt data, empty-state grid, quick suggestions, full prompt modal, and Playwright coverage.

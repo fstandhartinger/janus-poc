@@ -38,6 +38,7 @@ from janus_baseline_agent_cli.models.debug import DebugEventType
 from janus_baseline_agent_cli.services.debug import DebugEmitter
 from janus_baseline_agent_cli.services.vision import contains_images, get_image_urls
 from janus_baseline_agent_cli.services.response_processor import process_agent_response
+from janus_baseline_agent_cli.tracing import get_request_id
 
 logger = structlog.get_logger()
 
@@ -416,6 +417,9 @@ class SandyService:
         headers = {"Content-Type": "application/json"}
         if self._api_key:
             headers["Authorization"] = f"Bearer {self._api_key}"
+        request_id = get_request_id()
+        if request_id:
+            headers["X-Request-Id"] = request_id
         return headers
 
     def _resolve_path(self, path: str) -> Path:

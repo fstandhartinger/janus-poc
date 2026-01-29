@@ -11,6 +11,7 @@ import { MediaRenderer } from './MediaRenderer';
 import { TTSPlayer } from './TTSPlayer';
 import { AudioResponse } from './audio/AudioResponse';
 import { MessageActions } from './chat/MessageActions';
+import { MessageFooter } from './chat/MessageFooter';
 import { ThinkingIndicator } from './ThinkingIndicator';
 import { ArenaComparison } from './arena/ArenaComparison';
 
@@ -22,6 +23,7 @@ interface MessageBubbleProps {
   onAutoPlayHandled?: () => void;
   onRegenerate?: () => void;
   onShare?: () => void;
+  debugEnabled?: boolean;
 }
 
 /**
@@ -203,6 +205,7 @@ export function MessageBubble({
   onAutoPlayHandled,
   onRegenerate,
   onShare,
+  debugEnabled = false,
 }: MessageBubbleProps) {
   const isUser = message.role === 'user';
   const { submitVote } = useArena();
@@ -472,6 +475,10 @@ export function MessageBubble({
               disabled={isStreaming}
             />
           </div>
+        )}
+
+        {!isUser && (
+          <MessageFooter metadata={message.metadata} debugEnabled={debugEnabled} />
         )}
 
         {/* Show artifacts */}

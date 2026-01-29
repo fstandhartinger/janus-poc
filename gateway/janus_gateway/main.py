@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from janus_gateway import __version__
 from janus_gateway.config import get_settings
-from janus_gateway.middleware.logging import RequestLoggingMiddleware
+from janus_gateway.middleware.tracing import RequestTracingMiddleware
 from janus_gateway.middleware.pre_release_password import PreReleasePasswordMiddleware
 from janus_gateway.routers import (
     artifacts_router,
@@ -49,6 +49,7 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
+structlog.contextvars.bind_contextvars(service="gateway")
 
 
 def log_service_health_status() -> None:
@@ -121,7 +122,7 @@ Currently open access. API keys coming soon.
 )
 
 # Request logging middleware
-app.add_middleware(RequestLoggingMiddleware)
+app.add_middleware(RequestTracingMiddleware)
 
 # Pre-release password middleware
 if settings.pre_release_password:

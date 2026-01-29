@@ -1,6 +1,6 @@
 # Spec 104: Request IDs and End-to-End Tracing
 
-## Status: NOT STARTED
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -571,4 +571,4 @@ scripts/
 - Spec 80: Debug Mode Flow Visualization
 - Spec 13: Ops Observability
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

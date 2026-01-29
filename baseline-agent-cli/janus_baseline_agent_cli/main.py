@@ -5,7 +5,6 @@ import json
 import time
 import uuid
 from contextlib import asynccontextmanager
-from contextvars import ContextVar
 from typing import AsyncGenerator, Union
 
 import structlog
@@ -13,7 +12,8 @@ from fastapi import Depends, FastAPI, Header, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from starlette.middleware.base import BaseHTTPMiddleware
+from janus_baseline_agent_cli.middleware.tracing import RequestTracingMiddleware
+from janus_baseline_agent_cli.tracing import get_correlation_id, get_request_id
 
 from janus_baseline_agent_cli import __version__
 from janus_baseline_agent_cli.config import get_settings
@@ -60,17 +60,6 @@ AGENT_UNAVAILABLE_MESSAGE = (
     "which are not available at this time. Please try again later."
 )
 
-# Correlation ID context variable for request tracing
-CORRELATION_ID_HEADER = "X-Correlation-ID"
-REQUEST_ID_HEADER = "X-Request-ID"
-correlation_id_var: ContextVar[str] = ContextVar("correlation_id", default="")
-
-
-def get_correlation_id() -> str:
-    """Get current correlation ID from context."""
-    return correlation_id_var.get() or ""
-
-
 # Configure structured logging with contextvars for correlation
 structlog.configure(
     processors=[
@@ -93,53 +82,7 @@ structlog.configure(
 )
 
 logger = structlog.get_logger()
-
-
-class CorrelationMiddleware(BaseHTTPMiddleware):
-    """Middleware to extract correlation ID from headers and bind to context."""
-
-    async def dispatch(self, request: Request, call_next):
-        # Get or create correlation ID
-        correlation_id = request.headers.get(CORRELATION_ID_HEADER) or f"corr-{uuid.uuid4().hex[:16]}"
-        request_id = str(uuid.uuid4())[:8]
-        start_time = time.time()
-
-        # Set correlation ID in context var
-        correlation_id_var.set(correlation_id)
-
-        # Bind to structlog context
-        structlog.contextvars.bind_contextvars(
-            correlation_id=correlation_id,
-            request_id=request_id,
-            method=request.method,
-            path=request.url.path,
-        )
-
-        try:
-            logger.info("request_received")
-            response = await call_next(request)
-            duration_ms = (time.time() - start_time) * 1000
-            logger.info(
-                "request_complete",
-                status_code=response.status_code,
-                duration_ms=round(duration_ms, 2),
-            )
-            # Add correlation ID to response headers
-            response.headers[CORRELATION_ID_HEADER] = correlation_id
-            response.headers[REQUEST_ID_HEADER] = request_id
-            return response
-        except Exception as exc:
-            duration_ms = (time.time() - start_time) * 1000
-            logger.error(
-                "request_failed",
-                error=str(exc),
-                error_type=type(exc).__name__,
-                duration_ms=round(duration_ms, 2),
-            )
-            raise
-        finally:
-            structlog.contextvars.clear_contextvars()
-            correlation_id_var.set("")
+structlog.contextvars.bind_contextvars(service="baseline-agent-cli")
 
 
 def _latest_user_message_index(messages: list[Message]) -> int | None:
@@ -218,9 +161,15 @@ def _build_keepalive_payload(state: dict[str, str | None]) -> str:
     return f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
 
 
+def _resolve_request_id() -> str:
+    request_id = get_request_id()
+    return request_id or f"chatcmpl-{uuid.uuid4().hex}"
+
+
 def _build_unavailable_response(request: ChatCompletionRequest) -> ChatCompletionResponse:
+    request_id = _resolve_request_id()
     return ChatCompletionResponse(
-        id=f"chatcmpl-{uuid.uuid4().hex}",
+        id=request_id,
         model=request.model,
         choices=[
             Choice(
@@ -232,7 +181,7 @@ def _build_unavailable_response(request: ChatCompletionRequest) -> ChatCompletio
 
 
 def _build_unavailable_chunks(request: ChatCompletionRequest) -> list[ChatCompletionChunk]:
-    request_id = f"chatcmpl-{uuid.uuid4().hex}"
+    request_id = _resolve_request_id()
     return [
         ChatCompletionChunk(
             id=request_id,
@@ -376,8 +325,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Add correlation ID middleware for request tracing
-app.add_middleware(CorrelationMiddleware)
+# Add request tracing middleware for request correlation
+app.add_middleware(RequestTracingMiddleware)
 
 app.include_router(debug_router)
 
@@ -642,7 +591,7 @@ async def stream_response(
     keepalive_state: dict[str, str | None] = {
         "request_id": None,
         "model": request.model,
-        "fallback_id": f"chatcmpl-{uuid.uuid4().hex}",
+        "fallback_id": _resolve_request_id(),
     }
     keepalive_stream = stream_with_keepalive(
         raw_stream(),
