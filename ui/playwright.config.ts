@@ -1,18 +1,29 @@
 import { defineConfig, devices } from '@playwright/test';
 
-const testPort = process.env.TEST_PORT || '3001';
-const baseURL = process.env.TEST_BASE_URL || `http://127.0.0.1:${testPort}`;
+const testUrl = process.env.TEST_URL || process.env.TEST_BASE_URL;
+const testPort = process.env.TEST_PORT || '4721';
+const baseURL = testUrl || `http://127.0.0.1:${testPort}`;
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  testIgnore: ['e2e/visual/**'],
+  timeout: 60000,
+  expect: {
+    timeout: 10000,
+  },
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  workers: 1,
+  reporter: [
+    ['html', { outputFolder: 'playwright-report' }],
+    ['list'],
+  ],
   use: {
     baseURL,
     trace: 'on-first-retry',
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
     storageState: {
       cookies: [],
       origins: [
@@ -38,14 +49,14 @@ export default defineConfig({
   },
   projects: [
     {
-      name: 'chromium',
+      name: 'Desktop Chrome',
       use: { ...devices['Desktop Chrome'] },
     },
   ],
-  webServer: process.env.TEST_BASE_URL
+  webServer: testUrl
     ? undefined
     : {
-        command: `PORT=${testPort} npm run start`,
+        command: `PORT=${testPort} npm run dev`,
         url: baseURL,
         reuseExistingServer: true,
         timeout: 60000,

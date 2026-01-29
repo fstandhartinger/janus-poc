@@ -1,0 +1,48 @@
+name: Visual Regression Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  visual:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: cd ui && npm ci
+
+      - name: Install Playwright browsers
+        run: cd ui && npx playwright install --with-deps chromium
+
+      - name: Run visual tests
+        run: cd ui && npx playwright test --config=playwright.visual.config.ts
+        env:
+          TEST_URL: ${{ secrets.TEST_URL }}
+          CHUTES_JANUS_PRE_RELEASE_PWD: ${{ secrets.CHUTES_JANUS_PRE_RELEASE_PWD }}
+          NEXT_PUBLIC_ENABLE_VOICE_INPUT: ${{ secrets.NEXT_PUBLIC_ENABLE_VOICE_INPUT }}
+
+      - name: Upload snapshots on failure
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: visual-snapshots
+          path: |
+            ui/e2e/visual/snapshots/
+            ui/test-results/
+          retention-days: 7
+
+      - name: Upload report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: visual-report
+          path: ui/playwright-report/
+          retention-days: 30

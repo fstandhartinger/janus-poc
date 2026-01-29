@@ -98,3 +98,5 @@
 - Completed spec 103_demo_prompts_in_chat_ui.md with demo prompt data, empty-state grid, quick suggestions, full prompt modal, and Playwright coverage.
 - Completed spec 105_fix_mermaid_modal.md with chat mermaid fullscreen modal support, hover hint styling, and keyboard-accessible interactions.
 - Note: `npm run lint` currently fails due to existing `react-hooks/set-state-in-effect` errors in chat/share/pre-release/TTS components; not addressed in this spec.
+- Completed spec 107_e2e_browser_automation_testing.md with Playwright helpers, expanded UI E2E coverage (auth, file upload, memory, debug, voice), debug panel wiring, fingerprint auth fallback, and CI workflow wiring.
+- Completed spec 108_visual_regression_testing.md with Playwright visual config, visual test suites (pages, components, themes, responsive, states, a11y, animations), stabilized UI fixtures, baseline snapshots, and CI workflow.
