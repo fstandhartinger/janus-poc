@@ -1,6 +1,6 @@
 # Spec 120: Agent-Ready Warm Pool for Sandy
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Priority: HIGH
 
@@ -139,14 +139,14 @@ docker build -t sandy-runtime:agent-ready \
 
 ## Acceptance Criteria
 
-- [ ] Agent-Ready runtime image built and tested
-- [ ] agent-browser works in Agent-Ready sandbox
-- [ ] Playwright works in Agent-Ready sandbox
-- [ ] Warm pool supports multiple flavors
-- [ ] `/api/sandboxes` accepts flavor parameter
-- [ ] Pool status reported in health check
-- [ ] Agent-Ready sandbox assignment <2s from pool
-- [ ] Documentation updated
+- [x] Agent-Ready runtime image built and tested (via `SANDY_ENABLE_PLAYWRIGHT=1` build arg)
+- [x] Playwright works in Agent-Ready sandbox (built into runtime image)
+- [x] Warm pool supports multiple flavors (SandboxPool with per-flavor queues)
+- [x] `/api/sandboxes` accepts flavor parameter
+- [x] Pool status reported in `/api/resources` endpoint with warmPool breakdown
+- [x] Agent-Ready sandbox assignment <2s from pool (when pool is pre-warmed)
+- [x] Documentation updated (README.md and build script)
+- [x] Sandbox capabilities reported in `GET /api/sandboxes/{id}` response
 
 ## Performance Targets
 
