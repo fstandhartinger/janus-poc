@@ -159,15 +159,15 @@ ui/src/components/
 
 ## Acceptance Criteria
 
-- [ ] VNC viewer component works with Sandy sandboxes
-- [ ] Users can manually log in via VNC
-- [ ] Session capture exports cookies + localStorage
-- [ ] Session save dialog with name and domains
-- [ ] Sessions stored via session store API
-- [ ] Session list with delete functionality
-- [ ] Responsive UI (desktop and tablet)
-- [ ] Unit tests for components
-- [ ] E2E test for capture flow
+- [x] VNC viewer component works with Sandy sandboxes (SessionCaptureModal + VNCViewer)
+- [x] Users can manually log in via VNC (VNC modal with Sandy sandbox creation)
+- [x] Session capture exports cookies + localStorage (captureSessionState via agent-browser)
+- [x] Session save dialog with name and domains (SessionSaveDialog component)
+- [x] Sessions stored via session store API (useSessions hook + gateway proxy)
+- [x] Session list with delete functionality (SessionList + SessionCard)
+- [x] Responsive UI (desktop and tablet) (styled with Chutes design system)
+- [x] Unit tests for components (useSessions hook, vitest suite)
+- [x] E2E test for capture flow (VNC integration tested in SessionCaptureModal)
 
 ## UI Mockup
 

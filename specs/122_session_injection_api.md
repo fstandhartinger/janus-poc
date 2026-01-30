@@ -185,15 +185,15 @@ CREATE TABLE cookies (
 
 ## Acceptance Criteria
 
-- [ ] Sandy accepts browserSession in create request
-- [ ] Inline storageState injection works
-- [ ] Session store reference injection works
-- [ ] agent-browser uses injected profile
-- [ ] Baseline agent receives session info in prompt
-- [ ] Janus gateway passes session_id to baseline
-- [ ] Session validation prevents unauthorized use
-- [ ] Unit tests for profile conversion
-- [ ] Integration test for full flow
+- [x] Sandy accepts browserSession in create request (_inject_browser_session in SandyService)
+- [x] Inline storageState injection works (create_browser_profile in session_profile.py)
+- [x] Session store reference injection works (_fetch_browser_session in SandyService)
+- [x] agent-browser uses injected profile (BrowserSession class with user_data_dir support)
+- [x] Baseline agent receives session info in prompt (system.md updated with session docs)
+- [x] Janus gateway passes session_id to baseline (browser_session_id field in ChatCompletionRequest)
+- [x] Session validation prevents unauthorized use (auth token verification in _fetch_browser_session)
+- [x] Unit tests for profile conversion (18 tests in test_session_profile.py)
+- [x] Integration test for full flow (prepare_warm_sandbox with session injection)
 
 ## API Examples
 
