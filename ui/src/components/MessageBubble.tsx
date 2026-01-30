@@ -47,7 +47,10 @@ function useStreamingBuffer(content: string, isStreaming: boolean) {
 
   useEffect(() => {
     if (!isStreaming) {
-      setDisplayContent(content);
+      // Schedule state update outside effect render cycle
+      queueMicrotask(() => {
+        setDisplayContent(content);
+      });
       bufferRef.current = content;
       return;
     }
@@ -212,20 +215,28 @@ export function MessageBubble({
   const updateMessage = useChatStore((state) => state.updateMessage);
   const arenaData = message.arena;
   const contentParts = typeof message.content === 'string' ? [] : message.content || [];
-  const rawTextContent =
-    typeof message.content === 'string'
-      ? message.content
-      : contentParts
-          .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
-          .map((c) => c.text)
-          .join('\n');
-  const textContent = stripCanvasBlocks(rawTextContent);
-  const parsedAudio = parseAudioContent(textContent);
-  const cleanedText = stripAudioContent(textContent);
-  const { text: cleanedTextSansImages, images: inlineImages } = useMemo(
-    () => parseImageContent(cleanedText),
-    [cleanedText]
-  );
+
+  // Memoize the entire text processing chain to make dependencies stable
+  const { textContent, parsedAudio, cleanedText, cleanedTextSansImages, inlineImages } = useMemo(() => {
+    const rawTextContent =
+      typeof message.content === 'string'
+        ? message.content
+        : contentParts
+            .filter((c): c is { type: 'text'; text: string } => c.type === 'text')
+            .map((c) => c.text)
+            .join('\n');
+    const tc = stripCanvasBlocks(rawTextContent);
+    const pa = parseAudioContent(tc);
+    const ct = stripAudioContent(tc);
+    const { text: ctsi, images: ii } = parseImageContent(ct);
+    return {
+      textContent: tc,
+      parsedAudio: pa,
+      cleanedText: ct,
+      cleanedTextSansImages: ctsi,
+      inlineImages: ii,
+    };
+  }, [message.content, contentParts]);
   const hasInlineImages = inlineImages.length > 0;
   const hasText = Boolean(cleanedTextSansImages);
   const hasAudio = parsedAudio.length > 0;
@@ -299,7 +310,10 @@ export function MessageBubble({
     // This keeps the thinking section open while the agent is working
     if (!isStreaming && hasRealContent && !hasAutoCollapsedRef.current) {
       hasAutoCollapsedRef.current = true;
-      setIsThinkingExpanded(false);
+      // Schedule state update outside effect render cycle
+      queueMicrotask(() => {
+        setIsThinkingExpanded(false);
+      });
     }
   }, [hasRealContent, hasUsefulReasoning, isStreaming]);
 

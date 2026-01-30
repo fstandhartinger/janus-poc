@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, useSyncExternalStore } from 'react';
+import React, { useCallback, useEffect, useState, useSyncExternalStore, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Sidebar, ChatArea } from '@/components';
 import { useCanvasStore } from '@/store/canvas';
@@ -76,17 +76,28 @@ export default function ChatPage() {
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const handleNewChat = useCallback(() => createSession(), [createSession]);
 
+  // Handle initial share payload from URL params
+  // Using a ref to track if we've processed the params to avoid calling setState in effect
+  const hasProcessedShareParams = useRef(false);
+
   useEffect(() => {
+    if (hasProcessedShareParams.current) return;
+
     const initial = searchParams.get('initial');
     if (!initial) return;
+
+    hasProcessedShareParams.current = true;
 
     const autoSubmit = searchParams.get('autoSubmit') === 'true';
     const enableTTS = searchParams.get('tts') === 'true';
 
-    setSharePayload({ initial, autoSubmit });
-    if (enableTTS) {
-      setTTSAutoPlay(true);
-    }
+    // Schedule state updates outside of effect render cycle
+    queueMicrotask(() => {
+      setSharePayload({ initial, autoSubmit });
+      if (enableTTS) {
+        setTTSAutoPlay(true);
+      }
+    });
 
     const url = new URL(window.location.href);
     url.searchParams.delete('initial');

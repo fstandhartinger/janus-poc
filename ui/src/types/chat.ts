@@ -81,6 +81,7 @@ export interface Message {
 
 export interface MessageMetadata {
   requestId?: string;
+  debugRequestId?: string;
   model?: string;
   durationMs?: number;
 }

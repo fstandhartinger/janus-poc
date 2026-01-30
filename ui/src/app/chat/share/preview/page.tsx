@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function ShareTargetPage() {
@@ -8,14 +8,20 @@ export default function ShareTargetPage() {
   const searchParams = useSearchParams();
   const [content, setContent] = useState<{ title?: string; text?: string; url?: string } | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const hasProcessedParams = useRef(false);
 
   useEffect(() => {
+    if (hasProcessedParams.current) return;
+
     const title = searchParams.get('title') || undefined;
     const text = searchParams.get('text') || undefined;
     const url = searchParams.get('url') || undefined;
 
     if (title || text || url) {
-      setContent({ title, text, url });
+      hasProcessedParams.current = true;
+      queueMicrotask(() => {
+        setContent({ title, text, url });
+      });
     }
   }, [searchParams]);
 

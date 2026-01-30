@@ -43,6 +43,7 @@ pytest
 - `GET /v1/models` - List available models/competitors
 - `POST /v1/chat/completions` - Chat completions (streaming supported)
 - `GET /v1/artifacts/{id}` - Retrieve stored artifacts
+- `POST /api/search/web` - Web search (Serper/SearXNG)
 
 ## Environment Variables
 
@@ -57,5 +58,7 @@ pytest
 | `JANUS_SANDY_BASE_URL` | - | Sandy API base URL |
 | `JANUS_SANDY_API_KEY` | - | Sandy API key |
 | `CHUTES_API_KEY` | - | Chutes Whisper API key for transcription |
+| `SERPER_API_KEY` | - | Serper API key for web search |
+| `SEARXNG_API_URL` | - | SearXNG base URL for web search fallback |
 
 `BASELINE_AGENT_CLI_URL` and `BASELINE_URL` are accepted as aliases for `JANUS_BASELINE_URL`. `BASELINE_LANGCHAIN_URL` is accepted as an alias for `JANUS_BASELINE_LANGCHAIN_URL`.

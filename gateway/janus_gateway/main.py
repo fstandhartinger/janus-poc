@@ -21,6 +21,7 @@ from janus_gateway.routers import (
     sessions_router,
     models_router,
     arena_router,
+    search_router,
     transcription_router,
     research_router,
     tts_router,
@@ -151,6 +152,7 @@ app.include_router(tts_router)
 app.include_router(memories_router)
 app.include_router(sessions_router)
 app.include_router(arena_router)
+app.include_router(search_router)
 
 
 def main() -> None:

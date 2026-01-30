@@ -84,6 +84,16 @@ class Settings(BaseSettings):
         description="Chutes search base URL",
         validation_alias=AliasChoices("CHUTES_SEARCH_URL", "JANUS_CHUTES_SEARCH_URL"),
     )
+    serper_api_key: str = Field(
+        default="",
+        description="Serper API key for web search",
+        validation_alias=AliasChoices("SERPER_API_KEY", "JANUS_SERPER_API_KEY"),
+    )
+    searxng_api_url: str = Field(
+        default="",
+        description="SearXNG API URL for web search fallback",
+        validation_alias=AliasChoices("SEARXNG_API_URL", "JANUS_SEARXNG_API_URL"),
+    )
     firecrawl_api_key: Optional[str] = Field(
         default=None,
         description="Firecrawl API key",

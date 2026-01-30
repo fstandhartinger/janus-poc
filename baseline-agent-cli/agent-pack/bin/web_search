@@ -33,6 +33,8 @@ def _normalize_results(raw: Any) -> list[dict[str, str]]:
             items = raw.get("items")
         elif isinstance(raw.get("searchResults"), list):
             items = raw.get("searchResults")
+        elif isinstance(raw.get("organic"), list):
+            items = raw.get("organic")
     elif isinstance(raw, list):
         items = raw
 
@@ -74,6 +76,28 @@ def _resolve_search_url(base_url: str) -> str:
     if base.endswith("/search"):
         return base
     return f"{base}/api/search"
+
+
+def _search_serper(query: str) -> list[dict[str, str]]:
+    api_key = os.environ.get("SERPER_API_KEY", "")
+    if not api_key:
+        raise ValueError("SERPER_API_KEY not configured")
+    payload = json.dumps({"q": query, "num": 6}).encode("utf-8")
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "janus-web-search",
+        "X-API-KEY": api_key,
+    }
+    request = urllib.request.Request(
+        "https://google.serper.dev/search",
+        data=payload,
+        headers=headers,
+        method="POST",
+    )
+    with urllib.request.urlopen(request, timeout=30) as response:
+        raw = response.read().decode("utf-8", errors="replace")
+    data = json.loads(raw)
+    return _normalize_results(data)
 
 
 def _search_chutes(query: str) -> list[dict[str, str]]:
@@ -136,6 +160,18 @@ def main() -> int:
     error: str | None = None
 
     try:
+        if os.environ.get("SERPER_API_KEY"):
+            results = _search_serper(query)
+            filtered = _filter_valid_results(results)
+            if filtered:
+                results = filtered
+            source = "serper"
+        else:
+            raise ValueError("SERPER_API_KEY not configured")
+    except Exception as exc:
+        error = str(exc)
+
+    if not results:
         results = _search_chutes(query)
         filtered = _filter_valid_results(results)
         if filtered:
@@ -144,8 +180,6 @@ def main() -> int:
             results = []
             error = "Chutes search returned no valid results"
         source = "chutes-search"
-    except Exception as exc:
-        error = str(exc)
 
     if not results:
         try:

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 
 interface ChatOverflowMenuProps {
   debugEnabled: boolean;
@@ -200,7 +201,7 @@ export function ChatOverflowMenu({
             <span className="chat-overflow-label">Browser Sessions</span>
           </button>
 
-          <a
+          <Link
             href="/"
             role="menuitem"
             className="chat-overflow-item"
@@ -208,7 +209,7 @@ export function ChatOverflowMenu({
           >
             <HomeIcon className="w-4 h-4" />
             <span className="chat-overflow-label">Go home</span>
-          </a>
+          </Link>
         </div>
       )}
     </div>

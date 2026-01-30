@@ -111,7 +111,10 @@ export function usePWAInstall() {
     if (!isMobile()) return;
 
     if (isPWA()) {
-      setIsInstalled(true);
+      // Schedule state update outside effect render cycle
+      queueMicrotask(() => {
+        setIsInstalled(true);
+      });
       return;
     }
 

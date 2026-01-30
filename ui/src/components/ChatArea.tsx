@@ -136,7 +136,7 @@ export function ChatArea({
   const messages = session?.messages || [];
   const lastDebugRequestId = useMemo(() => {
     const lastAssistant = [...messages].reverse().find((message) => message.role === 'assistant');
-    return lastAssistant?.metadata?.requestId || null;
+    return lastAssistant?.metadata?.debugRequestId || lastAssistant?.metadata?.requestId || null;
   }, [messages]);
   const lastMessageContent = messages.length
     ? getMessageText(messages[messages.length - 1].content)
@@ -537,9 +537,15 @@ export function ChatArea({
       const handleResponse = (streamResponse: Response) => {
         const requestId =
           streamResponse.headers.get('x-request-id') || streamResponse.headers.get('X-Request-Id');
+        const debugRequestId =
+          streamResponse.headers.get('x-debug-request-id') ||
+          streamResponse.headers.get('X-Debug-Request-Id');
         if (requestId) {
           updateLastMessageMetadata({ requestId });
           logger.setRequestId(requestId);
+        }
+        if (debugRequestId) {
+          updateLastMessageMetadata({ debugRequestId });
         }
       };
 

@@ -77,8 +77,12 @@ export function GenerativeUI({ html, className }: GenerativeUIProps) {
 
   const srcDoc = useMemo(() => injectResizeScript(html), [html]);
 
+  // Reset content height when iframe/html changes
   useEffect(() => {
-    setContentHeight(DEFAULT_HEIGHT);
+    // Schedule state update outside effect render cycle
+    queueMicrotask(() => {
+      setContentHeight(DEFAULT_HEIGHT);
+    });
   }, [iframeKey, html]);
 
   useEffect(() => {

@@ -10,6 +10,8 @@ from tavily import TavilyClient
 
 from janus_baseline_langchain.config import get_settings
 
+_SERPER_URL = "https://google.serper.dev/search"
+
 
 def _search_with_retries(query: str, max_results: int) -> dict[str, object]:
     settings = get_settings()
@@ -46,6 +48,44 @@ def _resolve_search_url(base_url: str) -> str:
     return f"{base}/api/search"
 
 
+def _resolve_searxng_url(base_url: str) -> str:
+    base = base_url.rstrip("/")
+    if base.endswith("/search"):
+        return base
+    return f"{base}/search"
+
+
+def _search_serper(query: str, max_results: int) -> dict[str, object]:
+    settings = get_settings()
+    if not settings.serper_api_key:
+        raise ValueError("SERPER_API_KEY not configured")
+    response = httpx.post(
+        _SERPER_URL,
+        json={"q": query, "num": max_results},
+        headers={"X-API-KEY": settings.serper_api_key, "Content-Type": "application/json"},
+        timeout=20,
+    )
+    response.raise_for_status()
+    return cast(dict[str, object], response.json())
+
+
+def _search_searxng(query: str, max_results: int) -> dict[str, object]:
+    settings = get_settings()
+    if not settings.searxng_api_url:
+        raise ValueError("SEARXNG_API_URL not configured")
+    url = _resolve_searxng_url(settings.searxng_api_url)
+    response = httpx.get(
+        url,
+        params={"q": query, "format": "json"},
+        timeout=20,
+    )
+    response.raise_for_status()
+    payload = cast(dict[str, object], response.json())
+    if isinstance(payload.get("results"), list):
+        payload["results"] = payload["results"][: max(1, max_results)]
+    return payload
+
+
 def _search_chutes(query: str, max_results: int) -> dict[str, object]:
     settings = get_settings()
     url = _resolve_search_url(settings.chutes_search_url)
@@ -65,6 +105,20 @@ def _search_chutes(query: str, max_results: int) -> dict[str, object]:
 def _normalize_results(raw: Any) -> list[dict[str, object]]:
     if isinstance(raw, dict) and isinstance(raw.get("results"), list):
         return cast(list[dict[str, object]], raw.get("results"))
+    if isinstance(raw, dict) and isinstance(raw.get("organic"), list):
+        organic = cast(list[dict[str, object]], raw.get("organic"))
+        normalized: list[dict[str, object]] = []
+        for item in organic:
+            if not isinstance(item, dict):
+                continue
+            normalized.append(
+                {
+                    "title": item.get("title") or "",
+                    "url": item.get("link") or item.get("url") or "",
+                    "snippet": item.get("snippet") or item.get("description") or "",
+                }
+            )
+        return normalized
     if isinstance(raw, dict) and isinstance(raw.get("data"), dict):
         data = raw.get("data") or {}
         if isinstance(data.get("results"), list):
@@ -100,6 +154,34 @@ def web_search(query: str) -> str:
             if filtered:
                 result["results"] = filtered
             return json.dumps(result)
+        except Exception as exc:
+            last_error = exc
+
+    if settings.serper_api_key:
+        try:
+            result = _search_serper(query, max_results=5)
+            normalized = _normalize_results(result)
+            filtered = _filter_valid_results(normalized)
+            payload = {
+                "query": query,
+                "source": "serper",
+                "results": filtered or normalized,
+            }
+            return json.dumps(payload)
+        except Exception as exc:
+            last_error = exc
+
+    if settings.searxng_api_url:
+        try:
+            result = _search_searxng(query, max_results=5)
+            normalized = _normalize_results(result)
+            filtered = _filter_valid_results(normalized)
+            payload = {
+                "query": query,
+                "source": "searxng",
+                "results": filtered or normalized,
+            }
+            return json.dumps(payload)
         except Exception as exc:
             last_error = exc
 

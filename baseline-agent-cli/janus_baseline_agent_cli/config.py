@@ -135,6 +135,24 @@ class Settings(BaseSettings):
             "BASELINE_CHUTES_SEARCH_URL",
         ),
     )
+    serper_api_key: Optional[str] = Field(
+        default=None,
+        description="Serper API key for web search",
+        validation_alias=AliasChoices(
+            "SERPER_API_KEY",
+            "BASELINE_AGENT_CLI_SERPER_API_KEY",
+            "BASELINE_SERPER_API_KEY",
+        ),
+    )
+    searxng_api_url: Optional[str] = Field(
+        default=None,
+        description="SearXNG API URL for web search fallback",
+        validation_alias=AliasChoices(
+            "SEARXNG_API_URL",
+            "BASELINE_AGENT_CLI_SEARXNG_API_URL",
+            "BASELINE_SEARXNG_API_URL",
+        ),
+    )
 
     # Model router configuration
     use_model_router: bool = Field(

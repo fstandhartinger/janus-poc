@@ -254,10 +254,12 @@ The baseline uses [Chutes](https://chutes.ai) as the inference provider. Chutes 
 | `BASELINE_AGENT_CLI_OPENAI_BASE_URL` | - | Legacy alias for the Chutes API URL |
 | `BASELINE_AGENT_CLI_CHUTES_API_BASE` | `https://llm.chutes.ai/v1` | Chutes API base URL |
 | `BASELINE_AGENT_CLI_CHUTES_SEARCH_URL` | `https://chutes-search.onrender.com` | Chutes search base URL |
+| `BASELINE_AGENT_CLI_SERPER_API_KEY` | - | Serper API key for web search |
+| `BASELINE_AGENT_CLI_SEARXNG_API_URL` | - | SearXNG base URL for web search fallback |
 | `BASELINE_AGENT_CLI_MODEL` | `janus-router` | Model name exposed to clients |
 | `BASELINE_AGENT_CLI_DIRECT_MODEL` | `zai-org/GLM-4.7-TEE` | Direct model when router is disabled |
 
-For container usage, `OPENAI_API_KEY` and `OPENAI_BASE_URL` are also accepted.
+For container usage, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `SERPER_API_KEY`, and `SEARXNG_API_URL` are also accepted.
 
 > **Note**: Despite the `OPENAI_` prefix, these variables configure access to **Chutes**, not OpenAI. The prefix exists because the implementation uses the OpenAI Python client library, which Chutes supports via its OpenAI-compatible API.
 

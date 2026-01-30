@@ -40,3 +40,10 @@ ralph-logs/
 # Local config
 credentials.md
 logs/
+
+# Windows artifacts and bad paths (from Lighthouse/Chrome profiles)
+*:Zone.Identifier
+**/*:Zone.Identifier
+**/C:*
+**/AppData/**
+ui/C:*

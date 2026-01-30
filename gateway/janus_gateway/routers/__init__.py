@@ -12,6 +12,7 @@ from .sessions import router as sessions_router
 from .debug import router as debug_router
 from .logs import router as logs_router
 from .arena import router as arena_router
+from .search import router as search_router
 
 __all__ = [
     "health_router",
@@ -26,4 +27,5 @@ __all__ = [
     "debug_router",
     "logs_router",
     "arena_router",
+    "search_router",
 ]

@@ -133,6 +133,22 @@ class Settings(BaseSettings):
             "BASELINE_LANGCHAIN_CHUTES_SEARCH_URL",
         ),
     )
+    serper_api_key: Optional[str] = Field(
+        default=None,
+        description="Serper API key for web search",
+        validation_alias=AliasChoices(
+            "SERPER_API_KEY",
+            "BASELINE_LANGCHAIN_SERPER_API_KEY",
+        ),
+    )
+    searxng_api_url: Optional[str] = Field(
+        default=None,
+        description="SearXNG API URL for web search fallback",
+        validation_alias=AliasChoices(
+            "SEARXNG_API_URL",
+            "BASELINE_LANGCHAIN_SEARXNG_API_URL",
+        ),
+    )
 
     # Artifacts
     artifacts_dir: str = Field(

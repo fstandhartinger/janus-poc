@@ -187,10 +187,14 @@ export function TTSPlayer({
     if (state !== 'idle') return;
 
     let cancelled = false;
-    handlePlay().finally(() => {
-      if (!cancelled) {
-        onAutoPlayHandled?.();
-      }
+    // Schedule the async operation outside of effect render cycle
+    queueMicrotask(() => {
+      if (cancelled) return;
+      handlePlay().finally(() => {
+        if (!cancelled) {
+          onAutoPlayHandled?.();
+        }
+      });
     });
 
     return () => {

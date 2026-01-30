@@ -537,6 +537,8 @@ class SandyService:
             "CHUTES_API_URL": chutes_api_url,
             "CHUTES_API_BASE": chutes_api_url,
             "CHUTES_SEARCH_URL": self._settings.chutes_search_url,
+            "SERPER_API_KEY": self._settings.serper_api_key or "",
+            "SEARXNG_API_URL": self._settings.searxng_api_url or "",
             "JANUS_SANDBOX_ID": sandbox_id,
             "JANUS_SANDBOX_URL": sandbox_url,
             "JANUS_SANDBOX_PUBLIC_URL": public_url or "",

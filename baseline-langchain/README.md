@@ -13,7 +13,7 @@ An alternative Janus baseline implementation built on LangChain. This service ru
   - `music_generation`: DiffRhythm music generation
   - `audio_generation`: Audio/sound generation
   - `video_generation`: Chutes video generation
-  - `web_search`: Tavily search API
+  - `web_search`: Tavily/Serper search APIs (fallback to chutes-search)
   - `deep_research`: Chutes search with citations
   - `code_execution`: LangChain Python REPL tool
   - `clone_repository`: Clone git repositories for analysis
@@ -117,6 +117,8 @@ flowchart TB
 | `BASELINE_LANGCHAIN_CHUTES_API_KEY` | Chutes API key (image/TTS) | - |
 | `BASELINE_LANGCHAIN_CHUTES_API_BASE` | Chutes API base URL | `https://llm.chutes.ai/v1` |
 | `BASELINE_LANGCHAIN_TAVILY_API_KEY` | Tavily API key (web search) | - |
+| `BASELINE_LANGCHAIN_SERPER_API_KEY` | Serper API key (web search fallback) | - |
+| `BASELINE_LANGCHAIN_SEARXNG_API_URL` | SearXNG base URL (web search fallback) | - |
 | `BASELINE_LANGCHAIN_CHUTES_SEARCH_URL` | Chutes search base URL | `https://chutes-search.onrender.com` |
 | `BASELINE_LANGCHAIN_VISION_MODEL_PRIMARY` | Primary vision model | `Qwen/Qwen3-VL-235B-A22B-Instruct` |
 | `BASELINE_LANGCHAIN_VISION_MODEL_FALLBACK` | Fallback vision model | `chutesai/Mistral-Small-3.2-24B-Instruct-2506` |
@@ -127,7 +129,7 @@ flowchart TB
 | `BASELINE_LANGCHAIN_COMPLEXITY_THRESHOLD` | Token threshold for agent routing | `100` |
 | `BASELINE_LANGCHAIN_ALWAYS_USE_AGENT` | Force agent routing | `false` |
 
-For container usage, `HOST`, `PORT`, `DEBUG`, `LOG_LEVEL`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `CHUTES_API_KEY`, and `TAVILY_API_KEY` are also accepted.
+For container usage, `HOST`, `PORT`, `DEBUG`, `LOG_LEVEL`, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `CHUTES_API_KEY`, `TAVILY_API_KEY`, `SERPER_API_KEY`, and `SEARXNG_API_URL` are also accepted.
 
 ## Run Locally
 

@@ -134,6 +134,13 @@ print(report)  # Includes citations [1], [2], etc.
 - Code generation tasks
 - Personal opinions
 
+### Web Search
+
+When you need to search the web for current information:
+1. Use the `web_search` tool with your query.
+2. Results include title, URL, and snippet for each result.
+3. Cite sources when using information from search results.
+
 ### 📚 Research Quality Requirements
 
 When answering factual or research questions:

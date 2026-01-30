@@ -56,8 +56,11 @@ export function ShareModal({ isOpen, onClose, conversationId, messages }: ShareM
 
   useEffect(() => {
     if (!isOpen) {
-      setShareUrl('');
-      setCopied(false);
+      // Schedule state updates outside effect render cycle
+      queueMicrotask(() => {
+        setShareUrl('');
+        setCopied(false);
+      });
       return;
     }
 

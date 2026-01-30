@@ -3,7 +3,7 @@
 > A spec-first Proof-of-Concept for the Janus platform - an AI agent gateway with OpenAI API compatibility.
 
 ## Version
-1.0.4
+1.0.5
 
 ## Ralph Wiggum Version
 Installed from commit: 81231ca4e7466d84e3908841e9ed3d08e8c0803e
@@ -403,6 +403,33 @@ cd ui && npm run typecheck
 
 ---
 
+## Dual Repository Sync
+
+This project is maintained in two GitHub repositories that must be kept in sync:
+
+| Repository | URL | Purpose |
+|------------|-----|---------|
+| **Primary (dev)** | `https://github.com/fstandhartinger/janus-poc` | Active development |
+| **Chutes org** | `https://github.com/chutesai/janus-poc` | Official Chutes org copy |
+
+### Sync Protocol
+
+**After every significant commit/push:**
+1. Push to origin (fstandhartinger): `git push origin main`
+2. Push to chutesai: `git push chutesai main`
+
+**Setup (one-time):**
+```bash
+git remote add chutesai https://github.com/chutesai/janus-poc.git
+```
+
+**Future migration:**
+- Render hosting will eventually be wired to the chutesai repo
+- Once migrated, chutesai becomes primary and fstandhartinger becomes archive
+- Until then, keep both repos in sync manually
+
+---
+
 ## Governance
 
 - **Amendments**: Update this file, increment version, note changes
@@ -420,8 +447,9 @@ cd ui && npm run typecheck
 ---
 
 **Created**: 2025-01-22
-**Version**: 1.0.4
+**Version**: 1.0.5
 **Amendments**:
 - 1.0.2: Added explicit pre-release password entry guidance for browser automation.
 - 1.0.3: Added parallel Ralph loops warning and port conflict mitigation (use ports 4720+).
 - 1.0.4: Added testing time budget (max 25%) and prioritization guidance.
+- 1.0.5: Added dual repository sync protocol (fstandhartinger + chutesai).

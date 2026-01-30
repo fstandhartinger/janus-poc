@@ -178,6 +178,8 @@ See individual component READMEs for full configuration:
 | `CHUTES_OAUTH_REDIRECT_URI` | OAuth redirect URI for UI sign-in |
 | `CHUTES_OAUTH_COOKIE_SECRET` | Optional secret for encrypting OAuth cookies |
 | `CHUTES_API_KEY` | Chutes Whisper API key for transcription |
+| `SERPER_API_KEY` | Serper API key for web search |
+| `SEARXNG_API_URL` | SearXNG base URL for web search fallback |
 | `SANDY_BASE_URL` | Sandy sandbox service URL |
 | `SANDY_API_KEY` | Sandy API key |
 | `BASELINE_AGENT_CLI_OPENAI_API_KEY` | OpenAI API key for baseline |
