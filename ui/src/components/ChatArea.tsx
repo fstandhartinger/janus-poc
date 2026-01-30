@@ -36,6 +36,7 @@ import { QuickSuggestions } from './chat/QuickSuggestions';
 import { DebugPanel } from './debug/DebugPanel';
 import { DebugToggle } from './debug/DebugToggle';
 import { MemoryToggle } from './MemoryToggle';
+import { ChatOverflowMenu } from './ChatOverflowMenu';
 import { MemorySheet } from './memory/MemorySheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
@@ -818,8 +819,8 @@ export function ChatArea({
                     <button type="button" className="chat-signin-btn" onClick={() => signIn()}>
                       Sign in
                     </button>
-                    <div className="chat-free-count">
-                      {freeChatsRemaining}/{FREE_CHAT_LIMIT} free chats remaining
+                    <div className="chat-free-count hidden sm:block">
+                      {freeChatsRemaining}/{FREE_CHAT_LIMIT} free
                     </div>
                   </>
                 )}
@@ -827,12 +828,23 @@ export function ChatArea({
                   <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
                 )}
               </div>
-              <ArenaToggle />
-              <DebugToggle enabled={debugMode} onToggle={setDebugMode} />
-              <MemoryToggle
-                enabled={memoryEnabled}
-                onOpen={() => setMemorySheetOpen(true)}
-                open={memorySheetOpen}
+              <div className="hidden sm:flex items-center gap-2">
+                <ArenaToggle />
+                <DebugToggle enabled={debugMode} onToggle={setDebugMode} />
+                <MemoryToggle
+                  enabled={memoryEnabled}
+                  onOpen={() => setMemorySheetOpen(true)}
+                  open={memorySheetOpen}
+                />
+              </div>
+              <ChatOverflowMenu
+                debugEnabled={debugMode}
+                onDebugChange={setDebugMode}
+                memoryEnabled={memoryEnabled}
+                onMemoryToggle={() => setMemorySheetOpen(true)}
+                freeChatsRemaining={freeChatsRemaining}
+                freeChatsLimit={FREE_CHAT_LIMIT}
+                showFreeChats={!isAuthenticated}
               />
             </div>
           </div>
@@ -933,6 +945,11 @@ export function ChatArea({
 
           <div className="chat-input-bottom px-6">
             <div className="max-w-4xl mx-auto">
+              {!authLoading && !isAuthenticated && (
+                <div className="chat-free-count-mobile sm:hidden">
+                  {freeChatsRemaining}/{FREE_CHAT_LIMIT} free chats remaining today
+                </div>
+              )}
               <QuickSuggestions visible={showQuickSuggestions} onSelect={handleSelectPrompt} />
               <ChatInput onSend={handleSend} disabled={isStreaming} initialInput={prefillMessage} />
             </div>

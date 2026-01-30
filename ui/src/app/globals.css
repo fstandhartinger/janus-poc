@@ -3339,6 +3339,253 @@ html {
   }
 }
 
+/* ─── Chat Overflow Menu (Mobile) ──────────────────────────────────────────── */
+
+.chat-overflow-menu {
+  position: relative;
+  display: none;
+}
+
+.chat-overflow-btn {
+  width: 36px;
+  height: 36px;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(31, 41, 55, 0.8);
+  background: transparent;
+  color: #9CA3AF;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.chat-overflow-btn:hover {
+  color: #F3F4F6;
+  border-color: rgba(55, 65, 81, 0.8);
+  background: rgba(31, 41, 55, 0.4);
+}
+
+.chat-overflow-panel {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 8px);
+  width: 200px;
+  background: rgba(17, 23, 38, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(31, 41, 55, 0.8);
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+  z-index: 100;
+  animation: overflow-panel-in 0.15s ease;
+}
+
+@keyframes overflow-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.chat-overflow-info {
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #6B7280;
+  border-bottom: 1px solid rgba(31, 41, 55, 0.8);
+  margin-bottom: 4px;
+}
+
+.chat-overflow-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: #D1D5DB;
+  font-size: 13px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.chat-overflow-item:hover {
+  background: rgba(31, 41, 55, 0.6);
+  color: #F3F4F6;
+}
+
+.chat-overflow-label {
+  flex: 1;
+  text-align: left;
+}
+
+.chat-overflow-status {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6B7280;
+}
+
+.chat-overflow-status.is-on {
+  color: #63D297;
+}
+
+/* ─── Mobile Free Chats Indicator ──────────────────────────────────────────── */
+
+.chat-free-count-mobile {
+  text-align: center;
+  font-size: 11px;
+  color: #6B7280;
+  padding: 8px 0;
+  margin-bottom: 4px;
+}
+
+/* ─── Enhanced Mobile Responsive (< 640px) ─────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .chat-topbar {
+    padding: 10px 12px;
+    gap: 8px;
+  }
+
+  .chat-topbar-left {
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .chat-topbar-center {
+    flex: 1;
+    min-width: 0;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  .chat-topbar-right {
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Show overflow menu on mobile */
+  .chat-overflow-menu {
+    display: block;
+  }
+
+  /* Hide brand text on very narrow screens */
+  .chat-brand {
+    font-size: 14px;
+    letter-spacing: 0.2em;
+  }
+
+  /* Hide session info on mobile */
+  .chat-session-info {
+    display: none;
+  }
+
+  /* Hide context label */
+  .chat-context {
+    display: none;
+  }
+
+  /* Compact sign-in button */
+  .chat-signin-btn {
+    padding: 5px 10px;
+    font-size: 11px;
+    min-height: 32px;
+  }
+
+  /* Compact menu button with touch target */
+  .chat-menu-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 10px;
+  }
+
+  /* Compact new chat button */
+  .chat-new-chat-btn {
+    width: 32px;
+    height: 32px;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 10px;
+  }
+
+  /* Hide arena toggle on mobile (use overflow menu) */
+  .arena-toggle {
+    display: none;
+  }
+}
+
+/* ─── Extra Small Screens (< 375px) ────────────────────────────────────────── */
+
+@media (max-width: 374px) {
+  .chat-topbar {
+    padding: 8px 10px;
+  }
+
+  /* Hide brand on extra small screens */
+  .chat-brand {
+    display: none;
+  }
+
+  /* Even more compact sign-in */
+  .chat-signin-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .chat-overflow-panel {
+    width: 180px;
+  }
+}
+
+/* ─── Model Selector Mobile Styles ─────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  .model-selector {
+    max-width: 100px;
+  }
+
+  .model-selector-label {
+    display: none;
+  }
+
+  .model-selector-trigger {
+    padding: 6px 8px;
+    font-size: 11px;
+    min-height: 36px;
+  }
+
+  .model-selector-value {
+    max-width: 70px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .model-selector-chevron {
+    width: 14px;
+    height: 14px;
+  }
+
+  .model-selector-dropdown {
+    width: 200px;
+    max-width: calc(100vw - 24px);
+    right: 0;
+    left: auto;
+  }
+}
+
 .vnc-viewer {
   background: var(--bg-ink-800);
   border: 1px solid var(--border-default);
