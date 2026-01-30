@@ -13,19 +13,26 @@ from typing import Any, AsyncIterator, Literal, Optional
 
 import httpx
 import structlog
-from fastapi import FastAPI, Header, HTTPException, Request
+from fastapi import FastAPI, Header, HTTPException, Request, Response
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field
 
-from classifier import TaskClassifier
+from classifier import RoutingDecisionClassifier
 from metrics import metrics
-from models import ModelConfig, TaskType, get_fallback_models, get_model_for_task
+from models import ModelConfig, get_fallback_models, get_model_for_decision
+from decisions import (
+    RoutingDecision,
+    decision_for_images,
+    decision_from_metadata,
+    decision_from_model_id,
+    decision_requires_agent,
+)
 
 logger = structlog.get_logger()
 
 app = FastAPI(title="Janus Composite Model Router", version="1.1.0")
 
-classifier: Optional[TaskClassifier] = None
+classifier: Optional[RoutingDecisionClassifier] = None
 api_key: str = ""
 api_base: str = "https://llm.chutes.ai/v1"
 
@@ -364,7 +371,7 @@ async def startup() -> None:
         or os.environ.get("CHUTES_API_URL")
         or "https://llm.chutes.ai/v1"
     )
-    classifier = TaskClassifier(api_key, api_base)
+    classifier = RoutingDecisionClassifier(api_key, api_base)
 
 
 @app.on_event("shutdown")
@@ -399,6 +406,31 @@ async def get_metrics() -> dict:
     return metrics.to_dict()
 
 
+async def _resolve_routing_decision(
+    messages: list[dict],
+    has_images: bool,
+    metadata: Optional[dict],
+    requested_model: str,
+    path_hint: Literal["fast", "agent"] | None = None,
+) -> tuple[RoutingDecision, float, str, float]:
+    start_time = time.perf_counter()
+    decision = decision_from_metadata(metadata)
+    if decision:
+        return decision, 1.0, "metadata", (time.perf_counter() - start_time) * 1000
+
+    decision = decision_from_model_id(requested_model, path_hint)
+    if decision:
+        return decision, 0.9, "model_override", (time.perf_counter() - start_time) * 1000
+
+    if classifier is None:
+        return RoutingDecision.FAST_NEMOTRON, 0.5, "default", (
+            time.perf_counter() - start_time
+        ) * 1000
+
+    decision, confidence = await classifier.classify(messages, has_images)
+    return decision, confidence, "classifier", (time.perf_counter() - start_time) * 1000
+
+
 # --- Anthropic Messages API Endpoint ---
 
 
@@ -406,6 +438,7 @@ async def get_metrics() -> dict:
 async def anthropic_messages(
     request: AnthropicMessagesRequest,
     raw_request: Request,
+    http_response: Response,
     x_api_key: Optional[str] = Header(None, alias="x-api-key"),
     anthropic_version: Optional[str] = Header(None, alias="anthropic-version"),
     anthropic_beta: Optional[str] = Header(None, alias="anthropic-beta"),
@@ -415,32 +448,41 @@ async def anthropic_messages(
     Claude Code and other Anthropic SDK clients use this endpoint.
     Converts requests to OpenAI format, routes to Chutes, converts response back.
     """
-    start_time = time.perf_counter()
     requested_model = request.model
 
     # Convert Anthropic messages to OpenAI format
     openai_messages = _anthropic_to_openai_messages(request)
     has_images = _detect_images(openai_messages)
 
-    # Classify the task
-    if classifier is None:
-        task_type, confidence = TaskType.GENERAL_TEXT, 0.5
-    else:
-        task_type, confidence = await classifier.classify(openai_messages, has_images)
+    decision, confidence, decision_source, classification_time_ms = await _resolve_routing_decision(
+        openai_messages,
+        has_images,
+        request.metadata if isinstance(request.metadata, dict) else None,
+        requested_model,
+        path_hint="agent",
+    )
+    if has_images:
+        decision = decision_for_images(decision_requires_agent(decision))
 
-    classification_time_ms = (time.perf_counter() - start_time) * 1000
-
-    primary_model = get_model_for_task(task_type)
-    fallbacks = get_fallback_models(primary_model.model_id)
+    primary_model = get_model_for_decision(decision)
+    fallbacks = (
+        []
+        if decision_source in {"metadata", "model_override"}
+        else get_fallback_models(primary_model.model_id)
+    )
 
     logger.info(
         "anthropic_router_decision",
-        task_type=task_type.value,
+        decision=decision.value,
         confidence=confidence,
         model=primary_model.model_id,
         requested_model=requested_model,
+        decision_source=decision_source,
         classification_time_ms=round(classification_time_ms, 2),
     )
+
+    http_response.headers["X-Janus-Routing-Decision"] = decision.value
+    http_response.headers["X-Janus-Routing-Model"] = primary_model.model_id
 
     models_to_try = [primary_model] + fallbacks
     last_error: Exception | None = None
@@ -450,15 +492,15 @@ async def anthropic_messages(
         try:
             if request.stream:
                 response = await _anthropic_stream_response(
-                    request, openai_messages, model_config
+                    request, openai_messages, model_config, decision
                 )
             else:
                 response = await _anthropic_non_stream_response(
-                    request, openai_messages, model_config
+                    request, openai_messages, model_config, decision
                 )
 
             metrics.record_request(
-                task_type=task_type.value,
+                decision=decision.value,
                 model_id=model_config.model_id,
                 classification_time_ms=classification_time_ms,
                 used_fallback=used_fallback,
@@ -492,6 +534,7 @@ async def _anthropic_stream_response(
     anthropic_request: AnthropicMessagesRequest,
     openai_messages: list[dict],
     model_config: ModelConfig,
+    routing_decision: RoutingDecision,
 ) -> StreamingResponse:
     """Stream response in Anthropic SSE format."""
     msg_id = f"msg_{uuid.uuid4().hex[:24]}"
@@ -577,6 +620,9 @@ async def _anthropic_stream_response(
             payload["tools"] = openai_tools
         if openai_tool_choice is not None:
             payload["tool_choice"] = openai_tool_choice
+        metadata = dict(anthropic_request.metadata or {})
+        metadata["routing_decision"] = routing_decision.value
+        payload["metadata"] = metadata
 
         # If tools are present, use non-streaming OpenAI call and stream the Anthropic response.
         if openai_tools or openai_tool_choice is not None:
@@ -676,6 +722,8 @@ async def _anthropic_stream_response(
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "X-Janus-Model": model_config.model_id,
+            "X-Janus-Routing-Decision": routing_decision.value,
+            "X-Janus-Routing-Model": model_config.model_id,
         },
     )
 
@@ -684,6 +732,7 @@ async def _anthropic_non_stream_response(
     anthropic_request: AnthropicMessagesRequest,
     openai_messages: list[dict],
     model_config: ModelConfig,
+    routing_decision: RoutingDecision,
 ) -> dict:
     """Return non-streaming Anthropic format response."""
     max_tokens = anthropic_request.max_tokens or model_config.max_tokens
@@ -705,6 +754,9 @@ async def _anthropic_non_stream_response(
         payload["tools"] = openai_tools
     if openai_tool_choice is not None:
         payload["tool_choice"] = openai_tool_choice
+    metadata = dict(anthropic_request.metadata or {})
+    metadata["routing_decision"] = routing_decision.value
+    payload["metadata"] = metadata
 
     async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
         response = await client.post(
@@ -721,28 +773,43 @@ async def _anthropic_non_stream_response(
 
 
 @app.post("/v1/chat/completions")
-async def chat_completions(request: ChatCompletionRequest, raw_request: Request) -> Any:
+async def chat_completions(
+    request: ChatCompletionRequest,
+    raw_request: Request,
+    http_response: Response,
+) -> Any:
     """Classify and route chat completion requests."""
-    start_time = time.perf_counter()
     has_images = _detect_images(request.messages)
+    requested_model = request.model
 
-    if classifier is None:
-        task_type, confidence = TaskType.GENERAL_TEXT, 0.5
-    else:
-        task_type, confidence = await classifier.classify(request.messages, has_images)
+    decision, confidence, decision_source, classification_time_ms = await _resolve_routing_decision(
+        request.messages,
+        has_images,
+        request.metadata if isinstance(request.metadata, dict) else None,
+        requested_model,
+        path_hint="fast",
+    )
+    if has_images:
+        decision = decision_for_images(decision_requires_agent(decision))
 
-    classification_time_ms = (time.perf_counter() - start_time) * 1000
-
-    primary_model = get_model_for_task(task_type)
-    fallbacks = get_fallback_models(primary_model.model_id)
+    primary_model = get_model_for_decision(decision)
+    fallbacks = (
+        []
+        if decision_source in {"metadata", "model_override"}
+        else get_fallback_models(primary_model.model_id)
+    )
 
     logger.info(
         "router_decision",
-        task_type=task_type.value,
+        decision=decision.value,
         confidence=confidence,
         model=primary_model.model_id,
         classification_time_ms=round(classification_time_ms, 2),
+        decision_source=decision_source,
     )
+
+    http_response.headers["X-Janus-Routing-Decision"] = decision.value
+    http_response.headers["X-Janus-Routing-Model"] = primary_model.model_id
 
     models_to_try = [primary_model] + fallbacks
     last_error: Exception | None = None
@@ -751,12 +818,12 @@ async def chat_completions(request: ChatCompletionRequest, raw_request: Request)
         used_fallback = index > 0
         try:
             if request.stream:
-                response = await _stream_response(request, model_config)
+                response = await _stream_response(request, model_config, decision)
             else:
-                response = await _non_stream_response(request, model_config)
+                response = await _non_stream_response(request, model_config, decision)
 
             metrics.record_request(
-                task_type=task_type.value,
+                decision=decision.value,
                 model_id=model_config.model_id,
                 classification_time_ms=classification_time_ms,
                 used_fallback=used_fallback,
@@ -785,6 +852,7 @@ async def chat_completions(request: ChatCompletionRequest, raw_request: Request)
 async def _stream_response(
     request: ChatCompletionRequest,
     model_config: ModelConfig,
+    routing_decision: RoutingDecision,
 ) -> StreamingResponse:
     """Stream response from the backend model."""
 
@@ -797,7 +865,7 @@ async def _stream_response(
                     "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
-                json=_build_payload(request, model_config, stream=True),
+                json=_build_payload(request, model_config, stream=True, decision=routing_decision),
             ) as response:
                 response.raise_for_status()
                 async for line in response.aiter_lines():
@@ -824,6 +892,8 @@ async def _stream_response(
             "Cache-Control": "no-cache",
             "Connection": "keep-alive",
             "X-Janus-Model": model_config.model_id,
+            "X-Janus-Routing-Decision": routing_decision.value,
+            "X-Janus-Routing-Model": model_config.model_id,
         },
     )
 
@@ -831,6 +901,7 @@ async def _stream_response(
 async def _non_stream_response(
     request: ChatCompletionRequest,
     model_config: ModelConfig,
+    routing_decision: RoutingDecision,
 ) -> dict:
     """Return non-streaming response from backend model."""
     async with httpx.AsyncClient(timeout=model_config.timeout_seconds) as client:
@@ -840,7 +911,7 @@ async def _non_stream_response(
                 "Authorization": f"Bearer {api_key}",
                 "Content-Type": "application/json",
             },
-            json=_build_payload(request, model_config, stream=False),
+            json=_build_payload(request, model_config, stream=False, decision=routing_decision),
         )
         response.raise_for_status()
         data = response.json()
@@ -852,8 +923,13 @@ def _build_payload(
     request: ChatCompletionRequest,
     model_config: ModelConfig,
     stream: bool,
+    decision: RoutingDecision | None = None,
 ) -> dict:
     payload = request.model_dump(exclude_none=True)
+    if decision is not None:
+        metadata = dict(payload.get("metadata") or {})
+        metadata["routing_decision"] = decision.value
+        payload["metadata"] = metadata
     payload["model"] = model_config.model_id
     payload["stream"] = stream
     # Clamp max_tokens to model's configured limit (prevents slow tool-heavy calls)

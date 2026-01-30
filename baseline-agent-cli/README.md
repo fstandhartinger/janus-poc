@@ -15,14 +15,14 @@ flowchart TB
         DETECT["Complexity Detector"]
         KEYWORDS["Keyword Check<br/>(100+ patterns, EN/DE)"]
         URL_CHECK["URL Detection"]
-        LLM_VERIFY["LLM Routing<br/>(Qwen3-Next-80B → MiMo-V2 → DeepSeek-V3)"]
+        LLM_VERIFY["LLM Routing<br/>(Nemotron 3 Nano decision)"]
         TRIVIAL["Trivial Greeting<br/>Bypass"]
     end
 
     subgraph VisionPath ["Vision Path"]
         VISION_CHECK["Image Detection"]
-        VISION_MODEL["Vision Model<br/>(Qwen3-VL-235B)"]
-        VISION_FB["Vision Fallback<br/>(Mistral-Small-3.2)"]
+        VISION_MODEL["Vision Model<br/>(Kimi K2.5)"]
+        VISION_FB["Vision Override<br/>(Kimi K2.5)"]
     end
 
     subgraph FastPath ["Fast Path (Simple Requests)"]
@@ -32,11 +32,11 @@ flowchart TB
     end
 
     subgraph ModelRegistry ["Model Registry"]
-        M_FAST["Fast: GLM-4.7-Flash"]
-        M_GEN["General: Qwen3-Next-80B"]
-        M_REASON["Reasoning: DeepSeek-V3.2-Speciale"]
-        M_CODE["Programming: MiniMax-M2.1"]
-        M_CREATE["Creative: TNG-R1T2-Chimera"]
+        M_FAST["Fast: Qwen3-30B"]
+        M_GEN["Fast: Nemotron 30B"]
+        M_REASON["Fast: Kimi K2.5"]
+        M_CODE["Agent: Nemotron 30B"]
+        M_CREATE["Agent: Kimi K2.5"]
     end
 
     subgraph ComplexPath ["Complex Path (Agent Sandbox)"]
@@ -79,8 +79,8 @@ flowchart TB
     KEYWORDS -->|"No match"| URL_CHECK
     URL_CHECK -->|"URL + interaction"| SANDY
     URL_CHECK -->|"No URL"| LLM_VERIFY
-    LLM_VERIFY -->|"needs_agent: true"| SANDY
-    LLM_VERIFY -->|"needs_agent: false"| VISION_CHECK
+    LLM_VERIFY -->|"decision: agent"| SANDY
+    LLM_VERIFY -->|"decision: fast"| VISION_CHECK
     LLM_VERIFY -->|"Error/Timeout"| SANDY
 
     VISION_CHECK -->|"Has images"| VISION_MODEL
@@ -131,12 +131,12 @@ flowchart TB
    - Trivial greeting bypass (hello, thanks, etc.)
    - Keyword-based detection (100+ patterns in English/German)
    - URL detection with interaction hints
-   - LLM-based routing with fallbacks (Qwen3-Next-80B → MiMo-V2 → DeepSeek-V3)
-4. **Vision Path**: Requests with images route to vision models (Qwen3-VL-235B with Mistral fallback)
+   - LLM-based routing decision via Nemotron 3 Nano (single decision enum)
+4. **Vision Path**: Requests with images always use Kimi K2.5 (fast or agent path)
 5. **Path Selection**:
-   - **Fast Path**: Simple queries go to task-specific models via the model router
+   - **Fast Path**: Simple queries use Qwen3-30B, Nemotron 30B, or Kimi K2.5 per decision
    - **Complex Path**: Complex tasks route to Sandy sandbox with CLI agent
-6. **Model Router**: Selects optimal model by task type (fast, general, reasoning, programming, creative)
+6. **Model Router**: Honors `metadata.routing_decision` or computes the same decision when absent
 7. **Agent Execution**: CLI agent (Claude Code/Aider) runs with full tool access and memory integration
 8. **Response Streaming**: SSE stream with reasoning_content, artifacts, and optional debug_info
 
@@ -156,8 +156,8 @@ When the complex path uses Sandy’s `/agent/run`, make sure the following are t
 - OpenAI-compatible `/v1/chat/completions` endpoint
 - Dual-path architecture (fast vs complex) with intelligent routing
 - Multi-stage complexity detection (keywords, URL hints, LLM verification)
-- Task-specific model routing (fast, general, reasoning, programming, creative)
-- Vision model support with automatic fallback
+- Decision-based routing (path + model) with optional `metadata.routing_decision`
+- Vision routing pinned to Kimi K2.5 for image inputs
 - Sandy sandbox for secure agent execution
 - SSE streaming with `reasoning_content` and `debug_info` fields
 - Artifact generation for file outputs with server-side caching
@@ -267,8 +267,8 @@ For container usage, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `SERPER_API_KEY`, and 
 
 | Variable | Default | Description |
 |----------|---------|-------------|
-| `BASELINE_AGENT_CLI_VISION_MODEL_PRIMARY` | `Qwen/Qwen3-VL-235B-A22B-Instruct` | Primary vision model for image understanding |
-| `BASELINE_AGENT_CLI_VISION_MODEL_FALLBACK` | `chutesai/Mistral-Small-3.2-24B-Instruct-2506` | Fallback vision model for image understanding |
+| `BASELINE_AGENT_CLI_VISION_MODEL_PRIMARY` | `moonshotai/Kimi-K2.5-TEE` | Primary vision model for image understanding |
+| `BASELINE_AGENT_CLI_VISION_MODEL_FALLBACK` | `moonshotai/Kimi-K2.5-TEE` | Fallback vision model for image understanding |
 | `BASELINE_AGENT_CLI_VISION_MODEL_TIMEOUT` | `60.0` | Timeout for vision model requests (seconds) |
 | `BASELINE_AGENT_CLI_ENABLE_VISION_ROUTING` | `true` | Route requests with images to vision models |
 
@@ -299,7 +299,7 @@ For container usage, `OPENAI_API_KEY`, `OPENAI_BASE_URL`, `SERPER_API_KEY`, and 
 
 When routing complex requests into Sandy, we run Claude Code (or other CLI agents) through Sandy's `/agent/run` API. The recommended wiring ensures the model router, system prompt, and agent pack are always in play:
 
-- **Model router**: set `BASELINE_AGENT_CLI_USE_MODEL_ROUTER=true` and pass `apiBaseUrl` to Sandy `/agent/run` (public router URL if available). The model name should stay `janus-router` so the router can choose the best Chutes model + fallbacks.
+- **Model router**: set `BASELINE_AGENT_CLI_USE_MODEL_ROUTER=true` and pass `apiBaseUrl` to Sandy `/agent/run` (public router URL if available). The model name should stay `janus-router` so the router can choose the best Chutes model + fallbacks; optionally pass `metadata.routing_decision` to pin a specific path/model.
 - **System prompt + agent pack**: upload `agent-pack/` into `/workspace/agent-pack`, run `agent-pack/bootstrap.sh`, and point `JANUS_SYSTEM_PROMPT_PATH` at `agent-pack/prompts/system.md` (Claude Code uses `--append-system-prompt-file`).
 - **Working directory**: run the CLI from `/workspace` and include `--add-dir /workspace` for tools that need file access.
 - **Artifacts**: agents should save files into `/workspace/artifacts`. The baseline service emits Janus `artifacts` events with sandbox URLs; the UI caches them server-side (e.g., `/var/data/janus-artifacts`) and serves them via `/api/artifacts/...` for reliable rendering after sandbox teardown.
@@ -318,11 +318,11 @@ When routing complex requests into Sandy, we run Claude Code (or other CLI agent
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `BASELINE_AGENT_CLI_ALWAYS_USE_AGENT` | `false` | Always route requests to the agent path |
-| `BASELINE_AGENT_CLI_LLM_ROUTING_MODEL` | `zai-org/GLM-4.7-Flash` | Fast model for routing decisions |
+| `BASELINE_AGENT_CLI_LLM_ROUTING_MODEL` | `nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16` | Fast model for routing decisions |
 | `BASELINE_AGENT_CLI_LLM_ROUTING_TIMEOUT` | `3.0` | Timeout for routing check (seconds) |
 | `BASELINE_AGENT_CLI_COMPLEXITY_THRESHOLD` | `100` | Token threshold for complexity detection |
 
-> Note: LLM verification is always performed before using the fast path.
+> Note: You can optionally pass `metadata.routing_decision` to pin both path and model.
 
 ### Model Router Configuration
 
@@ -343,8 +343,8 @@ BASELINE_AGENT_CLI_ROUTER_HOST=127.0.0.1
 BASELINE_AGENT_CLI_ROUTER_PORT=8000
 BASELINE_AGENT_CLI_MODEL=janus-router
 BASELINE_AGENT_CLI_DIRECT_MODEL=zai-org/GLM-4.7-TEE
-BASELINE_AGENT_CLI_VISION_MODEL_PRIMARY=Qwen/Qwen3-VL-235B-A22B-Instruct
-BASELINE_AGENT_CLI_VISION_MODEL_FALLBACK=chutesai/Mistral-Small-3.2-24B-Instruct-2506
+BASELINE_AGENT_CLI_VISION_MODEL_PRIMARY=moonshotai/Kimi-K2.5-TEE
+BASELINE_AGENT_CLI_VISION_MODEL_FALLBACK=moonshotai/Kimi-K2.5-TEE
 BASELINE_AGENT_CLI_VISION_MODEL_TIMEOUT=60.0
 BASELINE_AGENT_CLI_ENABLE_VISION_ROUTING=true
 

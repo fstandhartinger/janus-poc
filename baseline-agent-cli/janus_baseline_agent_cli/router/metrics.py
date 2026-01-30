@@ -10,7 +10,7 @@ class RoutingMetrics:
     """Metrics for routing decisions."""
 
     total_requests: int = 0
-    requests_by_task_type: dict[str, int] = field(default_factory=dict)
+    requests_by_decision: dict[str, int] = field(default_factory=dict)
     requests_by_model: dict[str, int] = field(default_factory=dict)
     fallback_count: int = 0
     errors_by_model: dict[str, int] = field(default_factory=dict)
@@ -19,13 +19,13 @@ class RoutingMetrics:
 
     def record_request(
         self,
-        task_type: str,
+        decision: str,
         model_id: str,
         classification_time_ms: float,
         used_fallback: bool = False,
     ) -> None:
         self.total_requests += 1
-        self.requests_by_task_type[task_type] = self.requests_by_task_type.get(task_type, 0) + 1
+        self.requests_by_decision[decision] = self.requests_by_decision.get(decision, 0) + 1
         self.requests_by_model[model_id] = self.requests_by_model.get(model_id, 0) + 1
         if used_fallback:
             self.fallback_count += 1
@@ -42,7 +42,7 @@ class RoutingMetrics:
     def to_dict(self) -> dict:
         return {
             "total_requests": self.total_requests,
-            "requests_by_task_type": self.requests_by_task_type,
+            "requests_by_decision": self.requests_by_decision,
             "requests_by_model": self.requests_by_model,
             "fallback_count": self.fallback_count,
             "fallback_rate": self.fallback_count / max(self.total_requests, 1),

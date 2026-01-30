@@ -50,6 +50,13 @@ from janus_baseline_agent_cli.streaming import optimized_stream_response, stream
 from janus_baseline_agent_cli.tools.memory import INVESTIGATE_MEMORY_TOOL
 from janus_baseline_agent_cli.router.debug import router as debug_router
 from janus_baseline_agent_cli.router.server import app as router_app
+from janus_baseline_agent_cli.routing import (
+    apply_decision_metadata,
+    coerce_decision_for_agent,
+    decision_from_metadata,
+    decision_requires_agent,
+    model_for_decision,
+)
 
 settings = get_settings()
 warm_pool: WarmPoolManager | None = None
@@ -389,29 +396,35 @@ async def stream_response(
             "DETECT",
             "Starting complexity analysis",
         )
+    metadata_decision = decision_from_metadata(request.metadata)
     analysis = await complexity_detector.analyze_async(
         request.messages,
         request.generation_flags,
+        request.metadata,
     )
-    is_complex = analysis.is_complex
+    decision = analysis.decision
+    if settings.always_use_agent and metadata_decision is None and not decision_requires_agent(decision):
+        decision = coerce_decision_for_agent(decision)
+    is_complex = decision_requires_agent(decision)
     reason = analysis.reason
+    routing_model = model_for_decision(decision)
+    request.metadata = apply_decision_metadata(request.metadata, decision)
     sandy_unavailable = is_complex and not sandy_service.is_available
-    using_agent = settings.always_use_agent or (is_complex and sandy_service.is_available)
+    using_agent = is_complex and sandy_service.is_available
     use_cli_fallback = (
         sandy_service.requires_cli_execution(baseline_agent_override)
         if hasattr(sandy_service, "requires_cli_execution")
         else False
     )
     flags_payload = _generation_flags_payload(request.generation_flags)
-    metadata_payload = (
-        {
-            "generation_flags": flags_payload,
-            "using_agent": using_agent,
-            "complexity_reason": reason,
-        }
-        if flags_payload
-        else None
-    )
+    metadata_payload = {
+        "using_agent": using_agent,
+        "complexity_reason": reason,
+        "routing_decision": decision.value,
+        "routing_model": routing_model,
+    }
+    if flags_payload:
+        metadata_payload["generation_flags"] = flags_payload
 
     if debug_emitter:
         if analysis.keywords_matched:
@@ -421,32 +434,38 @@ async def stream_response(
                 f"Keyword match: {', '.join(analysis.keywords_matched)}",
                 data={"keywords": analysis.keywords_matched},
             )
-        if analysis.reason.startswith("llm_verification"):
+        if reason.startswith("llm_verification"):
             await debug_emitter.emit(
                 DebugEventType.COMPLEXITY_CHECK_LLM,
                 "LLM_VERIFY",
-                f"LLM verification: {analysis.reason}",
-                data={"reason": analysis.reason},
+                f"LLM verification: {reason}",
+                data={"reason": reason},
             )
         await debug_emitter.emit(
             DebugEventType.COMPLEXITY_CHECK_COMPLETE,
             "DETECT",
-            f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
-            data={"is_complex": analysis.is_complex, "reason": analysis.reason},
+            f"Complexity: {'complex' if is_complex else 'simple'}",
+            data={"is_complex": is_complex, "reason": reason},
+        )
+        await debug_emitter.emit(
+            DebugEventType.ROUTING_DECISION,
+            "ROUTE",
+            f"Routing decision: {decision.value}",
+            data={"decision": decision.value, "model": routing_model},
         )
         if sandy_unavailable:
             await debug_emitter.emit(
                 DebugEventType.ERROR,
                 "SANDY",
                 "Agent sandbox unavailable for complex request",
-                data={"reason": analysis.reason},
+                data={"reason": reason},
             )
         else:
             await debug_emitter.emit(
                 DebugEventType.AGENT_PATH_START if using_agent else DebugEventType.FAST_PATH_START,
                 "SANDY" if using_agent else "FAST_LLM",
                 "Routing to agent path" if using_agent else "Routing to fast path",
-                data={"using_agent": using_agent, "reason": analysis.reason},
+                data={"using_agent": using_agent, "reason": reason},
             )
 
     logger.info(
@@ -460,6 +479,8 @@ async def stream_response(
         sandy_available=sandy_service.is_available,
         text_preview=analysis.text_preview,
         always_use_agent=settings.always_use_agent,
+        routing_decision=decision.value,
+        routing_model=routing_model,
     )
 
     if sandy_unavailable:
@@ -725,12 +746,19 @@ async def chat_completions(
                 "DETECT",
                 "Starting complexity analysis",
             )
-        analysis = complexity_detector.analyze(
+        metadata_decision = decision_from_metadata(request.metadata)
+        analysis = await complexity_detector.analyze_async(
             request.messages,
             request.generation_flags,
+            request.metadata,
         )
-        is_complex = analysis.is_complex
+        decision = analysis.decision
+        if settings.always_use_agent and metadata_decision is None and not decision_requires_agent(decision):
+            decision = coerce_decision_for_agent(decision)
+        is_complex = decision_requires_agent(decision)
         reason = analysis.reason
+        routing_model = model_for_decision(decision)
+        request.metadata = apply_decision_metadata(request.metadata, decision)
         sandy_unavailable = is_complex and not sandy_service.is_available
         logger.info(
             "complexity_check",
@@ -743,6 +771,8 @@ async def chat_completions(
             sandy_available=sandy_service.is_available,
             text_preview=analysis.text_preview,
             always_use_agent=settings.always_use_agent,
+            routing_decision=decision.value,
+            routing_model=routing_model,
         )
         logger.info(
             "chat_completion_request",
@@ -759,32 +789,38 @@ async def chat_completions(
                     f"Keyword match: {', '.join(analysis.keywords_matched)}",
                     data={"keywords": analysis.keywords_matched},
                 )
-            if analysis.reason.startswith("llm_verification"):
+            if reason.startswith("llm_verification"):
                 await debug_emitter.emit(
                     DebugEventType.COMPLEXITY_CHECK_LLM,
                     "LLM_VERIFY",
-                    f"LLM verification: {analysis.reason}",
-                    data={"reason": analysis.reason},
+                    f"LLM verification: {reason}",
+                    data={"reason": reason},
                 )
             await debug_emitter.emit(
                 DebugEventType.COMPLEXITY_CHECK_COMPLETE,
                 "DETECT",
-                f"Complexity: {'complex' if analysis.is_complex else 'simple'}",
-                data={"is_complex": analysis.is_complex, "reason": analysis.reason},
+                f"Complexity: {'complex' if is_complex else 'simple'}",
+                data={"is_complex": is_complex, "reason": reason},
+            )
+            await debug_emitter.emit(
+                DebugEventType.ROUTING_DECISION,
+                "ROUTE",
+                f"Routing decision: {decision.value}",
+                data={"decision": decision.value, "model": routing_model},
             )
             if sandy_unavailable:
                 await debug_emitter.emit(
                     DebugEventType.ERROR,
                     "SANDY",
                     "Agent sandbox unavailable for complex request",
-                    data={"reason": analysis.reason},
+                    data={"reason": reason},
                 )
             else:
                 await debug_emitter.emit(
                     DebugEventType.AGENT_PATH_START if is_complex else DebugEventType.FAST_PATH_START,
                     "SANDY" if is_complex else "FAST_LLM",
                     "Routing to agent path" if is_complex else "Routing to fast path",
-                    data={"using_agent": is_complex, "reason": analysis.reason},
+                    data={"using_agent": is_complex, "reason": reason},
                 )
         if sandy_unavailable:
             logger.warning(
@@ -793,7 +829,7 @@ async def chat_completions(
                 text_preview=analysis.text_preview,
             )
             return _build_unavailable_response(request)
-        if settings.always_use_agent or (is_complex and sandy_service.is_available):
+        if is_complex and sandy_service.is_available:
             use_cli_fallback = (
                 sandy_service.requires_cli_execution(baseline_agent_header)
                 if hasattr(sandy_service, "requires_cli_execution")

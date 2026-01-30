@@ -69,6 +69,9 @@ chat();
     "messages": [
       {"role": "user", "content": "Explain quantum computing in simple terms"}
     ],
+    "metadata": {
+      "routing_decision": "fast_nemotron"
+    },
     "stream": false
   }'
 `,

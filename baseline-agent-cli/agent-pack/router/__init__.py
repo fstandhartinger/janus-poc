@@ -1,6 +1,8 @@
 """Composite model router for baseline agent."""
 
-from .models import ModelConfig, TaskType
+from decisions import RoutingDecision
+
+from .models import ModelConfig, get_model_for_decision
 from .server import run_router
 
-__all__ = ["ModelConfig", "TaskType", "run_router"]
+__all__ = ["ModelConfig", "RoutingDecision", "get_model_for_decision", "run_router"]

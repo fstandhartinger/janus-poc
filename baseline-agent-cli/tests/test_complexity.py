@@ -12,6 +12,7 @@ from janus_baseline_agent_cli.models import (
     MessageRole,
     TextContent,
 )
+from janus_baseline_agent_cli.routing import RoutingDecision
 from janus_baseline_agent_cli.services import ComplexityDetector
 
 
@@ -149,8 +150,8 @@ async def test_llm_routing_catches_multimodal(monkeypatch: pytest.MonkeyPatch) -
     settings = Settings(openai_api_key="test")
     detector = ComplexityDetector(settings)
 
-    async def fake_llm_check(text: str) -> tuple[bool, str]:
-        return True, "needs_image"
+    async def fake_llm_check(text: str, has_images: bool) -> tuple[RoutingDecision, str]:
+        return RoutingDecision.AGENT_KIMI, "needs_image"
 
     monkeypatch.setattr(detector, "_llm_routing_check", fake_llm_check)
 
@@ -196,7 +197,7 @@ async def test_llm_routing_skips_trivial_greeting(monkeypatch: pytest.MonkeyPatc
     settings = Settings(openai_api_key="test")
     detector = ComplexityDetector(settings)
 
-    async def fail_llm_check(text: str) -> tuple[bool, str]:
+    async def fail_llm_check(text: str, has_images: bool) -> tuple[RoutingDecision, str]:
         raise AssertionError("LLM check should be skipped for greetings")
 
     monkeypatch.setattr(detector, "_llm_routing_check", fail_llm_check)
@@ -205,3 +206,15 @@ async def test_llm_routing_skips_trivial_greeting(monkeypatch: pytest.MonkeyPatc
     result = await detector.analyze_async(messages)
     assert result.is_complex is False
     assert result.reason == "simple"
+
+
+@pytest.mark.asyncio
+async def test_metadata_routing_decision_override() -> None:
+    settings = Settings(openai_api_key="test")
+    detector = ComplexityDetector(settings)
+    messages = [Message(role=MessageRole.USER, content="Hello there")]
+    metadata = {"routing_decision": "agent_kimi"}
+    result = await detector.analyze_async(messages, metadata=metadata)
+    assert result.decision == RoutingDecision.AGENT_KIMI
+    assert result.is_complex is True
+    assert result.reason == "routing_metadata"

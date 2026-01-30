@@ -8,7 +8,8 @@ import { MermaidDiagram } from '@/components/docs/MermaidDiagram';
 const features = [
   {
     title: 'Dual-path routing',
-    description: 'Keyword and LLM checks route simple requests to a fast path while complex tasks go to the agent.',
+    description:
+      'Keyword checks plus an LLM decision choose both the path and model; metadata can pin a decision.',
   },
   {
     title: 'Sandboxed agent execution',
@@ -34,8 +35,8 @@ const features = [
 
 const howItWorksSteps = [
   'Receives OpenAI-compatible chat completion requests.',
-  'Runs keyword-based complexity detection followed by LLM verification.',
-  'Routes simple prompts to a fast LLM path or complex prompts to the agent sandbox.',
+  'Runs keyword-based complexity detection followed by a Nemotron routing decision.',
+  'Routes simple prompts to fast models or complex prompts to the agent sandbox.',
   'Executes the Claude Code CLI agent with full tool access.',
   'Streams responses with reasoning content and artifacts over SSE.',
 ];
@@ -130,12 +131,12 @@ const configSections: Array<{ title: string; description?: string; entries: Conf
     entries: [
       {
         name: 'BASELINE_AGENT_CLI_VISION_MODEL_PRIMARY',
-        defaultValue: 'Qwen/Qwen3-VL-235B-A22B-Instruct',
+        defaultValue: 'moonshotai/Kimi-K2.5-TEE',
         description: 'Primary vision model for image requests.',
       },
       {
         name: 'BASELINE_AGENT_CLI_VISION_MODEL_FALLBACK',
-        defaultValue: 'chutesai/Mistral-Small-3.2-24B-Instruct-2506',
+        defaultValue: 'moonshotai/Kimi-K2.5-TEE',
         description: 'Fallback vision model for image requests.',
       },
       {
@@ -225,7 +226,7 @@ const configSections: Array<{ title: string; description?: string; entries: Conf
       },
       {
         name: 'BASELINE_AGENT_CLI_LLM_ROUTING_MODEL',
-        defaultValue: 'zai-org/GLM-4.7-Flash',
+        defaultValue: 'nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16',
         description: 'Fast model used for routing decisions.',
       },
       {

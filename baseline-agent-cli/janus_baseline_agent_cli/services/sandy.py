@@ -39,6 +39,7 @@ from janus_baseline_agent_cli.services.debug import DebugEmitter
 from janus_baseline_agent_cli.services.vision import contains_images, get_image_urls
 from janus_baseline_agent_cli.services.response_processor import process_agent_response
 from janus_baseline_agent_cli.tracing import get_request_id
+from janus_baseline_agent_cli.routing import decision_from_metadata, model_for_decision
 
 logger = structlog.get_logger()
 
@@ -1790,6 +1791,16 @@ class SandyService:
         # Use the model from request, or default to a good model
         model = request.model
         agent_name = self._normalize_agent_name(agent or self._baseline_agent)
+        decision = decision_from_metadata(request.metadata)
+        if decision:
+            selected = model_for_decision(decision)
+            logger.info(
+                "model_selection",
+                requested=model,
+                selected=selected,
+                reason="routing_decision",
+            )
+            return selected
 
         if agent_name in {"claude", "claude-code"}:
             # Claude Code uses Anthropic Messages format; route through Janus router by default.

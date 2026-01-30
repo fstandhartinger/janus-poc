@@ -4,6 +4,7 @@ import pytest
 
 from janus_baseline_agent_cli.config import Settings
 from janus_baseline_agent_cli.models import Message, MessageRole
+from janus_baseline_agent_cli.routing import RoutingDecision
 from janus_baseline_agent_cli.services import ComplexityDetector
 
 
@@ -76,8 +77,8 @@ class TestConservativeDefaults:
     async def test_timeout_defaults_to_agent(
         self, detector: ComplexityDetector, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        async def fake_llm_check(text: str) -> tuple[bool, str]:
-            return True, "llm_check_error: timeout"
+        async def fake_llm_check(text: str, has_images: bool) -> tuple[RoutingDecision | None, str]:
+            return None, "llm_check_error: timeout"
 
         monkeypatch.setattr(detector, "_llm_routing_check", fake_llm_check)
 

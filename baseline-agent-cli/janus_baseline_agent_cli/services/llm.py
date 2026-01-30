@@ -32,6 +32,12 @@ from janus_baseline_agent_cli.agent.efficiency import (
     truncate_context_intelligently,
 )
 from janus_baseline_agent_cli.services.vision import contains_images
+from janus_baseline_agent_cli.routing import (
+    RoutingDecision,
+    apply_decision_metadata,
+    decision_from_metadata,
+    model_for_decision,
+)
 
 logger = structlog.get_logger()
 
@@ -87,8 +93,12 @@ class LLMService:
     def select_model(self, request: ChatCompletionRequest) -> str:
         """Select the appropriate model based on message content."""
         use_router = self._settings.use_model_router and not request.chutes_access_token
-        if use_router:
-            return self._settings.effective_model
+        decision = decision_from_metadata(request.metadata)
+        if decision:
+            selected = model_for_decision(decision)
+            if use_router:
+                return self._settings.effective_model
+            return selected
         requested_model = request.model or self._settings.model
         fallback_model = (
             self._settings.direct_model if self._settings.use_model_router else self._settings.model
@@ -105,12 +115,16 @@ class LLMService:
             requested_model = fallback_model
         if requested_model == "janus-router":  # Legacy check
             requested_model = fallback_model
-        if self._enable_vision_routing and contains_images(request.messages):
-            logger.info(
-                "vision_routing_enabled",
-                model=self._vision_model_primary,
+        if contains_images(request.messages):
+            request.metadata = apply_decision_metadata(
+                request.metadata, RoutingDecision.FAST_KIMI
             )
-            return self._vision_model_primary
+            logger.info("vision_routing_enabled", model=model_for_decision(RoutingDecision.FAST_KIMI))
+            if use_router:
+                return self._settings.effective_model
+            return model_for_decision(RoutingDecision.FAST_KIMI)
+        if use_router:
+            return self._settings.effective_model
         return requested_model
 
     def _is_vision_model(self, model: str) -> bool:
@@ -216,6 +230,8 @@ class LLMService:
             tool_params["tools"] = tools
             if tool_choice is not None:
                 tool_params["tool_choice"] = tool_choice
+        if request.metadata is not None:
+            tool_params["metadata"] = request.metadata
         return await client.chat.completions.create(
             model=model,
             messages=messages,  # type: ignore
@@ -254,6 +270,7 @@ class LLMService:
 
         client = self._get_client(api_key=api_key, api_base=api_base)
         model = self.select_model(request)
+        decision = decision_from_metadata(request.metadata)
         is_vision = self._is_vision_model(model)
         timeout = self._vision_timeout if is_vision else 30.0
         openai_messages = self._format_messages(request)
@@ -271,7 +288,7 @@ class LLMService:
                 ),
             )
         except Exception as e:
-            if is_vision and model == self._vision_model_primary:
+            if is_vision and model == self._vision_model_primary and decision is None:
                 logger.warning(
                     "vision_primary_failed_fallback",
                     error=str(e),
@@ -365,6 +382,7 @@ class LLMService:
         request_id = self._generate_id()
         api_key, api_base = self._resolve_auth(request)
         model = self.select_model(request)
+        decision = decision_from_metadata(request.metadata)
         is_vision = self._is_vision_model(model)
         timeout = self._vision_timeout if is_vision else 30.0
 
@@ -410,7 +428,7 @@ class LLMService:
                     ),
                 )
             except Exception as exc:
-                if is_vision and model == self._vision_model_primary:
+                if is_vision and model == self._vision_model_primary and decision is None:
                     logger.warning(
                         "vision_primary_stream_failed_fallback",
                         error=str(exc),

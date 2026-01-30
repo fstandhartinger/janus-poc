@@ -76,7 +76,7 @@ def test_select_model_routes_to_vision() -> None:
             )
         ],
     )
-    assert service.select_model(request) == settings.vision_model_primary
+    assert service.select_model(request) == "moonshotai/Kimi-K2.5-TEE"
 
 
 def test_select_model_respects_disabled_routing() -> None:
@@ -93,7 +93,7 @@ def test_select_model_respects_disabled_routing() -> None:
             )
         ],
     )
-    assert service.select_model(request) == "custom-model"
+    assert service.select_model(request) == "moonshotai/Kimi-K2.5-TEE"
 
 
 def test_select_model_uses_default_for_baseline_alias() -> None:

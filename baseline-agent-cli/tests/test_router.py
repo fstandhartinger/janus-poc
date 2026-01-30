@@ -2,31 +2,31 @@
 
 import httpx
 import pytest
+from fastapi import Response
 
 from janus_baseline_agent_cli.router.metrics import RoutingMetrics
-from janus_baseline_agent_cli.router.models import ModelConfig, TaskType, get_fallback_models, get_model_for_task
+from janus_baseline_agent_cli.router.models import ModelConfig, get_fallback_models, get_model_for_decision
 from janus_baseline_agent_cli.router import server as router_server
+from janus_baseline_agent_cli.routing import RoutingDecision
 
 
 class DummyClassifier:
-    async def classify(self, messages: list[dict], has_images: bool = False) -> tuple[TaskType, float]:
-        return TaskType.GENERAL_TEXT, 0.9
+    async def classify(
+        self, messages: list[dict], has_images: bool = False
+    ) -> tuple[RoutingDecision, float]:
+        return RoutingDecision.FAST_NEMOTRON, 0.9
 
     async def close(self) -> None:
         return None
 
 
 def test_model_registry_primary_and_fallbacks() -> None:
-    assert (
-        get_model_for_task(TaskType.MATH_REASONING).model_id
-        == "deepseek-ai/DeepSeek-V3.2-Speciale-TEE"
-    )
-    assert get_model_for_task(TaskType.PROGRAMMING).model_id == "MiniMaxAI/MiniMax-M2.1-TEE"
-    vision_model = get_model_for_task(TaskType.VISION)
+    assert get_model_for_decision(RoutingDecision.FAST_QWEN).model_id == "Qwen/Qwen3-30B-A3B-Instruct-2507"
+    vision_model = get_model_for_decision(RoutingDecision.FAST_KIMI)
     assert vision_model.supports_vision is True
     fallbacks = get_fallback_models(vision_model.model_id)
     assert fallbacks
-    assert all(model.supports_vision for model in fallbacks)
+    assert any(model.model_id == "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16" for model in fallbacks)
 
 
 @pytest.mark.asyncio
@@ -39,22 +39,20 @@ async def test_router_fallback_on_429(monkeypatch: pytest.MonkeyPatch) -> None:
     primary = ModelConfig(
         model_id="primary",
         display_name="Primary",
-        task_types=[TaskType.GENERAL_TEXT],
         priority=1,
     )
     fallback = ModelConfig(
         model_id="fallback",
         display_name="Fallback",
-        task_types=[TaskType.GENERAL_TEXT],
         priority=2,
     )
 
-    monkeypatch.setattr(router_server, "get_model_for_task", lambda task_type: primary)
+    monkeypatch.setattr(router_server, "get_model_for_decision", lambda decision: primary)
     monkeypatch.setattr(router_server, "get_fallback_models", lambda model_id: [fallback])
 
     calls: list[str] = []
 
-    async def fake_non_stream(request, model_config):
+    async def fake_non_stream(request, model_config, decision):
         calls.append(model_config.model_id)
         if model_config.model_id == "primary":
             request_obj = httpx.Request("POST", "http://example.com")
@@ -70,7 +68,9 @@ async def test_router_fallback_on_429(monkeypatch: pytest.MonkeyPatch) -> None:
         stream=False,
     )
 
-    response = await router_server.chat_completions(request, raw_request=None)
+    response = await router_server.chat_completions(
+        request, raw_request=None, http_response=Response()
+    )
     assert response["model"] == "janus-router"
     assert calls == ["primary", "fallback"]
     assert router_server.metrics.fallback_count == 1
@@ -126,11 +126,12 @@ async def test_streaming_rewrites_model(monkeypatch: pytest.MonkeyPatch) -> None
     model_config = ModelConfig(
         model_id="primary",
         display_name="Primary",
-        task_types=[TaskType.GENERAL_TEXT],
         priority=1,
     )
 
-    response = await router_server._stream_response(request, model_config)
+    response = await router_server._stream_response(
+        request, model_config, RoutingDecision.FAST_NEMOTRON
+    )
     chunks = [chunk async for chunk in response.body_iterator]
     combined = "".join(chunks)
     assert "janus-router" in combined

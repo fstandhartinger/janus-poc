@@ -198,7 +198,7 @@ const standardParameters: ParameterEntry[] = [
   {
     name: 'metadata',
     type: 'object',
-    description: 'Custom metadata passed through to the response.',
+    description: 'Custom metadata passed through to the response (include routing_decision to pin routing).',
   },
 ];
 
@@ -213,6 +213,11 @@ const janusExtensions: ParameterEntry[] = [
     type: 'boolean',
     defaultValue: 'false',
     description: 'Enable memory extraction and retrieval for personalized responses.',
+  },
+  {
+    name: 'routing_decision',
+    type: '"fast_qwen" | "fast_nemotron" | "fast_kimi" | "agent_nemotron" | "agent_kimi"',
+    description: 'Optional override for routing decision (set via metadata.routing_decision).',
   },
   {
     name: 'generation_flags',

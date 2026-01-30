@@ -21,6 +21,7 @@ from janus_baseline_agent_cli.models import (
     TextContent,
     ToolDefinition,
 )
+from janus_baseline_agent_cli.routing import RoutingDecision
 
 
 def test_inject_memory_context_updates_last_user_message() -> None:
@@ -90,9 +91,10 @@ async def test_memory_extraction_fires_after_stream() -> None:
         image_count = 0
         sandy_available = False
         text_preview = ""
+        decision = RoutingDecision.FAST_QWEN
 
     class DummyDetector:
-        async def analyze_async(self, messages, generation_flags=None):
+        async def analyze_async(self, messages, flags=None, metadata=None):
             return DummyAnalysis()
 
     class DummyLLM:

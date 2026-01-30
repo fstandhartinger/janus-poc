@@ -3,19 +3,15 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from enum import Enum
 
-
-class TaskType(Enum):
-    """Task types for routing decisions."""
-
-    SIMPLE_TEXT = "simple_text"
-    GENERAL_TEXT = "general_text"
-    MATH_REASONING = "math_reasoning"
-    PROGRAMMING = "programming"
-    CREATIVE = "creative"
-    VISION = "vision"
-    UNKNOWN = "unknown"
+from janus_baseline_agent_cli.routing import (
+    AGENT_KIMI_MODEL_ID,
+    AGENT_NEMOTRON_MODEL_ID,
+    FAST_KIMI_MODEL_ID,
+    FAST_NEMOTRON_MODEL_ID,
+    FAST_QWEN_MODEL_ID,
+    RoutingDecision,
+)
 
 
 @dataclass
@@ -24,7 +20,6 @@ class ModelConfig:
 
     model_id: str
     display_name: str
-    task_types: list[TaskType]
     priority: int
     max_tokens: int = 8192
     supports_streaming: bool = True
@@ -33,125 +28,53 @@ class ModelConfig:
     timeout_seconds: float = 120.0
 
 
-MODEL_REGISTRY: dict[str, ModelConfig] = {
-    "classifier": ModelConfig(
-        model_id="zai-org/GLM-4.7-Flash",
-        display_name="GLM 4.7 Flash (Classifier)",
-        task_types=[TaskType.SIMPLE_TEXT],
-        priority=0,
-        max_tokens=1024,
-        timeout_seconds=5.0,  # Reduced from 10s - fail fast to fallback
-    ),
-    "fast": ModelConfig(
-        model_id="zai-org/GLM-4.7-Flash",
-        display_name="GLM 4.7 Flash",
-        task_types=[TaskType.SIMPLE_TEXT],
+MODEL_CONFIGS: dict[str, ModelConfig] = {
+    FAST_QWEN_MODEL_ID: ModelConfig(
+        model_id=FAST_QWEN_MODEL_ID,
+        display_name="Qwen3 30B A3B",
         priority=1,
         max_tokens=4096,
         timeout_seconds=30.0,
     ),
-    "general": ModelConfig(
-        model_id="Qwen/Qwen3-Next-80B-A3B-Instruct",
-        display_name="Qwen3 Next 80B",
-        task_types=[TaskType.GENERAL_TEXT, TaskType.UNKNOWN],
+    FAST_NEMOTRON_MODEL_ID: ModelConfig(
+        model_id=FAST_NEMOTRON_MODEL_ID,
+        display_name="Nemotron 3 Nano 30B",
         priority=2,
         max_tokens=8192,
-        timeout_seconds=60.0,
+        timeout_seconds=45.0,
     ),
-    "reasoning": ModelConfig(
-        model_id="deepseek-ai/DeepSeek-V3.2-Speciale-TEE",
-        display_name="DeepSeek V3.2 Speciale",
-        task_types=[TaskType.MATH_REASONING],
+    FAST_KIMI_MODEL_ID: ModelConfig(
+        model_id=FAST_KIMI_MODEL_ID,
+        display_name="Kimi K2.5 TEE",
         priority=3,
-        max_tokens=16384,
-        timeout_seconds=120.0,
-    ),
-    "programming": ModelConfig(
-        model_id="MiniMaxAI/MiniMax-M2.1-TEE",
-        display_name="MiniMax M2.1",
-        task_types=[TaskType.PROGRAMMING],
-        priority=4,
-        max_tokens=16384,
-        timeout_seconds=90.0,
-    ),
-    "creative": ModelConfig(
-        model_id="tngtech/DeepSeek-TNG-R1T2-Chimera",  # Fixed namespace
-        display_name="TNG R1T2 Chimera",
-        task_types=[TaskType.CREATIVE],
-        priority=5,
-        max_tokens=16384,
-        timeout_seconds=90.0,
-    ),
-    "vision": ModelConfig(
-        model_id="Qwen/Qwen3-VL-235B-A22B-Instruct",
-        display_name="Qwen3 VL 235B",
-        task_types=[TaskType.VISION],
-        priority=6,
-        max_tokens=8192,
-        supports_vision=True,
-        timeout_seconds=90.0,
-    ),
-    "vision_fallback": ModelConfig(
-        model_id="chutesai/Mistral-Small-3.2-24B-Instruct-2506",  # Updated to working model
-        display_name="Mistral Small 3.2 (Vision Fallback)",
-        task_types=[TaskType.VISION],
-        priority=7,
         max_tokens=8192,
         supports_vision=True,
         timeout_seconds=60.0,
-    ),
-    "fast_alt": ModelConfig(
-        model_id="XiaomiMiMo/MiMo-V2-Flash",
-        display_name="MiMo V2 Flash",
-        task_types=[TaskType.SIMPLE_TEXT, TaskType.GENERAL_TEXT],
-        priority=8,
-        max_tokens=4096,
-        timeout_seconds=30.0,
-    ),
-    # Additional fallbacks for programming
-    "programming_fallback": ModelConfig(
-        model_id="deepseek-ai/DeepSeek-V3.2-TEE",
-        display_name="DeepSeek V3.2 (Programming Fallback)",
-        task_types=[TaskType.PROGRAMMING],
-        priority=9,
-        max_tokens=16384,
-        timeout_seconds=90.0,
-    ),
-    "programming_fallback2": ModelConfig(
-        model_id="Qwen/Qwen3-235B-A22B-Instruct-2507-TEE",
-        display_name="Qwen3 235B (Programming Fallback 2)",
-        task_types=[TaskType.PROGRAMMING],
-        priority=10,
-        max_tokens=16384,
-        timeout_seconds=90.0,
     ),
 }
 
+DECISION_MODEL_IDS: dict[RoutingDecision, str] = {
+    RoutingDecision.FAST_QWEN: FAST_QWEN_MODEL_ID,
+    RoutingDecision.FAST_NEMOTRON: FAST_NEMOTRON_MODEL_ID,
+    RoutingDecision.FAST_KIMI: FAST_KIMI_MODEL_ID,
+    RoutingDecision.AGENT_NEMOTRON: AGENT_NEMOTRON_MODEL_ID,
+    RoutingDecision.AGENT_KIMI: AGENT_KIMI_MODEL_ID,
+}
 
-def get_model_for_task(task_type: TaskType) -> ModelConfig:
-    """Get the primary model for a task type."""
-    for config in sorted(MODEL_REGISTRY.values(), key=lambda config: config.priority):
-        if task_type in config.task_types:
-            return config
-    return MODEL_REGISTRY["general"]
+FALLBACK_MODELS: dict[str, list[str]] = {
+    FAST_QWEN_MODEL_ID: [FAST_NEMOTRON_MODEL_ID, FAST_KIMI_MODEL_ID],
+    FAST_NEMOTRON_MODEL_ID: [FAST_KIMI_MODEL_ID],
+    FAST_KIMI_MODEL_ID: [FAST_NEMOTRON_MODEL_ID],
+}
+
+
+def get_model_for_decision(decision: RoutingDecision) -> ModelConfig:
+    """Get the primary model for a routing decision."""
+    model_id = DECISION_MODEL_IDS[decision]
+    return MODEL_CONFIGS[model_id]
 
 
 def get_fallback_models(primary_model_id: str) -> list[ModelConfig]:
     """Get fallback models when primary fails."""
-    primary = next(
-        (config for config in MODEL_REGISTRY.values() if config.model_id == primary_model_id),
-        None,
-    )
-    if not primary:
-        return [MODEL_REGISTRY["general"]]
-
-    fallbacks: list[ModelConfig] = []
-    for config in sorted(MODEL_REGISTRY.values(), key=lambda config: config.priority):
-        if config.model_id == primary_model_id:
-            continue
-        if primary.supports_vision and config.supports_vision:
-            fallbacks.append(config)
-        elif not primary.supports_vision and not config.supports_vision:
-            fallbacks.append(config)
-
-    return fallbacks[:3]
+    fallback_ids = FALLBACK_MODELS.get(primary_model_id, [])
+    return [MODEL_CONFIGS[model_id] for model_id in fallback_ids if model_id in MODEL_CONFIGS]

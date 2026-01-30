@@ -18,11 +18,12 @@ from janus_baseline_agent_cli.models import (
     Message,
     MessageRole,
 )
+from janus_baseline_agent_cli.routing import RoutingDecision
 from janus_baseline_agent_cli.services.sandy import SandyService
 
 
 class StubComplexityDetector:
-    async def analyze_async(self, messages, generation_flags=None):
+    async def analyze_async(self, messages, flags=None, metadata=None):
         return SimpleNamespace(
             is_complex=True,
             reason="test",
@@ -31,6 +32,7 @@ class StubComplexityDetector:
             has_images=False,
             image_count=0,
             text_preview="",
+            decision=RoutingDecision.AGENT_KIMI,
         )
 
 

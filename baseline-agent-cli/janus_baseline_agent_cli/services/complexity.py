@@ -11,6 +11,16 @@ import structlog
 from janus_baseline_agent_cli.config import Settings, get_settings
 from janus_baseline_agent_cli.logging import log_function_call
 from janus_baseline_agent_cli.models import GenerationFlags, Message, MessageContent
+from janus_baseline_agent_cli.routing import (
+    DECISION_MODEL_ID,
+    ROUTING_DECISION_PROMPT,
+    ROUTING_DECISION_TOOL,
+    RoutingDecision,
+    coerce_decision_for_agent,
+    decision_for_images,
+    decision_from_metadata,
+    decision_requires_agent,
+)
 from janus_baseline_agent_cli.tools.parser import robust_parse_tool_call
 from janus_baseline_agent_cli.services.vision import contains_images, count_images
 
@@ -20,65 +30,10 @@ ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
 
 # Routing models in order of preference (with fallbacks)
 ROUTING_MODELS = [
-    "Qwen/Qwen3-Next-80B-A3B-Instruct",  # Fast MoE model (135 t/s), smart routing
-    "XiaomiMiMo/MiMo-V2-Flash",          # Fallback
-    "deepseek-ai/DeepSeek-V3",           # Second fallback
+    DECISION_MODEL_ID,
+    "Qwen/Qwen3-30B-A3B-Instruct-2507",
 ]
 ROUTING_MODEL = ROUTING_MODELS[0]  # Default for settings
-ROUTING_PROMPT = """Analyze this user request and decide if it needs agent sandbox capabilities.
-
-Agent sandbox is REQUIRED for:
-- Image/video/audio generation ("generate an image", "create a video", "text to speech")
-- Code execution ("run this code", "execute", "test this script" or queries that are best answered by writing/running code)
-- Web search ("search for", "find current", "latest news")
-- File operations ("download", "save to file", "read file")
-- Browser automation ("test in browser", "open URL", "take screenshot", "click on")
-- GUI/Desktop interaction ("click button", "type into", "automate")
-- API calls ("call the API", "make a request", "curl")
-- Testing ("run tests", "verify", "check if working")
-- Any task requiring interaction with external systems, URLs, or tools
-
-Direct LLM response is ONLY sufficient for:
-- General conversation and chitchat
-- Explanations, definitions, and summaries that don't require up-to-date information or context from the internet
-- Simple math (without needing to run code)
-- Writing assistance (text generation without execution)
-- Questions that can be answered from knowledge alone (and where there is no need to look up the latest information or context from the internet)
-
-IMPORTANT: When in doubt, choose needs_agent=true. It's better to use the agent unnecessarily than to fail a task that needs tools.
-
-User request: {user_message}
-
-Call the use_agent function with your decision."""
-
-USE_AGENT_TOOL = {
-    "type": "function",
-    "function": {
-        "name": "use_agent",
-        "description": (
-            "Decide whether this request needs the agent sandbox with tools (for image "
-            "generation, code execution, web search, etc.) or can be answered directly by LLM."
-        ),
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "needs_agent": {
-                    "type": "boolean",
-                    "description": (
-                        "True if request needs agent sandbox (image gen, code exec, web search, "
-                        "file ops). False if LLM can answer directly."
-                    ),
-                },
-                "reason": {
-                    "type": "string",
-                    "description": "Brief explanation of the decision",
-                },
-            },
-            "required": ["needs_agent", "reason"],
-            "additionalProperties": False,
-        },
-    },
-}
 
 TRIVIAL_GREETINGS = {
     "hello",
@@ -157,6 +112,7 @@ class ComplexityAnalysis:
     has_images: bool
     image_count: int
     text_preview: str
+    decision: RoutingDecision
 
 
 class ComplexityDetector:
@@ -522,6 +478,50 @@ class ComplexityDetector:
             reasons.append("web search requested")
         return reasons
 
+    def _default_decision(self, is_complex: bool, has_images: bool) -> RoutingDecision:
+        if has_images:
+            return decision_for_images(is_complex)
+        return RoutingDecision.AGENT_KIMI if is_complex else RoutingDecision.FAST_QWEN
+
+    def _build_analysis(
+        self,
+        *,
+        is_complex: bool,
+        reason: str,
+        keywords_matched: list[str],
+        multimodal_detected: bool,
+        has_images: bool,
+        image_count: int,
+        text_preview: str,
+    ) -> ComplexityAnalysis:
+        return ComplexityAnalysis(
+            is_complex=is_complex,
+            reason=reason,
+            keywords_matched=keywords_matched,
+            multimodal_detected=multimodal_detected,
+            has_images=has_images,
+            image_count=image_count,
+            text_preview=text_preview,
+            decision=self._default_decision(is_complex, has_images),
+        )
+
+    def _apply_decision(
+        self,
+        analysis: ComplexityAnalysis,
+        decision: RoutingDecision,
+        reason: Optional[str] = None,
+    ) -> ComplexityAnalysis:
+        return ComplexityAnalysis(
+            is_complex=decision_requires_agent(decision),
+            reason=reason or analysis.reason,
+            keywords_matched=analysis.keywords_matched,
+            multimodal_detected=analysis.multimodal_detected,
+            has_images=analysis.has_images,
+            image_count=analysis.image_count,
+            text_preview=analysis.text_preview,
+            decision=decision,
+        )
+
     def analyze(
         self,
         messages: list[Message],
@@ -529,7 +529,7 @@ class ComplexityDetector:
     ) -> ComplexityAnalysis:
         """Analyze the request for complexity routing."""
         if not messages:
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=False,
                 reason="empty_messages",
                 keywords_matched=[],
@@ -546,7 +546,7 @@ class ComplexityDetector:
         last_user_msg = self._get_last_user_message(messages)
 
         if not last_user_msg:
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=False,
                 reason="no_user_message",
                 keywords_matched=[],
@@ -564,7 +564,7 @@ class ComplexityDetector:
         if flags:
             flag_reasons = self._flag_reasons(flags)
             if flag_reasons:
-                return ComplexityAnalysis(
+                return self._build_analysis(
                     is_complex=True,
                     reason=f"generation_flags: {', '.join(flag_reasons)}",
                     keywords_matched=flag_reasons,
@@ -576,7 +576,7 @@ class ComplexityDetector:
 
         # Check for multimodal request
         if multimodal_detected:
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=True,
                 reason="multimodal_request",
                 keywords_matched=keywords_matched,
@@ -588,7 +588,7 @@ class ComplexityDetector:
 
         # Check for complex keywords
         if keywords_matched:
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=True,
                 reason="complex_keywords",
                 keywords_matched=keywords_matched,
@@ -599,7 +599,7 @@ class ComplexityDetector:
             )
 
         if self._url_suggests_interaction(text):
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=True,
                 reason="url_interaction",
                 keywords_matched=keywords_matched,
@@ -612,7 +612,7 @@ class ComplexityDetector:
         # Check for code blocks in context (suggesting code-related task)
         all_text = " ".join(self._extract_text(m.content) for m in messages)
         if self._has_code_blocks(all_text) and self._has_complex_keywords(text):
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=True,
                 reason="code_context",
                 keywords_matched=keywords_matched,
@@ -625,7 +625,7 @@ class ComplexityDetector:
         # Check token length
         total_tokens = sum(self._estimate_tokens(self._extract_text(m.content)) for m in messages)
         if has_images and self._needs_agent_for_images(text):
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=True,
                 reason="image_with_tools",
                 keywords_matched=keywords_matched,
@@ -636,7 +636,7 @@ class ComplexityDetector:
             )
 
         if total_tokens > self._threshold:
-            return ComplexityAnalysis(
+            return self._build_analysis(
                 is_complex=True,
                 reason="token_threshold",
                 keywords_matched=keywords_matched,
@@ -646,7 +646,7 @@ class ComplexityDetector:
                 text_preview=text_preview,
             )
 
-        return ComplexityAnalysis(
+        return self._build_analysis(
             is_complex=False,
             reason="simple",
             keywords_matched=keywords_matched,
@@ -657,9 +657,9 @@ class ComplexityDetector:
         )
 
     async def _try_routing_model(
-        self, client: httpx.AsyncClient, model: str, text: str
-    ) -> tuple[bool, str, bool]:
-        """Try routing with a specific model. Returns (needs_agent, reason, success)."""
+        self, client: httpx.AsyncClient, model: str, text: str, has_images: bool
+    ) -> tuple[RoutingDecision | None, str, bool]:
+        """Try routing with a specific model. Returns (decision, reason, success)."""
         try:
             response = await client.post(
                 ROUTING_ENDPOINT,
@@ -672,13 +672,16 @@ class ComplexityDetector:
                     "messages": [
                         {
                             "role": "user",
-                            "content": ROUTING_PROMPT.format(user_message=text[:500]),
+                            "content": ROUTING_DECISION_PROMPT.format(
+                                user_message=text[:500],
+                                has_images=str(has_images).lower(),
+                            ),
                         }
                     ],
-                    "tools": [USE_AGENT_TOOL],
+                    "tools": [ROUTING_DECISION_TOOL],
                     "tool_choice": {
                         "type": "function",
-                        "function": {"name": "use_agent"},
+                        "function": {"name": "select_routing_decision"},
                     },
                     "max_tokens": 100,
                     "temperature": 0.0,
@@ -693,15 +696,18 @@ class ComplexityDetector:
                 tool_call = tool_calls[0]
                 arguments = tool_call.get("function", {}).get("arguments", "{}")
                 args = robust_parse_tool_call(arguments)
-                return bool(args.get("needs_agent", False)), str(
-                    args.get("reason", "llm_decision")
-                ), True
+                decision_value = args.get("decision")
+                if isinstance(decision_value, str):
+                    try:
+                        return RoutingDecision(decision_value), "llm_decision", True
+                    except ValueError:
+                        return None, f"invalid_decision:{decision_value}", True
 
-            return True, "no_tool_call_conservative", True
+            return None, "no_tool_call_conservative", True
 
         except httpx.TimeoutException:
             logger.warning("llm_routing_timeout", model=model, text_preview=text[:100])
-            return True, f"timeout ({model})", False
+            return None, f"timeout ({model})", False
 
         except Exception as exc:
             logger.warning(
@@ -710,13 +716,15 @@ class ComplexityDetector:
                 error=str(exc),
                 text_preview=text[:100],
             )
-            return True, str(exc), False
+            return None, str(exc), False
 
     @log_function_call
-    async def _llm_routing_check(self, text: str) -> tuple[bool, str]:
+    async def _llm_routing_check(
+        self, text: str, has_images: bool
+    ) -> tuple[RoutingDecision | None, str]:
         """LLM verification for routing decision with fallback models."""
         if not self._settings.openai_api_key:
-            return True, "no_api_key"
+            return None, "no_api_key"
 
         # Try each model in order until one succeeds
         models_to_try = [self._routing_model] + [
@@ -725,29 +733,36 @@ class ComplexityDetector:
 
         async with httpx.AsyncClient(timeout=self._routing_timeout) as client:
             for model in models_to_try:
-                needs_agent, reason, success = await self._try_routing_model(
-                    client, model, text
+                decision, reason, success = await self._try_routing_model(
+                    client, model, text, has_images
                 )
                 if success:
                     logger.info(
                         "llm_routing_success",
                         model=model,
-                        needs_agent=needs_agent,
+                        decision=decision.value if decision else None,
                         reason=reason,
                     )
-                    return needs_agent, reason
+                    return decision, reason
 
         # All models failed
-        return True, "llm_check_error: all models unavailable"
+        return None, "llm_check_error: all models unavailable"
 
     @log_function_call
     async def analyze_async(
         self,
         messages: list[Message],
         flags: GenerationFlags | None = None,
+        metadata: Optional[dict[str, object]] = None,
     ) -> ComplexityAnalysis:
         """Async analysis with mandatory LLM verification for fast path."""
         first_pass = self.analyze(messages, flags)
+        decision = decision_from_metadata(metadata)
+
+        if decision:
+            if first_pass.has_images:
+                decision = decision_for_images(decision_requires_agent(decision))
+            return self._apply_decision(first_pass, decision, reason="routing_metadata")
 
         if first_pass.is_complex:
             logger.info(
@@ -755,7 +770,6 @@ class ComplexityDetector:
                 reason=first_pass.reason,
                 keywords=first_pass.keywords_matched,
             )
-            return first_pass
 
         last_user_msg = self._get_last_user_message(messages)
         text = self._extract_text(last_user_msg.content) if last_user_msg else ""
@@ -764,7 +778,8 @@ class ComplexityDetector:
         # Fast path for trivial greetings
         if normalized in TRIVIAL_GREETINGS:
             logger.info("complexity_trivial_greeting", text_preview=text[:50])
-            return first_pass
+            decision = decision_for_images(False) if first_pass.has_images else RoutingDecision.FAST_QWEN
+            return self._apply_decision(first_pass, decision, reason=first_pass.reason)
 
         # Fast path for simple factual questions (skip LLM check for speed)
         if self._is_simple_factual_query(text):
@@ -773,55 +788,53 @@ class ComplexityDetector:
                 text_preview=text[:100],
                 reason="simple_factual_pattern_match",
             )
-            return ComplexityAnalysis(
-                is_complex=False,
-                reason="simple_factual_query",
-                keywords_matched=[],
-                multimodal_detected=first_pass.multimodal_detected,
-                has_images=first_pass.has_images,
-                image_count=first_pass.image_count,
-                text_preview=first_pass.text_preview,
-            )
+            decision = decision_for_images(False) if first_pass.has_images else RoutingDecision.FAST_QWEN
+            return self._apply_decision(first_pass, decision, reason="simple_factual_query")
 
         # Skip LLM check if text is empty
         if not normalized:
             return first_pass
 
-        needs_agent, reason = await self._llm_routing_check(text)
+        decision, reason = await self._llm_routing_check(text, first_pass.has_images)
         logger.info(
             "complexity_llm_verification",
-            needs_agent=needs_agent,
+            decision=decision.value if decision else None,
             reason=reason,
             model=self._routing_model,
             text_preview=text[:100],
         )
 
-        if needs_agent or reason.startswith("llm_check_error") or reason == "no_api_key":
-            if reason.startswith("llm_check_error") or reason == "no_api_key":
-                logger.warning(
-                    "complexity_defaulting_to_agent",
-                    reason=reason,
-                    text_preview=text[:100],
-                )
-                reason = f"conservative_default: {reason}"
-
-            return ComplexityAnalysis(
-                is_complex=True,
-                reason=f"llm_verification: {reason}",
-                keywords_matched=first_pass.keywords_matched,
-                multimodal_detected=first_pass.multimodal_detected,
-                has_images=first_pass.has_images,
-                image_count=first_pass.image_count,
-                text_preview=first_pass.text_preview,
+        if decision is None:
+            logger.warning(
+                "complexity_defaulting_to_agent",
+                reason=reason,
+                text_preview=text[:100],
+            )
+            fallback_decision = decision_for_images(True) if first_pass.has_images else RoutingDecision.AGENT_KIMI
+            return self._apply_decision(
+                first_pass,
+                fallback_decision,
+                reason=f"llm_verification: conservative_default: {reason}",
             )
 
+        if first_pass.is_complex and not decision_requires_agent(decision):
+            decision = coerce_decision_for_agent(decision)
+
+        if first_pass.has_images:
+            decision = decision_for_images(decision_requires_agent(decision))
+
         logger.info(
-            "complexity_confirmed_simple",
+            "complexity_decision_applied",
+            decision=decision.value,
             reason=reason,
+            is_complex=decision_requires_agent(decision),
             text_preview=text[:100],
         )
 
-        return first_pass
+        reason_override = (
+            first_pass.reason if first_pass.is_complex else f"llm_verification: {reason}"
+        )
+        return self._apply_decision(first_pass, decision, reason=reason_override)
 
     def is_complex(
         self,
