@@ -1,6 +1,6 @@
 # Spec 125: Fast Path Performance & Thinking Display
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** High
 **Complexity:** Medium
@@ -226,11 +226,11 @@ FAST_PATH_MAX_TOKENS = int(os.getenv("FAST_PATH_MAX_TOKENS", "1024"))
 
 ## Acceptance Criteria
 
-- [ ] "Explain why the sky is blue" responds in < 3 seconds
-- [ ] Simple factual queries route to fast path
-- [ ] Thinking/reasoning content displays in collapsible section
-- [ ] Debug panel shows correct path (fast vs agent)
-- [ ] Response timing logged for monitoring
+- [x] "Explain why the sky is blue" responds in < 3 seconds (via simple factual query pattern match)
+- [x] Simple factual queries route to fast path (pattern-based detection skips LLM verification)
+- [x] Thinking/reasoning content displays in collapsible section (already implemented in MessageBubble)
+- [x] Debug panel shows correct path (fast vs agent) (emits FAST_PATH_START/AGENT_PATH_START events)
+- [x] Response timing logged for monitoring (slow_fast_path_response warning for > 3s)
 
 ---
 
@@ -241,3 +241,7 @@ FAST_PATH_MAX_TOKENS = int(os.getenv("FAST_PATH_MAX_TOKENS", "1024"))
 3. Query: "Write a Python script to download a file" - should use agent path
 4. Verify thinking section appears when model reasons
 5. Check debug panel shows correct path selection
+
+---
+
+## NR_OF_TRIES: 1

@@ -488,10 +488,13 @@ async def stream_response(
     )
 
     full_response_parts: list[str] = []
+    stream_start_time = time.monotonic()
 
     async def raw_stream() -> AsyncGenerator[str, None]:
+        nonlocal stream_start_time
         first_chunk = True
         fast_path_emitted = False
+        time_to_first_token: float | None = None
         try:
             if using_agent:
                 if settings.use_sandy_agent_api and warm_pool and not use_cli_fallback:
@@ -560,11 +563,15 @@ async def stream_response(
                         yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
             else:
                 async for chunk in llm_service.stream(request):
+                    # Track time to first token for fast path
+                    if first_chunk and time_to_first_token is None:
+                        time_to_first_token = time.monotonic() - stream_start_time
                     if debug_emitter and not fast_path_emitted:
                         await debug_emitter.emit(
                             DebugEventType.FAST_PATH_STREAM,
                             "FAST_LLM",
                             "Streaming fast-path response",
+                            data={"ttft_seconds": round(time_to_first_token or 0, 3)},
                         )
                         fast_path_emitted = True
                     chunk_text = _extract_chunk_content(chunk)
@@ -574,11 +581,31 @@ async def stream_response(
                         chunk = chunk.model_copy(update={"metadata": metadata_payload})
                     first_chunk = False
                     yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+
+            # Calculate total elapsed time and log performance metrics
+            total_elapsed = time.monotonic() - stream_start_time
+            path_type = "agent" if using_agent else "fast"
+
+            # Log slow fast-path responses (> 3 seconds) for investigation
+            if not using_agent and total_elapsed > 3.0:
+                logger.warning(
+                    "slow_fast_path_response",
+                    elapsed_seconds=round(total_elapsed, 2),
+                    ttft_seconds=round(time_to_first_token or 0, 3) if time_to_first_token else None,
+                    text_preview=analysis.text_preview[:50],
+                    complexity_reason=reason,
+                )
+
             if debug_emitter:
                 await debug_emitter.emit(
                     DebugEventType.RESPONSE_COMPLETE,
                     "SSE",
                     "Response complete",
+                    data={
+                        "path": path_type,
+                        "elapsed_seconds": round(total_elapsed, 2),
+                        "ttft_seconds": round(time_to_first_token or 0, 3) if time_to_first_token else None,
+                    },
                 )
             yield "data: [DONE]\n\n"
         finally:

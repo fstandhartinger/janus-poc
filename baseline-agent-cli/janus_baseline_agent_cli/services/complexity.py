@@ -115,6 +115,30 @@ TRIVIAL_GREETINGS = {
     "ciao",
 }
 
+# Simple factual question patterns that should ALWAYS use fast path
+# These are basic knowledge questions that don't require tools/sandbox
+SIMPLE_FACTUAL_PATTERNS = [
+    # Basic "what/why/how is" questions
+    r"^(what|why|how|when|where|who)\s+(is|are|was|were|do|does|did)\b",
+    # "Explain why/how/what" questions
+    r"^explain\s+(why|how|what)\b",
+    # Simple definition/description requests
+    r"^(define|describe|tell me about)\s+\w+",
+    # Direct questions about concepts
+    r"^what does\s+\w+\s+mean",
+    r"^what is the (meaning|definition) of\b",
+    # Simple math/logic questions (asked conversationally)
+    r"^(what is|calculate|compute)\s+\d+",
+    # "Can you explain" variants
+    r"^can you (explain|tell me|describe)\b",
+    # German simple questions
+    r"^(was|warum|wie|wann|wo|wer)\s+(ist|sind|war|waren)\b",
+    r"^erkläre?\s+(warum|wie|was)\b",
+]
+
+# Compiled patterns for efficiency
+_SIMPLE_FACTUAL_COMPILED = [re.compile(p, re.IGNORECASE) for p in SIMPLE_FACTUAL_PATTERNS]
+
 # NOTE: Pattern-based detection removed in favor of LLM verifier
 # Only trivial greetings bypass LLM check - all other messages go through
 # the smart Qwen3-Next-80B-A3B-Instruct model for routing decisions
@@ -340,12 +364,36 @@ class ComplexityDetector:
         ).strip()
         return " ".join(cleaned.split())
 
+    def _is_simple_factual_query(self, text: str) -> bool:
+        """Check if query is a simple factual question that should use fast path.
+
+        Simple factual queries are basic knowledge questions like:
+        - "What is X?"
+        - "Explain why the sky is blue"
+        - "How does photosynthesis work?"
+
+        These don't require tools, web search, or code execution.
+        """
+        text_lower = text.lower().strip()
+
+        # Very short queries (≤15 words) matching simple patterns
+        word_count = len(text_lower.split())
+        if word_count <= 15:
+            for pattern in _SIMPLE_FACTUAL_COMPILED:
+                if pattern.match(text_lower):
+                    return True
+
+        return False
+
     def _should_skip_llm_check(self, text: str) -> bool:
-        """Only skip LLM check for trivial greetings - all other messages go through LLM verifier."""
+        """Skip LLM check for trivial greetings and simple factual questions."""
         normalized = self._normalize_text(text)
         if not normalized:
             return True
         if normalized in TRIVIAL_GREETINGS:
+            return True
+        # Skip LLM check for simple factual questions - they're always fast path
+        if self._is_simple_factual_query(text):
             return True
         # All other messages go through the LLM verifier for smart routing
         return False
@@ -711,9 +759,32 @@ class ComplexityDetector:
 
         last_user_msg = self._get_last_user_message(messages)
         text = self._extract_text(last_user_msg.content) if last_user_msg else ""
+        normalized = self._normalize_text(text)
 
-        if self._should_skip_llm_check(text):
+        # Fast path for trivial greetings
+        if normalized in TRIVIAL_GREETINGS:
             logger.info("complexity_trivial_greeting", text_preview=text[:50])
+            return first_pass
+
+        # Fast path for simple factual questions (skip LLM check for speed)
+        if self._is_simple_factual_query(text):
+            logger.info(
+                "complexity_simple_factual_query",
+                text_preview=text[:100],
+                reason="simple_factual_pattern_match",
+            )
+            return ComplexityAnalysis(
+                is_complex=False,
+                reason="simple_factual_query",
+                keywords_matched=[],
+                multimodal_detected=first_pass.multimodal_detected,
+                has_images=first_pass.has_images,
+                image_count=first_pass.image_count,
+                text_preview=first_pass.text_preview,
+            )
+
+        # Skip LLM check if text is empty
+        if not normalized:
             return first_pass
 
         needs_agent, reason = await self._llm_routing_check(text)
