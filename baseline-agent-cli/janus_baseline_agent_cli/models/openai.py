@@ -148,6 +148,8 @@ class ChatCompletionRequest(BaseModel):
     chutes_access_token: Optional[str] = None
     generation_flags: Optional[GenerationFlags] = None
     debug: bool = False
+    # Janus extension: browser session for authenticated browser automation
+    browser_session_id: Optional[str] = None
 
 
 class FinishReason(str, Enum):

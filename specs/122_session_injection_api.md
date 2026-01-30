@@ -1,6 +1,6 @@
 # Spec 122: Browser Session Injection API
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Priority: HIGH
 

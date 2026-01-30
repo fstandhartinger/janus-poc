@@ -148,6 +148,9 @@ class ChatCompletionRequest(BaseModel):
     # Janus extension: select competitor
     competitor_id: Optional[str] = None
 
+    # Janus extension: browser session for authenticated browser automation
+    browser_session_id: Optional[str] = None
+
     @field_validator("messages")
     @classmethod
     def _validate_messages(cls, messages: list[Message]) -> list[Message]:

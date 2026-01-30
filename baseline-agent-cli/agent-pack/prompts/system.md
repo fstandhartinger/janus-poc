@@ -194,6 +194,43 @@ text, shots = await browse_and_extract(
 - Use Qwen3-VL or Mistral-3.2 to interpret screenshots
 - Useful for understanding complex UIs, charts, or visual content
 
+### 🔐 Authenticated Browser Sessions
+
+If a browser session has been injected into your sandbox, you can browse authenticated websites:
+
+```python
+from lib.browser import BrowserSession
+import os
+
+# Check if a session is available
+profile_path = os.environ.get("JANUS_BROWSER_PROFILE_PATH")
+session_id = os.environ.get("JANUS_BROWSER_SESSION_ID")
+
+if profile_path:
+    # BrowserSession automatically uses the profile when available
+    async with BrowserSession() as browser:
+        # Navigate directly to authenticated areas
+        shot = await browser.goto("https://example.com/dashboard")
+        # You're already logged in!
+
+        # Extract authenticated content
+        text = await browser.get_text(".user-profile")
+
+        # Save session state after modifications
+        await browser.save_storage_state("/workspace/session_backup.json")
+```
+
+**When a browser session is available:**
+- The `JANUS_BROWSER_PROFILE_PATH` environment variable is set
+- The browser automatically loads cookies and localStorage
+- You can access authenticated pages without manual login
+- Session domains are listed in the environment
+
+**Important:**
+- Don't attempt to log out or modify session cookies
+- Session data is confidential - don't expose cookies/tokens in output
+- If the session expires, inform the user and request a new session
+
 ## Generative UI Responses
 
 You can include interactive UI widgets in your responses using the `html-gen-ui` code fence. This renders as an interactive iframe in the chat.

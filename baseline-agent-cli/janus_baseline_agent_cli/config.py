@@ -277,6 +277,17 @@ class Settings(BaseSettings):
             "BASELINE_MEMORY_SERVICE_URL",
         ),
     )
+
+    # Browser session service configuration
+    browser_session_service_url: str = Field(
+        default="https://janus-browser-session-service.onrender.com",
+        description="URL of the browser session storage service",
+        validation_alias=AliasChoices(
+            "BROWSER_SESSION_SERVICE_URL",
+            "BASELINE_AGENT_CLI_BROWSER_SESSION_SERVICE_URL",
+            "BASELINE_BROWSER_SESSION_SERVICE_URL",
+        ),
+    )
     enable_memory_feature: bool = Field(
         default=True,
         description="Whether memory feature is enabled server-side",

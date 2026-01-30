@@ -432,6 +432,27 @@ class SandyService:
                         sandbox_id=sandbox_id,
                         stdout=bootstrap_stdout,
                     )
+
+                # Inject browser session if specified
+                if request and request.browser_session_id:
+                    auth_token = self._resolve_auth_token(request)
+                    session_data = await self._fetch_browser_session(
+                        client, request.browser_session_id, auth_token
+                    )
+                    if session_data:
+                        await self._inject_browser_session(
+                            client,
+                            sandbox_id,
+                            session_data["storage_state"],
+                            session_data.get("domains"),
+                        )
+                    else:
+                        logger.warning(
+                            "browser_session_fetch_failed",
+                            sandbox_id=sandbox_id,
+                            session_id=request.browser_session_id,
+                        )
+
                 return sandbox_id, public_url
             except Exception as exc:
                 logger.warning(
@@ -564,6 +585,12 @@ class SandyService:
             )
         else:
             env["JANUS_ENABLE_MEMORY_TOOL"] = "false"
+
+        # Browser session injection
+        if request and request.browser_session_id:
+            env["JANUS_BROWSER_SESSION_ID"] = request.browser_session_id
+            env["JANUS_BROWSER_PROFILE_PATH"] = "/workspace/.browser-profile"
+
         return env
 
     def _normalize_agent_name(self, agent: str | None) -> str:
@@ -618,6 +645,161 @@ class SandyService:
                     if text and "<memory-references>" in text:
                         return True
         return False
+
+    async def _fetch_browser_session(
+        self,
+        client: httpx.AsyncClient,
+        session_id: str,
+        auth_token: str | None,
+    ) -> dict[str, Any] | None:
+        """Fetch browser session state from the session service.
+
+        Args:
+            client: HTTP client
+            session_id: Session ID to fetch
+            auth_token: Auth token for the session service
+
+        Returns:
+            Session data with storage_state and domains, or None if fetch fails
+        """
+        service_url = self._settings.browser_session_service_url
+        if not service_url:
+            logger.warning("browser_session_service_url not configured")
+            return None
+
+        try:
+            headers = {"Content-Type": "application/json"}
+            if auth_token:
+                headers["Authorization"] = f"Bearer {auth_token}"
+
+            # Fetch session state
+            response = await client.get(
+                f"{service_url}/sessions/{session_id}/state",
+                headers=headers,
+                timeout=10.0,
+            )
+
+            if response.status_code == 404:
+                logger.warning("browser_session_not_found", session_id=session_id)
+                return None
+
+            if response.status_code == 410:
+                logger.warning("browser_session_expired", session_id=session_id)
+                return None
+
+            response.raise_for_status()
+            state_data = response.json()
+
+            # Also fetch session metadata for domains
+            meta_response = await client.get(
+                f"{service_url}/sessions/{session_id}",
+                headers=headers,
+                timeout=10.0,
+            )
+            domains = []
+            if meta_response.status_code == 200:
+                meta_data = meta_response.json()
+                domains = meta_data.get("domains", [])
+
+            return {
+                "storage_state": state_data.get("storage_state", {}),
+                "domains": domains,
+            }
+
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                "browser_session_fetch_error",
+                session_id=session_id,
+                status_code=e.response.status_code,
+                error=str(e),
+            )
+            return None
+        except Exception as e:
+            logger.error(
+                "browser_session_fetch_error",
+                session_id=session_id,
+                error=str(e),
+            )
+            return None
+
+    async def _inject_browser_session(
+        self,
+        client: httpx.AsyncClient,
+        sandbox_id: str,
+        storage_state: dict[str, Any],
+        domains: list[str] | None = None,
+    ) -> bool:
+        """Inject browser session into sandbox.
+
+        Creates a Chrome-compatible browser profile from the storage state
+        and writes it to the sandbox.
+
+        Args:
+            client: HTTP client
+            sandbox_id: Sandbox ID to inject into
+            storage_state: Playwright-compatible storage state
+            domains: List of domains the session is valid for
+
+        Returns:
+            True if injection succeeded, False otherwise
+        """
+        try:
+            # Import the profile conversion utility
+            import sys
+            import tempfile
+            import os
+
+            # Add agent-pack to path for imports
+            agent_pack_lib = Path(__file__).resolve().parents[2] / "agent-pack" / "lib"
+            if str(agent_pack_lib) not in sys.path:
+                sys.path.insert(0, str(agent_pack_lib))
+
+            from session_profile import create_browser_profile, extract_domains_from_storage_state
+
+            # Auto-detect domains if not provided
+            if not domains:
+                domains = extract_domains_from_storage_state(storage_state)
+
+            # Create profile in a temporary directory
+            with tempfile.TemporaryDirectory() as temp_dir:
+                profile_path = os.path.join(temp_dir, "profile")
+                create_browser_profile(storage_state, profile_path, domains)
+
+                # Upload each file to the sandbox
+                sandbox_profile_path = "/workspace/.browser-profile"
+                for root, dirs, files in os.walk(profile_path):
+                    for file in files:
+                        local_path = os.path.join(root, file)
+                        rel_path = os.path.relpath(local_path, profile_path)
+                        sandbox_file_path = f"{sandbox_profile_path}/{rel_path}"
+
+                        with open(local_path, "rb") as f:
+                            content = f.read()
+
+                        # Write file to sandbox
+                        if not await self._write_file(client, sandbox_id, sandbox_file_path, content):
+                            # Try alternative method
+                            if not await self._write_file_via_exec(client, sandbox_id, sandbox_file_path, content):
+                                logger.warning(
+                                    "browser_profile_file_write_failed",
+                                    sandbox_id=sandbox_id,
+                                    file=sandbox_file_path,
+                                )
+
+            logger.info(
+                "browser_session_injected",
+                sandbox_id=sandbox_id,
+                domains=domains,
+            )
+            return True
+
+        except Exception as e:
+            logger.error(
+                "browser_session_injection_error",
+                sandbox_id=sandbox_id,
+                error=str(e),
+            )
+            return False
 
     def _build_agent_command(
         self,

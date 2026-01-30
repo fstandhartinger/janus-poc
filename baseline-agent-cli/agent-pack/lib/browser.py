@@ -59,14 +59,30 @@ class BrowserSession:
         headless: bool = True,
         viewport: tuple[int, int] = (1280, 720),
         on_screenshot: Optional[Callable[[Screenshot], None]] = None,
+        user_data_dir: Optional[str] = None,
+        storage_state: Optional[str | dict] = None,
     ):
+        """Initialize browser session.
+
+        Args:
+            headless: Run browser in headless mode
+            viewport: Browser viewport size (width, height)
+            on_screenshot: Callback for screenshot events
+            user_data_dir: Path to Chrome user data directory for persistent sessions.
+                          If set, uses launch_persistent_context for session persistence.
+            storage_state: Path to storage state JSON file or dict with cookies/origins.
+                          Used for Playwright-style session injection.
+        """
         self.headless = headless
         self.viewport = viewport
         self.on_screenshot = on_screenshot or _default_screenshot_handler
+        self.user_data_dir = user_data_dir or os.environ.get("JANUS_BROWSER_PROFILE_PATH")
+        self.storage_state = storage_state
         self._playwright = None
         self._browser = None
         self._context = None
         self._page = None
+        self._is_persistent = False
 
     async def __aenter__(self) -> "BrowserSession":
         await self.start()
@@ -76,26 +92,89 @@ class BrowserSession:
         await self.close()
 
     async def start(self) -> None:
-        """Start browser session."""
+        """Start browser session.
+
+        If user_data_dir is set, uses launch_persistent_context for session persistence.
+        Otherwise, uses regular browser launch with optional storage_state.
+        """
         from playwright.async_api import async_playwright
 
         self._playwright = await async_playwright().start()
-        self._browser = await self._playwright.chromium.launch(
-            headless=self.headless,
-            args=["--no-sandbox", "--disable-setuid-sandbox"],
-        )
-        self._context = await self._browser.new_context(
-            viewport={"width": self.viewport[0], "height": self.viewport[1]},
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        )
-        self._page = await self._context.new_page()
+
+        # Determine storage state to use
+        effective_storage_state = self.storage_state
+        if effective_storage_state is None and self.user_data_dir:
+            # Check for storage_state.json in user data dir
+            state_file = os.path.join(self.user_data_dir, "storage_state.json")
+            if os.path.exists(state_file):
+                effective_storage_state = state_file
+
+        if self.user_data_dir and os.path.isdir(self.user_data_dir):
+            # Use persistent context for full profile support (cookies, localStorage, etc.)
+            self._is_persistent = True
+            self._context = await self._playwright.chromium.launch_persistent_context(
+                self.user_data_dir,
+                headless=self.headless,
+                viewport={"width": self.viewport[0], "height": self.viewport[1]},
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                args=["--no-sandbox", "--disable-setuid-sandbox"],
+            )
+            # Persistent context already has pages, get the first or create one
+            if self._context.pages:
+                self._page = self._context.pages[0]
+            else:
+                self._page = await self._context.new_page()
+        else:
+            # Regular browser launch
+            self._browser = await self._playwright.chromium.launch(
+                headless=self.headless,
+                args=["--no-sandbox", "--disable-setuid-sandbox"],
+            )
+
+            # Create context with optional storage state
+            context_kwargs = {
+                "viewport": {"width": self.viewport[0], "height": self.viewport[1]},
+                "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            }
+            if effective_storage_state:
+                context_kwargs["storage_state"] = effective_storage_state
+
+            self._context = await self._browser.new_context(**context_kwargs)
+            self._page = await self._context.new_page()
 
     async def close(self) -> None:
         """Close browser session."""
-        if self._browser:
+        if self._is_persistent and self._context:
+            await self._context.close()
+        elif self._browser:
             await self._browser.close()
         if self._playwright:
             await self._playwright.stop()
+
+    async def save_storage_state(self, path: Optional[str] = None) -> dict:
+        """Save browser storage state (cookies + localStorage).
+
+        Args:
+            path: Optional path to save JSON file. If not provided, returns dict.
+
+        Returns:
+            Storage state dictionary with cookies and origins.
+        """
+        if path:
+            return await self._context.storage_state(path=path)
+        return await self._context.storage_state()
+
+    async def get_cookies(self) -> list[dict]:
+        """Get all cookies from the browser context."""
+        return await self._context.cookies()
+
+    async def add_cookies(self, cookies: list[dict]) -> None:
+        """Add cookies to the browser context.
+
+        Args:
+            cookies: List of cookie dicts with name, value, domain, etc.
+        """
+        await self._context.add_cookies(cookies)
 
     async def goto(self, url: str, wait_until: str = "networkidle") -> Screenshot:
         """Navigate to URL and return screenshot."""
