@@ -109,3 +109,6 @@
 
 ## 2026-01-30
 - Completed spec 112_comprehensive_unit_testing_suite.md with gateway SSE/model unit coverage, baseline CLI complexity/vision/sandy unit tests, LangChain agent/tool unit checks, UI useChat + SSE parsing tests, and a run-unit-tests script.
+- Completed spec 114_chat_ui_mobile_responsive.md with ChatOverflowMenu component, responsive topbar for mobile (< 640px), free chats indicator above input on mobile, 44px touch targets, and smooth animations. Verified on iPhone SE/14 viewports.
+- Verified and marked complete spec 116_artifact_delivery_pipeline.md - all artifact delivery infrastructure was already implemented: SandyService artifact collection, SSE artifacts events, tool-result recovery, grace period for sandbox termination, UI artifact caching at /api/artifacts/cache and serving at /api/artifacts/[...path], and MediaRenderer integration.
+- Verified and marked complete spec 116_media_auth_and_agent_router_e2e.md - authorization headers and CHUTES_API_KEY are properly documented in all prompts (system.md, text-to-image.md, etc.), bootstrap.sh exports the key, and the claude wrapper sources the env file for agent-run processes.

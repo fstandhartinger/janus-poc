@@ -1,6 +1,6 @@
 # Spec 116: Media Auth + Claude Code Agent Router E2E Fix
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -117,3 +117,7 @@ configuration rather than model behavior.
 
 - This spec only addresses auth/prompt correctness.
 - Router tool compatibility and streaming parsing are covered by Spec 115.
+
+---
+
+NR_OF_TRIES: 0

@@ -1,6 +1,6 @@
 # 116 Artifact delivery pipeline for Sandy agent outputs
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Problem
 Image generation works inside the Sandy sandbox, but the chat UI often shows broken images or nothing. The current agent output may print large base64 data URLs that get truncated, and artifacts stored in the sandbox can disappear before the UI can fetch them. We need a reliable, deterministic pipeline to transport binary outputs (images, files) from sandbox to UI.
@@ -52,3 +52,7 @@ Image generation works inside the Sandy sandbox, but the chat UI often shows bro
 - Update system prompt to save outputs to `/workspace/artifacts`.
 - Deploy baseline-agent and UI.
 - Verify via Playwright that images render reliably.
+
+---
+
+NR_OF_TRIES: 0
