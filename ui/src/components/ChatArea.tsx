@@ -38,6 +38,7 @@ import { DebugToggle } from './debug/DebugToggle';
 import { MemoryToggle } from './MemoryToggle';
 import { ChatOverflowMenu } from './ChatOverflowMenu';
 import { MemorySheet } from './memory/MemorySheet';
+import { SessionSheet } from './sessions/SessionSheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
 import { ShareModal } from './ShareModal';
@@ -118,6 +119,7 @@ export function ChatArea({
   const [pendingMessage, setPendingMessage] = useState<string | undefined>();
   const [toast, setToast] = useState<{ message: string; action?: string; onAction?: () => void } | null>(null);
   const [memorySheetOpen, setMemorySheetOpen] = useState(false);
+  const [sessionSheetOpen, setSessionSheetOpen] = useState(false);
   const [memoryEnabled, setMemoryEnabledState] = useState(() => isMemoryEnabled());
   const [prefillMessage, setPrefillMessage] = useState<string | undefined>();
   const [shareOpen, setShareOpen] = useState(false);
@@ -842,6 +844,7 @@ export function ChatArea({
                 onDebugChange={setDebugMode}
                 memoryEnabled={memoryEnabled}
                 onMemoryToggle={() => setMemorySheetOpen(true)}
+                onSessionsToggle={() => setSessionSheetOpen(true)}
                 freeChatsRemaining={freeChatsRemaining}
                 freeChatsLimit={FREE_CHAT_LIMIT}
                 showFreeChats={!isAuthenticated}
@@ -857,6 +860,11 @@ export function ChatArea({
               setMemoryEnabledState(enabled);
               setMemoryEnabled(enabled);
             }}
+          />
+
+          <SessionSheet
+            open={sessionSheetOpen}
+            onOpenChange={setSessionSheetOpen}
           />
 
           <SignInGateDialog

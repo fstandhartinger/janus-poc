@@ -7,6 +7,7 @@ interface ChatOverflowMenuProps {
   onDebugChange: (enabled: boolean) => void;
   memoryEnabled: boolean;
   onMemoryToggle: () => void;
+  onSessionsToggle: () => void;
   freeChatsRemaining?: number;
   freeChatsLimit?: number;
   showFreeChats?: boolean;
@@ -52,6 +53,21 @@ const MemoryIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const GlobeIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+  </svg>
+);
+
 const HomeIcon = ({ className }: { className?: string }) => (
   <svg
     viewBox="0 0 24 24"
@@ -86,6 +102,7 @@ export function ChatOverflowMenu({
   onDebugChange,
   memoryEnabled,
   onMemoryToggle,
+  onSessionsToggle,
   freeChatsRemaining,
   freeChatsLimit,
   showFreeChats,
@@ -168,6 +185,19 @@ export function ChatOverflowMenu({
             <span className={`chat-overflow-status ${memoryEnabled ? 'is-on' : ''}`}>
               {memoryEnabled ? 'ON' : 'OFF'}
             </span>
+          </button>
+
+          <button
+            type="button"
+            role="menuitem"
+            onClick={() => {
+              onSessionsToggle();
+              setOpen(false);
+            }}
+            className="chat-overflow-item"
+          >
+            <GlobeIcon className="w-4 h-4" />
+            <span className="chat-overflow-label">Browser Sessions</span>
           </button>
 
           <a

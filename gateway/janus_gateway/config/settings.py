@@ -111,6 +111,13 @@ class Settings(BaseSettings):
         validation_alias=AliasChoices("MEMORY_SERVICE_URL", "JANUS_MEMORY_SERVICE_URL"),
     )
 
+    # Browser session service
+    session_service_url: str = Field(
+        default="https://janus-browser-session-service.onrender.com",
+        description="Browser session service base URL",
+        validation_alias=AliasChoices("SESSION_SERVICE_URL", "JANUS_SESSION_SERVICE_URL"),
+    )
+
     # Scoring service
     scoring_service_url: str = Field(
         default="https://janus-scoring-service.onrender.com",

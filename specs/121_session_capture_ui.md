@@ -1,6 +1,6 @@
 # Spec 121: Browser Session Capture UI
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Priority: MEDIUM
 
