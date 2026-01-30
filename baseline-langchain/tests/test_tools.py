@@ -36,11 +36,11 @@ async def test_image_generation_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("BASELINE_LANGCHAIN_CHUTES_API_KEY", "test-key")
 
     class DummyResponse:
+        content = b"fake-image-data"
+        headers = {"content-type": "image/png"}
+
         def raise_for_status(self) -> None:
             return None
-
-        def json(self) -> dict[str, object]:
-            return {"data": [{"url": "https://example.com/image.png"}]}
 
     def fake_post(*args, **kwargs) -> DummyResponse:  # type: ignore[no-untyped-def]
         return DummyResponse()
@@ -48,7 +48,7 @@ async def test_image_generation_tool(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(httpx, "post", fake_post)
 
     result = await image_generation_tool.ainvoke("a sunset over mountains")
-    assert result.startswith("http") or result.startswith("data:")
+    assert "generated" in result.lower() or result.startswith("/") or result.startswith("http")
 
 
 @pytest.mark.asyncio
@@ -336,11 +336,11 @@ async def test_auth_token_passthrough(monkeypatch: pytest.MonkeyPatch) -> None:
     captured_headers: dict[str, str] = {}
 
     class DummyResponse:
+        content = b"fake-image-data"
+        headers = {"content-type": "image/png"}
+
         def raise_for_status(self) -> None:
             return None
-
-        def json(self) -> dict:
-            return {"data": [{"url": "https://example.com/image.png"}]}
 
     def fake_post(*args, **kwargs) -> DummyResponse:  # type: ignore[no-untyped-def]
         captured_headers.update(kwargs.get("headers", {}))
@@ -350,5 +350,5 @@ async def test_auth_token_passthrough(monkeypatch: pytest.MonkeyPatch) -> None:
     set_request_auth_token("passthrough-token")
 
     result = await image_generation_tool.ainvoke("token test")
-    assert result.startswith("http")
+    assert "generated" in result.lower() or result.startswith("/")
     assert captured_headers.get("Authorization") == "Bearer passthrough-token"

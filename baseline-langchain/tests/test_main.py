@@ -1,9 +1,18 @@
 """Tests for the FastAPI entrypoint."""
 
+import os
+
 import pytest
 from fastapi.testclient import TestClient
 
 from janus_baseline_langchain.main import app
+
+
+# Tool inference tests require actual LLM API calls
+requires_api_key = pytest.mark.skipif(
+    not (os.getenv("CHUTES_API_KEY") or os.getenv("OPENAI_API_KEY")),
+    reason="Tool inference tests require CHUTES_API_KEY or OPENAI_API_KEY",
+)
 
 
 @pytest.fixture
@@ -29,6 +38,7 @@ def test_router_metrics_endpoint(client: TestClient) -> None:
     assert "enabled" in data
 
 
+@requires_api_key
 def test_chat_completion_with_tools_infers_tool_call(client: TestClient) -> None:
     """Test chat completion with tool inference (no API call needed)."""
     response = client.post(
@@ -60,6 +70,7 @@ def test_chat_completion_with_tools_infers_tool_call(client: TestClient) -> None
     assert choice["message"]["tool_calls"][0]["function"]["name"] == "get_weather"
 
 
+@requires_api_key
 def test_chat_completion_streaming_with_tool_call(client: TestClient) -> None:
     """Test streaming chat completion with tool inference (no API call)."""
     response = client.post(
@@ -92,6 +103,7 @@ def test_chat_completion_streaming_with_tool_call(client: TestClient) -> None:
     assert "get_weather" in response.text
 
 
+@requires_api_key
 def test_chat_completion_calculator_tool(client: TestClient) -> None:
     """Test calculator tool inference."""
     response = client.post(

@@ -35,10 +35,14 @@ def test_complexity_generation_flags(detector: ComplexityDetector) -> None:
 
 
 @pytest.mark.asyncio
-async def test_complexity_async_skips_no_api_key(detector: ComplexityDetector) -> None:
+async def test_complexity_async_defaults_conservative_no_api_key(
+    detector: ComplexityDetector,
+) -> None:
+    """When LLM check fails due to missing API key, default to complex (conservative)."""
     analysis = await detector.analyze_async([_message("Tell me a joke")])
-    assert not analysis.is_complex
-    assert analysis.reason == "simple"
+    # Conservative default: when LLM unavailable, route to agent path for safety
+    assert analysis.is_complex
+    assert "conservative_default" in analysis.reason
 
 
 def test_complexity_url_interaction(detector: ComplexityDetector) -> None:
