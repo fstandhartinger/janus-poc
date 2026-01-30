@@ -109,6 +109,33 @@ services:
         value: "5"
     healthCheckPath: /health
 
+  # Janus Browser Session Service - Secure session storage
+  - type: web
+    name: janus-browser-session-service
+    runtime: python
+    plan: free
+    region: oregon
+    branch: main
+    rootDir: browser-session-service
+    buildCommand: pip install -e .
+    startCommand: uvicorn browser_session_service.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11"
+      - key: DATABASE_URL
+        sync: false
+      - key: SESSION_ENCRYPTION_SECRET
+        sync: false
+      - key: CHUTES_IDP_JWKS_URL
+        value: "https://idp.chutes.ai/.well-known/jwks.json"
+      - key: CHUTES_IDP_ISSUER
+        value: "https://idp.chutes.ai"
+      - key: CHUTES_IDP_AUDIENCE
+        value: "janus"
+      - key: SESSION_INIT_DB
+        value: "true"
+    healthCheckPath: /health
+
   # Janus Chat UI - Next.js frontend
   - type: web
     name: janus-ui
