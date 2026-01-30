@@ -106,6 +106,8 @@
 - Completed spec 111_claude_code_system_prompt.md with Claude router base normalization and stable Sandy agent-run prompt injection.
 - Stabilized Playwright chat/competition/memory E2E flows with gateway stubs and chat readiness helpers; full UI + gateway test suites now pass.
 - Completed spec 111_other_cli_agents_integration.md with CLI agent command updates (OpenCode/Codex), Roo Code + Cline installs, CLI agent selection UI + header wiring, and updated agent capability docs.
+- Completed spec 123_web_search_integration.md with Serper/SearXNG gateway search API, baseline web search fallbacks, sandbox env wiring, and documentation updates.
+- Note: `ui` Playwright suite timed out in this environment; rerun `npm test` when the UI server can stay responsive. `/api/search/web` integration test skipped without `SERPER_API_KEY`.
 
 ## 2026-01-30
 - Completed spec 112_comprehensive_unit_testing_suite.md with gateway SSE/model unit coverage, baseline CLI complexity/vision/sandy unit tests, LangChain agent/tool unit checks, UI useChat + SSE parsing tests, and a run-unit-tests script.
@@ -118,3 +120,4 @@
 - Re-verified spec 55_baseline_containerization.md - all acceptance criteria confirmed: Dockerfiles for baseline-agent-cli, baseline-langchain, gateway; docker-compose.yml; .dockerignore files; build scripts; port 8080 config. Gateway 78/78 tests pass. Baseline-langchain tests fixed: updated image_gen tool test mocks (added content/headers), marked tool inference tests as requiring API key, fixed conservative complexity default test.
 - Note: Specs 120-122 (Agent-Ready Warm Pool, Session Capture UI, Session Injection API) are blocked - they require Sandy infrastructure changes outside janus-poc repository.
 - Re-verified all specs complete in quality check mode: gateway (78 passed), UI (42 passed), baseline-agent-cli (123 passed), session profile tests (18 passed). Updated acceptance criteria checkboxes for specs 121-122 to reflect completed implementation.
+- Completed spec 124_debug_panel_improvements.md with: Mermaid diagram scaling via ResizeObserver, resizable panel width (320-800px) with drag handle, detachable panel via React portal to popup window, improved flow path highlighting with EVENT_TO_NODES mapping, and SSE path mapping for debug events. All UI tests pass (42/42).

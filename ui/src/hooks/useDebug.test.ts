@@ -31,7 +31,7 @@ describe('computeActiveNodes', () => {
   });
 
   it('falls back to step when unknown', () => {
-    expect(computeActiveNodes(baseEvent('CUSTOM'), [])).toEqual(['CUSTOM']);
+    expect(computeActiveNodes(baseEvent('CUSTOM'), [])).toEqual(['REQ', 'CUSTOM']);
   });
 
   it('retains previous when step is empty', () => {

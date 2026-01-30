@@ -22,9 +22,38 @@ const PATH_MAP: Record<string, string[]> = {
   TOOL_CODE: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT', 'TOOL_CODE'],
   TOOL_SEARCH: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT', 'TOOL_SEARCH'],
   TOOL_FILES: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT', 'TOOL_FILES'],
+  SSE: ['REQ', 'DETECT', 'KEYWORDS', 'SSE'],
 };
 
 const FILE_EVENT_TYPES = new Set(['file_created', 'file_modified', 'artifact_generated']);
+
+const EVENT_TO_NODES: Record<string, string[]> = {
+  request_received: ['REQ'],
+  complexity_check_start: ['DETECT'],
+  complexity_check_keyword: ['KEYWORDS'],
+  complexity_check_llm: ['LLM_VERIFY'],
+  complexity_check_complete: ['DETECT'],
+  routing_decision: ['DETECT'],
+  fast_path_start: ['FAST_LLM'],
+  fast_path_llm_call: ['FAST_LLM'],
+  fast_path_stream: ['SSE'],
+  fast_path_complete: ['SSE'],
+  agent_path_start: ['SANDY'],
+  agent_selection: ['SANDY'],
+  model_selection: ['SANDY'],
+  sandbox_init: ['SANDY'],
+  sandy_sandbox_create: ['SANDY'],
+  sandy_sandbox_created: ['SANDY'],
+  sandy_agent_api_request: ['AGENT'],
+  sandy_agent_api_sse_event: ['AGENT'],
+  sandy_agent_api_complete: ['AGENT'],
+  tool_call_start: ['AGENT'],
+  tool_call_result: ['AGENT'],
+  tool_call_complete: ['AGENT'],
+  response_chunk: ['SSE'],
+  response_complete: ['SSE'],
+  error: ['SSE'],
+};
 
 export function useDebug(enabled: boolean, requestId: string | null, baseline: string) {
   const [debugState, setDebugState] = useState<DebugState>(INITIAL_STATE);
@@ -32,14 +61,20 @@ export function useDebug(enabled: boolean, requestId: string | null, baseline: s
 
   useEffect(() => {
     if (!enabled) {
-      setDebugState(INITIAL_STATE);
+      // Schedule state update outside effect render cycle
+      queueMicrotask(() => {
+        setDebugState(INITIAL_STATE);
+      });
     }
   }, [enabled]);
 
   useEffect(() => {
     if (!enabled || !requestId) return;
 
-    setDebugState(INITIAL_STATE);
+    // Schedule state update outside effect render cycle
+    queueMicrotask(() => {
+      setDebugState(INITIAL_STATE);
+    });
 
     const params = new URLSearchParams();
     if (baseline) {
@@ -61,6 +96,7 @@ export function useDebug(enabled: boolean, requestId: string | null, baseline: s
           activeNodes,
           events: [...prev.events, debugEvent],
           files: nextFiles,
+          correlationId: prev.correlationId || debugEvent.correlation_id,
         };
       });
     };
@@ -81,13 +117,15 @@ export function useDebug(enabled: boolean, requestId: string | null, baseline: s
 }
 
 export function computeActiveNodes(event: DebugEvent, previous: string[]): string[] {
-  if (!event.step) return previous;
+  const eventNodes = EVENT_TO_NODES[event.type] ?? [];
+  let nextNodes = eventNodes.length ? uniqueList([...previous, ...eventNodes]) : previous;
+  if (!event.step) return nextNodes;
   if (event.step === 'SSE') {
-    return uniqueList([...previous, 'SSE']);
+    return uniqueList([...nextNodes, 'SSE']);
   }
   const mapped = PATH_MAP[event.step];
-  if (mapped) return mapped;
-  return [event.step];
+  if (mapped) return uniqueList([...nextNodes, ...mapped]);
+  return uniqueList([...nextNodes, event.step]);
 }
 
 function updateFiles(files: string[], event: DebugEvent): string[] {

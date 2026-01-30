@@ -1865,8 +1865,8 @@ html {
 }
 
 .chat-debug-panel {
-  width: 420px;
-  max-width: 42vw;
+  width: var(--debug-panel-width, 420px);
+  max-width: 800px;
   min-width: 320px;
   height: 100%;
   background: rgba(11, 17, 26, 0.96);
@@ -1875,6 +1875,20 @@ html {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative;
+}
+
+.chat-debug-panel.is-detached {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  border-left: none;
+  height: 100%;
+}
+
+.chat-debug-panel-detached {
+  align-items: center;
+  justify-content: center;
 }
 
 .chat-debug-header {
@@ -1895,7 +1909,13 @@ html {
   color: #F3F4F6;
 }
 
-.chat-debug-close {
+.chat-debug-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-debug-action {
   width: 28px;
   height: 28px;
   border-radius: 8px;
@@ -1908,7 +1928,7 @@ html {
   transition: all 0.2s ease;
 }
 
-.chat-debug-close:hover {
+.chat-debug-action:hover {
   color: #F3F4F6;
   border-color: rgba(55, 65, 81, 0.8);
 }
@@ -1918,6 +1938,14 @@ html {
   min-height: 0;
   overflow: auto;
   padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.chat-debug-diagram-scale {
+  display: inline-flex;
+  transform-origin: top center;
 }
 
 .chat-debug-mermaid,
@@ -1925,6 +1953,11 @@ html {
   background: transparent;
   border: none;
   padding: 0;
+}
+
+.chat-debug-diagram svg {
+  max-width: 100%;
+  height: auto;
 }
 
 .chat-debug-log {
@@ -2004,9 +2037,67 @@ html {
   color: #E5E7EB;
 }
 
+.debug-panel-resize-handle {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: ew-resize;
+  background: transparent;
+  transition: background 0.2s ease;
+}
+
+.debug-panel-resize-handle:hover,
+.debug-panel-resize-handle:active,
+.chat-debug-panel.is-resizing .debug-panel-resize-handle {
+  background: rgba(99, 210, 151, 0.5);
+}
+
+.chat-debug-detached {
+  text-align: center;
+  padding: 24px;
+  color: #E5E7EB;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chat-debug-detached-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.chat-debug-detached-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.chat-debug-detached-btn {
+  border-radius: 10px;
+  border: 1px solid rgba(55, 65, 81, 0.8);
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #F3F4F6;
+  background: rgba(20, 32, 48, 0.9);
+  transition: border 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.chat-debug-detached-btn.secondary {
+  color: #9CA3AF;
+  background: transparent;
+}
+
+.chat-debug-detached-btn:hover {
+  border-color: rgba(99, 210, 151, 0.6);
+  color: #FFFFFF;
+}
+
 @media (max-width: 1200px) {
   .chat-debug-panel {
-    width: 360px;
+    width: var(--debug-panel-width, 360px);
     min-width: 280px;
   }
 }

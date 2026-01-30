@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { MermaidDiagram } from '@/components/MermaidDiagram';
 
 const ALL_NODES = [
@@ -28,15 +28,68 @@ export function DebugFlowDiagram({ baseline, currentStep, highlightedNodes }: De
   const diagramDefinition = useMemo(() => {
     return generateDiagram(baseline, currentStep, highlightedNodes);
   }, [baseline, currentStep, highlightedNodes]);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+
+  const updateScale = useCallback(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const svgElement = container.querySelector('svg');
+    if (!svgElement) return;
+
+    const styles = window.getComputedStyle(container);
+    const paddingX = parseFloat(styles.paddingLeft) + parseFloat(styles.paddingRight);
+    const paddingY = parseFloat(styles.paddingTop) + parseFloat(styles.paddingBottom);
+
+    const containerWidth = container.clientWidth - paddingX;
+    const containerHeight = container.clientHeight - paddingY;
+    if (containerWidth <= 0 || containerHeight <= 0) return;
+
+    const viewBox = svgElement.viewBox?.baseVal;
+    const svgWidth = viewBox?.width || svgElement.getBoundingClientRect().width;
+    const svgHeight = viewBox?.height || svgElement.getBoundingClientRect().height;
+    if (!svgWidth || !svgHeight) return;
+
+    const scaleX = containerWidth / svgWidth;
+    const scaleY = containerHeight / svgHeight;
+    const nextScale = Math.min(scaleX, scaleY, 1);
+    setScale((prev) => (Math.abs(prev - nextScale) > 0.01 ? nextScale : prev));
+  }, []);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    const raf = requestAnimationFrame(updateScale);
+    const mutationObserver = new MutationObserver(() => {
+      requestAnimationFrame(updateScale);
+    });
+    mutationObserver.observe(container, { childList: true, subtree: true });
+
+    let resizeObserver: ResizeObserver | null = null;
+    if (typeof ResizeObserver !== 'undefined') {
+      resizeObserver = new ResizeObserver(() => {
+        requestAnimationFrame(updateScale);
+      });
+      resizeObserver.observe(container);
+    }
+
+    return () => {
+      cancelAnimationFrame(raf);
+      mutationObserver.disconnect();
+      resizeObserver?.disconnect();
+    };
+  }, [diagramDefinition, updateScale]);
 
   return (
-    <div className="chat-debug-diagram">
-      <MermaidDiagram
-        chart={diagramDefinition}
-        ariaLabel={`Debug flow diagram for ${baseline}`}
-        clickable={false}
-        className="chat-debug-mermaid"
-      />
+    <div className="chat-debug-diagram" ref={containerRef}>
+      <div className="chat-debug-diagram-scale" style={{ transform: `scale(${scale})` }}>
+        <MermaidDiagram
+          chart={diagramDefinition}
+          ariaLabel={`Debug flow diagram for ${baseline}`}
+          clickable={false}
+          className="chat-debug-mermaid"
+        />
+      </div>
     </div>
   );
 }
