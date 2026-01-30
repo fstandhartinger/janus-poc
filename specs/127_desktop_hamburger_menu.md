@@ -1,6 +1,6 @@
 # Spec 127: Desktop Hamburger Menu Toggle
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** Low
 **Complexity:** Low
@@ -196,12 +196,12 @@ Optionally animate the hamburger icon to indicate state:
 
 ## Acceptance Criteria
 
-- [ ] Hamburger button visible on desktop (≥ 1024px)
-- [ ] Clicking on desktop toggles sidebar collapse/expand
-- [ ] Clicking on mobile opens sidebar as modal (existing behavior)
-- [ ] Collapse state persists in localStorage
-- [ ] Visual feedback indicates current state
-- [ ] Accessible: proper aria-label and aria-expanded
+- [x] Hamburger button visible on desktop (≥ 1024px)
+- [x] Clicking on desktop toggles sidebar collapse/expand
+- [x] Clicking on mobile opens sidebar as modal (existing behavior)
+- [x] Collapse state persists in localStorage
+- [x] Visual feedback indicates current state
+- [x] Accessible: proper aria-label and aria-expanded
 
 ---
 
