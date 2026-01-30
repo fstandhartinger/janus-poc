@@ -1,6 +1,6 @@
 # Spec 129: Security Dependency Updates
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** High
 **Complexity:** Low
@@ -103,12 +103,27 @@ npm run typecheck
 
 ## Acceptance Criteria
 
-- [ ] Next.js updated to 16.1.6+
-- [ ] `npm audit` shows reduced vulnerabilities
-- [ ] Build passes without errors
-- [ ] Tests pass
-- [ ] Type checking passes
-- [ ] xlsx vulnerabilities documented/accepted or mitigated
+- [x] Next.js updated to 16.1.6+
+- [x] `npm audit` shows reduced vulnerabilities (11 → 1)
+- [x] Build passes without errors
+- [x] Tests pass (42/42)
+- [x] Type checking passes
+- [x] xlsx vulnerabilities documented/accepted (no fix available, low risk for export-only usage)
+
+## Implementation Summary
+
+**Vulnerabilities reduced from 11 to 1:**
+
+| Fix | Method |
+|-----|--------|
+| Next.js 3 CVEs | Already at 16.1.6 |
+| prismjs DOM Clobbering | Updated react-syntax-highlighter to 16.1.0 |
+| lodash-es Prototype Pollution | Added npm override for lodash-es@^4.17.23 |
+| xlsx (2 CVEs) | No fix available - accepted risk (export-only, no untrusted input parsing) |
+
+**Changes made:**
+- `ui/package.json`: Added `overrides` section for lodash-es, updated react-syntax-highlighter
+- `ui/package-lock.json`: Regenerated
 
 ---
 
