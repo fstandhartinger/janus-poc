@@ -856,7 +856,11 @@ def _build_payload(
     payload = request.model_dump(exclude_none=True)
     payload["model"] = model_config.model_id
     payload["stream"] = stream
-    payload["max_tokens"] = request.max_tokens or model_config.max_tokens
+    # Clamp max_tokens to model's configured limit (prevents slow tool-heavy calls)
+    max_tokens = request.max_tokens or model_config.max_tokens
+    if max_tokens > model_config.max_tokens:
+        max_tokens = model_config.max_tokens
+    payload["max_tokens"] = max_tokens
     return payload
 
 

@@ -1,6 +1,6 @@
 # Spec 109: Chat UI Mobile Responsive Improvements
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** High
 **Complexity:** Medium

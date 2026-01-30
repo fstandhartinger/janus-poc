@@ -1,6 +1,6 @@
 # Spec 117: Claude Code Streaming + Env Reliability (Agent-Run)
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Context / Why
 
@@ -141,3 +141,5 @@ Update the agent-pack docs and system prompts to reflect the current image API:
 3. **UI (Playwright MCP):**
    - Use Janus chat UI with pre-release password
    - Run the two demo prompts and verify streaming + final output
+
+NR_OF_TRIES: 1
