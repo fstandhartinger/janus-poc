@@ -1,6 +1,6 @@
 # Spec 101: Integration Testing Suite
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** High
 **Complexity:** High
@@ -962,4 +962,4 @@ TEST_MODE=local pytest tests/integration/ -v
 - Slow tests are marked with `@pytest.mark.slow`
 - Failed tests indicate bugs that must be fixed
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1
