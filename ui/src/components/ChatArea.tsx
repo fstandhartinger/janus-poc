@@ -53,6 +53,7 @@ interface ChatAreaProps {
   onNewChat?: () => void;
   initialMessage?: string;
   autoSubmit?: boolean;
+  sidebarCollapsed?: boolean;
 }
 
 type ResearchSource = {
@@ -85,6 +86,7 @@ export function ChatArea({
   onNewChat,
   initialMessage,
   autoSubmit,
+  sidebarCollapsed,
 }: ChatAreaProps) {
   const {
     currentSessionId,
@@ -773,10 +775,19 @@ export function ChatArea({
               <button
                 type="button"
                 onClick={onMenuClick}
-                className="chat-menu-btn lg:hidden"
-                aria-label="Open sidebar"
+                className="chat-menu-btn"
+                aria-label={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                aria-expanded={!sidebarCollapsed}
+                title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
               >
-                <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.6">
+                <svg
+                  viewBox="0 0 24 24"
+                  className="w-4 h-4 transition-transform duration-200"
+                  style={{ transform: sidebarCollapsed ? 'rotate(90deg)' : 'none' }}
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>

@@ -6,6 +6,7 @@ import { Sidebar, ChatArea } from '@/components';
 import { useCanvasStore } from '@/store/canvas';
 import { useChatStore } from '@/store/chat';
 import { useSettingsStore } from '@/store/settings';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 const SIDEBAR_STORAGE_KEY = 'sidebar-collapsed';
 const sidebarListeners = new Set<() => void>();
@@ -59,6 +60,9 @@ export default function ChatPage() {
     autoSubmit: boolean;
   } | null>(null);
 
+  // Detect desktop viewport (matches lg: breakpoint at 1024px)
+  const isDesktop = useMediaQuery('(min-width: 1024px)');
+
   const sidebarCollapsed = useSyncExternalStore(
     subscribeSidebarCollapsed,
     readSidebarCollapsed,
@@ -75,6 +79,17 @@ export default function ChatPage() {
   const openSidebar = useCallback(() => setSidebarOpen(true), []);
   const closeSidebar = useCallback(() => setSidebarOpen(false), []);
   const handleNewChat = useCallback(() => createSession(), [createSession]);
+
+  // Unified handler for hamburger menu click
+  // Desktop: toggle sidebar collapse/expand
+  // Mobile: open sidebar as modal overlay
+  const handleMenuClick = useCallback(() => {
+    if (isDesktop) {
+      toggleCollapse();
+    } else {
+      setSidebarOpen(true);
+    }
+  }, [isDesktop, toggleCollapse]);
 
   // Handle initial share payload from URL params
   // Using a ref to track if we've processed the params to avoid calling setState in effect
@@ -125,10 +140,11 @@ export default function ChatPage() {
           onToggleCollapse={toggleCollapse}
         />
         <ChatArea
-          onMenuClick={openSidebar}
+          onMenuClick={handleMenuClick}
           onNewChat={handleNewChat}
           initialMessage={sharePayload?.initial}
           autoSubmit={sharePayload?.autoSubmit}
+          sidebarCollapsed={sidebarCollapsed}
         />
       </main>
     </div>
