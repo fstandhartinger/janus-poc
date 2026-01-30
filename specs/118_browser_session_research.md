@@ -1,6 +1,6 @@
 # Spec 118: Browser Session Management - Experimental Research
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Priority: HIGH (Blocks follow-up implementation specs)
 
@@ -366,3 +366,7 @@ After research, review and update `baseline-agent-cli/agent-pack/prompts/system.
 ---
 
 *Reference: docs/browser-user-session-pre-research.md*
+
+---
+
+## NR_OF_TRIES: 1
