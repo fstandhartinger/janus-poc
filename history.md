@@ -110,6 +110,7 @@
 - Note: `ui` Playwright suite timed out in this environment; rerun `npm test` when the UI server can stay responsive. `/api/search/web` integration test skipped without `SERPER_API_KEY`.
 
 ## 2026-01-30
+- Completed spec 128_mermaid_modal_infinite_loop.md with useCallback stabilization for onClose handlers in MermaidDiagram, MermaidDiagramModal, and DiagramBlock components. Used refs to avoid useEffect dependency issues with the escape key handler.
 - Completed spec 112_comprehensive_unit_testing_suite.md with gateway SSE/model unit coverage, baseline CLI complexity/vision/sandy unit tests, LangChain agent/tool unit checks, UI useChat + SSE parsing tests, and a run-unit-tests script.
 - Completed spec 114_chat_ui_mobile_responsive.md with ChatOverflowMenu component, responsive topbar for mobile (< 640px), free chats indicator above input on mobile, 44px touch targets, and smooth animations. Verified on iPhone SE/14 viewports.
 - Verified and marked complete spec 116_artifact_delivery_pipeline.md - all artifact delivery infrastructure was already implemented: SandyService artifact collection, SSE artifacts events, tool-result recovery, grace period for sandbox termination, UI artifact caching at /api/artifacts/cache and serving at /api/artifacts/[...path], and MediaRenderer integration.

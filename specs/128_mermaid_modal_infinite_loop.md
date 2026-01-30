@@ -1,6 +1,6 @@
 # Spec 128: Fix Mermaid Modal Infinite Loop
 
-## Status: TODO
+## Status: COMPLETE
 
 **Priority:** Critical
 **Complexity:** Low
@@ -237,11 +237,13 @@ const MermaidDiagram = ({ chart, clickable = true, ariaLabel }: Props) => {
 
 ## Acceptance Criteria
 
-- [ ] Clicking diagram opens modal once
-- [ ] Modal stays open until explicitly closed
-- [ ] Clicking backdrop closes modal once
-- [ ] Clicking close button closes modal once
-- [ ] Pressing Escape closes modal once
-- [ ] No infinite render loops
-- [ ] No "Maximum update depth exceeded" errors
-- [ ] Page remains responsive after modal interaction
+- [x] Clicking diagram opens modal once
+- [x] Modal stays open until explicitly closed
+- [x] Clicking backdrop closes modal once
+- [x] Clicking close button closes modal once
+- [x] Pressing Escape closes modal once
+- [x] No infinite render loops
+- [x] No "Maximum update depth exceeded" errors
+- [x] Page remains responsive after modal interaction
+
+NR_OF_TRIES: 1

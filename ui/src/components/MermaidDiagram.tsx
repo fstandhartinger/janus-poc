@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useId, useState } from 'react';
+import { useCallback, useEffect, useId, useState } from 'react';
 import mermaid from 'mermaid';
 import { MermaidDiagramModal } from './MermaidDiagramModal';
 
@@ -237,11 +237,23 @@ export function MermaidDiagram({
     );
   }
 
-  const handleClick = () => {
+  // Stable callbacks to prevent infinite render loops
+  const handleClick = useCallback(() => {
     if (clickable) {
       setShowModal(true);
     }
-  };
+  }, [clickable]);
+
+  const handleModalClose = useCallback(() => {
+    setShowModal(false);
+  }, []);
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (clickable && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      setShowModal(true);
+    }
+  }, [clickable]);
 
   return (
     <>
@@ -251,12 +263,7 @@ export function MermaidDiagram({
           role="img"
           aria-label={ariaLabel ?? 'Mermaid diagram'}
           onClick={handleClick}
-          onKeyDown={(e) => {
-            if (clickable && (e.key === 'Enter' || e.key === ' ')) {
-              e.preventDefault();
-              setShowModal(true);
-            }
-          }}
+          onKeyDown={handleKeyDown}
           tabIndex={clickable ? 0 : undefined}
           dangerouslySetInnerHTML={{ __html: svg }}
         />
@@ -265,7 +272,7 @@ export function MermaidDiagram({
         <MermaidDiagramModal
           svg={svg}
           ariaLabel={ariaLabel}
-          onClose={() => setShowModal(false)}
+          onClose={handleModalClose}
         />
       )}
     </>

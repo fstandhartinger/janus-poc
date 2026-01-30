@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import mermaid from 'mermaid';
 import { MermaidDiagramModal } from '../MermaidDiagramModal';
 
@@ -55,7 +55,8 @@ export function DiagramBlock({ code }: DiagramBlockProps) {
     renderDiagram();
   }, [code]);
 
-  const downloadSVG = () => {
+  // Stable callbacks to prevent infinite render loops
+  const downloadSVG = useCallback(() => {
     if (!svg) return;
     const blob = new Blob([svg], { type: 'image/svg+xml' });
     const url = URL.createObjectURL(blob);
@@ -64,12 +65,33 @@ export function DiagramBlock({ code }: DiagramBlockProps) {
     anchor.download = 'diagram.svg';
     anchor.click();
     URL.revokeObjectURL(url);
-  };
+  }, [svg]);
 
-  const openModal = () => {
+  const openModal = useCallback(() => {
     if (!svg) return;
     setShowModal(true);
-  };
+  }, [svg]);
+
+  const handleModalClose = useCallback(() => {
+    setShowModal(false);
+  }, []);
+
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openModal();
+    }
+  }, [openModal]);
+
+  const handleDownloadClick = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    downloadSVG();
+  }, [downloadSVG]);
+
+  const handleExpandClick = useCallback((event: React.MouseEvent) => {
+    event.stopPropagation();
+    openModal();
+  }, [openModal]);
 
   if (error) {
     return (
@@ -87,31 +109,20 @@ export function DiagramBlock({ code }: DiagramBlockProps) {
         role="img"
         aria-label="Mermaid diagram (click to enlarge)"
         onClick={openModal}
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' || event.key === ' ') {
-            event.preventDefault();
-            openModal();
-          }
-        }}
+        onKeyDown={handleKeyDown}
         tabIndex={0}
       >
         <div className="diagram-toolbar">
           <button
             type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              downloadSVG();
-            }}
+            onClick={handleDownloadClick}
             title="Download SVG"
           >
             <DownloadIcon /> SVG
           </button>
           <button
             type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              openModal();
-            }}
+            onClick={handleExpandClick}
             title="View fullscreen"
           >
             <ExpandIcon /> Expand
@@ -128,7 +139,7 @@ export function DiagramBlock({ code }: DiagramBlockProps) {
         <MermaidDiagramModal
           svg={svg}
           ariaLabel="Mermaid diagram fullscreen"
-          onClose={() => setShowModal(false)}
+          onClose={handleModalClose}
         />
       )}
     </>
