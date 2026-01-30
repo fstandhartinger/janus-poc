@@ -1,8 +1,10 @@
 # Spec 119: Browser Session Storage Service
 
-## Status: TODO
+## Status: COMPLETE
 
 ## Priority: HIGH
+
+## NR_OF_TRIES: 1
 
 ## Context / Why
 
@@ -136,13 +138,13 @@ CHUTES_IDP_JWKS_URL=https://idp.chutes.ai/.well-known/jwks.json
 
 ## Acceptance Criteria
 
-- [ ] FastAPI service with session CRUD endpoints
-- [ ] Neon Postgres schema deployed
-- [ ] AES-256-GCM encryption/decryption working
-- [ ] JWT authentication with Chutes IDP
-- [ ] Unit tests for crypto and API
-- [ ] Deployed on Render
-- [ ] Health check endpoint `/health`
+- [x] FastAPI service with session CRUD endpoints
+- [x] Neon Postgres schema deployed (using SQLAlchemy async with auto-migration)
+- [x] AES-256-GCM encryption/decryption working
+- [x] JWT authentication with Chutes IDP
+- [x] Unit tests for crypto and API (35 tests)
+- [x] Deployed on Render (https://janus-browser-session-service.onrender.com)
+- [x] Health check endpoint `/health`
 
 ## API Examples
 
