@@ -139,3 +139,9 @@
   - Added scrollIntoViewIfNeeded for multimodal prompts at modal bottom
   - Added max-h-[85vh] overflow-y-auto to AllPromptsModal for scrollability
   - All 11 demo prompt E2E tests now pass (gateway 90/90 tests pass)
+- Quality check verification: Re-verified spec 131 acceptance criteria. All tests pass:
+  - Gateway: 90/90 tests pass (includes 11 sandbox unit tests)
+  - UI: 44/44 unit tests pass
+  - Demo prompts E2E: 11 tests properly configured
+  - Debug flow diagram: Simplified to 7 nodes with proper CSS centering
+  - Sandbox router: All 3 endpoints implemented with proper error handling
