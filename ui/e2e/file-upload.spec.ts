@@ -58,6 +58,7 @@ test.describe('File Upload', () => {
     const removeButton = page.locator(
       `button[aria-label="Remove ${path.basename(testImagePath)}"]`
     );
+    await page.locator(`img[alt="${path.basename(testImagePath)}"]`).hover();
     await expect(removeButton).toBeVisible();
     await removeButton.click();
 

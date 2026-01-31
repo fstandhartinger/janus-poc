@@ -43,7 +43,7 @@ run_pytest_in_dir() {
 run_group "Gateway Unit Tests" run_pytest_in_dir gateway janus_gateway tests/unit -v --tb=short
 run_group "Baseline CLI Unit Tests" run_pytest_in_dir baseline-agent-cli janus_baseline_agent_cli tests/unit -v --tb=short
 run_group "Baseline LangChain Unit Tests" run_pytest_in_dir baseline-langchain janus_baseline_langchain tests/unit -v --tb=short
-run_group "UI Unit Tests" bash -c "cd ui && npm run test:unit"
+run_group "UI Unit Tests" bash -c "cd ui && npm test -- --watchAll=false"
 
 if [ "${failed}" -ne 0 ]; then
   echo "One or more unit test groups failed."

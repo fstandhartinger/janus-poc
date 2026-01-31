@@ -12,5 +12,9 @@ export default defineConfig({
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.test.ts'],
     clearMocks: true,
+    coverage: {
+      provider: 'v8',
+      reporter: ['text'],
+    },
   },
 });

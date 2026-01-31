@@ -113,6 +113,13 @@ async function processWord(file: File, id: string): Promise<AttachedFile> {
 
 async function processExcel(file: File, id: string): Promise<AttachedFile> {
   const arrayBuffer = await file.arrayBuffer();
+  // SECURITY NOTE: The xlsx (SheetJS) package has known vulnerabilities:
+  // - GHSA-4r6h-8v6p-xvw6 (Prototype Pollution)
+  // - GHSA-5pgg-2g8v-p4x9 (ReDoS)
+  // Risk accepted: We only use xlsx to parse user-uploaded spreadsheets for display.
+  // The user already has access to their own data, so these vulnerabilities don't
+  // create additional attack surface beyond what the user could do directly.
+  // Reviewed: 2026-01-30, Spec: 129_security_dependency_updates.md
   const XLSX = await import('xlsx');
   const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 

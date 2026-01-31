@@ -1131,4 +1131,4 @@ echo "SUCCESS: All unit tests passed."
 - If a test reveals a bug, fix the bug AND keep the test
 - Run tests in CI on every commit
 
-NR_OF_TRIES: 0
+NR_OF_TRIES: 1

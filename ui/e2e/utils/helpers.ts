@@ -124,7 +124,11 @@ export async function signInWithChutes(page: Page, fingerprint: string) {
       sameSite: 'Lax',
     },
   ]);
-  await page.reload();
+  try {
+    await page.reload({ waitUntil: 'domcontentloaded' });
+  } catch {
+    await page.goto(url.toString(), { waitUntil: 'domcontentloaded' });
+  }
   await waitForPageReady(page);
 }
 
