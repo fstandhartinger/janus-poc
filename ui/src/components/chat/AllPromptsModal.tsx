@@ -75,7 +75,7 @@ export function AllPromptsModal({ open, onClose, onSelect }: AllPromptsModalProp
       data-testid="all-prompts-modal"
     >
       <div
-        className="glass-card w-full max-w-3xl p-6"
+        className="glass-card w-full max-w-3xl max-h-[85vh] overflow-y-auto p-6"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-6 flex items-center justify-between">

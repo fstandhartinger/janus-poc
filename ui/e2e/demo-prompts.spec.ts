@@ -83,7 +83,14 @@ test.describe('Demo Prompts', () => {
       await page.goto('/chat');
       await waitForChatReady(page);
 
-      const promptButton = page.getByTestId('demo-prompt-simple-translate');
+      // simple-translate is in the "All Prompts" modal, not on the main page
+      const seeMoreButton = page.getByTestId('see-more-prompts');
+      await expect(seeMoreButton).toBeVisible();
+      await seeMoreButton.click();
+      await expect(page.getByTestId('all-prompts-modal')).toBeVisible();
+
+      // Use the all-prompts-* test ID for items inside the modal
+      const promptButton = page.getByTestId('all-prompts-simple-translate');
       await expect(promptButton).toBeVisible();
       await promptButton.click();
 
@@ -118,7 +125,10 @@ test.describe('Demo Prompts', () => {
       await seeMoreButton.click();
       await expect(page.getByTestId('all-prompts-modal')).toBeVisible();
 
-      const promptButton = page.getByTestId('demo-prompt-multimodal-image-city');
+      // Use the all-prompts-* test ID for items inside the modal
+      // Multimodal section is at the bottom of the modal, need to scroll to it
+      const promptButton = page.getByTestId('all-prompts-multimodal-image-city');
+      await promptButton.scrollIntoViewIfNeeded();
       await expect(promptButton).toBeVisible();
       await promptButton.click();
 
@@ -149,7 +159,10 @@ test.describe('Demo Prompts', () => {
       await seeMoreButton.click();
       await expect(page.getByTestId('all-prompts-modal')).toBeVisible();
 
-      const promptButton = page.getByTestId('demo-prompt-multimodal-poem-tts');
+      // Use the all-prompts-* test ID for items inside the modal
+      // Multimodal section is at the bottom of the modal, need to scroll to it
+      const promptButton = page.getByTestId('all-prompts-multimodal-poem-tts');
+      await promptButton.scrollIntoViewIfNeeded();
       await expect(promptButton).toBeVisible();
       await promptButton.click();
 
@@ -180,8 +193,11 @@ test.describe('Demo Prompts', () => {
 
       const seeMoreButton = page.getByTestId('see-more-prompts');
       await seeMoreButton.click();
+      await expect(page.getByTestId('all-prompts-modal')).toBeVisible();
 
-      const promptButton = page.getByTestId('demo-prompt-research-web-2026');
+      // Use the all-prompts-* test ID for items inside the modal
+      const promptButton = page.getByTestId('all-prompts-research-web-2026');
+      await expect(promptButton).toBeVisible();
       await promptButton.click();
 
       await waitForStreamingComplete(page);
@@ -211,8 +227,11 @@ test.describe('Demo Prompts', () => {
 
       const seeMoreButton = page.getByTestId('see-more-prompts');
       await seeMoreButton.click();
+      await expect(page.getByTestId('all-prompts-modal')).toBeVisible();
 
-      const promptButton = page.getByTestId('demo-prompt-agentic-clone-summarize');
+      // Use the all-prompts-* test ID for items inside the modal
+      const promptButton = page.getByTestId('all-prompts-agentic-clone-summarize');
+      await expect(promptButton).toBeVisible();
       await promptButton.click();
 
       await waitForStreamingComplete(page);
@@ -234,8 +253,8 @@ test.describe('Demo Prompts', () => {
       const modal = page.getByTestId('all-prompts-modal');
       await expect(modal).toBeVisible();
 
-      // Should have all 12 demo prompts
-      const promptButtons = modal.locator('[data-testid^="demo-prompt-"]');
+      // Should have all 12 demo prompts (all-prompts-* prefix in the modal)
+      const promptButtons = modal.locator('[data-testid^="all-prompts-"]');
       await expect(promptButtons).toHaveCount(12);
     });
 
