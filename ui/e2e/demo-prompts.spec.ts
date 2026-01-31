@@ -99,7 +99,7 @@ test.describe('Demo Prompts', () => {
       await page.route('**/api/chat', async (route) => {
         const streamChunks = [
           'data: {"id":"chatcmpl-image","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
-          'data: {"id":"chatcmpl-image","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"I\\'ve generated a stunning image of a futuristic city.\\n\\n![Futuristic City](https://example.com/image.png)"},"finish_reason":null}]}',
+          `data: {"id":"chatcmpl-image","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"I've generated a stunning image of a futuristic city.\\n\\n![Futuristic City](https://example.com/image.png)"},"finish_reason":null}]}`,
           'data: [DONE]',
         ];
         await route.fulfill({
@@ -132,7 +132,7 @@ test.describe('Demo Prompts', () => {
       await page.route('**/api/chat', async (route) => {
         const streamChunks = [
           'data: {"id":"chatcmpl-poem","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
-          'data: {"id":"chatcmpl-poem","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"Here\\'s a poem about the ocean:\\n\\nWaves crash upon the shore,\\nWhispering secrets of the deep,\\nEternal tides forevermore."},"finish_reason":null}]}',
+          `data: {"id":"chatcmpl-poem","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"Here's a poem about the ocean:\\n\\nWaves crash upon the shore,\\nWhispering secrets of the deep,\\nEternal tides forevermore."},"finish_reason":null}]}`,
           'data: [DONE]',
         ];
         await route.fulfill({
@@ -196,7 +196,7 @@ test.describe('Demo Prompts', () => {
       await page.route('**/api/chat', async (route) => {
         const streamChunks = [
           'data: {"id":"chatcmpl-agentic","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"role":"assistant"},"finish_reason":null}]}',
-          'data: {"id":"chatcmpl-agentic","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"I\\'ve cloned and analyzed the repository.\\n\\n## Summary\\nThe anthropic-cookbook contains examples and recipes for using Claude API."},"finish_reason":null}]}',
+          `data: {"id":"chatcmpl-agentic","object":"chat.completion.chunk","created":0,"model":"baseline","choices":[{"index":0,"delta":{"content":"I've cloned and analyzed the repository.\\n\\n## Summary\\nThe anthropic-cookbook contains examples and recipes for using Claude API."},"finish_reason":null}]}`,
           'data: [DONE]',
         ];
         await route.fulfill({
