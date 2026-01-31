@@ -5,16 +5,11 @@ import { MermaidDiagram } from '@/components/MermaidDiagram';
 
 const ALL_NODES = [
   'REQ',
-  'DETECT',
-  'KEYWORDS',
-  'LLM_VERIFY',
+  'ROUTING',
   'FAST_LLM',
   'SANDY',
   'AGENT',
-  'TOOL_IMG',
-  'TOOL_CODE',
-  'TOOL_SEARCH',
-  'TOOL_FILES',
+  'TOOLS',
   'SSE',
 ];
 
@@ -82,7 +77,10 @@ export function DebugFlowDiagram({ baseline, currentStep, highlightedNodes }: De
 
   return (
     <div className="chat-debug-diagram" ref={containerRef}>
-      <div className="chat-debug-diagram-scale" style={{ transform: `scale(${scale})` }}>
+      <div
+        className="chat-debug-diagram-scale"
+        style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}
+      >
         <MermaidDiagram
           chart={diagramDefinition}
           ariaLabel={`Debug flow diagram for ${baseline}`}
@@ -101,58 +99,47 @@ function generateDiagram(
 ): string {
   const agentLabel = baseline.includes('langchain') ? 'LangChain Agent' : 'CLI Agent';
   const sandboxLabel = baseline.includes('langchain') ? 'Agent Runtime' : 'Sandy Sandbox';
-  const activeList = activeNodes.length ? activeNodes : currentStep ? [currentStep] : [];
-  const activeLines = activeList.map((node) => `class ${node} active`).join('\n');
+
+  // Map old node names to new simplified names for backward compatibility
+  const nodeMap: Record<string, string> = {
+    'DETECT': 'ROUTING',
+    'KEYWORDS': 'ROUTING',
+    'LLM_VERIFY': 'ROUTING',
+    'TOOL_IMG': 'TOOLS',
+    'TOOL_CODE': 'TOOLS',
+    'TOOL_SEARCH': 'TOOLS',
+    'TOOL_FILES': 'TOOLS',
+  };
+
+  const mappedNodes = activeNodes.map(node => nodeMap[node] || node);
+  const activeList = mappedNodes.length ? mappedNodes : currentStep ? [nodeMap[currentStep] || currentStep] : [];
+  const uniqueActiveNodes = [...new Set(activeList)];
+  const activeLines = uniqueActiveNodes.map((node) => `class ${node} active`).join('\n');
   const inactiveLine = `class ${ALL_NODES.join(',')} inactive`;
 
   return `
-    flowchart TB
-      classDef active fill:#63D297,stroke:#63D297,color:#0B0F14
-      classDef inactive fill:#111827,stroke:#334155,color:#E5E7EB
-      classDef pending fill:#111827,stroke:#475569,stroke-dasharray: 5 5,color:#9CA3AF
+flowchart TB
+  classDef active fill:#63D297,stroke:#63D297,color:#0B0F14,stroke-width:2px
+  classDef inactive fill:#111827,stroke:#334155,color:#E5E7EB
 
-      subgraph Request ["Incoming Request"]
-          REQ["POST /v1/chat/completions"]
-      end
+  REQ["📥 Request"]
+  ROUTING["🔀 Complexity Router"]
+  FAST_LLM["⚡ Direct LLM"]
+  SANDY["📦 ${sandboxLabel}"]
+  AGENT["🤖 ${agentLabel}"]
+  TOOLS["🔧 Tools"]
+  SSE["📤 SSE Response"]
 
-      subgraph Routing ["Complexity Detection"]
-          DETECT["Complexity Detector"]
-          KEYWORDS["Keyword Check"]
-          LLM_VERIFY["LLM Verification"]
-      end
+  REQ --> ROUTING
+  ROUTING -->|Simple| FAST_LLM
+  ROUTING -->|Complex| SANDY
+  SANDY --> AGENT
+  AGENT --> TOOLS
+  TOOLS --> AGENT
+  FAST_LLM --> SSE
+  AGENT --> SSE
 
-      subgraph FastPath ["Fast Path"]
-          FAST_LLM["Direct LLM Call"]
-      end
-
-      subgraph AgentPath ["Agent Path"]
-          SANDY["${sandboxLabel}"]
-          AGENT["${agentLabel}"]
-      end
-
-      subgraph Tools ["Agent Tools"]
-          TOOL_IMG["Image Gen"]
-          TOOL_CODE["Code Exec"]
-          TOOL_SEARCH["Web Search"]
-          TOOL_FILES["File Ops"]
-      end
-
-      subgraph Response ["Response"]
-          SSE["SSE Stream"]
-      end
-
-      REQ --> DETECT
-      DETECT --> KEYWORDS
-      KEYWORDS -->|"Complex"| SANDY
-      KEYWORDS -->|"Simple"| LLM_VERIFY
-      LLM_VERIFY --> FAST_LLM
-      LLM_VERIFY --> SANDY
-      SANDY --> AGENT
-      AGENT --> TOOL_IMG & TOOL_CODE & TOOL_SEARCH & TOOL_FILES
-      FAST_LLM --> SSE
-      AGENT --> SSE
-
-      ${inactiveLine}
-      ${activeLines}
+  ${inactiveLine}
+  ${activeLines}
   `;
 }

@@ -13,6 +13,7 @@ from .debug import router as debug_router
 from .logs import router as logs_router
 from .arena import router as arena_router
 from .search import router as search_router
+from .sandbox import router as sandbox_router
 
 __all__ = [
     "health_router",
@@ -28,4 +29,5 @@ __all__ = [
     "logs_router",
     "arena_router",
     "search_router",
+    "sandbox_router",
 ]

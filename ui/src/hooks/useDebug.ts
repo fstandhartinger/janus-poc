@@ -12,32 +12,42 @@ const INITIAL_STATE: DebugState = {
 
 const PATH_MAP: Record<string, string[]> = {
   REQ: ['REQ'],
-  DETECT: ['REQ', 'DETECT'],
-  KEYWORDS: ['REQ', 'DETECT', 'KEYWORDS'],
-  LLM_VERIFY: ['REQ', 'DETECT', 'KEYWORDS', 'LLM_VERIFY'],
-  FAST_LLM: ['REQ', 'DETECT', 'KEYWORDS', 'LLM_VERIFY', 'FAST_LLM'],
-  SANDY: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY'],
-  AGENT: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT'],
-  TOOL_IMG: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT', 'TOOL_IMG'],
-  TOOL_CODE: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT', 'TOOL_CODE'],
-  TOOL_SEARCH: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT', 'TOOL_SEARCH'],
-  TOOL_FILES: ['REQ', 'DETECT', 'KEYWORDS', 'SANDY', 'AGENT', 'TOOL_FILES'],
-  SSE: ['REQ', 'DETECT', 'KEYWORDS', 'SSE'],
+  ROUTING: ['REQ', 'ROUTING'],
+  FAST_LLM: ['REQ', 'ROUTING', 'FAST_LLM'],
+  SANDY: ['REQ', 'ROUTING', 'SANDY'],
+  AGENT: ['REQ', 'ROUTING', 'SANDY', 'AGENT'],
+  TOOLS: ['REQ', 'ROUTING', 'SANDY', 'AGENT', 'TOOLS'],
+  SSE: ['REQ', 'SSE'],
+  // Legacy mappings for backward compatibility
+  DETECT: ['REQ', 'ROUTING'],
+  KEYWORDS: ['REQ', 'ROUTING'],
+  LLM_VERIFY: ['REQ', 'ROUTING'],
+  TOOL_IMG: ['REQ', 'ROUTING', 'SANDY', 'AGENT', 'TOOLS'],
+  TOOL_CODE: ['REQ', 'ROUTING', 'SANDY', 'AGENT', 'TOOLS'],
+  TOOL_SEARCH: ['REQ', 'ROUTING', 'SANDY', 'AGENT', 'TOOLS'],
+  TOOL_FILES: ['REQ', 'ROUTING', 'SANDY', 'AGENT', 'TOOLS'],
 };
 
 const FILE_EVENT_TYPES = new Set(['file_created', 'file_modified', 'artifact_generated']);
 
 const EVENT_TO_NODES: Record<string, string[]> = {
+  // Request phase
   request_received: ['REQ'],
-  complexity_check_start: ['DETECT'],
-  complexity_check_keyword: ['KEYWORDS'],
-  complexity_check_llm: ['LLM_VERIFY'],
-  complexity_check_complete: ['DETECT'],
-  routing_decision: ['DETECT'],
+
+  // Routing phase
+  complexity_check_start: ['ROUTING'],
+  complexity_check_keyword: ['ROUTING'],
+  complexity_check_llm: ['ROUTING'],
+  complexity_check_complete: ['ROUTING'],
+  routing_decision: ['ROUTING'],
+
+  // Fast path
   fast_path_start: ['FAST_LLM'],
   fast_path_llm_call: ['FAST_LLM'],
-  fast_path_stream: ['SSE'],
+  fast_path_stream: ['FAST_LLM', 'SSE'],
   fast_path_complete: ['SSE'],
+
+  // Agent path
   agent_path_start: ['SANDY'],
   agent_selection: ['SANDY'],
   model_selection: ['SANDY'],
@@ -47,9 +57,13 @@ const EVENT_TO_NODES: Record<string, string[]> = {
   sandy_agent_api_request: ['AGENT'],
   sandy_agent_api_sse_event: ['AGENT'],
   sandy_agent_api_complete: ['AGENT'],
-  tool_call_start: ['AGENT'],
-  tool_call_result: ['AGENT'],
-  tool_call_complete: ['AGENT'],
+
+  // Tool calls
+  tool_call_start: ['TOOLS'],
+  tool_call_result: ['TOOLS'],
+  tool_call_complete: ['TOOLS'],
+
+  // Response
   response_chunk: ['SSE'],
   response_complete: ['SSE'],
   error: ['SSE'],

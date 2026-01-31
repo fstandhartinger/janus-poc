@@ -18,6 +18,7 @@ from janus_gateway.routers import (
     health_router,
     logs_router,
     memories_router,
+    sandbox_router,
     sessions_router,
     models_router,
     arena_router,
@@ -151,6 +152,7 @@ app.include_router(research_router)
 app.include_router(tts_router)
 app.include_router(memories_router)
 app.include_router(sessions_router)
+app.include_router(sandbox_router)
 app.include_router(arena_router)
 app.include_router(search_router)
 
