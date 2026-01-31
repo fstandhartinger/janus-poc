@@ -145,3 +145,8 @@
   - Demo prompts E2E: 11 tests properly configured
   - Debug flow diagram: Simplified to 7 nodes with proper CSS centering
   - Sandbox router: All 3 endpoints implemented with proper error handling
+- Quality check verification: Re-verified spec 130_model_routing_verification.md acceptance criteria:
+  - FR-1: RoutingDecision enum with 5 values (FAST_QWEN/NEMOTRON/KIMI, AGENT_NEMOTRON/KIMI) mapping to path+model
+  - FR-2: decision_from_metadata() extracts routing decisions, honored even when always_use_agent=true
+  - FR-3: LLM routing fallback uses DECISION_MODEL_ID (Nemotron 30B), image inputs always route to *_kimi
+  - FR-4: All tests pass (gateway 90/90, baseline 127/127, UI 44/44)
