@@ -133,3 +133,9 @@
   - Part A (Demo Examples): Added comprehensive E2E tests for all 12 demo prompts in ui/e2e/demo-prompts.spec.ts. Tests cover simple, agentic, research, and multimodal prompt categories with proper routing verification.
   - Part B (Debug View): Simplified the Mermaid flow diagram from 12 nodes to 7 (REQ, ROUTING, FAST_LLM, SANDY, AGENT, TOOLS, SSE). Fixed CSS for proper centering (transform-origin: center center). Updated EVENT_TO_NODES mapping in useDebug.ts with clear fast path and agent path event mappings.
   - Part C (Sandbox API): Implemented new gateway/janus_gateway/routers/sandbox.py with POST /api/sandbox/create, POST /api/sandbox/{id}/capture-session, and DELETE /api/sandbox/{id} endpoints. Added 11 unit tests in gateway/tests/unit/test_sandbox.py. All endpoints proxy to Sandy API with proper error handling.
+- Re-verified spec 131 during Ralph quality check: Found and fixed E2E test issues:
+  - Fixed test IDs to use 'all-prompts-*' prefix (matching AllPromptsModal testids)
+  - Tests now open modal before testing prompts that aren't on main page
+  - Added scrollIntoViewIfNeeded for multimodal prompts at modal bottom
+  - Added max-h-[85vh] overflow-y-auto to AllPromptsModal for scrollability
+  - All 11 demo prompt E2E tests now pass (gateway 90/90 tests pass)
