@@ -110,5 +110,7 @@ async def test_agent_api_stream_event_yields_content(monkeypatch: pytest.MonkeyP
                 content_parts.append(choice.delta.content)
 
     assert "".join(content_parts) == "Hello world!"
-    assert calls[:2] == ["upload", "bootstrap"]
-    assert "run" in calls
+    # Note: upload and bootstrap are now skipped for execute_via_agent_api
+    # because Sandy's /agent/run API handles agent setup internally
+    assert calls[0] == "run"
+    assert "terminate" in calls

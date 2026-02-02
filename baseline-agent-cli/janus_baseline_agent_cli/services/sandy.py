@@ -3273,83 +3273,22 @@ class SandyService:
             )
 
             try:
-                if not self._system_prompt_path.exists():
-                    logger.warning(
-                        "system_prompt_missing", path=str(self._system_prompt_path)
-                    )
+                # Note: Sandy's /agent/run API handles agent setup internally, so we skip
+                # the exec-based agent pack upload and bootstrap steps. Sandy configures
+                # the agent environment, API keys, and system prompts directly.
+                #
+                # If Sandy exec endpoint becomes available, we could optionally upload
+                # a custom agent pack here for specialized configurations.
 
                 yield ChatCompletionChunk(
                     id=request_id,
                     model=model,
                     choices=[
                         ChunkChoice(
-                            delta=Delta(reasoning_content="Uploading agent pack...\n")
+                            delta=Delta(reasoning_content="Running agent via Sandy API...\n")
                         )
                     ],
                 )
-
-                if not await self._upload_agent_pack(client, sandbox_id):
-                    yield ChatCompletionChunk(
-                        id=request_id,
-                        model=model,
-                        choices=[
-                            ChunkChoice(
-                                delta=Delta(
-                                    content="Error: Failed to upload agent pack to sandbox."
-                                )
-                            )
-                        ],
-                    )
-                    yield ChatCompletionChunk(
-                        id=request_id,
-                        model=model,
-                        choices=[
-                            ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)
-                        ],
-                    )
-                    return
-
-                yield ChatCompletionChunk(
-                    id=request_id,
-                    model=model,
-                    choices=[
-                        ChunkChoice(
-                            delta=Delta(reasoning_content="Running agent pack bootstrap...\n")
-                        )
-                    ],
-                )
-
-                bootstrap_stdout, bootstrap_stderr, bootstrap_exit = await self._run_bootstrap(
-                    client, sandbox_id, public_url, request, has_images
-                )
-                if bootstrap_exit != 0:
-                    error_detail = bootstrap_stderr or "Bootstrap failed."
-                    yield ChatCompletionChunk(
-                        id=request_id,
-                        model=model,
-                        choices=[ChunkChoice(delta=Delta(content=error_detail))],
-                    )
-                    yield ChatCompletionChunk(
-                        id=request_id,
-                        model=model,
-                        choices=[
-                            ChunkChoice(delta=Delta(), finish_reason=FinishReason.STOP)
-                        ],
-                    )
-                    return
-
-                if bootstrap_stdout:
-                    yield ChatCompletionChunk(
-                        id=request_id,
-                        model=model,
-                        choices=[
-                            ChunkChoice(
-                                delta=Delta(
-                                    reasoning_content=f"{bootstrap_stdout.rstrip()}\n"
-                                )
-                            )
-                        ],
-                    )
 
                 # Run agent via Sandy's API
                 async for event in self._run_agent_via_api_with_retry(
