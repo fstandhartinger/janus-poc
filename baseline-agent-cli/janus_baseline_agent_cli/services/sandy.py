@@ -1568,10 +1568,21 @@ class SandyService:
                         status_code=response.status_code,
                         error=error_text[:500],
                     )
-                    yield {
-                        "type": "error",
-                        "error": f"Agent API returned {response.status_code}: {error_text[:200]}",
-                    }
+                    # Provide helpful fallback message for 404 (endpoint not available)
+                    if response.status_code == 404:
+                        yield {
+                            "type": "error",
+                            "error": (
+                                "The sandbox service does not support the agent API. "
+                                "This task requires an AI agent with code execution capabilities. "
+                                "Please try a simpler query or contact support to enable agent features."
+                            ),
+                        }
+                    else:
+                        yield {
+                            "type": "error",
+                            "error": f"Agent API returned {response.status_code}: {error_text[:200]}",
+                        }
                     return
 
                 # Process SSE stream
