@@ -99,15 +99,16 @@ async def create_sandbox(request: CreateSandboxRequest) -> CreateSandboxResponse
                 )
 
             data = response.json()
-            sandbox_id = data.get("sandbox_id") or data.get("id")
+            # Sandy returns sandboxId (camelCase), not sandbox_id
+            sandbox_id = data.get("sandboxId") or data.get("sandbox_id") or data.get("id")
             if not sandbox_id:
                 raise HTTPException(
                     status_code=500,
                     detail="Sandy response missing sandbox_id",
                 )
 
-            # Construct VNC URL from Sandy base URL
-            vnc_port = data.get("vnc_port", 5900)
+            # Construct VNC URL from Sandy base URL (handle both camelCase and snake_case)
+            vnc_port = data.get("vncPort") or data.get("vnc_port") or 5900
 
             logger.info("sandbox_created", sandbox_id=sandbox_id, vnc_port=vnc_port)
 
