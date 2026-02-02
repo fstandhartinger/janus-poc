@@ -76,14 +76,9 @@ async def create_sandbox(request: CreateSandboxRequest) -> CreateSandboxResponse
                 f"{sandy_url}/api/sandboxes",
                 headers={"Authorization": f"Bearer {api_key}"},
                 json={
-                    "image": request.flavor,
+                    "flavor": request.flavor,
                     "enableVnc": request.enableVnc,
-                    "timeout": request.timeout,
-                    "resources": {
-                        "cpu": 2,
-                        "memory_mb": 4096,
-                        "disk_gb": 10,
-                    },
+                    "enableBrowser": request.enableVnc,  # Enable browser if VNC is enabled
                 },
             )
 
@@ -107,10 +102,11 @@ async def create_sandbox(request: CreateSandboxRequest) -> CreateSandboxResponse
                     detail="Sandy response missing sandbox_id",
                 )
 
-            # Construct VNC URL from Sandy base URL (handle both camelCase and snake_case)
-            vnc_port = data.get("vncPort") or data.get("vnc_port") or 5900
+            # Sandy returns VNC info in a nested object
+            vnc_info = data.get("vnc", {})
+            vnc_port = vnc_info.get("port") or data.get("vncPort") or data.get("vnc_port") or 5900
 
-            logger.info("sandbox_created", sandbox_id=sandbox_id, vnc_port=vnc_port)
+            logger.info("sandbox_created", sandbox_id=sandbox_id, vnc_port=vnc_port, vnc_enabled=vnc_info.get("enabled"))
 
             return CreateSandboxResponse(
                 id=sandbox_id,
