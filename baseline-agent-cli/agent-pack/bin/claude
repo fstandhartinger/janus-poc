@@ -41,7 +41,7 @@ while [ "$#" -gt 0 ]; do
       args+=("$1")
       shift
       ;;
-    --append-system-prompt|--system-prompt|--system-prompt-file)
+    --append-system-prompt|--append-system-prompt-file|--system-prompt|--system-prompt-file)
       has_append_prompt=true
       args+=("$1" "$2")
       shift 2
