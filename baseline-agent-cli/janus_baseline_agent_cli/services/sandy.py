@@ -1518,9 +1518,11 @@ class SandyService:
         if env:
             payload["env"] = env
             payload["envVars"] = env
-            system_prompt_path = env.get("JANUS_SYSTEM_PROMPT_PATH")
-            if system_prompt_path:
-                payload["systemPromptPath"] = system_prompt_path
+            # Note: We intentionally do NOT pass systemPromptPath to Sandy's agent API.
+            # The claude wrapper script in agent-pack/bin/ handles adding the system prompt
+            # from JANUS_SYSTEM_PROMPT_PATH (passed in env). Passing systemPromptPath would
+            # cause Sandy to add --append-system-prompt-file, which conflicts with the
+            # wrapper's --append-system-prompt in older warm sandboxes.
 
         # Pass the public router URL if configured - enables smart model switching,
         # 429 fallbacks, and multimodal routing for Sandy agents
