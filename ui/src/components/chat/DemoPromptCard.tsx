@@ -31,9 +31,11 @@ export function DemoPromptCard({
       data-testid={`demo-prompt-${prompt.id}`}
     >
       <div className="flex items-start gap-3">
-        <span className="text-xl" aria-hidden="true">
-          {prompt.icon}
-        </span>
+        {prompt.icon && (
+          <span className="text-xl" aria-hidden="true">
+            {prompt.icon}
+          </span>
+        )}
         <div className="min-w-0 flex-1">
           <p className="text-sm font-semibold text-ink-100 transition-colors group-hover:text-moss">
             {prompt.label}

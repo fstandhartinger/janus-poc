@@ -26,10 +26,7 @@ export function EmptyState({ onSelectPrompt }: EmptyStateProps) {
     <div className="chat-empty flex-1">
       <div className="chat-empty-container w-full max-w-4xl px-4 py-6">
         <div className="mb-8 text-center">
-          <p className="chat-empty-title flex items-center justify-center gap-2">
-            <span aria-hidden="true">🤠</span>
-            <span>Janus</span>
-          </p>
+          <p className="chat-empty-title">Janus</p>
           <p className="chat-empty-subtitle">The Open Intelligence Rodeo</p>
         </div>
 

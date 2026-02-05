@@ -23,9 +23,11 @@ function PromptButton({ prompt, onSelect, showTime }: PromptButtonProps) {
       className="flex w-full items-start gap-3 rounded-xl border border-ink-800/70 bg-ink-900/40 p-3 text-left transition hover:border-moss/40"
       data-testid={`all-prompts-${prompt.id}`}
     >
-      <span className="text-lg" aria-hidden="true">
-        {prompt.icon}
-      </span>
+      {prompt.icon && (
+        <span className="text-lg" aria-hidden="true">
+          {prompt.icon}
+        </span>
+      )}
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold text-ink-100">{prompt.label}</p>
         <p className="mt-1 text-xs text-ink-400">{prompt.prompt}</p>
@@ -95,7 +97,7 @@ export function AllPromptsModal({ open, onClose, onSelect }: AllPromptsModalProp
         <div className="space-y-6">
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
-              💡 Quick Questions
+              Quick Questions
             </h3>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {DEMO_PROMPTS_BY_CATEGORY.simple.map((prompt) => (
@@ -106,7 +108,7 @@ export function AllPromptsModal({ open, onClose, onSelect }: AllPromptsModalProp
 
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
-              🤖 Agentic Tasks
+              Agentic Tasks
             </h3>
             <div className="space-y-2">
               {DEMO_PROMPTS_BY_CATEGORY.agentic.map((prompt) => (
@@ -122,7 +124,7 @@ export function AllPromptsModal({ open, onClose, onSelect }: AllPromptsModalProp
 
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
-              🔎 Research
+              Research
             </h3>
             <div className="space-y-2">
               {DEMO_PROMPTS_BY_CATEGORY.research.map((prompt) => (
@@ -138,7 +140,7 @@ export function AllPromptsModal({ open, onClose, onSelect }: AllPromptsModalProp
 
           <section>
             <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-ink-400">
-              🎨 Multimodal
+              Multimodal
             </h3>
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {DEMO_PROMPTS_BY_CATEGORY.multimodal.map((prompt) => (
