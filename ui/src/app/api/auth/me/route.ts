@@ -1,9 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { clearSessionCookieHeader, getAuthSession } from '@/lib/auth/session';
+import {
+  buildSessionCookieHeader,
+  clearSessionCookieHeader,
+  getAuthSession,
+} from '@/lib/auth/session';
 
 export const runtime = 'nodejs';
 
 export async function GET(request: NextRequest) {
+  const rawCookie = request.cookies.get('auth_session')?.value;
   const { session, setCookie, clearCookie } = await getAuthSession(request);
 
   if (!session) {
@@ -21,9 +26,9 @@ export async function GET(request: NextRequest) {
     },
   });
 
-  if (setCookie) {
-    response.headers.append('Set-Cookie', setCookie);
-  }
+  // Sliding cookie: keep the session alive for 30 days after last successful usage.
+  const cookieHeader = setCookie ?? (rawCookie ? buildSessionCookieHeader(rawCookie) : undefined);
+  if (cookieHeader) response.headers.append('Set-Cookie', cookieHeader);
 
   return response;
 }

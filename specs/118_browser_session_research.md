@@ -246,7 +246,7 @@ CREATE TABLE browser_sessions_test (
 ### Step 2: Create Test Sandy Sandbox
 
 ```bash
-curl -X POST https://sandy.65.109.64.180.nip.io/api/sandboxes \
+curl -X POST https://sandy.chutes.ai/api/sandboxes \
   -H "Authorization: Bearer $SANDY_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -261,7 +261,7 @@ curl -X POST https://sandy.65.109.64.180.nip.io/api/sandboxes \
 Use Sandy's exec API or agent/run to execute test scripts:
 
 ```bash
-curl -X POST https://sandy.65.109.64.180.nip.io/api/sandboxes/{id}/exec \
+curl -X POST https://sandy.chutes.ai/api/sandboxes/{id}/exec \
   -H "Authorization: Bearer $SANDY_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -341,7 +341,7 @@ After research, review and update `baseline-agent-cli/agent-pack/prompts/system.
 ## Resources
 
 - **Pre-Research Document:** `docs/browser-user-session-pre-research.md`
-- **Sandy API:** https://sandy.65.109.64.180.nip.io
+- **Sandy API:** https://sandy.chutes.ai
 - **Sandy README:** `/home/flori/Dev/chutes/sandy/README.md`
 - **agent-as-a-service-web:** `/home/flori/Dev/chutes/agent-as-a-service-web/`
 - **Playwright Auth Docs:** https://playwright.dev/docs/auth
