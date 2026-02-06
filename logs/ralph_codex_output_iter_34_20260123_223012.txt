@@ -1,3 +1,0 @@
-Using read-context and speckit-implement to follow the Ralph loop.
-
-I just noticed an unexpected change: `specs/31_janus_research_benchmark.md` now shows `## Status: COMPLETE` even though it appeared as `DRAFT` when I first read it. I didn’t make this change, so I’m stopping as instructed. How would you like to proceed?

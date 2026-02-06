@@ -1,7 +1,0 @@
-Using speckit-implement for the Ralph loop.
-
-I hit unexpected existing changes in the repo (e.g. modified `baseline-agent-cli/*`, docs/specs, plus untracked `.codex/` and `.claude/` items). Per instructions I’m pausing before tests/commit. How do you want to proceed?
-
-1) Ignore those and continue, committing only my bench/spec‑30 changes.  
-2) Stash/clean the unrelated changes first.  
-3) Something else you prefer.

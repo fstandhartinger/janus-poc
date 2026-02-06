@@ -1,1 +1,0 @@
-Using `read-context` to load the project constitution and `speckit-implement` to run the Ralph spec loop.

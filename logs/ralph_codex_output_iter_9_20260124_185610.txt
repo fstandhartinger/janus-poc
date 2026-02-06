@@ -1,7 +1,0 @@
-Using skills read-context, speckit-implement, test-all, visual-test, verify-complete, commit-push, deploy-watch to follow the Ralph loop requirements.
-
-I hit unexpected repo changes (lots of modified/deleted files I didn’t touch), e.g. `specs/49_canvas_feature.md` deleted, `ui/src/app/globals.css` modified, `.specify/memory/constitution.md` modified. Per instructions I’m stopping here—how do you want to proceed?
-
-1) Ignore unrelated changes and continue spec 55 work in this dirty tree  
-2) Stash/clean unrelated changes first  
-3) Treat those changes as intentional and incorporate them into this run

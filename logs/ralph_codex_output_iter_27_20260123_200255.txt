@@ -1,9 +1,0 @@
-Using skill `speckit-implement` because we’re in Ralph Build Mode and need to process the next spec.
-
-I ran `git status -sb` and found pre-existing changes I didn’t make (modified: `.specify/memory/constitution.md`, `README.md`, `baseline-agent-cli/*`, `bench/*`, `docs/*`, `gateway/*`, `render.yaml`, several `specs/*`, `ui/*`; untracked: `.codex/`, `logs/`, `.playwright-mcp/`, `ui/public/Janus_God_and_Bull_Video_Generation.mp4`, `ui/src/app/competition/components/CompetitionOverview.tsx`). Per instructions I need your direction before proceeding.
-
-How should I handle these?
-1) Treat the current worktree as the baseline and continue with Spec 26 changes on top  
-2) You want me to stash/commit these first  
-3) You want me to reset to a clean state before starting  
-4) Something else (tell me which files to keep/ignore)

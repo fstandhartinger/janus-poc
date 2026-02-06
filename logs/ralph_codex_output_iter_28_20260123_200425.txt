@@ -1,3 +1,0 @@
-Using skill: speckit-implement (Ralph loop on specs).
-
-I noticed `baseline-langchain/tests/conftest.py` and `baseline-langchain/tests/test_main.py` contain content I did not create in this session. How would you like me to proceed—keep these files as-is or replace them with the fixtures/tests I planned?

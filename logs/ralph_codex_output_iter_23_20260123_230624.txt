@@ -1,8 +1,0 @@
-Using the `continue` skill to resume where we left off.
-
-I hit an unexpected change: the Render baseline service is now building a commit I didn’t make (`a4775ed` “Add Spec 54: Baseline containerization for Sandy execution”). The instructions say to stop and ask how you want to proceed when this happens.
-
-How should I handle this?
-1. Pull/merge that commit locally and continue fixing the baseline shim on top.
-2. Ignore it and continue from our current local state.
-3. Investigate who/what triggered that deploy before making changes.

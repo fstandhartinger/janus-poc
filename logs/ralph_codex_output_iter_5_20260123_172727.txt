@@ -1,9 +1,0 @@
-Using `speckit-implement` (Ralph loop execution) and `read-context` (required context files) — I need your guidance before proceeding. `git status` shows pre‑existing changes/untracked files I didn’t make:
-
-- Modified: `.specify/memory/constitution.md`, `CLAUDE.md`, `README.md`, `specs/11_chat_ui.md`
-- Untracked: `.claude/commands/speckit.implement.md`, `.claude/commands/speckit.specify.md`, `.codex/`, `.playwright-mcp/`, `logs/`, `render.yaml`
-
-How would you like me to proceed?
-1) Ignore these changes and continue with the spec work
-2) Stash them first
-3) Include any of them in the upcoming work (tell me which)
