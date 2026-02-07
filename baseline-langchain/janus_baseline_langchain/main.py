@@ -1188,11 +1188,6 @@ async def _stream_vision_response(
                             Delta(role=MessageRole.ASSISTANT),
                             metadata=metadata if not metadata_sent else None,
                         )
-                        yield _chunk_payload(
-                            request_id,
-                            attempt_model,
-                            Delta(reasoning_content="Processing request..."),
-                        )
                         started = True
                         metadata_sent = True
                     for part in content_parts:

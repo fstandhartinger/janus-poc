@@ -456,13 +456,6 @@ class LLMService:
                 choices=[ChunkChoice(delta=Delta(role=MessageRole.ASSISTANT))],
             )
 
-            # Emit reasoning content (thinking)
-            yield ChatCompletionChunk(
-                id=request_id,
-                model=model,
-                choices=[ChunkChoice(delta=Delta(reasoning_content="Processing request... "))],
-            )
-
             prompt_tokens = 0
             completion_tokens = 0
 
