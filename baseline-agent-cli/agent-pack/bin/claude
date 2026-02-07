@@ -31,6 +31,11 @@ while [ "$#" -gt 0 ]; do
       args+=("$1")
       shift
       ;;
+    --append-system-prompt=*|--append-system-prompt-file=*|--system-prompt=*|--system-prompt-file=*)
+      has_append_prompt=true
+      args+=("$1")
+      shift
+      ;;
     --output-format)
       has_output_format=true
       args+=("$1" "$2")
