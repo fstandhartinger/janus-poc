@@ -168,6 +168,12 @@ def _build_keepalive_payload(state: dict[str, str | None]) -> str:
     return f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
 
 
+def _build_keepalive_comment() -> str:
+    # SSE comment keepalive. This avoids emitting `reasoning_content` for fast-path
+    # responses while still keeping idle connections alive.
+    return ": keepalive\n\n"
+
+
 def _resolve_request_id() -> str:
     request_id = get_request_id()
     return request_id or f"chatcmpl-{uuid.uuid4().hex}"
@@ -650,7 +656,11 @@ async def stream_response(
     keepalive_stream = stream_with_keepalive(
         raw_stream(),
         keepalive_interval=float(settings.sse_keepalive_interval),
-        keepalive_factory=lambda: _build_keepalive_payload(keepalive_state),
+        keepalive_factory=(
+            (lambda: _build_keepalive_payload(keepalive_state))
+            if using_agent
+            else _build_keepalive_comment
+        ),
         on_chunk=lambda payload: _update_keepalive_state(payload, keepalive_state),
     )
     async for payload in optimized_stream_response(keepalive_stream):
