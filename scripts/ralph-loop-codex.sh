@@ -287,13 +287,13 @@ Read `.specify/memory/constitution.md` to understand project principles and cons
 
 Search for incomplete work from these sources (in order):
 
-1. **specs/ folder** — Look for `.md` files NOT marked `## Status: COMPLETE`
+1. **specs/ folder** — Look for spec markdown files (including `specs/*.md` and `specs/*/spec.md`) NOT marked `## Status: COMPLETE`
 2. **IMPLEMENTATION_PLAN.md** — If exists, find unchecked `- [ ]` tasks
 3. **GitHub Issues** — Check for open issues (if this is a GitHub repo)
 4. **Any task tracker** — Jira, Linear, etc. if configured
 
 Pick the **HIGHEST PRIORITY** incomplete item:
-- Lower numbers = higher priority (001 before 010)
+- Lower numbers = higher priority (001 before 010, 002 before 100)
 - `[HIGH]` before `[MEDIUM]` before `[LOW]`
 - Bugs/blockers before features
 
@@ -305,7 +305,7 @@ Before implementing, search the codebase to verify it's not already done.
 
 **If ALL specs appear complete**, don't just exit — do a quality check:
 
-1. **Randomly pick** one completed spec from `specs/`
+1. **Randomly pick** one completed spec from `specs/` (either `specs/*.md` or `specs/*/spec.md`)
 2. **Strictly re-verify** ALL its acceptance criteria:
    - Run the actual tests mentioned in the spec
    - Manually verify each criterion is truly met

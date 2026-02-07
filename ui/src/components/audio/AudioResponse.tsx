@@ -15,6 +15,7 @@ interface AudioResponseProps {
   type: 'speech' | 'music' | 'sound';
   title?: string;
   metadata?: AudioResponseMetadata;
+  downloadName?: string;
 }
 
 export function AudioResponse({
@@ -22,6 +23,7 @@ export function AudioResponse({
   type,
   title,
   metadata,
+  downloadName,
 }: AudioResponseProps) {
   const [expanded, setExpanded] = useState(false);
 
@@ -53,13 +55,23 @@ export function AudioResponse({
     }
   }, [type]);
 
-  const downloadName = useMemo(() => {
+  const resolvedDownloadName = useMemo(() => {
+    if (downloadName) {
+      return downloadName;
+    }
     const extMatch = /^data:audio\/([^;]+);/i.exec(audioUrl);
     const ext = extMatch?.[1]?.toLowerCase() || 'wav';
     const safeExt = ext.includes('/') ? 'wav' : ext;
-    const prefix = type === 'speech' ? 'speech' : type === 'music' ? 'music' : type === 'sound' ? 'sound' : 'audio';
+    const prefix =
+      type === 'speech'
+        ? 'speech'
+        : type === 'music'
+          ? 'music'
+          : type === 'sound'
+            ? 'sound'
+            : 'audio';
     return `${prefix}.${safeExt}`;
-  }, [audioUrl, type]);
+  }, [audioUrl, downloadName, type]);
 
   return (
     <div className={`audio-response audio-response-${type}`}>
@@ -81,7 +93,7 @@ export function AudioResponse({
         )}
       </div>
 
-      <AudioPlayer src={audioUrl} downloadName={downloadName} />
+      <AudioPlayer src={audioUrl} downloadName={resolvedDownloadName} />
 
       {expanded && hasMetadata && (
         <div className="audio-response-metadata">

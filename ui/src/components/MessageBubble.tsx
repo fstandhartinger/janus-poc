@@ -1,10 +1,11 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { Message, MessageContent } from '@/types/chat';
+import type { Artifact, Message, MessageContent } from '@/types/chat';
 import { stripCanvasBlocks } from '@/lib/canvas-parser';
 import { parseAudioContent } from '@/lib/audio-parser';
 import { parseImageContent } from '@/lib/image-parser';
 import { MarkdownContent } from '@/lib/markdown-renderer';
+import { formatBytes } from '@/lib/file-utils';
 import { useArena } from '@/hooks/useArena';
 import { useChatStore } from '@/store/chat';
 import { MediaRenderer } from './MediaRenderer';
@@ -38,6 +39,21 @@ function stripAnsiCodes(text: string): string {
     .replace(/\x1b\[[0-9;]*m/g, '') // Standard ANSI: ESC[...m (hex)
     .replace(/\u001b\[[0-9;]*m/g, '') // Unicode ESC
     .replace(/\[([0-9;]*)m/g, ''); // Literal bracket notation [1;31m
+}
+
+function inferAudioType(artifact: Artifact): 'speech' | 'music' | 'sound' {
+  const name = (artifact.display_name || '').toLowerCase();
+  if (name.includes('speech') || name.includes('tts') || name.includes('spoken')) {
+    return 'speech';
+  }
+  if (name.includes('music') || name.includes('song') || name.includes('melody')) {
+    return 'music';
+  }
+  return 'sound';
+}
+
+function isLocalArtifactUrl(url: string): boolean {
+  return url.startsWith('/') || url.startsWith('data:');
 }
 
 function useStreamingBuffer(content: string, isStreaming: boolean) {
@@ -111,9 +127,14 @@ const STATUS_MESSAGE_PATTERNS = [
 
 function isUsefulReasoning(content?: string): boolean {
   if (!content) return false;
-  const trimmed = content.trim();
-  if (trimmed.length < 20) return false;
-  return !USELESS_REASONING_PATTERNS.some((pattern) => pattern.test(trimmed));
+  const lines = content
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+  if (lines.length === 0) return false;
+  return lines.some(
+    (line) => !USELESS_REASONING_PATTERNS.some((pattern) => pattern.test(line))
+  );
 }
 
 /**
@@ -272,6 +293,24 @@ export function MessageBubble({
   const nonImageArtifacts = useMemo(
     () => (message.artifacts || []).filter((artifact) => artifact.type !== 'image'),
     [message.artifacts]
+  );
+  const audioArtifacts = useMemo(
+    () => nonImageArtifacts.filter((artifact) => artifact.mime_type.startsWith('audio/') && artifact.url),
+    [nonImageArtifacts]
+  );
+  const videoArtifacts = useMemo(
+    () => nonImageArtifacts.filter((artifact) => artifact.mime_type.startsWith('video/') && artifact.url),
+    [nonImageArtifacts]
+  );
+  const downloadableArtifacts = useMemo(
+    () =>
+      nonImageArtifacts.filter(
+        (artifact) =>
+          !artifact.mime_type.startsWith('audio/') &&
+          !artifact.mime_type.startsWith('video/') &&
+          artifact.url
+      ),
+    [nonImageArtifacts]
   );
   const shouldShowPlaceholder =
     !isUser &&
@@ -496,23 +535,82 @@ export function MessageBubble({
         )}
 
         {/* Show artifacts */}
-        {nonImageArtifacts.length > 0 && (
-          <div className="mt-2 space-y-1">
-            {nonImageArtifacts.map((artifact) => (
-              <a
-                key={artifact.id}
-                href={artifact.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 p-2 bg-white/5 rounded-lg text-sm hover:bg-white/10 transition-colors"
-              >
-                <span className="text-[#63D297]">Attachment</span>
-                <span className="truncate">{artifact.display_name}</span>
-                <span className="text-xs text-[#6B7280]">
-                  ({Math.round(artifact.size_bytes / 1024)}KB)
-                </span>
-              </a>
-            ))}
+        {(audioArtifacts.length > 0 ||
+          videoArtifacts.length > 0 ||
+          downloadableArtifacts.length > 0) && (
+          <div className="mt-3 space-y-3">
+            {audioArtifacts.length > 0 && (
+              <div className="space-y-2">
+                {audioArtifacts.map((artifact) => (
+                  <AudioResponse
+                    key={artifact.id}
+                    audioUrl={artifact.url}
+                    type={inferAudioType(artifact)}
+                    title={artifact.display_name}
+                    downloadName={artifact.display_name}
+                  />
+                ))}
+              </div>
+            )}
+
+            {videoArtifacts.length > 0 && (
+              <div className="space-y-2">
+                {videoArtifacts.map((artifact) => (
+                  <div
+                    key={artifact.id}
+                    className="relative max-w-[520px] w-full rounded-lg overflow-hidden border border-[#1F2937] bg-[#0B0F14]"
+                  >
+                    <video
+                      src={artifact.url}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      className="w-full"
+                    >
+                      <source src={artifact.url} type={artifact.mime_type} />
+                      Your browser does not support video playback.
+                    </video>
+                    <div className="flex items-center justify-between gap-3 px-3 py-2 border-t border-[#1F2937] bg-[#0F172A]/70">
+                      <span className="min-w-0 truncate text-xs text-[#9CA3AF]">
+                        {artifact.display_name}
+                      </span>
+                      <a
+                        href={artifact.url}
+                        download={artifact.display_name}
+                        {...(isLocalArtifactUrl(artifact.url)
+                          ? {}
+                          : { target: '_blank', rel: 'noopener noreferrer' })}
+                        className="shrink-0 text-xs text-[#63D297] hover:underline"
+                      >
+                        Download
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {downloadableArtifacts.length > 0 && (
+              <div className="space-y-1">
+                {downloadableArtifacts.map((artifact) => (
+                  <a
+                    key={artifact.id}
+                    href={artifact.url}
+                    download={artifact.display_name}
+                    {...(isLocalArtifactUrl(artifact.url)
+                      ? {}
+                      : { target: '_blank', rel: 'noopener noreferrer' })}
+                    className="flex items-center gap-2 p-2 bg-white/5 rounded-lg text-sm hover:bg-white/10 transition-colors"
+                  >
+                    <span className="text-[#63D297]">Attachment</span>
+                    <span className="truncate">{artifact.display_name}</span>
+                    <span className="text-xs text-[#6B7280]">
+                      ({formatBytes(artifact.size_bytes)})
+                    </span>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </div>
