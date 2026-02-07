@@ -1516,13 +1516,24 @@ class SandyService:
         }
         env = self._build_agent_env(sandbox_id, public_url, request, has_images)
         if env:
+            # IMPORTANT (claude-code): Sandy's AgentRunner always passes a base system prompt via
+            # `--append-system-prompt`. If a system prompt *path* is also provided (either via
+            # payload `systemPromptPath` or env `JANUS_SYSTEM_PROMPT_PATH`), Sandy adds
+            # `--append-system-prompt-file` too, and the Claude CLI errors because it does not
+            # allow both flags at once. Provide our Janus system prompt as inline text instead.
+            if agent in {"claude", "claude-code"}:
+                env.pop("JANUS_SYSTEM_PROMPT_PATH", None)
+                if self._system_prompt_path.exists():
+                    try:
+                        payload["systemPrompt"] = self._system_prompt_path.read_text(
+                            encoding="utf-8"
+                        )
+                    except Exception:
+                        # Non-fatal: proceed without a custom system prompt.
+                        pass
             payload["env"] = env
             payload["envVars"] = env
             # Note: We intentionally do NOT pass systemPromptPath to Sandy's agent API.
-            # The claude wrapper script in agent-pack/bin/ handles adding the system prompt
-            # from JANUS_SYSTEM_PROMPT_PATH (passed in env). Passing systemPromptPath would
-            # cause Sandy to add --append-system-prompt-file, which conflicts with the
-            # wrapper's --append-system-prompt in older warm sandboxes.
 
         # Pass the public router URL if configured - enables smart model switching,
         # 429 fallbacks, and multimodal routing for Sandy agents
