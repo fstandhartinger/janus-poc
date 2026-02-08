@@ -1,0 +1,23 @@
+flowchart LR
+    subgraph localhost
+        UI["UI :3000"]
+        GW["Gateway :8000"]
+        B1["Baseline CLI :8081"]
+        B2["Baseline LangChain :8082"]
+        SCORE["Scoring :8100"]
+        MEM["Memory :8090"]
+    end
+
+    subgraph External
+        SANDY["Sandy<br/>(remote)"]
+        CHUTES["Chutes AI"]
+    end
+
+    UI --> GW
+    GW --> B1
+    GW --> B2
+    GW --> MEM
+    GW --> SCORE
+    B1 --> SANDY
+    B1 --> CHUTES
+    B2 --> CHUTES

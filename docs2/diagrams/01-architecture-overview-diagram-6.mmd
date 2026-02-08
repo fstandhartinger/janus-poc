@@ -1,0 +1,31 @@
+flowchart TD
+    subgraph Submission
+        DOCKER["Docker Container<br/>exposes /v1/chat/completions"]
+    end
+
+    subgraph Evaluation
+        BENCH["Benchmark Runner"]
+        QUALITY["Quality<br/>40%"]
+        SPEED["Speed<br/>20%"]
+        COST["Cost<br/>15%"]
+        STREAMING["Streaming<br/>15%"]
+        MULTIMODAL["Multimodal<br/>10%"]
+    end
+
+    subgraph Result
+        COMPOSITE["Composite Score<br/>(0-100)"]
+        LEADER["Leaderboard"]
+    end
+
+    DOCKER --> BENCH
+    BENCH --> QUALITY
+    BENCH --> SPEED
+    BENCH --> COST
+    BENCH --> STREAMING
+    BENCH --> MULTIMODAL
+    QUALITY --> COMPOSITE
+    SPEED --> COMPOSITE
+    COST --> COMPOSITE
+    STREAMING --> COMPOSITE
+    MULTIMODAL --> COMPOSITE
+    COMPOSITE --> LEADER

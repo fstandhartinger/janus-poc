@@ -1,0 +1,17 @@
+flowchart TD
+    TOGGLE["ArenaToggle"]
+    PROMPT["User sends prompt"]
+    API["POST /api/arena"]
+    GW["Gateway arena endpoint"]
+    DISPLAY["ArenaComparison<br/>(side-by-side display)"]
+    VOTE["User votes A, B, or Tie"]
+    VOTE_API["POST /api/arena/vote"]
+    LEADER["ArenaLeaderboard"]
+
+    TOGGLE -->|enable| PROMPT
+    PROMPT --> API
+    API --> GW
+    GW --> DISPLAY
+    DISPLAY --> VOTE
+    VOTE --> VOTE_API
+    VOTE_API --> LEADER

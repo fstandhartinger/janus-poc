@@ -1,0 +1,16 @@
+flowchart LR
+    subgraph "Dimension Scores (0-100)"
+        Q["Quality<br/>40%"]
+        SP["Speed<br/>20%"]
+        CO["Cost<br/>15%"]
+        ST["Streaming<br/>15%"]
+        MM["Multimodal<br/>10%"]
+    end
+
+    COMPOSITE["Composite Score<br/>(0-100)"]
+
+    Q -->|0.40| COMPOSITE
+    SP -->|0.20| COMPOSITE
+    CO -->|0.15| COMPOSITE
+    ST -->|0.15| COMPOSITE
+    MM -->|0.10| COMPOSITE

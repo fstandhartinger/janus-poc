@@ -1,0 +1,28 @@
+flowchart LR
+    subgraph "SSE Stream"
+        SSE_RC["delta.reasoning_content"]
+        SSE_C["delta.content"]
+        SSE_A["artifacts[]"]
+        SSE_META["metadata"]
+        SSE_SCREEN["screenshot events"]
+    end
+
+    subgraph "UI Rendering"
+        THINKING["ThinkingIndicator<br/>(collapsible panel)"]
+        CONTENT["MessageBubble<br/>(markdown + code)"]
+        ARTIFACT["Artifact Cards<br/>(download links)"]
+        MEDIA["MediaRenderer<br/>(images, audio, video)"]
+        GEN_UI["GenerativeUI<br/>(html-gen-ui iframes)"]
+        MERMAID["MermaidDiagram<br/>(rendered diagrams)"]
+        VIZ["ChartBlock / SpreadsheetBlock"]
+        SCREENSHOT["ScreenshotStream"]
+    end
+
+    SSE_RC --> THINKING
+    SSE_C --> CONTENT
+    SSE_C --> MEDIA
+    SSE_C --> GEN_UI
+    SSE_C --> MERMAID
+    SSE_C --> VIZ
+    SSE_A --> ARTIFACT
+    SSE_SCREEN --> SCREENSHOT

@@ -1,0 +1,20 @@
+sequenceDiagram
+    participant Runner
+    participant Gateway
+    participant Scorer
+
+    Runner->>Gateway: POST /v1/chat/completions (stream=true)
+
+    loop SSE events
+        Gateway-->>Runner: data: {chunk}
+        Runner->>Runner: Track TTFT, gaps, tokens
+    end
+    Gateway-->>Runner: data: [DONE]
+
+    Runner->>Runner: Calculate streaming metrics
+    Runner->>Scorer: Evaluate quality
+    Runner->>Scorer: Score speed (TTFT + TPS)
+    Runner->>Scorer: Score cost (tokens + USD)
+    Runner->>Scorer: Score streaming (continuity)
+    Runner->>Scorer: Score multimodal (CLIP/heuristic)
+    Scorer-->>Runner: TaskResult with all scores

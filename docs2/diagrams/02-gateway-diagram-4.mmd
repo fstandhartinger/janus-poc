@@ -1,0 +1,28 @@
+sequenceDiagram
+    participant User
+    participant Arena as arena.py
+    participant Registry
+    participant CompA as Competitor A
+    participant CompB as Competitor B
+    participant Scoring as Scoring Service
+
+    User->>Arena: POST /v1/chat/completions/arena
+    Arena->>Registry: Get arena pair
+    Registry-->>Arena: model_a, model_b
+
+    par Parallel requests
+        Arena->>CompA: POST /v1/chat/completions
+        Arena->>CompB: POST /v1/chat/completions
+    end
+
+    CompA-->>Arena: Response A
+    CompB-->>Arena: Response B
+
+    Arena->>Arena: Store prompt record
+    Arena-->>User: {prompt_id, response_a, response_b}
+
+    User->>Arena: POST /api/arena/vote
+    Arena->>Arena: Validate vote (rate limit, timing)
+    Arena->>Scoring: Forward vote
+    Scoring-->>Arena: Recorded
+    Arena-->>User: {status: recorded, model_a, model_b}

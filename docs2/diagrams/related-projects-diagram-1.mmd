@@ -1,0 +1,21 @@
+flowchart TB
+    subgraph "User-Facing Applications"
+        JANUS["Janus<br/>(Competitive Intelligence API)"]
+        AGENT_WEB["Agent as a Service<br/>(Agent Orchestration UI)"]
+        WEBCODER["Chutes Webcoder<br/>(AI Web IDE)"]
+    end
+
+    subgraph "Shared Infrastructure"
+        SANDY["Sandy<br/>(Sandbox as a Service)"]
+        CHUTES["Chutes Inference<br/>(LLM, Image, TTS, Video)"]
+        IDP["Chutes IDP<br/>(OAuth 2.0 + PKCE)"]
+    end
+
+    JANUS -->|agent path| SANDY
+    JANUS -->|model calls| CHUTES
+    JANUS -->|auth| IDP
+    AGENT_WEB -->|sandbox + agent API| SANDY
+    AGENT_WEB -->|auth| IDP
+    WEBCODER -->|sandbox + agent API| SANDY
+    WEBCODER -->|model routing| JANUS
+    WEBCODER -->|direct LLM| CHUTES

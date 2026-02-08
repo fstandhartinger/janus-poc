@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant BL as Baseline Service
+    participant Sandy
+    participant Agent as CLI Agent
+    participant Chutes as Chutes API
+
+    BL->>Sandy: Create sandbox
+    Sandy-->>BL: sandbox_id
+    BL->>Sandy: Upload agent-pack
+    BL->>Sandy: Run bootstrap.sh
+    BL->>Sandy: POST /agent/run
+    Sandy->>Agent: Start CLI agent (Claude Code)
+
+    loop Agent execution
+        Agent->>Chutes: LLM calls via model router
+        Chutes-->>Agent: Responses
+        Agent->>Sandy: Write files to /workspace/artifacts
+        Sandy-->>BL: SSE stream (agent output)
+        BL-->>BL: Parse into reasoning_content + content
+    end
+
+    Sandy-->>BL: Agent complete
+    BL-->>BL: Emit final content + artifacts

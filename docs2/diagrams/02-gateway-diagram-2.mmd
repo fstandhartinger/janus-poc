@@ -1,0 +1,29 @@
+sequenceDiagram
+    participant Client
+    participant Chat as chat.py
+    participant Registry
+    participant Competitor
+    participant SSE as SSE Stream
+
+    Client->>Chat: POST /v1/chat/completions
+    Chat->>Chat: Generate completion ID
+    Chat->>Chat: Process messages (message_processor)
+    Chat->>Registry: Resolve competitor
+    Registry-->>Chat: CompetitorInfo (id, url)
+
+    alt stream = true
+        Chat->>Competitor: HTTP POST (streaming)
+        loop SSE chunks
+            Competitor-->>Chat: data: {chunk}
+            Chat-->>Client: data: {chunk}
+        end
+        alt Idle period > keep_alive_interval
+            Chat-->>Client: : ping
+        end
+        Competitor-->>Chat: data: [DONE]
+        Chat-->>Client: data: [DONE]
+    else stream = false
+        Chat->>Competitor: HTTP POST
+        Competitor-->>Chat: JSON response
+        Chat-->>Client: JSON response
+    end

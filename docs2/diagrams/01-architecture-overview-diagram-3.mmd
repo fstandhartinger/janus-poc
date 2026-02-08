@@ -1,0 +1,38 @@
+flowchart LR
+    subgraph "Frontend (Node 20)"
+        UI["Chat UI"]
+    end
+
+    subgraph "Gateway (Python 3.11)"
+        GW["Gateway API"]
+    end
+
+    subgraph "Competitors (Python 3.11)"
+        B1["Baseline CLI Agent"]
+        B2["Baseline LangChain"]
+    end
+
+    subgraph "Supporting Services"
+        MEM["Memory Service"]
+        SCORE["Scoring Service"]
+        BSESS["Browser Session Service"]
+    end
+
+    subgraph "External"
+        SANDY["Sandy (VMs)"]
+        CHUTES["Chutes AI APIs"]
+        SERPER["Serper / SearXNG"]
+    end
+
+    UI -->|HTTP + SSE| GW
+    GW -->|HTTP + SSE| B1
+    GW -->|HTTP + SSE| B2
+    GW -->|REST| MEM
+    GW -->|REST| SCORE
+    GW -->|REST| BSESS
+    GW -->|REST| SANDY
+
+    B1 -->|REST + SSE| SANDY
+    B1 -->|REST| CHUTES
+    B2 -->|REST| CHUTES
+    GW -->|REST| SERPER

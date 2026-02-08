@@ -1,0 +1,23 @@
+sequenceDiagram
+    participant C as Client
+    participant G as Gateway
+    participant R as Registry
+    participant B as Competitor
+    participant S as Sandy
+
+    C->>G: POST /v1/chat/completions
+    G->>R: resolve competitor
+    R-->>G: competitor URL
+    G->>B: forward request
+
+    alt Fast Path
+        B->>B: Direct LLM call
+        B-->>G: SSE (content tokens)
+    else Agent Path
+        B->>S: Create sandbox + run agent
+        S-->>B: Agent output stream
+        B-->>G: SSE (reasoning_content, content, artifacts)
+    end
+
+    G-->>C: SSE pass-through
+    G-->>C: data: [DONE]

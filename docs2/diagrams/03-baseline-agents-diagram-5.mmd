@@ -1,0 +1,52 @@
+flowchart TD
+    REQ["POST /v1/chat/completions"]
+
+    subgraph "Complexity Detection"
+        DETECT["ComplexityDetector"]
+        KW["Keyword Check"]
+        LLM_V["LLM Verification"]
+    end
+
+    subgraph "Fast Path"
+        DIRECT["Direct ChatOpenAI call"]
+    end
+
+    subgraph "Agent Path"
+        AGENT["LangChain OpenAI Tools Agent"]
+        TOOLS_LIST["Available Tools"]
+    end
+
+    subgraph "LangChain Tools"
+        IMG["image_generation<br/>(Chutes API)"]
+        TTS["text_to_speech<br/>(Kokoro TTS)"]
+        MUSIC["music_generation<br/>(DiffRhythm)"]
+        AUDIO["audio_generation"]
+        VIDEO["video_generation"]
+        SEARCH["web_search<br/>(Tavily/Serper/chutes-search)"]
+        RESEARCH["deep_research<br/>(chutes-search)"]
+        CODE["code_execution<br/>(Python REPL)"]
+        GIT["clone/list/read repo"]
+        FILES["write_file, read_file"]
+        MEMORY["investigate_memory"]
+    end
+
+    REQ --> DETECT
+    DETECT --> KW
+    KW -->|complex| AGENT
+    KW -->|simple| LLM_V
+    LLM_V -->|needs_agent| AGENT
+    LLM_V -->|simple| DIRECT
+    LLM_V -->|error| AGENT
+
+    AGENT --> TOOLS_LIST
+    TOOLS_LIST --> IMG
+    TOOLS_LIST --> TTS
+    TOOLS_LIST --> MUSIC
+    TOOLS_LIST --> AUDIO
+    TOOLS_LIST --> VIDEO
+    TOOLS_LIST --> SEARCH
+    TOOLS_LIST --> RESEARCH
+    TOOLS_LIST --> CODE
+    TOOLS_LIST --> GIT
+    TOOLS_LIST --> FILES
+    TOOLS_LIST --> MEMORY

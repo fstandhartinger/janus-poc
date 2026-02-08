@@ -1,0 +1,9 @@
+flowchart TD
+    QWEN["Qwen3 30B<br/>Priority 1<br/>max_tokens 4096<br/>timeout 30s"]
+    NEMOTRON["Nemotron 30B<br/>Priority 2<br/>max_tokens 8192<br/>timeout 45s"]
+    KIMI["Kimi K2.5<br/>Priority 3<br/>max_tokens 8192<br/>timeout 60s<br/>supports vision"]
+
+    QWEN -->|fallback| NEMOTRON
+    QWEN -->|fallback| KIMI
+    NEMOTRON -->|fallback| KIMI
+    KIMI -->|fallback| NEMOTRON

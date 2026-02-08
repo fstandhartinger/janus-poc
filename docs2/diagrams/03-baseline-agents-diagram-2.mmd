@@ -1,0 +1,46 @@
+flowchart TD
+    subgraph "Stage 1: Generation Flags"
+        GF["Check generation_flags"]
+        GF_YES["Route to agent"]
+    end
+
+    subgraph "Stage 2: Metadata Override"
+        META["Check metadata.routing_decision"]
+        META_YES["Use pinned decision"]
+    end
+
+    subgraph "Stage 3: Trivial Bypass"
+        TRIVIAL["Normalize text, check TRIVIAL_GREETINGS set"]
+        TRIVIAL_YES["fast_qwen"]
+    end
+
+    subgraph "Stage 4: Simple Factual"
+        FACTUAL["Regex patterns for<br/>What is X? / How does Y work?"]
+        FACTUAL_YES["fast_qwen"]
+    end
+
+    subgraph "Stage 5: Keyword Matching"
+        KW["100+ keywords EN/DE<br/>+ German separable verbs"]
+        KW_YES["Route to agent"]
+    end
+
+    subgraph "Stage 6: URL Detection"
+        URL["URL regex + interaction hints<br/>(test, check, visit, screenshot)"]
+        URL_YES["Route to agent"]
+    end
+
+    subgraph "Stage 7: LLM Verifier"
+        LLM["Nemotron 3 Nano<br/>tool_choice: select_routing_decision"]
+        LLM_RESULT["5-way enum decision"]
+        LLM_FAIL["Fallback: agent_kimi"]
+    end
+
+    GF --> META --> TRIVIAL --> FACTUAL --> KW --> URL --> LLM
+    GF -->|flags set| GF_YES
+    META -->|decision present| META_YES
+    TRIVIAL -->|greeting| TRIVIAL_YES
+    FACTUAL -->|pattern match| FACTUAL_YES
+    KW -->|keywords found| KW_YES
+    URL -->|URL + hints| URL_YES
+    LLM --> LLM_RESULT
+    LLM -->|error/timeout| LLM_FAIL

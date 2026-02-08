@@ -1,0 +1,53 @@
+flowchart TD
+    REQ["POST /v1/chat/completions"]
+
+    subgraph "Pre-Routing Checks"
+        FLAGS{"Generation flags set?<br/>(image, video, audio, research)"}
+        METADATA{"metadata.routing_decision<br/>present?"}
+    end
+
+    subgraph "Multi-Stage Complexity Detection"
+        TRIVIAL{"Trivial greeting?<br/>(hello, thanks, bye, ...)"}
+        FACTUAL{"Simple factual query?<br/>(What is X? How does Y work?)"}
+        KEYWORDS{"Complex keywords matched?<br/>(100+ patterns, EN/DE)"}
+        URL{"URL + interaction hints?"}
+        LLM{"LLM Routing Decision<br/>(Nemotron 3 Nano)"}
+    end
+
+    subgraph "Fast Path"
+        FAST_QWEN["Qwen3 30B<br/>(plain short answers)"]
+        FAST_NEMOTRON["Nemotron 30B<br/>(light reasoning)"]
+        FAST_KIMI["Kimi K2.5<br/>(hard reasoning)"]
+        VISION["Kimi K2.5<br/>(vision model)"]
+    end
+
+    subgraph "Agent Path"
+        SANDY["Sandy Sandbox"]
+        AGENT["CLI Agent<br/>(Claude Code / Aider)"]
+        TOOLS["Full Toolset<br/>(shell, browser, files, APIs)"]
+    end
+
+    REQ --> FLAGS
+    FLAGS -->|yes| SANDY
+    FLAGS -->|no| METADATA
+    METADATA -->|yes, agent| SANDY
+    METADATA -->|yes, fast| FAST_QWEN
+    METADATA -->|no| TRIVIAL
+
+    TRIVIAL -->|yes| FAST_QWEN
+    TRIVIAL -->|no| FACTUAL
+    FACTUAL -->|yes| FAST_QWEN
+    FACTUAL -->|no| KEYWORDS
+    KEYWORDS -->|matched| SANDY
+    KEYWORDS -->|no match| URL
+    URL -->|interaction detected| SANDY
+    URL -->|no URL| LLM
+    LLM -->|fast_qwen| FAST_QWEN
+    LLM -->|fast_nemotron| FAST_NEMOTRON
+    LLM -->|fast_kimi| FAST_KIMI
+    LLM -->|agent_nemotron| SANDY
+    LLM -->|agent_kimi| SANDY
+    LLM -->|error/timeout| SANDY
+
+    SANDY --> AGENT
+    AGENT --> TOOLS

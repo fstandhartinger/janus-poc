@@ -1,0 +1,36 @@
+flowchart TD
+    subgraph "Benchmark Runner"
+        CLI["janus-bench CLI<br/>(cli.py)"]
+        LOADER["Dataset Loader<br/>(datasets/loader.py)"]
+        RUNNER["BenchmarkRunner<br/>(runner.py)"]
+        EVAL["Evaluators"]
+        SCORE["Scorers"]
+        REPORT["Report Generator"]
+    end
+
+    subgraph "Datasets"
+        PUBLIC["public/train<br/>public/dev"]
+        PRIVATE["private/test"]
+        JANUS["janus/intelligence"]
+    end
+
+    subgraph "Target System"
+        GW["Janus Gateway"]
+        COMP["Competitor"]
+    end
+
+    CLI --> LOADER
+    LOADER --> PUBLIC
+    LOADER --> PRIVATE
+    LOADER --> JANUS
+    LOADER --> RUNNER
+
+    RUNNER -->|POST /v1/chat/completions| GW
+    GW --> COMP
+    COMP -->|SSE stream| GW
+    GW -->|SSE stream| RUNNER
+
+    RUNNER --> EVAL
+    EVAL --> SCORE
+    SCORE --> REPORT
+    REPORT --> CLI

@@ -1,0 +1,22 @@
+flowchart TD
+    subgraph "Scoring Service"
+        API["FastAPI App"]
+        EXECUTOR["Run Executor<br/>(async workers)"]
+        DB["PostgreSQL<br/>(runs, results, competitors)"]
+        ARENA_ELO["Arena Elo Calculator"]
+    end
+
+    subgraph "External"
+        SANDY["Sandy<br/>(for container runs)"]
+        JUDGE["LLM Judge<br/>(optional)"]
+        BENCH_LIB["janus_bench library"]
+    end
+
+    API -->|enqueue run| EXECUTOR
+    EXECUTOR -->|import| BENCH_LIB
+    EXECUTOR -->|spin up containers| SANDY
+    EXECUTOR -->|evaluate| JUDGE
+    EXECUTOR -->|store results| DB
+    API -->|query| DB
+    API -->|update| ARENA_ELO
+    ARENA_ELO --> DB

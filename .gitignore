@@ -10,6 +10,7 @@ node_modules/
 out/
 dist/
 coverage/
+.coverage
 .nyc_output/
 *.log
 
@@ -40,6 +41,8 @@ ralph-logs/
 # Local config
 credentials.md
 logs/
+.cursor/
+*.pptx
 
 # Windows artifacts and bad paths (from Lighthouse/Chrome profiles)
 *:Zone.Identifier

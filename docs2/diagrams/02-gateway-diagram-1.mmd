@@ -1,0 +1,13 @@
+flowchart TD
+    REQ["Incoming Request"]
+    CID{"competitor_id<br/>in request?"}
+    MODEL{"model matches<br/>competitor ID?"}
+    DEFAULT["Use default competitor<br/>(baseline-cli-agent)"]
+    RESOLVE["Resolved Competitor"]
+
+    REQ --> CID
+    CID -->|yes| RESOLVE
+    CID -->|no| MODEL
+    MODEL -->|yes| RESOLVE
+    MODEL -->|no| DEFAULT
+    DEFAULT --> RESOLVE

@@ -1,0 +1,24 @@
+flowchart TD
+    START["Start streaming from competitor"]
+    QUEUE["Line queue<br/>(asyncio.Queue)"]
+    READER["Reader task<br/>(reads competitor lines)"]
+    WAIT["Wait for line<br/>(timeout = keep_alive_interval)"]
+    TIMEOUT{"Timeout?"}
+    PING["Yield ': ping'"]
+    LINE["Process line"]
+    DONE{"data: [DONE]?"}
+    FORWARD["Yield line to client"]
+    END["Stream complete"]
+
+    START --> QUEUE
+    START --> READER
+    READER -->|lines| QUEUE
+    QUEUE --> WAIT
+    WAIT --> TIMEOUT
+    TIMEOUT -->|yes| PING
+    PING --> WAIT
+    TIMEOUT -->|no| LINE
+    LINE --> DONE
+    DONE -->|yes| END
+    DONE -->|no| FORWARD
+    FORWARD --> WAIT

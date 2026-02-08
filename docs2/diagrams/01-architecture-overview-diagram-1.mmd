@@ -1,0 +1,59 @@
+flowchart TB
+    subgraph Clients
+        UI["Chat UI<br/>(Next.js :3000)"]
+        BENCH["Bench CLI<br/>(janus-bench)"]
+        CURL["curl / SDK"]
+    end
+
+    subgraph Gateway["Janus Gateway :8000"]
+        GW_CHAT["POST /v1/chat/completions"]
+        GW_MODELS["GET /v1/models"]
+        GW_ARENA["POST /v1/chat/completions/arena"]
+        GW_ARTIFACTS["GET /v1/artifacts/:id"]
+        GW_SEARCH["POST /api/search/web"]
+        GW_RESEARCH["POST /api/research"]
+        GW_SANDBOX["POST /api/sandbox/create"]
+        REGISTRY["Competitor Registry"]
+        STREAM["SSE Streaming<br/>+ Keep-alive"]
+    end
+
+    subgraph Competitors
+        BASELINE_CLI["Baseline Agent CLI :8081<br/>(Sandy + CLI agents)"]
+        BASELINE_LC["Baseline LangChain :8082<br/>(in-process tools)"]
+        MINER_N["Miner N<br/>(custom container)"]
+    end
+
+    subgraph Platform["Platform Services"]
+        SANDY["Sandy<br/>(Firecracker VMs)"]
+        CHUTES["Chutes Inference<br/>(LLM, Image, TTS, Video)"]
+        MEMORY["Memory Service :8090"]
+        SCORING["Scoring Service :8100"]
+        SEARCH_SVC["chutes-search"]
+        BROWSER_SVC["Browser Session Service"]
+    end
+
+    UI --> GW_CHAT
+    BENCH --> GW_CHAT
+    CURL --> GW_CHAT
+    UI --> GW_MODELS
+    UI --> GW_ARENA
+    UI --> GW_ARTIFACTS
+
+    GW_CHAT --> REGISTRY
+    REGISTRY --> BASELINE_CLI
+    REGISTRY --> BASELINE_LC
+    REGISTRY --> MINER_N
+
+    BASELINE_CLI --> SANDY
+    BASELINE_CLI --> CHUTES
+    BASELINE_CLI --> MEMORY
+    BASELINE_CLI --> SEARCH_SVC
+    BASELINE_LC --> CHUTES
+    BASELINE_LC --> SEARCH_SVC
+
+    SANDY --> CHUTES
+    SCORING --> BENCH
+
+    BASELINE_CLI -.->|SSE stream| STREAM
+    BASELINE_LC -.->|SSE stream| STREAM
+    STREAM -.->|forwarded| UI

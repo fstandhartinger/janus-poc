@@ -1,0 +1,39 @@
+flowchart TB
+    subgraph "Next.js App Router"
+        LANDING["/ (Landing Page)"]
+        CHAT_PAGE["/chat (Chat Interface)"]
+        COMP_PAGE["/competition (Competition)"]
+        SCORE_PAGE["/competition/scoring (Scoring)"]
+        MARKET["/marketplace (Marketplace)"]
+        DOCS["/docs (API Documentation)"]
+        API_DOCS["/api-docs (API Reference)"]
+    end
+
+    subgraph "API Routes (Server-Side Proxy)"
+        API_CHAT["/api/chat"]
+        API_ARENA["/api/arena"]
+        API_ARTIFACTS["/api/artifacts/[...path]"]
+        API_AUTH["/api/auth/*"]
+        API_SCORING["/api/scoring/*"]
+        API_DEBUG["/api/debug/stream/[id]"]
+        API_PRE["/api/pre-release/check"]
+    end
+
+    subgraph "State Management"
+        ZUSTAND_CHAT["useChatStore<br/>(Zustand + persist)"]
+        ZUSTAND_CANVAS["useCanvasStore"]
+        ZUSTAND_SETTINGS["useSettingsStore"]
+    end
+
+    subgraph "External Services"
+        GATEWAY["Janus Gateway :8000"]
+        OAUTH["Chutes IDP (OAuth)"]
+    end
+
+    CHAT_PAGE --> API_CHAT
+    CHAT_PAGE --> ZUSTAND_CHAT
+    API_CHAT --> GATEWAY
+    API_ARENA --> GATEWAY
+    API_ARTIFACTS --> GATEWAY
+    API_AUTH --> OAUTH
+    API_SCORING --> GATEWAY

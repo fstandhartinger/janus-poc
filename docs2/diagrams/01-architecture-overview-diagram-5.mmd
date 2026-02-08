@@ -1,0 +1,25 @@
+flowchart TB
+    subgraph Render["Render Platform"]
+        UI_R["janus-ui<br/>(Node, free)"]
+        GW_R["janus-gateway<br/>(Python, free)"]
+        B1_R["janus-baseline-agent<br/>(Python, starter)"]
+        B2_R["janus-baseline-langchain<br/>(Python, free)"]
+        SC_R["janus-scoring-service<br/>(Python, starter)"]
+        MEM_R["janus-memory-service<br/>(Python, free)"]
+        BS_R["janus-browser-session-service<br/>(Python, free)"]
+    end
+
+    subgraph External["External Services"]
+        SANDY_R["Sandy VMs"]
+        CHUTES_R["Chutes Inference"]
+    end
+
+    UI_R --> GW_R
+    GW_R --> B1_R
+    GW_R --> B2_R
+    GW_R --> MEM_R
+    GW_R --> SC_R
+    B1_R --> SANDY_R
+    B1_R --> CHUTES_R
+    B2_R --> CHUTES_R
+    SC_R --> SANDY_R

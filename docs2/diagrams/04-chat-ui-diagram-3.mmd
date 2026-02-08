@@ -1,0 +1,14 @@
+sequenceDiagram
+    participant User
+    participant Input as ChatInput
+    participant Store as ChatStore
+    participant API as /api/chat
+    participant GW as Gateway
+
+    User->>Input: Drop/paste/select image
+    Input->>Input: FileReader.readAsDataURL()
+    Input->>Store: addMessage({content: [{type: text, text: ...}, {type: image_url, image_url: {url: data:...}}]})
+    Store->>API: POST with multimodal content
+    API->>GW: Forward to competitor
+    GW-->>API: SSE stream
+    API-->>Store: Parsed chunks
