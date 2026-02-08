@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { fetchWithRetry, GATEWAY_URL } from '@/lib/api';
+import { applyPreReleaseHeader } from '@/lib/preRelease';
 
 type ServiceHealthResponse = {
   status?: string;
@@ -40,7 +41,7 @@ export function useServiceHealth(refreshIntervalMs = DEFAULT_REFRESH_MS): UseSer
     try {
       const response = await fetchWithRetry(
         HEALTH_URL,
-        { cache: 'no-store' },
+        { cache: 'no-store', headers: applyPreReleaseHeader() },
         { retries: 1, timeoutMs: 8000 }
       );
       if (!response.ok) {
