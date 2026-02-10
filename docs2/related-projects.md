@@ -7,11 +7,11 @@ Janus is part of the Chutes ecosystem. The projects below provide the infrastruc
 ## Sandy -- Sandbox as a Service
 
 **Repository**: `sandy/`
-**Documentation**: [sandy/docs2/](../../sandy/docs2/)
+**Documentation**: [sandy/docs/](../../sandy/docs/)
 
 Sandy is the sandbox-as-a-service platform that provides isolated execution environments for AI agents, code execution, and web development. It is the core infrastructure that powers the Janus agent path -- when a competitor determines a request is complex enough to require a full agent, it creates a Sandy sandbox (Firecracker micro-VM or Docker container) and runs a CLI agent inside it.
 
-Sandy runs as a FastAPI application on port 7330 with a controller/worker architecture. The controller load-balances across worker nodes, each of which manages container sandboxes via the Quixand runtime. Sandy provides APIs for sandbox creation, file operations, command execution, agent orchestration, VNC access, and HTTP proxying into sandboxes.
+Sandy runs as a FastAPI application with a controller/worker architecture. The controller load-balances across worker nodes. Workers run either a Firecracker microVM runtime (delegating lifecycle/exec/files to `microvm-api`) or a Docker runtime (Quixand). Sandy provides APIs for sandbox creation, file operations, command execution, agent orchestration, VNC access, and HTTP proxying into sandboxes.
 
 **Janus uses Sandy for**:
 - Running CLI agents (Claude Code, Aider, Codex, etc.) in isolated sandboxes during the agent path
@@ -23,13 +23,13 @@ Sandy runs as a FastAPI application on port 7330 with a controller/worker archit
 
 | File | Description |
 |------|-------------|
-| [01-architecture-overview.md](../../sandy/docs2/01-architecture-overview.md) | Controller/worker architecture, routing, upstream management |
-| [02-security-model.md](../../sandy/docs2/02-security-model.md) | Isolation layers, authentication, network security |
-| [03-sandbox-lifecycle.md](../../sandy/docs2/03-sandbox-lifecycle.md) | Creation, execution, teardown, resource limits |
-| [04-agent-system.md](../../sandy/docs2/04-agent-system.md) | Agent orchestration, CLI agent support, streaming protocol |
-| [05-model-router.md](../../sandy/docs2/05-model-router.md) | LLM model routing within Sandy |
-| [06-ecosystem.md](../../sandy/docs2/06-ecosystem.md) | Integration with Chutes services and downstream consumers |
-| [07-streaming-protocol.md](../../sandy/docs2/07-streaming-protocol.md) | SSE streaming format, event types, keep-alives |
+| [01-architecture-overview.md](../../sandy/docs/01-architecture-overview.md) | Controller/worker architecture, routing, upstream management |
+| [02-security-model.md](../../sandy/docs/02-security-model.md) | Isolation layers, authentication, network security |
+| [03-sandbox-lifecycle.md](../../sandy/docs/03-sandbox-lifecycle.md) | Creation, execution, teardown, resource limits |
+| [04-agent-system.md](../../sandy/docs/04-agent-system.md) | Agent orchestration, CLI agent support, streaming protocol |
+| [05-model-router.md](../../sandy/docs/05-model-router.md) | LLM model routing within Sandy |
+| [06-ecosystem.md](../../sandy/docs/06-ecosystem.md) | Integration with Chutes services and downstream consumers |
+| [07-streaming-protocol.md](../../sandy/docs/07-streaming-protocol.md) | SSE streaming format, event types, keep-alives |
 
 ---
 
