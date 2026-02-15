@@ -326,6 +326,8 @@ When routing complex requests into Sandy, we run Claude Code (or other CLI agent
 
 ### Model Router Configuration
 
+The baseline embeds a local copy of the [Model Router](../../model-router/README.md) (standalone project at `../model-router/`). The router classifies requests using GLM 4.7 Flash and routes to the best Chutes model per task type. The standalone version is also deployed on Vercel at `model-router-ten.vercel.app`.
+
 | Variable | Default | Description |
 |----------|---------|-------------|
 | `BASELINE_AGENT_CLI_USE_MODEL_ROUTER` | `true` | Enable the local composite model router |
@@ -388,6 +390,7 @@ curl -X POST http://localhost:8080/v1/chat/completions \
 
 ## Related Documentation
 
+- [Model Router](../../model-router/README.md) - Standalone LLM request router (origin of the embedded router)
 - [Janus Competition Specs](../specs/competition/) - Competition rules and scoring
 - [Chutes API](https://chutes.ai/docs) - Inference provider documentation
 - [Sandy Integration](../specs/08_sandy_integration.md) - Sandbox configuration

@@ -266,6 +266,7 @@ Our **reference baseline** demonstrates this architecture: a thin OpenAI-compati
 
 | Project | Description |
 |---------|-------------|
+| [Model Router](../model-router/README.md) | Standalone intelligent LLM request router (extracted from Janus). Classifies requests and routes to the best model per task type. Both baselines embed a local copy of this router. |
 | [chutes-knowledge-agent](../chutes-knowledge-agent/) | UI and agent UX patterns reused in Janus |
 | [chutes-bench-runner](https://chutes-bench-runner-ui.onrender.com) | Evaluation harness for running Janus benchmarks |
 | [Squad API](https://github.com/chutesai/squad-api) | Inspiration for tooling (memory, sandboxes, tools) |
