@@ -6,8 +6,10 @@ import atexit
 import asyncio
 import base64
 import os
+import shlex
 import threading
 import time
+from datetime import datetime, timezone
 from collections import deque
 from dataclasses import dataclass
 
@@ -130,7 +132,8 @@ class SandyClient:
             response.raise_for_status()
             data = response.json()
 
-            sandbox_id = data.get("sandbox_id") or data.get("id")
+            # Sandy API responses use camelCase fields.
+            sandbox_id = data.get("sandboxId") or data.get("sandbox_id") or data.get("id")
             if not sandbox_id:
                 raise RuntimeError("Sandbox ID missing from response.")
 
@@ -138,7 +141,7 @@ class SandyClient:
 
             return Sandbox(
                 id=str(sandbox_id),
-                public_url=data.get("public_url", ""),
+                public_url=str(data.get("url") or data.get("public_url") or ""),
                 status=data.get("status", "running"),
                 ttl_remaining=int(data.get("ttl_remaining") or ttl_seconds),
             )
@@ -173,11 +176,16 @@ class SandyClient:
             )
             response.raise_for_status()
             data = response.json()
+            exit_code = data.get("exit_code")
+            if exit_code is None:
+                exit_code = data.get("exitCode")
+            if exit_code is None:
+                exit_code = -1
 
             return (
                 data.get("stdout", ""),
                 data.get("stderr", ""),
-                data.get("exit_code", -1),
+                int(exit_code),
             )
 
     async def write_file(
@@ -187,17 +195,32 @@ class SandyClient:
         content: str | bytes,
     ) -> None:
         """Write a file to a sandbox."""
-        if isinstance(content, str):
-            content = content.encode("utf-8")
+        # The Sandy file API is text-oriented and returns JSON payloads. Prefer
+        # writing UTF-8 text via the file endpoint, and fall back to an exec-based
+        # base64 decode for arbitrary bytes.
+        if isinstance(content, bytes):
+            try:
+                payload_content = content.decode("utf-8")
+            except UnicodeDecodeError:
+                encoded = base64.b64encode(content).decode("utf-8")
+                dest_dir = os.path.dirname(path) or "/"
+                command = (
+                    f"mkdir -p {shlex.quote(dest_dir)} && "
+                    f"printf %s {shlex.quote(encoded)} | base64 -d > {shlex.quote(path)}"
+                )
+                _, stderr, exit_code = await self.exec_command(
+                    sandbox_id, command, timeout=60
+                )
+                if exit_code != 0:
+                    raise RuntimeError(f"exec write failed: {stderr}")
+                return
+        else:
+            payload_content = content
 
         async with httpx.AsyncClient(timeout=30) as client:
             response = await client.post(
                 f"{self.base_url}/api/sandboxes/{sandbox_id}/files/write",
-                json={
-                    "path": path,
-                    "content": base64.b64encode(content).decode("utf-8"),
-                    "encoding": "base64",
-                },
+                json={"path": path, "content": payload_content},
                 headers=self._headers(),
             )
             response.raise_for_status()
@@ -215,6 +238,12 @@ class SandyClient:
                 headers=self._headers(),
             )
             response.raise_for_status()
+            content_type = (response.headers.get("content-type") or "").lower()
+            if "application/json" in content_type:
+                data = response.json()
+                payload = data.get("content", "")
+                if isinstance(payload, str):
+                    return payload.encode("utf-8")
             return response.content
 
     async def terminate(self, sandbox_id: str) -> None:
@@ -236,12 +265,24 @@ class SandyClient:
             )
             response.raise_for_status()
             data = response.json()
+            ttl_remaining = data.get("ttl_remaining") or data.get("ttlRemaining")
+            if ttl_remaining is None and data.get("timeoutAt"):
+                try:
+                    timeout_at = datetime.fromisoformat(str(data["timeoutAt"]))
+                    if timeout_at.tzinfo is None:
+                        timeout_at = timeout_at.replace(tzinfo=timezone.utc)
+                    ttl_remaining = max(
+                        0,
+                        int((timeout_at - datetime.now(timezone.utc)).total_seconds()),
+                    )
+                except Exception:
+                    ttl_remaining = 0
 
             return Sandbox(
                 id=sandbox_id,
-                public_url=data.get("public_url", ""),
+                public_url=str(data.get("url") or data.get("public_url") or ""),
                 status=data.get("status", "unknown"),
-                ttl_remaining=int(data.get("ttl_remaining", 0)),
+                ttl_remaining=int(ttl_remaining or 0),
             )
 
 

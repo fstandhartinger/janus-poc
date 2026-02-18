@@ -8,7 +8,18 @@ from janus_baseline_langchain.services import ComplexityDetector
 
 
 @pytest.fixture
-def detector() -> ComplexityDetector:
+def detector(monkeypatch: pytest.MonkeyPatch) -> ComplexityDetector:
+    # Ensure this fixture truly runs in a "no API key" environment, regardless of
+    # the developer machine's shell env.
+    for name in (
+        "CHUTES_API_KEY",
+        "JANUS_CHUTES_API_KEY",
+        "BASELINE_LANGCHAIN_CHUTES_API_KEY",
+        "OPENAI_API_KEY",
+        "BASELINE_LANGCHAIN_OPENAI_API_KEY",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
     settings = Settings(
         openai_api_key=None,
         chutes_api_key=None,

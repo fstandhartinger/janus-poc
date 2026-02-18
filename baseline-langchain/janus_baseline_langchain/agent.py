@@ -121,7 +121,21 @@ def create_llm(
 ) -> Union[CompositeRoutingChatModel, ChatOpenAI]:
     """Create the LLM instance based on settings."""
     api_key = api_key_override or settings.chutes_api_key or settings.openai_api_key or "dummy-key"
-    base_url = base_url_override or settings.openai_base_url
+    if base_url_override:
+        base_url = base_url_override
+    elif api_key_override:
+        # If the request overrides the API key but not the base URL, default to the
+        # configured OpenAI-compatible base URL. Callers can pass base_url_override
+        # to target a different provider.
+        base_url = settings.openai_base_url
+    else:
+        # Keep API keys paired with the correct API base:
+        # - Chutes key -> llm.chutes.ai
+        # - OpenAI key -> api.openai.com (or configured override)
+        if settings.chutes_api_key and api_key == settings.chutes_api_key:
+            base_url = settings.chutes_api_base
+        else:
+            base_url = settings.openai_base_url
 
     if settings.use_model_router and not api_key_override:
         return CompositeRoutingChatModel(

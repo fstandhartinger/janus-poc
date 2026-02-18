@@ -649,7 +649,10 @@ class ComplexityDetector:
             return True, str(exc), False
 
     async def _llm_routing_check(self, text: str) -> tuple[bool, str]:
-        token = self._settings.openai_api_key or self._settings.chutes_api_key
+        # The routing models are hosted on Chutes (llm.chutes.ai). Do not attempt to call
+        # this endpoint with an OpenAI key; instead, skip the LLM check if no Chutes key
+        # is configured.
+        token = self._settings.chutes_api_key
         if not token:
             return False, "no_api_key"
 
@@ -714,14 +717,39 @@ class ComplexityDetector:
                 text_preview=first_pass.text_preview,
             )
 
+        # Fast path for deterministic tool-trigger queries. These are handled via
+        # heuristic tool-call inference in the request handler and do not require
+        # an LLM routing check.
+        if "weather" in normalized:
+            logger.info(
+                "complexity_tool_trigger_fast_path",
+                tool="weather",
+                text_preview=text[:100],
+            )
+            return first_pass
+
         # Skip LLM check if text is empty
         if not normalized:
             return first_pass
 
         needs_agent, reason = await self._llm_routing_check(text)
         if reason == "no_api_key":
-            logger.info("complexity_llm_skipped_no_api_key", text_preview=text[:100])
-            return first_pass
+            # Conservative default: without an LLM key we cannot safely verify "simple"
+            # queries, so route to the agent path.
+            logger.warning(
+                "complexity_defaulting_to_agent",
+                reason="no_api_key",
+                text_preview=text[:100],
+            )
+            return ComplexityAnalysis(
+                is_complex=True,
+                reason="conservative_default: no_api_key",
+                keywords_matched=first_pass.keywords_matched,
+                multimodal_detected=first_pass.multimodal_detected,
+                has_images=first_pass.has_images,
+                image_count=first_pass.image_count,
+                text_preview=first_pass.text_preview,
+            )
 
         logger.info(
             "complexity_llm_verification",

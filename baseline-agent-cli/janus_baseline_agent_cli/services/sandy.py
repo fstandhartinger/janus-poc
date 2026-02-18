@@ -1118,7 +1118,29 @@ class SandyService:
                 timeout=self._timeout,
             )
             response.raise_for_status()
-            return response.content
+            headers = getattr(response, "headers", None) or {}
+            content_type = (headers.get("content-type") or "").lower()
+            raw = response.content
+
+            # Sandy has returned both raw file bytes and JSON payloads over time.
+            # Support either shape:
+            # - raw bytes (e.g., content-type: application/octet-stream)
+            # - {"content": "...", "encoding": "base64"|"utf-8"|...} (application/json)
+            if "application/json" in content_type:
+                try:
+                    data = response.json()
+                    payload = data.get("content")
+                    if payload is None:
+                        return raw
+                    encoding = (data.get("encoding") or "").lower()
+                    if encoding == "base64":
+                        return base64.b64decode(payload)
+                    if isinstance(payload, str):
+                        return payload.encode("utf-8")
+                except Exception:
+                    return raw
+
+            return raw
         except Exception as e:
             logger.warning("sandy_files_read_error", error=str(e), path=path)
             return None
@@ -1405,6 +1427,8 @@ class SandyService:
                 f"{self._base_url}/api/sandboxes",
                 json=payload,
                 headers=self._get_headers(),
+                # Sandbox creation can take longer than httpx's default 5s timeout.
+                timeout=self._settings.http_client_timeout,
             )
             response.raise_for_status()
             data = response.json()
@@ -1435,10 +1459,15 @@ class SandyService:
             )
             response.raise_for_status()
             data = response.json()
+            exit_code = data.get("exit_code")
+            if exit_code is None:
+                exit_code = data.get("exitCode")
+            if exit_code is None:
+                exit_code = 0
             return (
                 data.get("stdout", ""),
                 data.get("stderr", ""),
-                data.get("exit_code", 0),
+                int(exit_code),
             )
         except Exception as e:
             logger.error("sandy_exec_error", error=str(e))
@@ -1452,6 +1481,7 @@ class SandyService:
             await client.post(
                 f"{self._base_url}/api/sandboxes/{sandbox_id}/terminate",
                 headers=self._get_headers(),
+                timeout=self._settings.http_client_timeout,
             )
         except Exception as e:
             logger.warning("sandy_terminate_error", error=str(e))
