@@ -569,9 +569,17 @@ class SandyService:
             if anthropic_base.endswith("/v1"):
                 anthropic_base = anthropic_base[:-3]
             env.setdefault("ANTHROPIC_BASE_URL", anthropic_base)
-            if chutes_api_key:
-                env.setdefault("ANTHROPIC_API_KEY", chutes_api_key)
-                env.setdefault("ANTHROPIC_AUTH_TOKEN", chutes_api_key)
+            # When routing through an external router (PUBLIC_ROUTER_URL set), use the
+            # service's own CHUTES_API_KEY for router auth. The user's access token may
+            # differ from the key the router validates against (its own CHUTES_API_KEY).
+            router_auth_key = (
+                self._settings.chutes_api_key
+                or self._settings.openai_api_key
+                or chutes_api_key
+            ) if self._settings.public_router_url else chutes_api_key
+            if router_auth_key:
+                env.setdefault("ANTHROPIC_API_KEY", router_auth_key)
+                env.setdefault("ANTHROPIC_AUTH_TOKEN", router_auth_key)
         if chutes_api_key:
             env.setdefault("OPENAI_API_KEY", chutes_api_key)
         if chutes_api_url:
