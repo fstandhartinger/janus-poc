@@ -76,7 +76,8 @@ def test_select_model_routes_to_vision() -> None:
             )
         ],
     )
-    assert service.select_model(request) == "moonshotai/Kimi-K2.5-TEE"
+    from janus_baseline_agent_cli.routing import FAST_KIMI_MODEL_ID
+    assert service.select_model(request) == FAST_KIMI_MODEL_ID
 
 
 def test_select_model_respects_disabled_routing() -> None:
@@ -93,7 +94,8 @@ def test_select_model_respects_disabled_routing() -> None:
             )
         ],
     )
-    assert service.select_model(request) == "moonshotai/Kimi-K2.5-TEE"
+    from janus_baseline_agent_cli.routing import FAST_KIMI_MODEL_ID
+    assert service.select_model(request) == FAST_KIMI_MODEL_ID
 
 
 def test_select_model_uses_default_for_baseline_alias() -> None:

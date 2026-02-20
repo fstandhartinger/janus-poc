@@ -31,7 +31,7 @@ ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
 # Routing models in order of preference (with fallbacks)
 ROUTING_MODELS = [
     DECISION_MODEL_ID,
-    "Qwen/Qwen3-30B-A3B-Instruct-2507",
+    "Qwen/Qwen3-Next-80B-A3B-Instruct",
 ]
 ROUTING_MODEL = ROUTING_MODELS[0]  # Default for settings
 

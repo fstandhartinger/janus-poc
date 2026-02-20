@@ -21,12 +21,13 @@ class DummyClassifier:
 
 
 def test_model_registry_primary_and_fallbacks() -> None:
-    assert get_model_for_decision(RoutingDecision.FAST_QWEN).model_id == "Qwen/Qwen3-30B-A3B-Instruct-2507"
-    vision_model = get_model_for_decision(RoutingDecision.FAST_KIMI)
-    assert vision_model.supports_vision is True
-    fallbacks = get_fallback_models(vision_model.model_id)
+    from janus_baseline_agent_cli.routing import FAST_QWEN_MODEL_ID, FAST_KIMI_MODEL_ID, FAST_NEMOTRON_MODEL_ID
+    assert get_model_for_decision(RoutingDecision.FAST_QWEN).model_id == FAST_QWEN_MODEL_ID
+    kimi_model = get_model_for_decision(RoutingDecision.FAST_KIMI)
+    assert kimi_model.model_id == FAST_KIMI_MODEL_ID
+    fallbacks = get_fallback_models(kimi_model.model_id)
     assert fallbacks
-    assert any(model.model_id == "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16" for model in fallbacks)
+    assert any(model.model_id in (FAST_QWEN_MODEL_ID, FAST_NEMOTRON_MODEL_ID) for model in fallbacks)
 
 
 @pytest.mark.asyncio

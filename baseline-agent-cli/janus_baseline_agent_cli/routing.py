@@ -8,12 +8,12 @@ from typing import Any, Literal, Optional
 
 ROUTING_DECISION_KEY = "routing_decision"
 
-DECISION_MODEL_ID = "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16"
-FAST_QWEN_MODEL_ID = "Qwen/Qwen3-30B-A3B-Instruct-2507"
-FAST_NEMOTRON_MODEL_ID = DECISION_MODEL_ID
-FAST_KIMI_MODEL_ID = "moonshotai/Kimi-K2.5-TEE"
-AGENT_NEMOTRON_MODEL_ID = DECISION_MODEL_ID
-AGENT_KIMI_MODEL_ID = "moonshotai/Kimi-K2.5-TEE"
+DECISION_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
+FAST_QWEN_MODEL_ID = "Qwen/Qwen3-Next-80B-A3B-Instruct"
+FAST_NEMOTRON_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
+FAST_KIMI_MODEL_ID = "Qwen/Qwen3-VL-235B-A22B-Instruct"
+AGENT_NEMOTRON_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
+AGENT_KIMI_MODEL_ID = "MiniMaxAI/MiniMax-M2.5-TEE"
 
 
 class RoutingDecision(str, Enum):
@@ -88,11 +88,11 @@ ROUTING_DECISION_TOOL = {
 ROUTING_DECISION_PROMPT = """You are a routing verifier. Choose exactly one decision.
 
 Decisions (path + model):
-- fast_qwen: FAST path, Qwen/Qwen3-30B-A3B-Instruct-2507, plain short answers
-- fast_nemotron: FAST path, nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16, light reasoning/longer answers
-- fast_kimi: FAST path, moonshotai/Kimi-K2.5-TEE, harder reasoning without tools
-- agent_nemotron: AGENT path, nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16, simple agent tasks
-- agent_kimi: AGENT path, moonshotai/Kimi-K2.5-TEE, all other agent tasks
+- fast_qwen: FAST path, Qwen3-Next-80B, plain short answers
+- fast_nemotron: FAST path, MiMo-V2-Flash, light reasoning/longer answers
+- fast_kimi: FAST path, Qwen3-VL-235B, vision and multimodal tasks
+- agent_nemotron: AGENT path, MiMo-V2-Flash, simple agent tasks
+- agent_kimi: AGENT path, MiniMax-M2.5, all other agent tasks
 
 Rules:
 - If tools or external actions are required, choose an AGENT decision.

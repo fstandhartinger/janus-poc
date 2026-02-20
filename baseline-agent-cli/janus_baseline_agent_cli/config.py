@@ -195,11 +195,11 @@ class Settings(BaseSettings):
 
     # Vision settings
     vision_model_primary: str = Field(
-        default="moonshotai/Kimi-K2.5-TEE",
+        default="Qwen/Qwen3-VL-235B-A22B-Instruct",
         description="Primary vision model for image understanding",
     )
     vision_model_fallback: str = Field(
-        default="moonshotai/Kimi-K2.5-TEE",
+        default="chutesai/Mistral-Small-3.2-24B-Instruct-2506",
         description="Fallback vision model for image understanding",
     )
     vision_model_timeout: float = Field(
@@ -396,7 +396,7 @@ class Settings(BaseSettings):
         description="Always route to agent sandbox, bypass complexity detection",
     )
     llm_routing_model: str = Field(
-        default="nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B-BF16",
+        default="XiaomiMiMo/MiMo-V2-Flash",
         description="Fast model to use for routing decisions",
     )
     llm_routing_timeout: float = Field(

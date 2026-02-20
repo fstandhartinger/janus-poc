@@ -181,68 +181,78 @@ PY
   done
 ) >/workspace/artifact_server.log 2>&1 &
 
-# Install router dependencies (only if not already installed)
-echo "=== Installing Router Dependencies ==="
-python3 -c "import httpx, structlog, fastapi, uvicorn, pydantic" 2>/dev/null || pip_install httpx structlog fastapi uvicorn pydantic
+# Determine router URL: use external PUBLIC_ROUTER_URL if available, otherwise start local router
+# ANTHROPIC_BASE_URL is set by janus-baseline-agent when PUBLIC_ROUTER_URL is configured
+if [ -n "${ANTHROPIC_BASE_URL:-}" ] && [ "${ANTHROPIC_BASE_URL}" != "http://127.0.0.1:8000" ]; then
+  echo "=== Using External Model Router: ${ANTHROPIC_BASE_URL} ==="
+  ROUTER_BASE="${ANTHROPIC_BASE_URL}"
+  ROUTER_BASE_V1="${ROUTER_BASE%/}/v1"
+  # Strip /v1 suffix for Anthropic base URL
+  ANTHROPIC_BASE="${ROUTER_BASE%/v1}"
+  ANTHROPIC_BASE="${ANTHROPIC_BASE%/}"
+else
+  # Install router dependencies (only if not already installed)
+  echo "=== Installing Router Dependencies ==="
+  python3 -c "import httpx, structlog, fastapi, uvicorn, pydantic" 2>/dev/null || pip_install httpx structlog fastapi uvicorn pydantic
 
-# Start the model router in the background
-echo "=== Starting Janus Model Router ==="
-cd "${AGENT_PACK_ROOT}/router"
+  # Start the model router in the background
+  echo "=== Starting Janus Model Router ==="
+  cd "${AGENT_PACK_ROOT}/router"
 
-# Test imports first
-echo "Testing router imports..."
-python3 -c "from server import app; print('Router imports OK')" 2>&1 | head -5
+  # Test imports first
+  echo "Testing router imports..."
+  python3 -c "from server import app; print('Router imports OK')" 2>&1 | head -5
 
-# Start the router
-python3 -c "import uvicorn; uvicorn.run('server:app', host='0.0.0.0', port=8000, log_level='info')" >/workspace/router.log 2>&1 &
-ROUTER_PID=$!
-cd /workspace
+  # Start the router
+  python3 -c "import uvicorn; uvicorn.run('server:app', host='0.0.0.0', port=8000, log_level='info')" >/workspace/router.log 2>&1 &
+  ROUTER_PID=$!
+  cd /workspace
 
-# Wait for router to be ready (increased timeout to 60 iterations = 30 seconds)
-echo "Waiting for router to start (PID: $ROUTER_PID)..."
-ROUTER_READY=false
-for i in {1..60}; do
-  if curl -s http://127.0.0.1:8000/health >/dev/null 2>&1; then
-    echo "Router ready after $((i/2)) seconds!"
-    ROUTER_READY=true
-    break
+  # Wait for router to be ready (max 30 seconds)
+  echo "Waiting for router to start (PID: $ROUTER_PID)..."
+  ROUTER_READY=false
+  for i in {1..60}; do
+    if curl -s http://127.0.0.1:8000/health >/dev/null 2>&1; then
+      echo "Router ready after $((i/2)) seconds!"
+      ROUTER_READY=true
+      break
+    fi
+    sleep 0.5
+  done
+
+  if [ "$ROUTER_READY" != "true" ]; then
+    echo "WARNING: Local router failed to start. Falling back to Chutes API directly."
+    if [ -f /workspace/router.log ]; then
+      tail -10 /workspace/router.log
+    fi
   fi
-  sleep 0.5
-done
 
-# Check if router failed to start
-if [ "$ROUTER_READY" != "true" ]; then
-  echo "WARNING: Router may not have started. Checking logs..."
-  if [ -f /workspace/router.log ]; then
-    echo "Router log:"
-    tail -20 /workspace/router.log
-  fi
-  # Check if process is still running
-  if ! kill -0 $ROUTER_PID 2>/dev/null; then
-    echo "ERROR: Router process died!"
-  fi
+  ROUTER_BASE="http://127.0.0.1:8000"
+  ROUTER_BASE_V1="http://127.0.0.1:8000/v1"
+  ANTHROPIC_BASE="http://127.0.0.1:8000"
 fi
 
-# Configure agents to use local router
+# Configure agents to use the resolved router
 # OpenAI-compatible agents (Aider, Codex, etc.)
-export OPENAI_API_BASE="http://127.0.0.1:8000/v1"
+export OPENAI_API_BASE="${ROUTER_BASE_V1}"
 export OPENAI_API_KEY="${CHUTES_API_KEY}"
 export OPENAI_MODEL="janus-router"
 
 # Anthropic-compatible agents (Claude Code)
-export ANTHROPIC_BASE_URL="http://127.0.0.1:8000"
+export ANTHROPIC_BASE_URL="${ANTHROPIC_BASE}"
 export ANTHROPIC_API_KEY="${CHUTES_API_KEY}"
 
 # Configure Claude Code settings for model router
 if command -v claude >/dev/null 2>&1; then
-  echo "=== Configuring Claude Code ==="
-  python3 - <<'PY'
+  echo "=== Configuring Claude Code (router: ${ANTHROPIC_BASE}) ==="
+  python3 - <<PY
 import json
 import os
 from pathlib import Path
 
+anthropic_base = os.environ.get("ANTHROPIC_BASE_URL", "http://127.0.0.1:8000")
 settings = {
-    "apiBaseUrl": "http://127.0.0.1:8000",
+    "apiBaseUrl": anthropic_base,
     "defaultModel": "janus-router",
     "alwaysThinkingEnabled": True,
     "API_TIMEOUT_MS": 600000,
@@ -270,9 +280,9 @@ settings_path.parent.mkdir(parents=True, exist_ok=True)
 settings_path.write_text(json.dumps(settings, indent=2))
 PY
   # Also set environment variables for Claude Code CLI
-  export CLAUDE_API_BASE_URL="http://127.0.0.1:8000"
+  export CLAUDE_API_BASE_URL="${ANTHROPIC_BASE}"
   export CLAUDE_MODEL="janus-router"
-  echo "Claude Code configured to use local router"
+  echo "Claude Code configured to use router: ${ANTHROPIC_BASE}"
 fi
 
 # Persist agent env for runners that don't inherit env from bootstrap.

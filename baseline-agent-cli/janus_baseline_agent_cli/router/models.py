@@ -28,30 +28,42 @@ class ModelConfig:
     timeout_seconds: float = 120.0
 
 
-MODEL_CONFIGS: dict[str, ModelConfig] = {
-    FAST_QWEN_MODEL_ID: ModelConfig(
+# Build unique set of model configs from routing constants
+_ALL_MODEL_CONFIGS: list[tuple[str, ModelConfig]] = [
+    (FAST_QWEN_MODEL_ID, ModelConfig(
         model_id=FAST_QWEN_MODEL_ID,
-        display_name="Qwen3 30B A3B",
+        display_name="Qwen3 Next 80B",
         priority=1,
+        max_tokens=8192,
+        timeout_seconds=60.0,
+    )),
+    (FAST_NEMOTRON_MODEL_ID, ModelConfig(
+        model_id=FAST_NEMOTRON_MODEL_ID,
+        display_name="MiMo V2 Flash",
+        priority=2,
         max_tokens=4096,
         timeout_seconds=30.0,
-    ),
-    FAST_NEMOTRON_MODEL_ID: ModelConfig(
-        model_id=FAST_NEMOTRON_MODEL_ID,
-        display_name="Nemotron 3 Nano 30B",
-        priority=2,
-        max_tokens=8192,
-        timeout_seconds=45.0,
-    ),
-    FAST_KIMI_MODEL_ID: ModelConfig(
+    )),
+    (FAST_KIMI_MODEL_ID, ModelConfig(
         model_id=FAST_KIMI_MODEL_ID,
-        display_name="Kimi K2.5 TEE",
+        display_name="Qwen3 VL 235B",
         priority=3,
         max_tokens=8192,
         supports_vision=True,
-        timeout_seconds=60.0,
-    ),
-}
+        timeout_seconds=90.0,
+    )),
+    (AGENT_KIMI_MODEL_ID, ModelConfig(
+        model_id=AGENT_KIMI_MODEL_ID,
+        display_name="MiniMax M2.5",
+        priority=4,
+        max_tokens=16384,
+        timeout_seconds=90.0,
+    )),
+]
+
+MODEL_CONFIGS: dict[str, ModelConfig] = {}
+for _model_id, _config in _ALL_MODEL_CONFIGS:
+    MODEL_CONFIGS.setdefault(_model_id, _config)
 
 DECISION_MODEL_IDS: dict[RoutingDecision, str] = {
     RoutingDecision.FAST_QWEN: FAST_QWEN_MODEL_ID,
@@ -63,8 +75,9 @@ DECISION_MODEL_IDS: dict[RoutingDecision, str] = {
 
 FALLBACK_MODELS: dict[str, list[str]] = {
     FAST_QWEN_MODEL_ID: [FAST_NEMOTRON_MODEL_ID, FAST_KIMI_MODEL_ID],
-    FAST_NEMOTRON_MODEL_ID: [FAST_KIMI_MODEL_ID],
-    FAST_KIMI_MODEL_ID: [FAST_NEMOTRON_MODEL_ID],
+    FAST_NEMOTRON_MODEL_ID: [FAST_QWEN_MODEL_ID, FAST_KIMI_MODEL_ID],
+    FAST_KIMI_MODEL_ID: [FAST_QWEN_MODEL_ID, FAST_NEMOTRON_MODEL_ID],
+    AGENT_KIMI_MODEL_ID: [FAST_KIMI_MODEL_ID, FAST_QWEN_MODEL_ID],
 }
 
 
