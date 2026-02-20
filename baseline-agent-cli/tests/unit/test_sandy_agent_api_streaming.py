@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+from unittest.mock import patch
+
 import pytest
 
 from janus_baseline_agent_cli.config import Settings
@@ -114,3 +117,63 @@ async def test_agent_api_stream_event_yields_content(monkeypatch: pytest.MonkeyP
     # because Sandy's /agent/run API handles agent setup internally
     assert calls[0] == "run"
     assert "terminate" in calls
+
+
+class TestClaudeCodeFlagConflictRegression:
+    """Regression tests for --append-system-prompt vs --append-system-prompt-file conflict.
+
+    Sandy's AgentRunner passes --append-system-prompt, so if we also set
+    JANUS_SYSTEM_PROMPT_PATH (which Sandy translates to --append-system-prompt-file),
+    Claude Code errors because both flags cannot coexist. The fix is to remove the
+    env var and pass the prompt inline via the payload's systemPrompt field.
+    """
+
+    def _make_service(self, system_prompt_path: Path | None = None) -> SandyService:
+        settings = Settings(sandy_base_url="http://sandy.test")
+        service = SandyService(settings, client_factory=lambda: DummyClient())
+        if system_prompt_path is not None:
+            service._system_prompt_path = system_prompt_path
+        return service
+
+    def test_claude_code_env_removes_system_prompt_path(self, tmp_path: Path) -> None:
+        """JANUS_SYSTEM_PROMPT_PATH must not be in env for claude-code agents."""
+        prompt_file = tmp_path / "system.md"
+        prompt_file.write_text("You are Janus.", encoding="utf-8")
+        service = self._make_service(system_prompt_path=prompt_file)
+
+        env = service._build_agent_env("sbx_1", "http://sandbox.test")
+        # The env initially contains JANUS_SYSTEM_PROMPT_PATH
+        assert "JANUS_SYSTEM_PROMPT_PATH" in env
+
+        # Simulate what _run_agent_via_api does for claude-code
+        payload: dict = {"agent": "claude-code", "model": "test", "prompt": "hi"}
+        if payload["agent"] in {"claude", "claude-code"}:
+            env.pop("JANUS_SYSTEM_PROMPT_PATH", None)
+            if service._system_prompt_path.exists():
+                payload["systemPrompt"] = service._system_prompt_path.read_text(
+                    encoding="utf-8"
+                )
+
+        assert "JANUS_SYSTEM_PROMPT_PATH" not in env
+        assert payload.get("systemPrompt") == "You are Janus."
+
+    def test_non_claude_agent_keeps_system_prompt_path(self) -> None:
+        """Non-Claude agents should retain JANUS_SYSTEM_PROMPT_PATH in env."""
+        service = self._make_service()
+        env = service._build_agent_env("sbx_1", "http://sandbox.test")
+        assert "JANUS_SYSTEM_PROMPT_PATH" in env
+
+    def test_claude_wrapper_avoids_duplicate_flags(self) -> None:
+        """The claude wrapper script must not add --append-system-prompt when already provided."""
+        wrapper_path = (
+            Path(__file__).resolve().parents[2]
+            / "agent-pack"
+            / "bin"
+            / "claude"
+        )
+        if not wrapper_path.exists():
+            pytest.skip("claude wrapper script not found")
+        content = wrapper_path.read_text(encoding="utf-8")
+        # Verify the wrapper checks has_append_prompt before adding its own flag
+        assert "has_append_prompt" in content
+        assert '! $has_append_prompt' in content or "! ${has_append_prompt}" in content

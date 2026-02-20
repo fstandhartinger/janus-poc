@@ -150,3 +150,11 @@
   - FR-2: decision_from_metadata() extracts routing decisions, honored even when always_use_agent=true
   - FR-3: LLM routing fallback uses DECISION_MODEL_ID (Nemotron 30B), image inputs always route to *_kimi
   - FR-4: All tests pass (gateway 90/90, baseline 127/127, UI 44/44)
+
+## 2026-02-20
+- Completed spec 002-chat-reliability (Chat Reliability Contract) via test-first validation:
+  - All 7 FRs verified: fast path routing, agentic routing, model router, streaming UX, multimodal rendering, file downloads, generative UI
+  - No implementation changes needed — all acceptance criteria already satisfied
+  - Added 3 regression tests for Claude Code `--append-system-prompt` flag conflict (prevents recurrence)
+  - Added 12 artifact storage unit tests (sanitization, path traversal protection, extension/MIME mapping)
+  - Final test counts: gateway 90/90, UI 57/57 (14 files), baseline 130/130+19 skipped
