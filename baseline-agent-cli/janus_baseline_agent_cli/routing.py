@@ -13,7 +13,17 @@ FAST_QWEN_MODEL_ID = "Qwen/Qwen3-Next-80B-A3B-Instruct"
 FAST_NEMOTRON_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
 FAST_KIMI_MODEL_ID = "Qwen/Qwen3-VL-235B-A22B-Instruct"
 AGENT_NEMOTRON_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
-AGENT_KIMI_MODEL_ID = "MiniMaxAI/MiniMax-M2.5-TEE"
+# AGENT_KIMI is the workhorse for any prompt that needs the Sandy/Claude
+# Code path. It must be a model that aggressively *invokes* tools (Bash,
+# Edit, Write) instead of writing the code as a markdown block — otherwise
+# image generation, code execution, repo cloning, etc. all silently
+# degrade to "I'd run this for you" responses (see janus.rodeo image-gen
+# bug 2026-04-16). MiniMax-M2.5-TEE was the previous choice but, even with
+# `--dangerously-skip-permissions` enabled in Sandy, it consistently
+# refused to invoke Bash for image-generation prompts. moonshotai's
+# Kimi K2.5 has the strongest tool-call training on the Chutes Claude
+# proxy (claude.chutes.ai) and runs Bash on the very first turn.
+AGENT_KIMI_MODEL_ID = "moonshotai/Kimi-K2.5-TEE"
 
 
 class RoutingDecision(str, Enum):
