@@ -3517,20 +3517,18 @@ html {
   }
 }
 
-/* ─── Chat Overflow Menu (Mobile) ──────────────────────────────────────────── */
+/* ─── Chat Overflow Menu ───────────────────────────────────────────────────── */
 
 .chat-overflow-menu {
   position: relative;
-  display: none;
+  display: inline-flex;
 }
 
 .chat-overflow-btn {
-  width: 36px;
-  height: 36px;
-  min-width: 44px;
-  min-height: 44px;
+  width: 32px;
+  height: 32px;
   border-radius: 10px;
-  border: 1px solid rgba(31, 41, 55, 0.8);
+  border: none;
   background: transparent;
   color: #9CA3AF;
   display: flex;
@@ -3542,8 +3540,7 @@ html {
 
 .chat-overflow-btn:hover {
   color: #F3F4F6;
-  border-color: rgba(55, 65, 81, 0.8);
-  background: rgba(31, 41, 55, 0.4);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .chat-overflow-panel {
@@ -3651,11 +3648,6 @@ html {
   .chat-topbar-right {
     gap: 6px;
     flex-shrink: 0;
-  }
-
-  /* Show overflow menu on mobile */
-  .chat-overflow-menu {
-    display: block;
   }
 
   /* Hide brand text on very narrow screens */
