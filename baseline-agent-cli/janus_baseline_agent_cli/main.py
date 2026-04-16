@@ -557,25 +557,46 @@ async def stream_response(
             )
             if wants_image and not wants_other_media:
                 completion_id = f"chatcmpl-direct-image-{uuid.uuid4().hex[:12]}"
+                # Buffer everything from stream_image_generation up-front so
+                # we can decide whether to commit to it (success path) or
+                # discard it (failure path) and fall through to the agent.
+                # Each chunk is small (a few KB) so the memory cost is
+                # negligible compared to the user-experience win of falling
+                # back gracefully when image.chutes.ai is having an outage.
+                buffered_chunks: list = []
+                image_succeeded = False
                 async for chunk in stream_image_generation(
                     request.messages,
                     settings=settings,
                     completion_id=completion_id,
                     model_label=request.model or "baseline-direct-image",
                 ):
-                    chunk_text = _extract_chunk_content(chunk)
-                    if chunk_text:
-                        full_response_parts.append(chunk_text)
-                    if first_chunk and metadata_payload:
-                        merged = dict(metadata_payload)
-                        merged["routing_decision"] = "direct_image"
-                        merged["routing_model"] = "image.chutes.ai/qwen-image"
-                        merged["complexity_reason"] = "direct_image_intent"
-                        chunk = chunk.model_copy(update={"metadata": merged})
-                    first_chunk = False
-                    yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
-                yield "data: [DONE]\n\n"
-                return
+                    buffered_chunks.append(chunk)
+                    text_payload = _extract_chunk_content(chunk) or ""
+                    if "data:image/" in text_payload:
+                        image_succeeded = True
+
+                if image_succeeded:
+                    for idx, chunk in enumerate(buffered_chunks):
+                        chunk_text = _extract_chunk_content(chunk)
+                        if chunk_text:
+                            full_response_parts.append(chunk_text)
+                        if idx == 0 and metadata_payload:
+                            merged = dict(metadata_payload)
+                            merged["routing_decision"] = "direct_image"
+                            merged["routing_model"] = "chutes-z-image-turbo"
+                            merged["complexity_reason"] = "direct_image_intent"
+                            chunk = chunk.model_copy(update={"metadata": merged})
+                        yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+                    yield "data: [DONE]\n\n"
+                    return
+                # Image API failed (502, missing key, etc) — fall through to
+                # the agent path so the user still gets a helpful response
+                # instead of a one-line failure message.
+                logger.warning(
+                    "direct_image_generation_failed_falling_back_to_agent",
+                    chunk_count=len(buffered_chunks),
+                )
         except Exception as exc:  # never let the fast-path break the agent path
             logger.warning("direct_image_path_failed", error=str(exc))
 

@@ -33,11 +33,27 @@ from janus_baseline_agent_cli.models import (
 
 logger = logging.getLogger(__name__)
 
-CHUTES_IMAGE_ENDPOINT = "https://image.chutes.ai/generate"
-DEFAULT_IMAGE_MODEL = "qwen-image"
-DEFAULT_IMAGE_SIZE = 1024
-DEFAULT_INFERENCE_STEPS = 30
+# Default to the z-image-turbo chute that chutes-frontend's chat route uses
+# (see chutes-frontend/src/app/api/chat/route.ts::generateImageWithRetry).
+# That endpoint expects only `{ "prompt": "..." }` — no model / size / steps —
+# and returns raw image/png bytes. Use CHUTES_IMAGE_ENDPOINT env var to swap
+# in a different chute (e.g. https://image.chutes.ai/generate with a model
+# field if Chutes brings back the qwen-image router; or a self-hosted chute
+# while the platform-wide image chutes are down 2026-04-16).
+import os as _os
+
+CHUTES_IMAGE_ENDPOINT = (
+    _os.getenv("CHUTES_IMAGE_ENDPOINT")
+    or "https://chutes-z-image-turbo.chutes.ai/generate"
+)
+# When an explicit model is needed (image.chutes.ai router style), set
+# CHUTES_IMAGE_MODEL — otherwise the model field is omitted from the body.
+CHUTES_IMAGE_MODEL = _os.getenv("CHUTES_IMAGE_MODEL")
+DEFAULT_IMAGE_SIZE = int(_os.getenv("CHUTES_IMAGE_SIZE") or "1024")
+DEFAULT_INFERENCE_STEPS = int(_os.getenv("CHUTES_IMAGE_INFERENCE_STEPS") or "30")
 REQUEST_TIMEOUT_SECONDS = 180
+COLD_START_RETRY_DELAY_SECONDS = 5
+MAX_COLD_START_RETRIES = 3
 
 
 # ─── Prompt extraction ──────────────────────────────────────────────────────
@@ -108,31 +124,55 @@ async def generate_image(
     prompt: str,
     *,
     api_key: str,
-    model: str = DEFAULT_IMAGE_MODEL,
+    model: Optional[str] = None,
     width: int = DEFAULT_IMAGE_SIZE,
     height: int = DEFAULT_IMAGE_SIZE,
     inference_steps: int = DEFAULT_INFERENCE_STEPS,
+    endpoint: Optional[str] = None,
 ) -> tuple[bytes, str]:
-    """POST the prompt to image.chutes.ai and return (bytes, mime_type)."""
+    """POST the prompt to a Chutes diffusion chute and return (bytes, mime).
+
+    Retries on 502/503 to absorb cold starts (the same pattern chutes-frontend
+    uses) and falls through to the caller (raises) on any other error so the
+    streaming wrapper can convert it to a polite user-facing message instead
+    of crashing the SSE.
+    """
     if not api_key:
         raise RuntimeError("CHUTES_API_KEY not configured for direct image generation")
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "width": width,
-        "height": height,
-        "num_inference_steps": inference_steps,
-    }
+    target = endpoint or CHUTES_IMAGE_ENDPOINT
+    use_model = model if model is not None else CHUTES_IMAGE_MODEL
+    payload: dict[str, object] = {"prompt": prompt}
+    if use_model:
+        payload["model"] = use_model
+        payload["width"] = width
+        payload["height"] = height
+        payload["num_inference_steps"] = inference_steps
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
     }
     timeout = httpx.Timeout(REQUEST_TIMEOUT_SECONDS)
+    last_exc: Optional[Exception] = None
     async with httpx.AsyncClient(timeout=timeout) as client:
-        response = await client.post(CHUTES_IMAGE_ENDPOINT, headers=headers, json=payload)
-        response.raise_for_status()
-        mime_type = response.headers.get("content-type") or "image/jpeg"
-        return response.content, mime_type
+        for attempt in range(MAX_COLD_START_RETRIES):
+            try:
+                response = await client.post(target, headers=headers, json=payload)
+            except (httpx.RequestError, asyncio.TimeoutError) as exc:
+                last_exc = exc
+                if attempt + 1 < MAX_COLD_START_RETRIES:
+                    await asyncio.sleep(COLD_START_RETRY_DELAY_SECONDS)
+                    continue
+                raise
+            if response.status_code in (502, 503) and attempt + 1 < MAX_COLD_START_RETRIES:
+                await asyncio.sleep(COLD_START_RETRY_DELAY_SECONDS)
+                continue
+            response.raise_for_status()
+            mime_type = response.headers.get("content-type") or "image/png"
+            return response.content, mime_type
+    # If we somehow exit the loop without a value re-raise the last error
+    if last_exc is not None:
+        raise last_exc
+    raise RuntimeError("image generation retry loop exited unexpectedly")
 
 
 # ─── Streaming wrapper ──────────────────────────────────────────────────────
