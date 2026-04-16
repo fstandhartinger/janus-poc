@@ -136,6 +136,36 @@ services:
         value: "true"
     healthCheckPath: /health
 
+  # Janus Keep-Warm Cron - pings /health on every user-facing service every
+  # 10 minutes so Render's free plan never spins the containers down. Without
+  # this, cold starts from sleep surface to the user as "Error from
+  # competitor: 429" because Render's proxy returns 429 while a sleeping
+  # container is booting. Paired with the cold-start retry loop in the
+  # gateway (see gateway/janus_gateway/routers/chat.py::stream_from_competitor)
+  # this gives us belt + suspenders protection.
+  - type: cron
+    name: janus-keepwarm
+    runtime: node
+    region: oregon
+    plan: starter
+    schedule: "*/10 * * * *"
+    buildCommand: echo noop
+    startCommand: |
+      node -e "
+      const urls = [
+        'https://janus-gateway-bqou.onrender.com/health',
+        'https://janus-baseline-agent.onrender.com/health',
+        'https://janus-baseline-langchain.onrender.com/health',
+        'https://janus-memory-service.onrender.com/health',
+        'https://janus-scoring-service.onrender.com/health',
+        'https://janus-ui.onrender.com/'
+      ];
+      Promise.allSettled(urls.map(u => fetch(u, { headers: { 'User-Agent': 'janus-keepwarm' } })
+        .then(r => console.log(u, r.status))
+        .catch(e => console.log(u, 'ERR', String(e)))
+      )).then(() => console.log('keepwarm done'));
+      "
+
   # Janus Chat UI - Next.js frontend
   - type: web
     name: janus-ui

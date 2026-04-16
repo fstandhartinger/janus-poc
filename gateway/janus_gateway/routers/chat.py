@@ -8,6 +8,20 @@ from typing import AsyncGenerator, Union, cast
 
 import httpx
 import structlog
+
+# Render's free plan spins services down after ~15 minutes of inactivity.
+# When a request hits a sleeping service it first returns HTTP 429 (a
+# "Too Many Requests" stub served by Render's proxy in a couple of
+# milliseconds) while the container is being booted. Polling again a few
+# seconds later usually succeeds once the underlying uvicorn is up.
+# These retry knobs let the gateway absorb that cold-start window so end
+# users don't see a one-shot "Error from competitor: 429" for what is
+# really a transient wake-up.
+COLD_START_RETRYABLE_STATUS = {429, 502, 503, 504}
+COLD_START_FAST_RESPONSE_SECONDS = 5.0
+COLD_START_MAX_ATTEMPTS = 6
+COLD_START_INITIAL_BACKOFF_SECONDS = 2.0
+COLD_START_MAX_BACKOFF_SECONDS = 15.0
 from fastapi import APIRouter, Depends, Request, Response
 from fastapi.responses import StreamingResponse
 
@@ -92,38 +106,69 @@ async def stream_from_competitor(
         if trace_request_id:
             headers[REQUEST_ID_HEADER] = trace_request_id
             headers["X-Upstream-Service"] = "gateway"
-        async with client.stream(
-            "POST",
-            f"{competitor_url}/v1/chat/completions",
-            json=competitor_request,
-            timeout=settings.request_timeout,
-            headers=headers or None,
-        ) as response:
-            # Log baseline response status
+
+        # Open the upstream stream, retrying briefly on Render's cold-start
+        # proxy responses (429/5xx that come back in a handful of
+        # milliseconds from a sleeping free-tier container).
+        attempt = 0
+        backoff = COLD_START_INITIAL_BACKOFF_SECONDS
+        response = None
+        stream_ctx = None
+        cold_start_final_status: int | None = None
+        cold_start_final_body: str = ""
+        while attempt < COLD_START_MAX_ATTEMPTS:
+            attempt += 1
+            attempt_start = time.time()
+            stream_ctx = client.stream(
+                "POST",
+                f"{competitor_url}/v1/chat/completions",
+                json=competitor_request,
+                timeout=settings.request_timeout,
+                headers=headers or None,
+            )
+            response = await stream_ctx.__aenter__()
+            attempt_duration = time.time() - attempt_start
             logger.info(
                 "baseline_response",
                 status_code=response.status_code,
-                duration_ms=round((time.time() - start_time) * 1000, 2),
+                duration_ms=round(attempt_duration * 1000, 2),
+                attempt=attempt,
             )
+            if response.status_code == 200:
+                break
 
-            if response.status_code != 200:
-                error_body = await response.aread()
-                try:
-                    error_text = error_body.decode("utf-8", errors="replace")
-                except Exception:
-                    error_text = "<binary data>"
+            error_body = await response.aread()
+            try:
+                error_text = error_body.decode("utf-8", errors="replace")
+            except Exception:
+                error_text = "<binary data>"
+
+            is_wake_up_signal = (
+                response.status_code in COLD_START_RETRYABLE_STATUS
+                and attempt_duration < COLD_START_FAST_RESPONSE_SECONDS
+                and attempt < COLD_START_MAX_ATTEMPTS
+            )
+            cold_start_final_status = response.status_code
+            cold_start_final_body = error_text
+            await stream_ctx.__aexit__(None, None, None)
+            response = None
+            stream_ctx = None
+
+            if not is_wake_up_signal:
                 logger.error(
                     "baseline_error",
-                    status_code=response.status_code,
-                    body=error_text[:500],  # Truncate for logging
+                    status_code=cold_start_final_status,
+                    body=error_text[:500],
+                    attempt=attempt,
                 )
-                # Yield error as SSE
                 error_chunk = ChatCompletionChunk(
                     id=completion_id,
                     model=request.model,
                     choices=[
                         ChunkChoice(
-                            delta=Delta(content=f"Error from competitor: {response.status_code}"),
+                            delta=Delta(
+                                content=f"Error from competitor: {cold_start_final_status}"
+                            ),
                             finish_reason=FinishReason.STOP,
                         )
                     ],
@@ -131,6 +176,44 @@ async def stream_from_competitor(
                 yield f"data: {error_chunk.model_dump_json()}\n\n"
                 yield "data: [DONE]\n\n"
                 return
+
+            logger.warning(
+                "baseline_cold_start_retry",
+                status_code=cold_start_final_status,
+                attempt=attempt,
+                backoff_seconds=round(backoff, 2),
+                body_preview=error_text[:120],
+            )
+            yield ": warming upstream\n\n"
+            await asyncio.sleep(backoff)
+            backoff = min(backoff * 2, COLD_START_MAX_BACKOFF_SECONDS)
+
+        if response is None or stream_ctx is None:
+            logger.error(
+                "baseline_cold_start_exhausted",
+                status_code=cold_start_final_status,
+                body=cold_start_final_body[:500],
+            )
+            error_chunk = ChatCompletionChunk(
+                id=completion_id,
+                model=request.model,
+                choices=[
+                    ChunkChoice(
+                        delta=Delta(
+                            content=(
+                                "Competitor is waking up but didn't answer in time. "
+                                "Please retry in a few seconds."
+                            )
+                        ),
+                        finish_reason=FinishReason.STOP,
+                    )
+                ],
+            )
+            yield f"data: {error_chunk.model_dump_json()}\n\n"
+            yield "data: [DONE]\n\n"
+            return
+
+        try:
 
             line_queue: asyncio.Queue[object] = asyncio.Queue()
             done_sentinel = object()
@@ -201,6 +284,11 @@ async def stream_from_competitor(
                     reader_task.cancel()
                     with contextlib.suppress(asyncio.CancelledError):
                         await reader_task
+        finally:
+            # Always release the upstream connection (mirrors the
+            # `async with client.stream(...)` contract we expanded above).
+            with contextlib.suppress(Exception):
+                await stream_ctx.__aexit__(None, None, None)
 
     except httpx.TimeoutException:
         logger.error("competitor_timeout", url=competitor_url)

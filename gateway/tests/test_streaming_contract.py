@@ -203,3 +203,104 @@ def test_stream_includes_usage_and_done(client: TestClient) -> None:
         for line in data_lines
         if line != "[DONE]"
     )
+
+
+class _SequenceStubClient:
+    """Stub httpx client that returns a sequence of stub responses."""
+
+    def __init__(self, responses: Sequence[StubStreamResponse]) -> None:
+        self._responses = list(responses)
+        self.attempts = 0
+
+    def stream(self, *args, **kwargs) -> StubStreamContext:
+        if not self._responses:
+            raise AssertionError("No more stub responses configured")
+        response = self._responses.pop(0)
+        self.attempts += 1
+        return StubStreamContext(response)
+
+
+@pytest.mark.asyncio
+async def test_gateway_retries_on_cold_start_429(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Sleeping Render free-tier upstreams return a fast 429 during wake-up.
+
+    The gateway must retry a couple of times instead of surfacing a one-shot
+    "Error from competitor: 429" to the user. This is the regression guard
+    for https://janus.rodeo/chat 429 incidents.
+    """
+    # Speed up retry backoffs so the test stays fast.
+    monkeypatch.setattr(
+        "janus_gateway.routers.chat.COLD_START_INITIAL_BACKOFF_SECONDS", 0.01
+    )
+    monkeypatch.setattr(
+        "janus_gateway.routers.chat.COLD_START_MAX_BACKOFF_SECONDS", 0.02
+    )
+
+    sleeping_response_1 = StubStreamResponse([], status_code=429)
+    sleeping_response_2 = StubStreamResponse([], status_code=503)
+    final_chunk = ChatCompletionChunk(
+        id="chatcmpl-test",
+        model="baseline",
+        choices=[ChunkChoice(delta=Delta(role=MessageRole.ASSISTANT, content="ok"))],
+    )
+    awake_response = StubStreamResponse(
+        [f"data: {final_chunk.model_dump_json()}", "data: [DONE]"]
+    )
+    client = _SequenceStubClient([sleeping_response_1, sleeping_response_2, awake_response])
+
+    request = ChatCompletionRequest(
+        model="baseline",
+        messages=[Message(role=MessageRole.USER, content="Hello")],
+        stream=True,
+    )
+    settings = Settings(keep_alive_interval=1.0)
+
+    payloads = []
+    async for payload in stream_from_competitor(
+        client, "http://example.test", request, "req-test", settings
+    ):
+        payloads.append(payload)
+
+    assert client.attempts == 3, (
+        "Expected gateway to retry twice before the upstream served 200"
+    )
+    joined = "".join(payloads)
+    assert "Error from competitor: 429" not in joined
+    assert "[DONE]" in joined
+
+
+@pytest.mark.asyncio
+async def test_gateway_surfaces_non_retryable_upstream_errors(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Non-wake-up failures (e.g. 400 Bad Request) should not loop forever."""
+    monkeypatch.setattr(
+        "janus_gateway.routers.chat.COLD_START_INITIAL_BACKOFF_SECONDS", 0.01
+    )
+    monkeypatch.setattr(
+        "janus_gateway.routers.chat.COLD_START_MAX_BACKOFF_SECONDS", 0.02
+    )
+
+    bad_request = StubStreamResponse([], status_code=400)
+    # A second response is only consumed if the gateway mistakenly retries.
+    fallback = StubStreamResponse(
+        [f"data: {{\"choices\": []}}", "data: [DONE]"]
+    )
+    client = _SequenceStubClient([bad_request, fallback])
+
+    request = ChatCompletionRequest(
+        model="baseline",
+        messages=[Message(role=MessageRole.USER, content="Hello")],
+        stream=True,
+    )
+    settings = Settings(keep_alive_interval=1.0)
+
+    payloads = []
+    async for payload in stream_from_competitor(
+        client, "http://example.test", request, "req-test", settings
+    ):
+        payloads.append(payload)
+
+    assert client.attempts == 1, "Non-retryable 4xx should not be retried"
+    joined = "".join(payloads)
+    assert "Error from competitor: 400" in joined
