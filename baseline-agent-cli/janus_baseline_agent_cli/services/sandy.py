@@ -1930,12 +1930,112 @@ class SandyService:
         """Generate a completion ID."""
         return f"chatcmpl-baseline-sandy-{uuid.uuid4().hex[:12]}"
 
+    @staticmethod
+    def _infer_generation_flags(text: str) -> GenerationFlags | None:
+        """Infer generation_flags from natural-language intent in *text*.
+
+        The UI only sets generation_flags when a user picks an explicit tag
+        from the plus menu, but a vast majority of users just type prompts
+        like "create an image of a cute cat" or "read this aloud" and expect
+        the agent to *do the thing* — not write a Python block describing how
+        it would. Without these flags the prompt is delivered to the model
+        verbatim, and tool-poor models (the ones available on
+        https://claude.chutes.ai) frequently respond with a markdown code
+        block instead of invoking Bash. With the flags set, _build_agent_prompt
+        wraps the user message in a "You MUST generate …" directive that the
+        same models reliably follow with a real tool call.
+        """
+        text_lower = (text or "").lower()
+        if not text_lower.strip():
+            return None
+
+        # Image keywords — kept narrow so we don't false-positive on prompts
+        # that merely *mention* images (e.g. "explain how images work").
+        image_intent_keywords = (
+            "create an image",
+            "create a image",
+            "create image",
+            "generate an image",
+            "generate a image",
+            "generate image",
+            "make an image",
+            "make a image",
+            "make a picture",
+            "draw me",
+            "draw a ",
+            "draw an ",
+            "render a ",
+            "render an ",
+            "illustrate ",
+            "paint a ",
+            "paint an ",
+            "image of",
+            "picture of",
+            "illustration of",
+            "photo of",
+            "erstelle bild",
+            "erzeuge bild",
+            "male ",
+            "zeichne ",
+        )
+        video_intent_keywords = (
+            "create a video",
+            "generate a video",
+            "make a video",
+            "animate ",
+            "animation of",
+            "video of",
+        )
+        audio_intent_keywords = (
+            "read aloud",
+            "read this aloud",
+            "speak this",
+            "say this",
+            "text to speech",
+            "tts:",
+            "generate audio",
+            "create audio",
+            "vorlesen",
+        )
+
+        flags = GenerationFlags()
+        if any(k in text_lower for k in image_intent_keywords):
+            flags.generate_image = True
+        if any(k in text_lower for k in video_intent_keywords):
+            flags.generate_video = True
+        if any(k in text_lower for k in audio_intent_keywords):
+            flags.generate_audio = True
+
+        if flags.generate_image or flags.generate_video or flags.generate_audio:
+            return flags
+        return None
+
     def _build_agent_prompt(
         self,
         user_message: str,
         flags: GenerationFlags | None,
     ) -> str:
         instructions: list[str] = []
+
+        # If the caller didn't explicitly set flags but the prompt clearly
+        # asks for media generation, infer it. This dramatically improves
+        # success on prompts like "create an image of a cute cat" which
+        # otherwise get a code-block-as-text response from the underlying
+        # tool-poor LLMs on claude.chutes.ai.
+        if flags is None or not (
+            flags.generate_image or flags.generate_video or flags.generate_audio
+        ):
+            inferred = self._infer_generation_flags(user_message)
+            if inferred is not None:
+                if flags is None:
+                    flags = inferred
+                else:
+                    if inferred.generate_image:
+                        flags.generate_image = True
+                    if inferred.generate_video:
+                        flags.generate_video = True
+                    if inferred.generate_audio:
+                        flags.generate_audio = True
 
         if flags:
             if flags.generate_image:
