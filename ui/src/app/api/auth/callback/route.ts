@@ -18,8 +18,34 @@ type UserInfoResponse = {
   preferred_username?: string;
 };
 
+const resolveAppOrigin = (request: NextRequest): string => {
+  // Match the origin resolution used in the login route so callbacks that
+  // redirect back into the app always land on the public hostname rather than
+  // the internal Render bind address (e.g. `https://localhost:10000`).
+  const forwardedHost =
+    request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+  if (forwardedHost && !forwardedHost.startsWith('localhost')) {
+    try {
+      return new URL(`${forwardedProto}://${forwardedHost}`).origin;
+    } catch {
+      // ignore and fall through
+    }
+  }
+  if (OAUTH_CONFIG.redirectUri) {
+    try {
+      return new URL(OAUTH_CONFIG.redirectUri).origin;
+    } catch {
+      // ignore and fall through
+    }
+  }
+  return request.nextUrl.origin;
+};
+
 const redirectToError = (request: NextRequest, error: string) =>
-  NextResponse.redirect(new URL(`/auth/error?error=${encodeURIComponent(error)}`, request.nextUrl.origin));
+  NextResponse.redirect(
+    new URL(`/auth/error?error=${encodeURIComponent(error)}`, resolveAppOrigin(request))
+  );
 
 export async function GET(request: NextRequest) {
   try {
@@ -118,7 +144,26 @@ export async function GET(request: NextRequest) {
     return redirectToError(request, 'session_failed');
   }
 
-  const response = NextResponse.redirect(storedState.returnTo || '/chat');
+  const appOrigin = resolveAppOrigin(request);
+  const returnToTarget = (() => {
+    if (!storedState.returnTo) {
+      return new URL('/chat', appOrigin).toString();
+    }
+    try {
+      const url = new URL(storedState.returnTo, appOrigin);
+      const hostname = url.hostname.toLowerCase();
+      if (hostname === 'localhost' || hostname === '127.0.0.1') {
+        // Sealed state was created before the origin fix — rewrite onto the
+        // current public origin so we never bounce users into the Render
+        // container address.
+        return new URL(url.pathname + url.search + url.hash, appOrigin).toString();
+      }
+      return url.toString();
+    } catch {
+      return new URL('/chat', appOrigin).toString();
+    }
+  })();
+  const response = NextResponse.redirect(returnToTarget);
   response.cookies.delete('oauth_state');
   response.cookies.set('auth_session', cookieValue, getSessionCookieOptions());
 

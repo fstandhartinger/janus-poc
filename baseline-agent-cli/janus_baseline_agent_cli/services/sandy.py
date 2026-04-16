@@ -1461,7 +1461,15 @@ class SandyService:
         try:
             response = await client.post(
                 f"{self._base_url}/api/sandboxes/{sandbox_id}/exec",
-                json={"command": command, "timeout": self._timeout},
+                # Sandy's /exec endpoint reads `timeoutMs` (milliseconds). We
+                # previously sent `timeout` (seconds) which Sandy silently
+                # ignored and fell back to the short Docker client default,
+                # making the bootstrap phase time out with "Command timed out".
+                json={
+                    "command": command,
+                    "timeoutMs": max(1, int(self._timeout)) * 1000,
+                    "timeout": self._timeout,
+                },
                 headers=self._get_headers(),
                 timeout=self._timeout,
             )

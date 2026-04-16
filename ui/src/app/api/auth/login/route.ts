@@ -5,14 +5,42 @@ import { isOAuthConfigError, toOAuthConfigErrorResponse } from '@/lib/auth/error
 
 export const runtime = 'nodejs';
 
+const resolveAppOrigin = (request: NextRequest): string => {
+  // Render (and most reverse proxies) forward the public host/proto via
+  // X-Forwarded-* headers. `request.nextUrl.origin` on the server can resolve
+  // to the internal bind address (e.g. `https://localhost:10000`) when those
+  // headers aren't trusted by Next.js, so prefer explicit proxy headers and
+  // fall back to the configured OAuth redirect URI origin before using the
+  // request origin as a last resort.
+  const forwardedHost =
+    request.headers.get('x-forwarded-host') || request.headers.get('host') || '';
+  const forwardedProto = request.headers.get('x-forwarded-proto') || 'https';
+  if (forwardedHost && !forwardedHost.startsWith('localhost')) {
+    try {
+      return new URL(`${forwardedProto}://${forwardedHost}`).origin;
+    } catch {
+      // fall through to other strategies
+    }
+  }
+  if (OAUTH_CONFIG.redirectUri) {
+    try {
+      return new URL(OAUTH_CONFIG.redirectUri).origin;
+    } catch {
+      // fall through to request origin
+    }
+  }
+  return request.nextUrl.origin;
+};
+
 const resolveReturnTo = (request: NextRequest, returnToParam: string | null) => {
-  const fallback = new URL('/chat', request.nextUrl.origin).toString();
+  const appOrigin = resolveAppOrigin(request);
+  const fallback = new URL('/chat', appOrigin).toString();
   if (!returnToParam) {
     return fallback;
   }
   try {
-    const url = new URL(returnToParam, request.nextUrl.origin);
-    if (url.origin !== request.nextUrl.origin) {
+    const url = new URL(returnToParam, appOrigin);
+    if (url.origin !== appOrigin) {
       return fallback;
     }
     return url.toString();
