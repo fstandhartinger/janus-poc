@@ -524,6 +524,61 @@ async def stream_response(
         first_chunk = True
         fast_path_emitted = False
         time_to_first_token: float | None = None
+        # Direct image-generation path: if the prompt is a pure media-gen
+        # request, skip Sandy/Claude entirely and call image.chutes.ai
+        # ourselves. The Anthropic-compatible proxy at claude.chutes.ai
+        # consistently fails to surface tool_use blocks back to Claude Code
+        # (tested with MiniMax M2.5, Kimi K2.5, DeepSeek V3.2 — all just
+        # write Python blocks instead of running Bash), so this is the
+        # only 100% reliable path for "create an image of …" today.
+        # See sandy/sandy/agent.py for the YOLO/IS_SANDBOX work that
+        # tried, but couldn't, fix this end-to-end via Claude.
+        try:
+            from janus_baseline_agent_cli.services.direct_image import (
+                stream_image_generation,
+            )
+            from janus_baseline_agent_cli.services.sandy import SandyService
+
+            inferred_flags = SandyService._infer_generation_flags(
+                analysis.text_preview or ""
+            )
+            wants_image = bool(
+                (request.generation_flags and request.generation_flags.generate_image)
+                or (inferred_flags and inferred_flags.generate_image)
+            )
+            wants_other_media = bool(
+                (request.generation_flags
+                 and (request.generation_flags.generate_video
+                      or request.generation_flags.generate_audio
+                      or request.generation_flags.deep_research))
+                or (inferred_flags
+                    and (inferred_flags.generate_video
+                         or inferred_flags.generate_audio))
+            )
+            if wants_image and not wants_other_media:
+                completion_id = f"chatcmpl-direct-image-{uuid.uuid4().hex[:12]}"
+                async for chunk in stream_image_generation(
+                    request.messages,
+                    settings=settings,
+                    completion_id=completion_id,
+                    model_label=request.model or "baseline-direct-image",
+                ):
+                    chunk_text = _extract_chunk_content(chunk)
+                    if chunk_text:
+                        full_response_parts.append(chunk_text)
+                    if first_chunk and metadata_payload:
+                        merged = dict(metadata_payload)
+                        merged["routing_decision"] = "direct_image"
+                        merged["routing_model"] = "image.chutes.ai/qwen-image"
+                        merged["complexity_reason"] = "direct_image_intent"
+                        chunk = chunk.model_copy(update={"metadata": merged})
+                    first_chunk = False
+                    yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
+                yield "data: [DONE]\n\n"
+                return
+        except Exception as exc:  # never let the fast-path break the agent path
+            logger.warning("direct_image_path_failed", error=str(exc))
+
         try:
             if using_agent:
                 if settings.use_sandy_agent_api and warm_pool and not use_cli_fallback:
