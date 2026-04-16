@@ -411,6 +411,8 @@ async def stream_response(
     decision = analysis.decision
     if settings.always_use_agent and metadata_decision is None and not decision_requires_agent(decision):
         decision = coerce_decision_for_agent(decision)
+    if metadata_decision is None and baseline_agent_override and not decision_requires_agent(decision):
+        decision = coerce_decision_for_agent(decision)
     is_complex = decision_requires_agent(decision)
     reason = analysis.reason
     routing_model = model_for_decision(decision)
@@ -764,6 +766,8 @@ async def chat_completions(
         )
         decision = analysis.decision
         if settings.always_use_agent and metadata_decision is None and not decision_requires_agent(decision):
+            decision = coerce_decision_for_agent(decision)
+        if metadata_decision is None and baseline_agent_header and not decision_requires_agent(decision):
             decision = coerce_decision_for_agent(decision)
         is_complex = decision_requires_agent(decision)
         reason = analysis.reason

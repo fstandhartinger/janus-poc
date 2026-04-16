@@ -74,3 +74,45 @@ def test_metadata_decision_bypasses_always_use_agent(
     message = data["choices"][0]["message"]["content"]
     assert main_module.AGENT_UNAVAILABLE_MESSAGE not in message
     assert "mock mode" in message
+
+
+def test_baseline_agent_header_forces_agent_path_without_metadata(
+    client: TestClient,
+) -> None:
+    """Explicit CLI agent selection should force Sandy routing when metadata is not pinned."""
+    response = client.post(
+        "/v1/chat/completions",
+        headers={"X-Baseline-Agent": "claude-code"},
+        json={
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "stream": False,
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    message = data["choices"][0]["message"]["content"]
+    assert main_module.AGENT_UNAVAILABLE_MESSAGE in message
+
+
+def test_metadata_decision_still_overrides_explicit_cli_agent_selection(
+    client: TestClient, monkeypatch
+) -> None:
+    """Pinned metadata routing should still win over UI agent selection."""
+    monkeypatch.setattr(main_module.settings, "openai_api_key", None)
+    monkeypatch.setattr(main_module.settings, "chutes_api_key", None)
+    response = client.post(
+        "/v1/chat/completions",
+        headers={"X-Baseline-Agent": "claude-code"},
+        json={
+            "model": "gpt-4o-mini",
+            "messages": [{"role": "user", "content": "Hello"}],
+            "stream": False,
+            "metadata": {"routing_decision": "fast_qwen"},
+        },
+    )
+    assert response.status_code == 200
+    data = response.json()
+    message = data["choices"][0]["message"]["content"]
+    assert main_module.AGENT_UNAVAILABLE_MESSAGE not in message
+    assert "mock mode" in message

@@ -158,3 +158,8 @@
   - Added 3 regression tests for Claude Code `--append-system-prompt` flag conflict (prevents recurrence)
   - Added 12 artifact storage unit tests (sanitization, path traversal protection, extension/MIME mapping)
   - Final test counts: gateway 90/90, UI 57/57 (14 files), baseline 130/130+19 skipped
+
+## 2026-04-16
+- Revived the Janus baseline agent-selection path by coercing explicit `X-Baseline-Agent` requests onto the Sandy agent route unless `metadata.routing_decision` already pins routing.
+- Added regression coverage in `baseline-agent-cli/tests/test_chat.py` for forced agent routing and metadata override precedence.
+- Re-verified deployed Janus UI, gateway, and baseline health before deploying the baseline fix.
