@@ -30,19 +30,15 @@ import { ScreenshotStream } from './ScreenshotStream';
 import { CanvasPanel } from './canvas';
 import { ModelSelector } from './ModelSelector';
 import { AgentSelector, type AgentOption } from './AgentSelector';
-import { AgentStatusIndicator } from './chat/AgentStatusIndicator';
 import { EmptyState } from './chat/EmptyState';
 import { QuickSuggestions } from './chat/QuickSuggestions';
 import { DebugPanel } from './debug/DebugPanel';
-import { DebugToggle } from './debug/DebugToggle';
-import { MemoryToggle } from './MemoryToggle';
 import { ChatOverflowMenu } from './ChatOverflowMenu';
 import { MemorySheet } from './memory/MemorySheet';
 import { SessionSheet } from './sessions/SessionSheet';
 import { SignInGateDialog } from './auth/SignInGateDialog';
 import { UserMenu } from './auth/UserMenu';
 import { ShareModal } from './ShareModal';
-import { ArenaToggle } from './arena/ArenaToggle';
 import { useAuth } from '@/hooks/useAuth';
 import type { Artifact, ChatCompletionChunk, MessageContent, Model, ScreenshotData } from '@/types/chat';
 import type { GenerationFlags } from '@/types/generation';
@@ -104,7 +100,10 @@ export function ChatArea({
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: authLoading, signIn, signOut } = useAuth();
-  const { arenaMode, requestArenaCompletion } = useArena();
+  const { arenaMode, setArenaMode, requestArenaCompletion } = useArena();
+  const toggleArena = useCallback(() => {
+    setArenaMode(!arenaMode);
+  }, [arenaMode, setArenaMode]);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const processedCanvasMessagesRef = useRef<Set<string>>(new Set());
@@ -704,8 +703,11 @@ export function ChatArea({
     [handleSend, isStreaming]
   );
 
+  // Only surface quick-reply pills after the conversation has started — the
+  // empty state already has its own curated prompts below the headline, so we
+  // don't want to duplicate them there.
   const showQuickSuggestions =
-    !isStreaming && (messages.length === 0 || messages[messages.length - 1]?.role === 'assistant');
+    !isStreaming && messages.length > 0 && messages[messages.length - 1]?.role === 'assistant';
 
   useEffect(() => {
     if (!initialMessage) return;
@@ -794,74 +796,43 @@ export function ChatArea({
               <Link href="/" className="chat-brand" title="Go to home" aria-label="Go to home">
                 JANUS
               </Link>
-            </div>
-
-            <div className="chat-topbar-center">
-              <div className="chat-session-info">
-                <span className="chat-context">Session</span>
-                <span className="chat-session-title">{session?.title || 'New chat'}</span>
-              </div>
-              <div className="chat-header-actions">
-                {onNewChat && (
-                  <button
-                    type="button"
-                    onClick={onNewChat}
-                    className="chat-new-chat-btn hidden sm:flex"
-                    aria-label="New chat"
-                    title="New chat"
-                  >
-                    <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                )}
-                <AgentStatusIndicator />
-                {isCliAgentModel && (
-                  <AgentSelector
-                    agents={AGENT_OPTIONS}
-                    selectedAgent={selectedAgent}
-                    onSelect={setSelectedAgent}
-                  />
-                )}
-                <ModelSelector
-                  models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
-                  selectedModel={selectedModel}
-                  onSelect={setSelectedModel}
+              <ModelSelector
+                models={models.length ? models : [{ id: 'baseline-cli-agent', object: 'model', created: 0, owned_by: 'janus' }]}
+                selectedModel={selectedModel}
+                onSelect={setSelectedModel}
+              />
+              {isCliAgentModel && (
+                <AgentSelector
+                  agents={AGENT_OPTIONS}
+                  selectedAgent={selectedAgent}
+                  onSelect={setSelectedAgent}
                 />
-              </div>
+              )}
             </div>
 
             <div className="chat-topbar-right">
-              <div className="chat-auth">
-                {!authLoading && !isAuthenticated && (
-                  <>
-                    <button type="button" className="chat-signin-btn" onClick={() => signIn()}>
-                      Sign in
-                    </button>
-                    <div className="chat-free-count hidden sm:block">
-                      {freeChatsRemaining}/{FREE_CHAT_LIMIT} free
-                    </div>
-                  </>
-                )}
-                {isAuthenticated && user && (
-                  <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
-                )}
-              </div>
-              <div className="hidden sm:flex items-center gap-2">
-                <ArenaToggle />
-                <DebugToggle enabled={debugMode} onToggle={setDebugMode} />
-                <MemoryToggle
-                  enabled={memoryEnabled}
-                  onOpen={() => setMemorySheetOpen(true)}
-                  open={memorySheetOpen}
-                />
-              </div>
+              {!authLoading && !isAuthenticated && (
+                <>
+                  <span className="chat-free-count hidden sm:inline-flex" aria-label="Free chats remaining">
+                    {freeChatsRemaining}/{FREE_CHAT_LIMIT}
+                  </span>
+                  <button type="button" className="chat-signin-btn" onClick={() => signIn()}>
+                    Sign in
+                  </button>
+                </>
+              )}
+              {isAuthenticated && user && (
+                <UserMenu userId={user.userId} username={user.username} onSignOut={signOut} />
+              )}
               <ChatOverflowMenu
                 debugEnabled={debugMode}
                 onDebugChange={setDebugMode}
                 memoryEnabled={memoryEnabled}
                 onMemoryToggle={() => setMemorySheetOpen(true)}
                 onSessionsToggle={() => setSessionSheetOpen(true)}
+                arenaEnabled={arenaMode}
+                onArenaToggle={toggleArena}
+                onNewChat={onNewChat}
                 freeChatsRemaining={freeChatsRemaining}
                 freeChatsLimit={FREE_CHAT_LIMIT}
                 showFreeChats={!isAuthenticated}

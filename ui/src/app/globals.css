@@ -1271,9 +1271,9 @@ html {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 24px;
-  border-bottom: 1px solid rgba(31, 41, 55, 0.8);
-  background: rgba(11, 15, 20, 0.78);
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(11, 15, 20, 0.6);
   backdrop-filter: blur(16px);
   position: sticky;
   top: 0;
@@ -1283,8 +1283,10 @@ html {
 .chat-topbar-left {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
 }
 
 .chat-topbar-center {
@@ -1381,20 +1383,22 @@ html {
 }
 
 .chat-menu-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 12px;
-  border: 1px solid rgba(31, 41, 55, 0.8);
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  border: none;
   color: #9CA3AF;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  background: transparent;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .chat-menu-btn:hover {
   color: #F3F4F6;
-  border-color: rgba(55, 65, 81, 0.8);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .chat-home-btn {
@@ -1441,13 +1445,8 @@ html {
 .chat-topbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.chat-auth {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 }
 
 .chat-signin-btn {
@@ -1467,14 +1466,15 @@ html {
 }
 
 .chat-free-count {
+  display: inline-flex;
+  align-items: center;
   font-size: 11px;
   color: #6B7280;
-  border: 1px solid rgba(31, 41, 55, 0.8);
   padding: 4px 10px;
   border-radius: 999px;
-  background: rgba(17, 23, 38, 0.6);
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.04);
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
 }
 
 .auth-user-menu {
@@ -3050,9 +3050,15 @@ html {
   padding: 0;
 }
 
-/* Empty state container - centered vertically */
+/* Empty state container - centered vertically, generous whitespace */
 .chat-empty-container {
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  padding-top: 40px;
+  padding-bottom: 40px;
 }
 
 /* Messages container with proper scrolling - takes all available space */
@@ -3068,21 +3074,68 @@ html {
 /* Bottom-fixed input area - always at bottom, never grows */
 .chat-input-bottom {
   flex: 0 0 auto;
-  background: linear-gradient(to top, rgba(11, 15, 20, 0.95) 0%, rgba(11, 15, 20, 0.8) 50%, transparent 100%);
-  padding-top: 1.5rem;
+  background: linear-gradient(to top, rgba(11, 15, 20, 0.9) 0%, rgba(11, 15, 20, 0.55) 55%, transparent 100%);
+  padding-top: 1.75rem;
   padding-bottom: 16px;
 }
 
 .chat-empty-title {
-  font-size: 2rem;
-  color: #E5E7EB;
+  font-size: 1.5rem;
+  color: rgba(243, 244, 246, 0.92);
   font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 640px) {
+  .chat-empty-title {
+    font-size: 1.875rem;
+  }
 }
 
 .chat-empty-subtitle {
   margin-top: 12px;
   font-size: 13px;
   color: #6B7280;
+}
+
+.chat-empty-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  max-width: 560px;
+}
+
+.chat-empty-prompt {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #D1D5DB;
+  font-size: 13px;
+  line-height: 1.2;
+  transition: all 0.18s ease;
+  cursor: pointer;
+}
+
+.chat-empty-prompt:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.14);
+  color: #F3F4F6;
+}
+
+.chat-empty-prompt-more {
+  color: rgba(99, 210, 151, 0.85);
+  border-color: rgba(99, 210, 151, 0.25);
+  background: rgba(99, 210, 151, 0.06);
+}
+
+.chat-empty-prompt-more:hover {
+  color: #7FDAA8;
+  border-color: rgba(99, 210, 151, 0.4);
+  background: rgba(99, 210, 151, 0.12);
 }
 
 .chat-streaming {
@@ -3116,13 +3169,23 @@ html {
 .chat-input-container {
   display: flex;
   align-items: flex-end;
-  gap: 12px;
-  padding: 12px 16px;
-  background: rgba(17, 23, 38, 0.75);
-  border: 1px solid rgba(55, 65, 81, 0.8);
-  border-radius: 24px;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 28px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+
+.chat-input-container:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.chat-input-container:focus-within {
+  border-color: rgba(255, 255, 255, 0.20);
+  background: rgba(255, 255, 255, 0.05);
 }
 
 .chat-plus-menu {
@@ -3130,10 +3193,10 @@ html {
 }
 
 .chat-plus-button {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   border-radius: 999px;
-  border: 1px solid rgba(31, 41, 55, 0.9);
+  border: none;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3145,7 +3208,7 @@ html {
 
 .chat-plus-button:hover {
   color: #F3F4F6;
-  border-color: rgba(71, 85, 105, 0.9);
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .chat-plus-button:disabled {
@@ -3304,20 +3367,26 @@ html {
 }
 
 .chat-send-btn {
-  width: 38px;
-  height: 38px;
+  width: 32px;
+  height: 32px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: #63D297;
   border-radius: 999px;
-  color: #111827;
+  color: #0B111A;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.chat-send-btn:hover:not(:disabled) {
+  background: #7FDAA8;
 }
 
 .chat-send-btn:disabled {
-  background: #374151;
-  color: #6B7280;
+  background: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: not-allowed;
 }
 
 @media (max-width: 1023px) {
@@ -3346,7 +3415,7 @@ html {
   }
 
   .chat-topbar {
-    padding: 12px 16px;
+    padding: 10px 12px;
   }
 
   .chat-topbar-center {
@@ -3354,12 +3423,22 @@ html {
     gap: 10px;
   }
 
-  .chat-header-actions .model-selector {
+  /* Hide the tiny uppercase "MODEL"/"AGENT" labels on narrow screens so the
+     dropdowns themselves (which carry the same meaning via their content)
+     have room to render without overflowing. */
+  .chat-topbar .model-selector-label,
+  .chat-topbar .agent-selector-label {
     display: none;
   }
 
-  .chat-header-actions .agent-selector {
+  /* Agent selector is a power-user control — keep it available but hide on
+     the smallest phones so the model selector + sign-in don't wrap. */
+  .chat-topbar .agent-selector {
     display: none;
+  }
+
+  .chat-topbar .model-selector-value {
+    max-width: 120px;
   }
 
   .agent-status-indicator {

@@ -3,11 +3,41 @@
 import { useState } from 'react';
 import { DEMO_PROMPTS_BY_CATEGORY } from '@/data/demoPrompts';
 import { AllPromptsModal } from './AllPromptsModal';
-import { DemoPromptCard } from './DemoPromptCard';
 
 interface EmptyStateProps {
   onSelectPrompt: (prompt: string) => void;
 }
+
+// Curated quick-starts — short, text-only pills. Keeps the empty state calm
+// and matches the chutes-frontend minimal "Ask anything…" aesthetic.
+const QUICK_PROMPTS: Array<{ id: string; label: string; prompt: string }> = [
+  {
+    id: 'sky',
+    label: 'Explain why the sky is blue',
+    prompt: DEMO_PROMPTS_BY_CATEGORY.simple[0]?.prompt ?? 'Explain why the sky is blue.',
+  },
+  {
+    id: 'research',
+    label: 'Web research report',
+    prompt:
+      DEMO_PROMPTS_BY_CATEGORY.research[0]?.prompt ??
+      'Research the latest advances in AI agents and give me a brief report.',
+  },
+  {
+    id: 'repo',
+    label: 'Clone & summarize a repo',
+    prompt:
+      DEMO_PROMPTS_BY_CATEGORY.agentic[0]?.prompt ??
+      'Clone https://github.com/chutesai/chutes and summarize the repository structure.',
+  },
+  {
+    id: 'image',
+    label: 'Generate a futuristic city',
+    prompt:
+      DEMO_PROMPTS_BY_CATEGORY.multimodal[0]?.prompt ??
+      'Generate an image of a futuristic city at dusk.',
+  },
+];
 
 export function EmptyState({ onSelectPrompt }: EmptyStateProps) {
   const [allPromptsOpen, setAllPromptsOpen] = useState(false);
@@ -17,51 +47,30 @@ export function EmptyState({ onSelectPrompt }: EmptyStateProps) {
     setAllPromptsOpen(false);
   };
 
-  const simplePrompts = DEMO_PROMPTS_BY_CATEGORY.simple;
-  const researchPrompt = DEMO_PROMPTS_BY_CATEGORY.research[0];
-  const agenticPrompt = DEMO_PROMPTS_BY_CATEGORY.agentic[0];
-  const multimodalPrompt = DEMO_PROMPTS_BY_CATEGORY.multimodal[0];
-
   return (
     <div className="chat-empty flex-1">
-      <div className="chat-empty-container w-full max-w-4xl px-4 py-6">
-        <div className="mb-8 text-center">
-          <p className="chat-empty-title">Janus</p>
-          <p className="chat-empty-subtitle">The Open Intelligence Rodeo</p>
-        </div>
+      <div className="chat-empty-container w-full max-w-2xl mx-auto px-4">
+        <p className="chat-empty-title">Where should we begin?</p>
 
-        <div>
-          <p className="mb-4 text-center text-sm text-ink-400">Try one of these examples:</p>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {simplePrompts[0] && (
-              <DemoPromptCard prompt={simplePrompts[0]} onSelect={handleSelect} />
-            )}
-            {researchPrompt && (
-              <DemoPromptCard prompt={researchPrompt} onSelect={handleSelect} />
-            )}
-            {agenticPrompt && (
-              <DemoPromptCard
-                prompt={agenticPrompt}
-                onSelect={handleSelect}
-                variant="featured"
-                className="sm:col-span-2"
-              />
-            )}
-            {multimodalPrompt && (
-              <DemoPromptCard prompt={multimodalPrompt} onSelect={handleSelect} />
-            )}
-            {simplePrompts[1] && (
-              <DemoPromptCard prompt={simplePrompts[1]} onSelect={handleSelect} />
-            )}
-          </div>
-
+        <div className="chat-empty-prompts" role="list">
+          {QUICK_PROMPTS.map((item) => (
+            <button
+              key={item.id}
+              type="button"
+              className="chat-empty-prompt"
+              onClick={() => handleSelect(item.prompt)}
+              role="listitem"
+            >
+              {item.label}
+            </button>
+          ))}
           <button
             type="button"
-            className="mx-auto mt-4 block text-sm text-moss/70 transition hover:text-moss"
+            className="chat-empty-prompt chat-empty-prompt-more"
             onClick={() => setAllPromptsOpen(true)}
             data-testid="see-more-prompts"
           >
-            See more examples →
+            More examples →
           </button>
         </div>
       </div>

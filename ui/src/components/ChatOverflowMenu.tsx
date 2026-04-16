@@ -9,6 +9,9 @@ interface ChatOverflowMenuProps {
   memoryEnabled: boolean;
   onMemoryToggle: () => void;
   onSessionsToggle: () => void;
+  arenaEnabled?: boolean;
+  onArenaToggle?: () => void;
+  onNewChat?: () => void;
   freeChatsRemaining?: number;
   freeChatsLimit?: number;
   showFreeChats?: boolean;
@@ -98,12 +101,46 @@ const MoreIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+const PlusIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+);
+
+const ArenaIcon = ({ className }: { className?: string }) => (
+  <svg
+    viewBox="0 0 24 24"
+    className={className}
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.6"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    aria-hidden="true"
+  >
+    <path d="M8 7h8l1 10H7zM9 4h6" />
+    <path d="M5 11h2M17 11h2" />
+  </svg>
+);
+
 export function ChatOverflowMenu({
   debugEnabled,
   onDebugChange,
   memoryEnabled,
   onMemoryToggle,
   onSessionsToggle,
+  arenaEnabled,
+  onArenaToggle,
+  onNewChat,
   freeChatsRemaining,
   freeChatsLimit,
   showFreeChats,
@@ -154,6 +191,39 @@ export function ChatOverflowMenu({
             <div className="chat-overflow-info">
               {freeChatsRemaining}/{freeChatsLimit} free chats
             </div>
+          )}
+
+          {onNewChat && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onNewChat();
+                setOpen(false);
+              }}
+              className="chat-overflow-item"
+            >
+              <PlusIcon className="w-4 h-4" />
+              <span className="chat-overflow-label">New chat</span>
+            </button>
+          )}
+
+          {onArenaToggle && (
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onArenaToggle();
+                setOpen(false);
+              }}
+              className="chat-overflow-item"
+            >
+              <ArenaIcon className="w-4 h-4" />
+              <span className="chat-overflow-label">Arena mode</span>
+              <span className={`chat-overflow-status ${arenaEnabled ? 'is-on' : ''}`}>
+                {arenaEnabled ? 'ON' : 'OFF'}
+              </span>
+            </button>
           )}
 
           <button
