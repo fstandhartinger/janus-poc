@@ -11,6 +11,15 @@ import pytest
 from tests.config import config
 
 
+def skip_if_memory_service_unavailable(response: httpx.Response) -> None:
+    """Skip deployed integration checks when Render reports the service is suspended."""
+    if response.status_code == 503 and (
+        response.headers.get("x-render-routing") == "suspend-by-user"
+        or "Service Suspended" in response.text
+    ):
+        pytest.skip("Memory service is suspended on Render")
+
+
 class TestMemoryServiceHealth:
     """Test memory service health."""
 
@@ -21,6 +30,7 @@ class TestMemoryServiceHealth:
         async with httpx.AsyncClient(timeout=config.health_timeout) as client:
             try:
                 response = await client.get(f"{url}/health")
+                skip_if_memory_service_unavailable(response)
                 assert response.status_code == 200
             except httpx.ConnectError:
                 pytest.skip("Memory service not available")
@@ -49,6 +59,7 @@ class TestMemoryExtraction:
                         ],
                     },
                 )
+                skip_if_memory_service_unavailable(response)
                 # Service may be partially implemented or have issues
                 if response.status_code == 500:
                     pytest.skip("Memory extraction service has internal issues")
@@ -75,6 +86,7 @@ class TestMemoryRetrieval:
                     f"{url}/memories/relevant",
                     params={"user_id": test_user_id, "prompt": "What's my favorite color?"},
                 )
+                skip_if_memory_service_unavailable(response)
                 assert response.status_code == 200
                 data = response.json()
                 assert "memories" in data
@@ -93,12 +105,14 @@ class TestMemoryRetrieval:
                     f"{url}/memories",
                     params={"user_id": test_user_id},
                 )
+                skip_if_memory_service_unavailable(response)
                 # Endpoint may be /memories or /memories/list
                 if response.status_code == 404:
                     response = await client.get(
                         f"{url}/memories/list",
                         params={"user_id": test_user_id},
                     )
+                    skip_if_memory_service_unavailable(response)
                 assert response.status_code == 200
             except httpx.ConnectError:
                 pytest.skip("Memory service not available")

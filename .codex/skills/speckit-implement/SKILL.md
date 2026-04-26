@@ -13,7 +13,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Overview
 
-This skill launches the Ralph Wiggum implementation loop to process specifications autonomously. The agent iterates until acceptance criteria and Completion Signal requirements pass.
+This command launches the Ralph Wiggum implementation loop to process specifications autonomously. The agent iterates until acceptance criteria and Completion Signal requirements pass.
 
 ## Prerequisites
 
@@ -30,44 +30,54 @@ This skill launches the Ralph Wiggum implementation loop to process specificatio
 
 If `$ARGUMENTS` specifies a single spec (e.g., "001-user-auth"):
 
-1. Read the spec from `specs/$ARGUMENTS/spec.md`
-2. Read `.specify/memory/constitution.md` for project principles
-3. Read `AGENTS.md` for development guidelines
-4. Implement all requirements
-5. Complete ALL items in the Completion Signal section
-6. Run all tests (unit, integration, browser, visual)
-7. Verify no console/network errors
-8. Commit and push changes
-9. Deploy if required and verify
-10. Iterate until all checks pass
-11. Output `<promise>DONE</promise>` when ALL checks pass
+```
+/ralph-loop:ralph-loop "Implement the spec $ARGUMENTS from specs/$ARGUMENTS/spec.md.
+
+Context:
+- Read .specify/memory/constitution.md for project principles
+- Read AGENTS.md for development guidelines
+
+Process:
+1. Read and understand the full spec
+2. Implement all requirements
+3. Complete ALL items in the Completion Signal section
+4. Run all tests (unit, integration, browser, visual)
+5. Verify no console/network errors
+6. Commit and push changes
+7. Deploy if required and verify
+8. Iterate until all checks pass
+
+Output <promise>DONE</promise> when ALL checks pass." --completion-promise "DONE" --max-iterations 30
+```
 
 ### Option B: All Specs (Master Loop)
 
 If no specific spec provided, run the master loop:
 
-1. Read `.specify/memory/constitution.md` for project principles
-2. Read `AGENTS.md` for development guidelines
-3. Work through all specifications in `specs/` folder in numerical order
-4. For each spec:
-   - Read the spec from `specs/{spec-name}/spec.md`
-   - Implement all requirements
-   - Complete ALL items in the Completion Signal section
-   - Commit, push, and verify deployment
-   - Update history if required
-   - Move to next spec
-5. Output `<promise>ALL_DONE</promise>` when all specs complete
+```
+/ralph-loop:ralph-loop "Work through all specifications in specs/ folder, implementing each one until its acceptance criteria pass, then move to the next.
 
-## Alternative: Shell Script
+Context:
+- Read .specify/memory/constitution.md for project principles
+- Read AGENTS.md for development guidelines
 
-You can also run the Ralph loop via shell:
+For each spec in numerical order:
+1. Read the spec from specs/{spec-name}/spec.md
+2. Implement all requirements
+3. Complete ALL items in the Completion Signal section
+4. Commit, push, and verify deployment
+5. Update history if required
+6. Move to next spec
 
-```bash
-./scripts/ralph-loop-codex.sh
+Output <promise>ALL_DONE</promise> when all specs complete." --completion-promise "ALL_DONE" --max-iterations 100
 ```
 
-Or for a specific spec:
+## Fallback (No Ralph Plugin)
 
-```bash
-./scripts/ralph-loop-codex.sh 001-user-auth
-```
+If the Ralph Wiggum plugin is not available:
+
+1. Read `RALPH_PROMPT.md` for the master prompt
+2. Manually iterate through specs in order
+3. For each spec, implement until Completion Signal requirements are met
+4. Commit and push after each major milestone
+5. Continue until all specs complete

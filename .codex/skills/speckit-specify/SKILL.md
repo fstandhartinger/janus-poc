@@ -1,6 +1,6 @@
 ---
 name: speckit-specify
-description: Create or update a feature specification from a natural language description
+description: Create or update a feature specification from a natural language description.
 ---
 
 ## User Input
@@ -13,7 +13,7 @@ You **MUST** consider the user input before proceeding (if not empty).
 
 ## Outline
 
-The text after invoking this skill is the feature description. Do not ask the user to repeat it unless it is empty.
+The text after `/speckit.specify` is the feature description. Do not ask the user to repeat it unless it is empty.
 
 Given that description, do this:
 

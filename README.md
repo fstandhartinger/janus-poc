@@ -1,5 +1,7 @@
 # Janus PoC
 
+> **Sandy dependency**: This project uses Sandy on the production servers (new\_sandy / old\_sandy). Do NOT deploy Sandy changes to bench-runner-sandy (`88.99.58.39`), which is dedicated to `chutes-bench-runner`. Do NOT change Sandy server configs (systemd overrides, autoscaler limits, resource watermarks) on Hetzner servers to accommodate this project — doing so has previously broken `chutes-bench-runner` throughput (incident 2026-03-13). Use a separate Sandy instance or test changes in isolation first.
+
 **[janus.rodeo](https://janus-ui.onrender.com)** — A competitive, OpenAI-compatible intelligence API where miners compete to build the best universal agent. Anything in, anything out.
 
 > *Janus* is the Roman god of beginnings, transitions, and duality — looking to the past and future simultaneously. Here, Janus rides the bull: a nod to the crypto-bullish ethos and the rodeo-style miner competition.

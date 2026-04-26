@@ -429,7 +429,8 @@ PLANEOF
 fi
 
 # Build Codex flags for exec mode
-CODEX_FLAGS="exec"
+CODEX_MODEL="${CODEX_MODEL:-gpt-5.5}"
+CODEX_FLAGS="exec -m $CODEX_MODEL"
 if [ "$YOLO_ENABLED" = true ]; then
     CODEX_FLAGS="$CODEX_FLAGS --dangerously-bypass-approvals-and-sandbox"
 fi

@@ -163,3 +163,8 @@
 - Revived the Janus baseline agent-selection path by coercing explicit `X-Baseline-Agent` requests onto the Sandy agent route unless `metadata.routing_decision` already pins routing.
 - Added regression coverage in `baseline-agent-cli/tests/test_chat.py` for forced agent routing and metadata override precedence.
 - Re-verified deployed Janus UI, gateway, and baseline health before deploying the baseline fix.
+
+## 2026-04-26
+- Completed `specs/003-sandy-cross-repo/spec.md` by refreshing the Sandy cross-repo integration map, verifying Sandy worker/controller routes and downstream client usage, and adding `tests/integration/test_sandy_cross_repo_contract.py` as a static compatibility guard.
+- Fixed `../agent-as-a-service-web/script.js` so Sandy `agent/run` calls fail fast when `janus-router` is selected without a router API base, and so the advanced agent-run path reads `routerBase` from config before building the payload.
+- Hardened deployed memory-service integration tests to skip Render's explicit `suspend-by-user` 503 page, matching the suite's existing unavailable-service skip behavior.
