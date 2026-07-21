@@ -42,9 +42,12 @@ logger = logging.getLogger(__name__)
 # while the platform-wide image chutes are down 2026-04-16).
 import os as _os
 
+# `chutes-z-image-turbo` disappeared from the platform (404 as of 2026-07-21);
+# the live z-image-turbo chute is `vonkaiser-z-image-turbo` (same one
+# chutes-frontend uses). Verified with a live generation before switching.
 CHUTES_IMAGE_ENDPOINT = (
     _os.getenv("CHUTES_IMAGE_ENDPOINT")
-    or "https://chutes-z-image-turbo.chutes.ai/generate"
+    or "https://vonkaiser-z-image-turbo.chutes.ai/generate"
 )
 # When an explicit model is needed (image.chutes.ai router style), set
 # CHUTES_IMAGE_MODEL — otherwise the model field is omitted from the body.

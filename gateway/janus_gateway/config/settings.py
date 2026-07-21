@@ -112,7 +112,11 @@ class Settings(BaseSettings):
         description="Firecrawl request timeout in seconds",
     )
     whisper_endpoint: str = Field(
-        default="https://chutes-whisper-large-v3.chutes.ai/transcribe",
+        # The dedicated chutes-whisper-large-v3 chute was retired ("No matching
+        # chute found!" as of 2026-07-21). AudioDojo's /stt/whisper is a
+        # drop-in: same {"audio_b64": ...} request, returns {"text": ...}.
+        # Verified with a live TTS->STT round trip before switching.
+        default="https://vonkaiser-audiodojo.chutes.ai/stt/whisper",
         description="Whisper transcription endpoint URL",
         validation_alias=AliasChoices("WHISPER_ENDPOINT", "JANUS_WHISPER_ENDPOINT"),
     )

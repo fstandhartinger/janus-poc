@@ -1,7 +1,9 @@
 import { GATEWAY_URL } from './api';
 import { applyPreReleaseHeader } from './preRelease';
 
-const WHISPER_ENDPOINT = 'https://chutes-whisper-large-v3.chutes.ai/transcribe';
+// chutes-whisper-large-v3 was retired; AudioDojo's /stt/whisper accepts the
+// same {"audio_b64": ...} payload and returns {"text": ...}.
+const WHISPER_ENDPOINT = 'https://vonkaiser-audiodojo.chutes.ai/stt/whisper';
 
 interface TranscriptionOptions {
   language?: string | null;

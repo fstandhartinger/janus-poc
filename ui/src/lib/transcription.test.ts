@@ -83,7 +83,7 @@ describe('transcription', () => {
     const result = await transcribeAudio(new Blob(['test'], { type: 'audio/webm' }));
 
     expect(mockFetch).toHaveBeenCalledWith(
-      'https://chutes-whisper-large-v3.chutes.ai/transcribe',
+      'https://vonkaiser-audiodojo.chutes.ai/stt/whisper',
       expect.objectContaining({
         headers: expect.objectContaining({ Authorization: 'Bearer test-key' }),
       })

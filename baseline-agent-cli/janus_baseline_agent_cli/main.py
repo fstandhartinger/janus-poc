@@ -584,7 +584,7 @@ async def stream_response(
                         if idx == 0 and metadata_payload:
                             merged = dict(metadata_payload)
                             merged["routing_decision"] = "direct_image"
-                            merged["routing_model"] = "chutes-z-image-turbo"
+                            merged["routing_model"] = "vonkaiser-z-image-turbo"
                             merged["complexity_reason"] = "direct_image_intent"
                             chunk = chunk.model_copy(update={"metadata": merged})
                         yield f"data: {chunk.model_dump_json(exclude_none=True)}\n\n"
