@@ -12,7 +12,9 @@ export async function GET(request: NextRequest) {
   const { session, setCookie, clearCookie } = await getAuthSession(request);
 
   if (!session) {
-    const response = NextResponse.json({ user: null }, { status: 401 });
+    // 200 with a null user: "signed out" is a normal state, and a 401 here
+    // logs a red console error on every page load for anonymous visitors.
+    const response = NextResponse.json({ user: null });
     if (clearCookie) {
       response.headers.append('Set-Cookie', clearSessionCookieHeader());
     }

@@ -50,7 +50,7 @@ export function RunSubmitForm() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.detail || 'Failed to create run');
+        throw new Error(data.detail || data.message || 'Failed to create run');
       }
 
       const run = await response.json();

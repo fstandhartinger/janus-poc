@@ -1,7 +1,5 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-const SCORING_SERVICE_URL =
-  process.env.SCORING_SERVICE_URL || 'https://janus-scoring-service.onrender.com';
+import { NextRequest } from 'next/server';
+import { SCORING_SERVICE_URL, proxyScoringJson } from '@/lib/scoringProxy';
 
 export async function GET(
   request: NextRequest,
@@ -12,8 +10,5 @@ export async function GET(
   const url = `${SCORING_SERVICE_URL}/api/runs/${id}/results${
     searchParams ? `?${searchParams}` : ''
   }`;
-
-  const response = await fetch(url, { cache: 'no-store' });
-  const data = await response.json();
-  return NextResponse.json(data, { status: response.status });
+  return proxyScoringJson(url);
 }

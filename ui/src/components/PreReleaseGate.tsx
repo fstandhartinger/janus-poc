@@ -98,6 +98,13 @@ export default function PreReleaseGate() {
     return null;
   }
 
+  // While the stored password is being re-verified on page load, don't flash
+  // the password modal at users who are already unlocked — render a plain
+  // scrim instead and only show the form once we know the gate is locked.
+  if (status === 'checking' && error === null) {
+    return <div className="fixed inset-0 z-[1000] bg-black/40" aria-hidden="true" />;
+  }
+
   return (
     <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/70 px-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-6 text-slate-900 shadow-2xl">

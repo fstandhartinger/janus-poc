@@ -27,7 +27,9 @@ vi.mock('./ThinkingIndicator', () => ({
 }));
 
 describe('MessageBubble artifacts', () => {
-  it('renders audio/video players and file attachments from artifacts', async () => {
+  // Generous timeout: this test dynamically imports the heavy MessageBubble
+  // dependency tree and can exceed the default 5s when suites run in parallel.
+  it('renders audio/video players and file attachments from artifacts', { timeout: 20000 }, async () => {
     const { MessageBubble } = await import('./MessageBubble');
     const message: Message = {
       id: 'msg_1',

@@ -1,16 +1,12 @@
-import { NextRequest, NextResponse } from 'next/server';
-
-const SCORING_SERVICE_URL =
-  process.env.SCORING_SERVICE_URL || 'https://janus-scoring-service.onrender.com';
+import { NextRequest } from 'next/server';
+import { SCORING_SERVICE_URL, proxyScoringJson } from '@/lib/scoringProxy';
 
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const response = await fetch(`${SCORING_SERVICE_URL}/api/runs/${id}`, { cache: 'no-store' });
-  const data = await response.json();
-  return NextResponse.json(data, { status: response.status });
+  return proxyScoringJson(`${SCORING_SERVICE_URL}/api/runs/${id}`);
 }
 
 export async function DELETE(
@@ -18,9 +14,7 @@ export async function DELETE(
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const response = await fetch(`${SCORING_SERVICE_URL}/api/runs/${id}`, {
+  return proxyScoringJson(`${SCORING_SERVICE_URL}/api/runs/${id}`, {
     method: 'DELETE',
   });
-  const data = await response.json();
-  return NextResponse.json(data, { status: response.status });
 }

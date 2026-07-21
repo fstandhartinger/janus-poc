@@ -1,18 +1,23 @@
 export const runtime = 'nodejs';
 
-const SCORING_SERVICE_URL =
-  process.env.SCORING_SERVICE_URL || 'https://janus-scoring-service.onrender.com';
+import { SCORING_SERVICE_URL, SCORING_UNAVAILABLE_BODY } from '@/lib/scoringProxy';
 
 export async function GET(
   _request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
   const { id } = await context.params;
-  const upstream = await fetch(`${SCORING_SERVICE_URL}/api/runs/${id}/stream`, {
-    headers: {
-      Accept: 'text/event-stream',
-    },
-  });
+
+  let upstream: Response;
+  try {
+    upstream = await fetch(`${SCORING_SERVICE_URL}/api/runs/${id}/stream`, {
+      headers: {
+        Accept: 'text/event-stream',
+      },
+    });
+  } catch {
+    return Response.json(SCORING_UNAVAILABLE_BODY, { status: 503 });
+  }
 
   if (!upstream.ok || !upstream.body) {
     return new Response(await upstream.text(), { status: upstream.status });
