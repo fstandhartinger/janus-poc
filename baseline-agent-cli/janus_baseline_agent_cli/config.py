@@ -400,8 +400,11 @@ class Settings(BaseSettings):
         description="Fast model to use for routing decisions",
     )
     llm_routing_timeout: float = Field(
-        default=3.0,
-        description="Timeout in seconds for LLM routing check",
+        default=10.0,
+        description="Timeout in seconds for LLM routing check. Needs headroom: "
+        "the current Chutes catalog models typically answer the routing tool "
+        "call in 1-4s but can take longer when cold; a too-tight timeout makes "
+        "every request fall back to the (slow) agent path.",
     )
 
     # Logging

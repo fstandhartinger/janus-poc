@@ -40,3 +40,12 @@ def test_langchain_url_hostport_uses_http(monkeypatch) -> None:
 def test_langchain_url_hostname_uses_https(monkeypatch) -> None:
     monkeypatch.setenv("BASELINE_LANGCHAIN_URL", "janus-baseline-langchain.onrender.com")
     assert _load_langchain_url() == "https://janus-baseline-langchain.onrender.com"
+
+
+def test_langchain_not_registered_without_url(monkeypatch) -> None:
+    monkeypatch.delenv("BASELINE_LANGCHAIN_URL", raising=False)
+    monkeypatch.delenv("JANUS_BASELINE_LANGCHAIN_URL", raising=False)
+    get_settings.cache_clear()
+    get_competitor_registry.cache_clear()
+    registry = get_competitor_registry()
+    assert registry.get("baseline-langchain") is None

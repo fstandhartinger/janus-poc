@@ -55,8 +55,11 @@ class Settings(BaseSettings):
         ),
     )
     baseline_langchain_url: str = Field(
-        default="http://localhost:8082",
-        description="Baseline LangChain competitor base URL",
+        default="",
+        description="Baseline LangChain competitor base URL. Empty by default: "
+        "the competitor is only registered when this is set (the Render "
+        "deployment of janus-baseline-langchain is suspended). For local dev "
+        "set BASELINE_LANGCHAIN_URL=http://localhost:8082.",
         validation_alias=AliasChoices(
             "BASELINE_LANGCHAIN_URL",
             "JANUS_BASELINE_LANGCHAIN_URL",
