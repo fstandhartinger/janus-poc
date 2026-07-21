@@ -2,7 +2,7 @@
 
 > **Sandy dependency**: This project uses Sandy on the production servers (new\_sandy / old\_sandy). Do NOT deploy Sandy changes to bench-runner-sandy (`88.99.58.39`), which is dedicated to `chutes-bench-runner`. Do NOT change Sandy server configs (systemd overrides, autoscaler limits, resource watermarks) on Hetzner servers to accommodate this project — doing so has previously broken `chutes-bench-runner` throughput (incident 2026-03-13). Use a separate Sandy instance or test changes in isolation first.
 
-**[janus.rodeo](https://janus-ui.onrender.com)** — A competitive, OpenAI-compatible intelligence API where miners compete to build the best universal agent. Anything in, anything out.
+**[janus.rodeo](https://janus.rodeo)** — A competitive, OpenAI-compatible intelligence API where miners compete to build the best universal agent. Anything in, anything out.
 
 > *Janus* is the Roman god of beginnings, transitions, and duality — looking to the past and future simultaneously. Here, Janus rides the bull: a nod to the crypto-bullish ethos and the rodeo-style miner competition.
 
@@ -10,12 +10,28 @@
 
 | Service | URL | Status |
 |---------|-----|--------|
-| **Janus UI** | https://janus-ui.onrender.com | [![UI](https://img.shields.io/badge/live-online-63D297)](https://janus-ui.onrender.com) |
-| **Janus Gateway** | https://janus-gateway-bqou.onrender.com | [![Gateway](https://img.shields.io/badge/live-online-63D297)](https://janus-gateway-bqou.onrender.com/health) |
-| **Janus Baseline Agent** | https://janus-baseline-agent.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-agent.onrender.com/health) |
-| **Janus Baseline LangChain** | https://janus-baseline-langchain.onrender.com | [![Baseline](https://img.shields.io/badge/live-online-63D297)](https://janus-baseline-langchain.onrender.com/health) |
-| **Janus Scoring Service** | https://janus-scoring-service.onrender.com | [![Scoring](https://img.shields.io/badge/live-online-63D297)](https://janus-scoring-service.onrender.com/health) |
-| **Janus Memory Service** | https://janus-memory-service.onrender.com | [![Memory](https://img.shields.io/badge/live-online-63D297)](https://janus-memory-service.onrender.com/health) |
+| **Janus UI** | https://janus.rodeo (also https://janus-ui.onrender.com) | live |
+| **Janus Gateway** | https://janus-gateway-bqou.onrender.com | live |
+| **Janus Baseline Agent** | https://janus-baseline-agent.onrender.com | live |
+| **Janus Browser Session Service** | https://janus-browser-session-service.onrender.com | live |
+| **Janus Baseline LangChain** | https://janus-baseline-langchain.onrender.com | **suspended** |
+| **Janus Scoring Service** | https://janus-scoring-service.onrender.com | **suspended** |
+| **Janus Memory Service** | https://janus-memory-service.onrender.com | **suspended** |
+
+> **Suspended services (2026-07):** Render team workspaces no longer have a free
+> tier, so janus-baseline-langchain, janus-scoring-service and
+> janus-memory-service are suspended. The app degrades gracefully without them:
+> the langchain competitor is not offered (BASELINE_LANGCHAIN_URL unset), the
+> scoring pages show an "offline" banner, and memory features report themselves
+> unavailable. Chat, routing, image generation, TTS/STT and auth all work
+> without them.
+>
+> **Model ids rotate:** the Chutes catalog changes over time. If chat suddenly
+> answers "I encountered an error", first verify every model id in
+> `baseline-agent-cli/janus_baseline_agent_cli/routing.py` (and the
+> `BASELINE_MODEL` env var on Render) against
+> `GET https://llm.chutes.ai/v1/models`, and probe the image/STT chute
+> endpoints in `services/direct_image.py` and the gateway `whisper_endpoint`.
 
 ## Components
 

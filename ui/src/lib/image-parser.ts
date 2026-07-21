@@ -3,7 +3,13 @@ export interface ParsedImage {
   alt?: string;
 }
 
-const MAX_INLINE_IMAGE_URL_LENGTH = 20000;
+// Upper bound for an inline data-URL image we are willing to render.
+// This must comfortably fit a real generated image: the direct image path
+// streams ~1-1.5 MB of base64 PNG for a 1024px image. The old 20k cap
+// silently dropped every generated image (the text rendered, the image
+// vanished). Keep a cap to guard against pathological payloads, but make it
+// far larger than any expected image.
+const MAX_INLINE_IMAGE_URL_LENGTH = 12_000_000;
 
 /**
  * Extract inline data-image markdown and return cleaned text + images.
