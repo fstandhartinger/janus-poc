@@ -1852,11 +1852,11 @@ class SandyService:
         """Select model for Sandy's agent/run API.
 
         Supported models on Chutes include:
-        - MiniMaxAI/MiniMax-M2.1-TEE (default, fast, good tool call support)
+        - MiniMaxAI/MiniMax-M2.5-TEE (default, fast, good tool call support)
         - deepseek-ai/DeepSeek-V3-0324-TEE (powerful but has tool call parsing issues)
-        - zai-org/GLM-4.7-TEE (Chinese model, good for general tasks)
-        - Qwen/Qwen3-VL-235B-A22B-Instruct (for vision tasks)
-        - chutesai/Mistral-Small-3.2-24B-Instruct-2506 (fast, small)
+        - zai-org/GLM-5.2-TEE (good for general tasks)
+        - moonshotai/Kimi-K2.5-TEE (for vision tasks)
+        - google/gemma-4-31B-turbo-TEE (fast, small)
         """
         # Use the model from request, or default to a good model
         model = request.model
@@ -1881,7 +1881,7 @@ class SandyService:
         if model in {"baseline", "janus-router", "janus-baseline"}:
             # Use MiniMax as default - DeepSeek has issues with tool call parsing
             # in Sandy's agent runner (causes "'dict object' has no attribute 'name'" errors)
-            selected = "MiniMaxAI/MiniMax-M2.1-TEE"
+            selected = "MiniMaxAI/MiniMax-M2.5-TEE"
             logger.info(
                 "model_selection",
                 requested=model,
@@ -1917,7 +1917,7 @@ class SandyService:
             return model
 
         # Default model for general use - use MiniMax which has better tool call support
-        selected = "MiniMaxAI/MiniMax-M2.1-TEE"
+        selected = "MiniMaxAI/MiniMax-M2.5-TEE"
         logger.info(
             "model_selection",
             requested=model,

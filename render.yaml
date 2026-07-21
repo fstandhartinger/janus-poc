@@ -22,12 +22,9 @@ services:
           name: janus-baseline-agent
           property: hostport
           envVarKey: BASELINE_URL
-      - key: BASELINE_LANGCHAIN_URL
-        fromService:
-          type: web
-          name: janus-baseline-langchain
-          property: hostport
-          envVarKey: BASELINE_LANGCHAIN_URL
+      # BASELINE_LANGCHAIN_URL intentionally unset: janus-baseline-langchain is
+      # suspended (Render team workspaces have no free tier anymore). The
+      # gateway omits the langchain competitor when this env var is missing.
       - key: CHUTES_API_KEY
         sync: false
       - key: CHUTES_JANUS_PRE_RELEASE_PWD
@@ -52,7 +49,7 @@ services:
       - key: BASELINE_DEBUG
         value: "false"
       - key: BASELINE_MODEL
-        value: "moonshotai/Kimi-K2-Instruct"
+        value: "deepseek-ai/DeepSeek-V3.2-TEE"
       - key: BASELINE_OPENAI_API_KEY
         sync: false
       - key: BASELINE_OPENAI_BASE_URL
@@ -153,11 +150,12 @@ services:
     startCommand: |
       node -e "
       const urls = [
+        // janus-baseline-langchain, janus-memory-service and
+        // janus-scoring-service are suspended (no Render free tier for team
+        // workspaces) and intentionally not pinged.
         'https://janus-gateway-bqou.onrender.com/health',
         'https://janus-baseline-agent.onrender.com/health',
-        'https://janus-baseline-langchain.onrender.com/health',
-        'https://janus-memory-service.onrender.com/health',
-        'https://janus-scoring-service.onrender.com/health',
+        'https://janus-browser-session-service.onrender.com/health',
         'https://janus-ui.onrender.com/'
       ];
       Promise.allSettled(urls.map(u => fetch(u, { headers: { 'User-Agent': 'janus-keepwarm' } })

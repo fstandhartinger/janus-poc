@@ -2,14 +2,14 @@
 
 ## Available Models
 
-### Primary: Qwen3-VL-235B-A22B-Instruct
-- Model ID: `Qwen/Qwen3-VL-235B-A22B-Instruct`
+### Primary: Kimi-K2.5-TEE
+- Model ID: `moonshotai/Kimi-K2.5-TEE`
 - Capabilities: Image understanding, OCR, diagram analysis, visual QA
 - Context: 32k tokens
 - Best for: Complex visual reasoning, detailed image analysis
 
-### Fallback: Mistral-Small-3.2-24B-Instruct-2506
-- Model ID: `chutesai/Mistral-Small-3.2-24B-Instruct-2506`
+### Fallback: Kimi-K2.6-TEE
+- Model ID: `moonshotai/Kimi-K2.6-TEE`
 - Capabilities: Basic image understanding, visual QA
 - Context: 128k tokens
 - Best for: Simple image questions, faster responses

@@ -249,7 +249,7 @@ class BrowserSession:
 async def analyze_screenshot(
     screenshot: Screenshot,
     question: str,
-    model: str = "Qwen/Qwen3-VL-235B-A22B-Instruct",
+    model: str = "moonshotai/Kimi-K2.5-TEE",
 ) -> str:
     """
     Analyze a screenshot using a vision model.

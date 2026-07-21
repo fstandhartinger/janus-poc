@@ -94,7 +94,7 @@ class Settings(BaseSettings):
     )
     model: str = Field(default="janus-router", description="Default model for fast path")
     direct_model: str = Field(
-        default="tngtech/TNG-R1T-Chimera-Turbo",
+        default="deepseek-ai/DeepSeek-V3.2-TEE",
         description="Direct model when router is disabled",
         validation_alias=AliasChoices(
             "DIRECT_MODEL",
@@ -195,11 +195,11 @@ class Settings(BaseSettings):
 
     # Vision settings
     vision_model_primary: str = Field(
-        default="Qwen/Qwen3-VL-235B-A22B-Instruct",
+        default="moonshotai/Kimi-K2.5-TEE",
         description="Primary vision model for image understanding",
     )
     vision_model_fallback: str = Field(
-        default="chutesai/Mistral-Small-3.2-24B-Instruct-2506",
+        default="moonshotai/Kimi-K2.6-TEE",
         description="Fallback vision model for image understanding",
     )
     vision_model_timeout: float = Field(
@@ -396,7 +396,7 @@ class Settings(BaseSettings):
         description="Always route to agent sandbox, bypass complexity detection",
     )
     llm_routing_model: str = Field(
-        default="XiaomiMiMo/MiMo-V2-Flash",
+        default="google/gemma-4-31B-turbo-TEE",
         description="Fast model to use for routing decisions",
     )
     llm_routing_timeout: float = Field(

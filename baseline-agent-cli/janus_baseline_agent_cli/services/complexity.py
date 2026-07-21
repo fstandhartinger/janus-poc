@@ -31,7 +31,7 @@ ROUTING_ENDPOINT = "https://llm.chutes.ai/v1/chat/completions"
 # Routing models in order of preference (with fallbacks)
 ROUTING_MODELS = [
     DECISION_MODEL_ID,
-    "Qwen/Qwen3-Next-80B-A3B-Instruct",
+    "deepseek-ai/DeepSeek-V3.2-TEE",
 ]
 ROUTING_MODEL = ROUTING_MODELS[0]  # Default for settings
 
@@ -96,7 +96,7 @@ _SIMPLE_FACTUAL_COMPILED = [re.compile(p, re.IGNORECASE) for p in SIMPLE_FACTUAL
 
 # NOTE: Pattern-based detection removed in favor of LLM verifier
 # Only trivial greetings bypass LLM check - all other messages go through
-# the smart Qwen3-Next-80B-A3B-Instruct model for routing decisions
+# the fast gemma-4-31B-turbo model for routing decisions
 
 URL_PATTERN = re.compile(r'https?://[^\s<>"\']+|www\.[^\s<>"\']+', re.IGNORECASE)
 

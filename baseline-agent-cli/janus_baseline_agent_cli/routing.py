@@ -8,11 +8,16 @@ from typing import Any, Literal, Optional
 
 ROUTING_DECISION_KEY = "routing_decision"
 
-DECISION_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
-FAST_QWEN_MODEL_ID = "Qwen/Qwen3-Next-80B-A3B-Instruct"
-FAST_NEMOTRON_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
-FAST_KIMI_MODEL_ID = "Qwen/Qwen3-VL-235B-A22B-Instruct"
-AGENT_NEMOTRON_MODEL_ID = "XiaomiMiMo/MiMo-V2-Flash"
+# Model ids verified against https://llm.chutes.ai/v1/models on 2026-07-21.
+# The catalog rotates; every id here must exist in the live catalog.
+# gemma-4-31B-turbo-TEE: fastest non-reasoning model (classifier / light work).
+# DeepSeek-V3.2-TEE: strong non-reasoning generalist (fast path workhorse).
+# Kimi-K2.5-TEE: accepts image inputs (vision/multimodal path).
+DECISION_MODEL_ID = "google/gemma-4-31B-turbo-TEE"
+FAST_QWEN_MODEL_ID = "deepseek-ai/DeepSeek-V3.2-TEE"
+FAST_NEMOTRON_MODEL_ID = "deepseek-ai/DeepSeek-V3.2-TEE"
+FAST_KIMI_MODEL_ID = "moonshotai/Kimi-K2.5-TEE"
+AGENT_NEMOTRON_MODEL_ID = "deepseek-ai/DeepSeek-V3.2-TEE"
 # AGENT_KIMI is the workhorse for any prompt that needs the Sandy/Claude
 # Code path. It must be a model that aggressively *invokes* tools (Bash,
 # Edit, Write) instead of writing the code as a markdown block — otherwise
@@ -48,27 +53,27 @@ DECISION_DETAILS: dict[RoutingDecision, DecisionDetails] = {
     RoutingDecision.FAST_QWEN: DecisionDetails(
         path="fast",
         model_id=FAST_QWEN_MODEL_ID,
-        label="FAST + Qwen3 30B (plain)",
+        label="FAST + DeepSeek-V3.2 (plain)",
     ),
     RoutingDecision.FAST_NEMOTRON: DecisionDetails(
         path="fast",
         model_id=FAST_NEMOTRON_MODEL_ID,
-        label="FAST + Nemotron 30B (light reasoning)",
+        label="FAST + DeepSeek-V3.2 (light reasoning)",
     ),
     RoutingDecision.FAST_KIMI: DecisionDetails(
         path="fast",
         model_id=FAST_KIMI_MODEL_ID,
-        label="FAST + Kimi K2.5 (hard reasoning)",
+        label="FAST + Kimi K2.5 (vision/multimodal)",
     ),
     RoutingDecision.AGENT_NEMOTRON: DecisionDetails(
         path="agent",
         model_id=AGENT_NEMOTRON_MODEL_ID,
-        label="AGENT + Nemotron 30B (simple agent task)",
+        label="AGENT + DeepSeek-V3.2 (simple agent task)",
     ),
     RoutingDecision.AGENT_KIMI: DecisionDetails(
         path="agent",
         model_id=AGENT_KIMI_MODEL_ID,
-        label="AGENT + Kimi K2.5 (general agent task)",
+        label="AGENT + DeepSeek-V3.2 (general agent task)",
     ),
 }
 
@@ -99,11 +104,11 @@ ROUTING_DECISION_TOOL = {
 ROUTING_DECISION_PROMPT = """You are a routing verifier. Choose exactly one decision.
 
 Decisions (path + model):
-- fast_qwen: FAST path, Qwen3-Next-80B, plain short answers
-- fast_nemotron: FAST path, MiMo-V2-Flash, light reasoning/longer answers
-- fast_kimi: FAST path, Qwen3-VL-235B, vision and multimodal tasks
-- agent_nemotron: AGENT path, MiMo-V2-Flash, simple agent tasks
-- agent_kimi: AGENT path, MiniMax-M2.5, all other agent tasks
+- fast_qwen: FAST path, DeepSeek-V3.2, plain short answers
+- fast_nemotron: FAST path, DeepSeek-V3.2, light reasoning/longer answers
+- fast_kimi: FAST path, Kimi-K2.5, vision and multimodal tasks
+- agent_nemotron: AGENT path, DeepSeek-V3.2, simple agent tasks
+- agent_kimi: AGENT path, DeepSeek-V3.2, all other agent tasks
 
 Rules:
 - If tools or external actions are required, choose an AGENT decision.

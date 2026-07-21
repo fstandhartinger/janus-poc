@@ -29,7 +29,7 @@ def analyze_screenshot(
 
     api_url = os.environ.get("CHUTES_API_URL", "https://api.chutes.ai/v1")
     resolved_model = model or os.environ.get(
-        "JANUS_VISION_MODEL", "Qwen/Qwen3-VL-235B-A22B-Instruct"
+        "JANUS_VISION_MODEL", "moonshotai/Kimi-K2.5-TEE"
     )
 
     if screenshot_base64.startswith("data:"):
